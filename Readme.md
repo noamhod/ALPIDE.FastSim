@@ -24,7 +24,7 @@ The reconstructed tracks are written for further analysis using python+ROOT.
   - in runLUXEeeReco.C, find this line: `TString process = "trident";  /// trident or bppp`
   - change (hardcode) as needed between "bppp" and "trident"
   - run `root -b -q load.C runLUXEeeReco.C+`
-  - repeat (2) and (3) for "bppp" or "trident"
+  - repeat the 2 steps above to flip between "bppp" and "trident"
   - this will produce a number of files in the data/root/ directory
 
 - Analyse the reconstructed output:
