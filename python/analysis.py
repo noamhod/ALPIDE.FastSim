@@ -96,11 +96,11 @@ def BookHistos(process):
    histos.update( {"h_xy_layer3_gen":TH2D("h_xy_layer3_gen","Layer 3: generated tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
    histos.update( {"h_xy_layer4_gen":TH2D("h_xy_layer4_gen","Layer 4: generated tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
 
-   histos.update( {"h_xE_layer0_gen":TH2D("h_xE_layer0_gen","Dipole exit;x [cm];E [GeV];Tracks", 6000,-75,+75, 100,0,+20)} )
-   histos.update( {"h_xE_layer1_gen":TH2D("h_xE_layer1_gen","Layer 1;x [cm];E [GeV];Tracks",     6000,-75,+75, 100,0,+20)} )
-   histos.update( {"h_xE_layer2_gen":TH2D("h_xE_layer2_gen","Layer 2;x [cm];E [GeV];Tracks",     6000,-75,+75, 100,0,+20)} )
-   histos.update( {"h_xE_layer3_gen":TH2D("h_xE_layer3_gen","Layer 3;x [cm];E [GeV];Tracks",     6000,-75,+75, 100,0,+20)} )
-   histos.update( {"h_xE_layer4_gen":TH2D("h_xE_layer4_gen","Layer 4;x [cm];E [GeV];Tracks",     6000,-75,+75, 100,0,+20)} )
+   histos.update( {"h_xE_layer0_gen":TH2D("h_xE_layer0_gen","Dipole exit;x [cm];E [GeV];Tracks", 600,-75,+75, 100,0,+20)} )
+   histos.update( {"h_xE_layer1_gen":TH2D("h_xE_layer1_gen","Layer 1;x [cm];E [GeV];Tracks",     600,-75,+75, 100,0,+20)} )
+   histos.update( {"h_xE_layer2_gen":TH2D("h_xE_layer2_gen","Layer 2;x [cm];E [GeV];Tracks",     600,-75,+75, 100,0,+20)} )
+   histos.update( {"h_xE_layer3_gen":TH2D("h_xE_layer3_gen","Layer 3;x [cm];E [GeV];Tracks",     600,-75,+75, 100,0,+20)} )
+   histos.update( {"h_xE_layer4_gen":TH2D("h_xE_layer4_gen","Layer 4;x [cm];E [GeV];Tracks",     600,-75,+75, 100,0,+20)} )
 
    histos.update( {"h_nITSHits":TH1D("h_nITSHits",";nITSHits;Tracks", 10,0,10)} )
    histos.update( {"h_Snp_pull":TH1D("h_Snp_pull", ";(Snp_{rec}-Snp_{gen})/#DeltaSnp_{rec};Tracks",100,-5,+5)} ) ### new
@@ -769,3 +769,13 @@ cnv_dE_vs_x.cd()
 histos["h_dE_vs_x"].Draw("col")
 cnv_dE_vs_x.SaveAs(fn+"dE_vs_x.pdf")
 cnv_dE_vs_x.SaveAs(allpdf+")")
+
+
+
+########### write all histos to a root file
+allroot = "../output/root/all_"+process+".root"
+tfileout = TFile(allroot,"RECREATE")
+tfileout.cd()
+for hname,hist in histos.items(): hist.Write()
+tfileout.Write()
+tfileout.Close()
