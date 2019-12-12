@@ -156,7 +156,6 @@ Int_t KMCProbeFwd::Compare(const TObject* obj) const
 Bool_t KMCProbeFwd::PropagateToZBxByBz(double z, double maxDZ, Double_t xOverX0, Double_t xTimesRho, Bool_t modeMC)
 {
   // propagate the track to position Z in uniform material with xOverX0 rad lgt and xTimesRho lgt*density
-  //
   double zCurr = GetZ();
   double dz = z - zCurr;
   if (TMath::Abs(dz)<kAlmost0) return kTRUE;
@@ -178,7 +177,6 @@ Bool_t KMCProbeFwd::PropagateToZBxByBz(double z, double maxDZ, Double_t xOverX0,
     //    fTrack.Print();
   }
   return kTRUE;
-  //
 }
 
 //_______________________________________________________________________

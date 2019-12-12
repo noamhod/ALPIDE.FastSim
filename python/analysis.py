@@ -96,6 +96,12 @@ def BookHistos(process):
    histos.update( {"h_xy_layer3_gen":TH2D("h_xy_layer3_gen","Layer 3: generated tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
    histos.update( {"h_xy_layer4_gen":TH2D("h_xy_layer4_gen","Layer 4: generated tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
 
+   histos.update( {"h_xE_layer0_gen":TH2D("h_xE_layer0_gen","Dipole exit;x [cm];E [GeV];Tracks", 6000,-75,+75, 100,0,+20)} )
+   histos.update( {"h_xE_layer1_gen":TH2D("h_xE_layer1_gen","Layer 1;x [cm];E [GeV];Tracks",     6000,-75,+75, 100,0,+20)} )
+   histos.update( {"h_xE_layer2_gen":TH2D("h_xE_layer2_gen","Layer 2;x [cm];E [GeV];Tracks",     6000,-75,+75, 100,0,+20)} )
+   histos.update( {"h_xE_layer3_gen":TH2D("h_xE_layer3_gen","Layer 3;x [cm];E [GeV];Tracks",     6000,-75,+75, 100,0,+20)} )
+   histos.update( {"h_xE_layer4_gen":TH2D("h_xE_layer4_gen","Layer 4;x [cm];E [GeV];Tracks",     6000,-75,+75, 100,0,+20)} )
+
    histos.update( {"h_nITSHits":TH1D("h_nITSHits",";nITSHits;Tracks", 10,0,10)} )
    histos.update( {"h_Snp_pull":TH1D("h_Snp_pull", ";(Snp_{rec}-Snp_{gen})/#DeltaSnp_{rec};Tracks",100,-5,+5)} ) ### new
    histos.update( {"h_dSnp_vs_Snp":TH2D("h_dSnp_vs_Snp", ";Snp_{gen};Snp_{rec}-Snp_{gen};Tracks",100,-0.65e-3,+0.65e-3, 100,-1.e-3,+1.e-3)} ) ### new
@@ -163,6 +169,14 @@ def FillHistos(event):
          ygen = ROOT.Double()
          zgen = ROOT.Double()
          event.polm_gen[i].GetPoint(jxy,xgen,ygen,zgen)
+         
+         ### noam for tracking
+         if(zgen==200): histos["h_xE_layer0_gen"].Fill(xgen,Egen,wgt)
+         if(zgen==300): histos["h_xE_layer1_gen"].Fill(xgen,Egen,wgt)
+         if(zgen==310): histos["h_xE_layer2_gen"].Fill(xgen,Egen,wgt)
+         if(zgen==320): histos["h_xE_layer3_gen"].Fill(xgen,Egen,wgt)
+         if(zgen==330): histos["h_xE_layer4_gen"].Fill(xgen,Egen,wgt)
+         
          if(zgen<300): continue
          if(zgen==300): histos["h_xy_layer1_gen"].Fill(xgen,ygen,wgt)
          if(zgen==310): histos["h_xy_layer2_gen"].Fill(xgen,ygen,wgt)
@@ -469,6 +483,7 @@ staveR.Draw()
 cnv_xy_gen.SaveAs(fn+"xy_gen.pdf")
 cnv_xy_gen.SaveAs(allpdf)
 
+
 cnv_res_xy = TCanvas("cnv_res_xy","",800,800)
 cnv_res_xy.Divide(2,2)
 p1 = cnv_res_xy.cd(1)
@@ -485,6 +500,35 @@ p4.cd()
 histos["h_res_y_vs_x_4"].Draw("col")
 cnv_res_xy.SaveAs(fn+"res_xy.pdf")
 cnv_res_xy.SaveAs(allpdf)
+
+
+
+cnv_xE_gen = TCanvas("cnv_xE","",1000,1000)
+cnv_xE_gen.Divide(1,5)
+p1 = cnv_xE_gen.cd(1)
+p2 = cnv_xE_gen.cd(2)
+p3 = cnv_xE_gen.cd(3)
+p4 = cnv_xE_gen.cd(4)
+p5 = cnv_xE_gen.cd(5)
+p1.cd()
+# histos["h_xE_layer4_gen"].Scale(1./nevents)
+histos["h_xE_layer4_gen"].Draw("col")
+p2.cd()
+# histos["h_xE_layer3_gen"].Scale(1./nevents)
+histos["h_xE_layer3_gen"].Draw("col")
+p3.cd()
+# histos["h_xE_layer2_gen"].Scale(1./nevents)
+histos["h_xE_layer2_gen"].Draw("col")
+p4.cd()
+# histos["h_xE_layer1_gen"].Scale(1./nevents)
+histos["h_xE_layer1_gen"].Draw("col")
+p5.cd()
+# histos["h_xE_layer0_gen"].Scale(1./nevents)
+histos["h_xE_layer0_gen"].Draw("col")
+cnv_xE_gen.SaveAs(fn+"xE_gen.pdf")
+cnv_xE_gen.SaveAs(allpdf)
+
+
 
 
 leg_rec_gen = TLegend(0.60,0.73,0.87,0.87)

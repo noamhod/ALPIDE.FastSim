@@ -11,17 +11,17 @@ vertex:		      			0.	25e-4	1e-5	1e-5
 # If one of values is specified, the others should also be set
 # note: layer with thickness DZ is positioned such that it extends in Z from Zc-DZ/2 to Zc+DZ/2
 #				name		material	Zc		DZ			resX	resY	eff		RMin	RMax
-activelayer:vt	VT1			SILICON		300		100e-4 		4.e-4	4.e-4   0.99	1. 		100.
-dummy:			VT1Plane	CARBON		300.02	300e-4		
+activelayer:vt	VT1			SILICON		300		100e-4 		4.e-4	4.e-4 0.99	1. 		100.
+dummy:			VT1Plane	   CARBON		300.02	300e-4		
 
 activelayer:vt	VT2			SILICON		310		100e-4		4.e-4	4.e-4	0.99	1. 		100.
-dummy:          VT2Plane	CARBON		310.02  300e-4
+dummy:         VT2Plane	   CARBON		310.02   300e-4
 
 activelayer:vt	VT3			SILICON		320		100e-4		4.e-4	4.e-4	0.99	1. 		100.
-dummy:          VT3Plane	CARBON		320.02  300e-4
+dummy:         VT3Plane	   CARBON		320.02   300e-4
 
 activelayer:vt	VT4			SILICON		330		100e-4		4.e-4	4.e-4	0.99	1. 		100.
-dummy:          VT4Plane	CARBON		330.02  300e-4
+dummy:         VT4Plane	   CARBON		330.02   300e-4
 
 ############################################################
 ######                                                ######

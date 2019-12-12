@@ -1097,11 +1097,12 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
     KMCProbeFwd::Trk2Lab(clxyz, clxyzL);
     lr->GetMCCluster()->Set(clxyzL[0],clxyzL[1],clxyzL[2]);
     */
-    // cluster is stored in local frame
+    // cluster is stored in local frame	 
+	 
     if (bg) {
       lr->AddBgCluster(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()-rx*lr->GetXRes(r),probTr->GetTrID());
     }
-    else lr->GetMCCluster()->Set(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()-rx*lr->GetXRes(r),probTr->GetTrID());
+    else lr->GetMCCluster()->Set(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()+rx*lr->GetXRes(r),probTr->GetTrID());
     //
   }
   //

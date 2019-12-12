@@ -2,7 +2,7 @@
 CC = g++
 CFLAGS = -g -O0 -Wall -fPIC -m64 -std=gnu++17
 LFLAGS = $(shell root-config --glibs) -lEG -lGeom
-INC =	-I$(ROOTSYS)/include -I/usr/include  -I./
+INC =	-I$(ROOTSYS)/include -I/usr/include -I./
 TGT =	libKMCDetFwd.so
 DICT=	KMCDetFwdDict.cxx
 DICTO=	KMCDetFwdDict.o

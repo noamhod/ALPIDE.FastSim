@@ -3,7 +3,8 @@ Tracks are reconstructed individually (so no combinatorics solving).
 The C++ (ROOT-based) detector simulation part of this project is based on a version of ALICE software written for the NA60 experiment.
 This is improved and converted for LUXE's needs here.
 More details about the code are in: https://cernbox.cern.ch/index.php/s/flL3gcDe9W6pJ3V.
-The reconstructed tracks are written for further analysis using python+ROOT.
+The reconstructed tracks are written for further analysis using python+ROOT. 
+
 
 - Basic setup
   - have ROOT6 and python installed

@@ -117,7 +117,7 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
        nz++;
     }
     TPolyLine3D *polyline = new TPolyLine3D(nz+1);
-	polyline->SetLineColor(col);
+	 polyline->SetLineColor(col);
     for (int i=0;i<nz+1;i++) {
        polyline->SetPoint(i,xp[i],yp[i],zp[i]);
     }
@@ -137,14 +137,14 @@ bool islayer(double z)
 TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax, double zstep, Color_t col=kBlack)
 {
     KMCProbeFwd tmp(*source);
-	int nZ = (int)(zmax-zmin)/zstep;
+	 int nZ = (int)(zmax-zmin)/zstep;
     double xp[nZ],yp[nZ],zp[nZ];
     double xyz[3];
     tmp.GetXYZ(xyz);
     xp[0] = xyz[0];
     yp[0] = xyz[1];
     zp[0] = xyz[2];
-	int nz = 0;
+	 int nz = 0;
     for(int iz=1;iz<nZ;iz++) {
        if (!tmp.PropagateToZBxByBz( tmp.GetZ()+zstep, zstep )) break; // for different reasons the propagation may fail
        tmp.GetXYZ(xyz);
@@ -154,8 +154,8 @@ TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax
        nz++;
     }
     TPolyMarker3D *polymarker = new TPolyMarker3D(zlayer->size());
-	polymarker->SetMarkerColor(col);
-	int n = 0;
+	 polymarker->SetMarkerColor(col);
+	 int n = 0;
     for(int i=0;i<nz+1;i++) {
        if(!islayer(zp[i])) continue;
        polymarker->SetPoint(n,xp[i],yp[i],zp[i]);
@@ -529,7 +529,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
 
    int outN = 100;
 
-   TString process = "bppp";  /// trident or bppp
+   TString process = "trident";  /// trident or bppp or bppp_bkg or trident_bkg
 
    /// get the particles from a ttree
    TFile* fIn = new TFile("data/root/raw_"+process+".root","READ");
@@ -605,14 +605,15 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
  
    /// loop on events
    for(int iev=0;iev<nev;iev++)
+   // for(int iev=0;iev<nev and iev<10;iev++)
    {
       //// clear
       ngen = 0;    
       nres = 0;
       nrec = 0;
- 	  for(int i=0;i<(int)polm_gen.size();++i) delete polm_gen[i];
- 	  for(int i=0;i<(int)poll_gen.size();++i) delete poll_gen[i];
- 	  for(int i=0;i<(int)polm.size();++i)     delete polm[i];
+ 	   for(int i=0;i<(int)polm_gen.size();++i) delete polm_gen[i];
+ 	   for(int i=0;i<(int)poll_gen.size();++i) delete poll_gen[i];
+ 	   for(int i=0;i<(int)polm.size();++i)     delete polm[i];
       for(int i=0;i<(int)poll.size();++i)     delete poll[i];
       wgtgen.clear();
       pgen.clear();
@@ -634,19 +635,19 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
       int npairs = 0;
       int npositrons = 0;
       
- 	  //// get the next entry
- 	  tIn->GetEntry(iev);
+ 	   //// get the next entry
+ 	   tIn->GetEntry(iev);
       if ((iev%outN)==0) printf("Done %d out of %d\n",iev,nev);
       int nfakeHits = 0;
- 	  TLorentzVector ptmp;
- 	  int ngenall = pdgId->size();
+ 	   TLorentzVector ptmp;
+ 	   int ngenall = pdgId->size();
       int pair = 1;
       /// loop on particles
       for(int igen=0 ; igen<ngenall ; igen++)
       {
          if(abs(pdgId->at(igen))!=11)
          {
-			cout << "illegal pdgId: " << pdgId->at(igen) << endl;
+			   cout << "illegal pdgId: " << pdgId->at(igen) << endl;
             break;
          }
 

@@ -58,6 +58,9 @@ def readparticles(name):
       words = [word for word in words if(len(word.split())!=0)]
       if( not photon and abs(int(words[7]))!=11 ): continue
       if(     photon and abs(int(words[7]))!=22 ): continue
+      if(float(words[4])*float(words[4])+float(words[5])*float(words[5])+float(words[6])*float(words[6])>1.):
+         # print("WARNING beta>1: betaxyz=(%s,%s,%s)" % (words[4],words[5],words[6]) )
+         continue
       particles.append( {"E":float(words[0]), "vx":float(words[1]), "vy":float(words[2]), "vz":float(words[3]), "betax":float(words[4]), "betay":float(words[5]), "betaz":float(words[6]), "pdgId":int(words[7]), "wgt":float(words[8])} )
       i += 1
    fIn.close()
