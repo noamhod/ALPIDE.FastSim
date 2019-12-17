@@ -34,3 +34,13 @@ The reconstructed tracks are written for further analysis using python+ROOT.
   - run the analysis:
      - `python analysis.py -p bppp`
      - `python analysis.py -p trident`
+     - check the output dir
+
+- Fit the truth E(x) profiles for the 4 layers and the dipole exit (together for bppp and trident)
+  - go to the python dir
+  - make sure python and ROOT is setup
+  - run the fits:
+    - `python E_vs_x.py`
+    - check the output dir
+
+
