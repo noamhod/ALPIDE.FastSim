@@ -29,7 +29,7 @@ xAbsMargins = 0.5 # cm
 yAbsMargins = 0.05 # cm
 zDipoleExit = 202.9
 
-NnoiseClusters = 1000
+NnoiseClusters = 2000
 
 
 #############################################
@@ -260,6 +260,16 @@ def trimwide(clusters,clusters_wide,windowx,windowyz):
       clusters.GetPoint(i,r[0],r[1],r[2])
       clusters_wide.SetNextPoint(r[0],r[1],r[2])
       
+def trimsigwide(clusters_sig,clusters_sig_wide,windowx,windowyz):
+   for i in range(clusters_sig.GetN()):
+      acceptx  = isinwindowx(clusters_sig,i,windowx)
+      acceptyz = isinwindowyz(clusters_sig,i,windowyz)
+      if(not acceptx):  continue
+      if(not acceptyz): continue
+      r = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
+      clusters_sig.GetPoint(i,r[0],r[1],r[2])
+      clusters_sig_wide.SetNextPoint(r[0],r[1],r[2])
+
 def trimnarr(clusters_wide,clusters_narr,window):
    for i in range(clusters_wide.GetN()):
       accept = isinwindowx(clusters_wide,i,window)
@@ -267,6 +277,14 @@ def trimnarr(clusters_wide,clusters_narr,window):
       r = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
       clusters_wide.GetPoint(i,r[0],r[1],r[2])
       clusters_narr.SetNextPoint(r[0],r[1],r[2])
+      
+def trimsignarr(clusters_sig_wide,clusters_sig_narr,window):
+   for i in range(clusters_sig_wide.GetN()):
+      accept = isinwindowx(clusters_sig_wide,i,window)
+      if(not accept): continue
+      r = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
+      clusters_sig_wide.GetPoint(i,r[0],r[1],r[2])
+      clusters_sig_narr.SetNextPoint(r[0],r[1],r[2])
 
 def makeseed(cluster1,cluster2):
    p = TLorentzVector()
@@ -282,22 +300,101 @@ def makeseed(cluster1,cluster2):
    v1.SetXYZ(r1[0],r1[1],r1[2])
    v2.SetXYZ(r2[0],r2[1],r2[2])
    p = p4(v1,v2,E) ## TLorentzVector of the seed
-   print("E1=%g, E2=%g" % (E1,E2))
-   print("E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (p.E(),p.Pt(),p.Eta(),p.Phi(),p.Theta()) )
+   # print("E1=%g, E2=%g" % (E1,E2))
+   print("Seed: E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (p.E(),p.Pt(),p.Eta(),p.Phi(),p.Theta()) )
    return p
 
 
-##########################################################################################
-##########################################################################################
-##########################################################################################
-### read fits to root file
-fitsEx = GetFits()
+#############################################
+### get tracks and clusters
+def Read(event,points):
+   ntrk_gen = 0
+   for i in range(event.pgen.size()):
+      wgt = event.wgtgen[i]
+      pgen = event.pgen[i]
+      ### cut on acceptance
+      if(event.acctrkrec[i]!=1): continue 
+      if(i==0): print("Genr: E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (pgen.E(),pgen.Pt(),pgen.Eta(),pgen.Phi(),pgen.Theta()) )
+      ### loop over points along track (generated)
+      for jxy in range(event.polm_gen[i].GetN()):
+         rgen = [ ROOT.Double(), ROOT.Double(), ROOT.Double() ]
+         event.polm_gen[i].GetPoint(jxy,rgen[0],rgen[1],rgen[2])
+         if(rgen[2]<300): continue
+         # if(rgen[2]==300): can do something with the truth location
+         # if(rgen[2]==310): can do something with the truth location
+         # if(rgen[2]==320): can do something with the truth location
+         # if(rgen[2]==330): can do something with the truth location
+      ### loop over clusters along track (simulated)
+      for jxy in range(event.polm_clusters[i].GetN()):
+         rcls = [ ROOT.Double(), ROOT.Double(), ROOT.Double() ]
+         event.polm_clusters[i].GetPoint(jxy,rcls[0],rcls[1],rcls[2])
+         if(rcls[2]<300): continue
+         if(rcls[2]==330): points["cluster_seed1"].SetNextPoint(rcls[0],rcls[1],rcls[2])
+         if(rcls[2]==320): points["cluster_layr3"].SetNextPoint(rcls[0],rcls[1],rcls[2])
+         if(rcls[2]==310): points["cluster_layr2"].SetNextPoint(rcls[0],rcls[1],rcls[2])
+         if(rcls[2]==300): points["cluster_seed2"].SetNextPoint(rcls[0],rcls[1],rcls[2])
 
+## event loop
+def EventLoop(tree,nmax=0):
+   nevents = tree.GetEntries()
+   print("with %d events" % nevents)
+   n=0 ### init n
+   for event in tree:
+      if(n>nmax): break
+      if(n%10==0 and n>0): print("  processed %d events" % n)
+      Read(event,points)
+      n+=1
+   print("Total events processed: ",n)
+   return nevents
+
+## file and tree
+def Run(tfilename,ttreename):
+   print("getting tree from ",tfilename)
+   tfile = TFile(tfilename,"READ")
+   tree = tfile.Get(ttreename)
+   nevents = EventLoop(tree)
+   return nevents
+
+def draw(name,title,points,suffix):
+   cnv = TCanvas("","",2000,2000)
+   view = TView.CreateView(1)
+   view.ShowAxis()
+   # view.SetRange(-80,-50,0, +80,+50,350)
+   view.SetRange(0,-10,190, +30,+10,340)
+   geom = getgeometry() ### get the geometry from the root file
+   for g in geom: g.Draw()
+   window_wide.Draw("same")
+   window_narr.Draw("same")
+   window_yz.Draw("same")
+   points["cluster_seed1"+suffix].Draw("same")
+   points["cluster_layr3"+suffix].Draw("same")
+   points["cluster_layr2"+suffix].Draw("same")
+   points["cluster_seed2"+suffix].Draw("same")
+   print(title+' --> N clusters:',countpoints(points["cluster_noise"+suffix]))
+   points["cluster_noise"+suffix].Draw("same")
+   cnv.SaveAs(name)
+   rootname = name.replace(".pdf","."+title+".root").replace("(","").replace(")","")
+   cnv.SaveAs(rootname)
+
+
+##########################################################################################
+##########################################################################################
+##########################################################################################
 ### define the data structures to hold clusters and windows
 points = { "cluster_seed1" : TPolyMarker3D(),
            "cluster_seed2" : TPolyMarker3D(),
            "cluster_layr2" : TPolyMarker3D(),
            "cluster_layr3" : TPolyMarker3D(),
+           
+           "cluster_seed1_wide" : TPolyMarker3D(),
+           "cluster_seed2_wide" : TPolyMarker3D(),
+           "cluster_layr2_wide" : TPolyMarker3D(),
+           "cluster_layr3_wide" : TPolyMarker3D(),
+           
+           "cluster_seed1_narr" : TPolyMarker3D(),
+           "cluster_seed2_narr" : TPolyMarker3D(),
+           "cluster_layr2_narr" : TPolyMarker3D(),
+           "cluster_layr3_narr" : TPolyMarker3D(),
            
            "cluster_noise"      : TPolyMarker3D(), ## about 100 tracks per event per side
            "cluster_noise_wide" : TPolyMarker3D(), ## after removing the points not in the wide window
@@ -308,14 +405,13 @@ points = { "cluster_seed1" : TPolyMarker3D(),
            "window_yz"     : TPolyMarker3D(),
 }
 
-### set the signal clusters 
-### TODO: this is not done at this step but I do it for illustration
-points["cluster_seed1"].SetNextPoint(25,0,330)
-points["cluster_layr3"].SetNextPoint(24,0,320) ## would normally be chosen later inside the narrow window
-points["cluster_layr2"].SetNextPoint(23,0,310) ## would normally be chosen later inside the narrow window
-points["cluster_seed2"].SetNextPoint(22,0,300)
+### read fits to root file
+fitsEx = GetFits()
+
+### set the signal clusters
+nevents = Run("../data/root/rec_bppp.root","res")
 for name,marker3d in points.items():
-   if("cluster_seed" in name or "cluster_layer" in name): marker3d.SetMarkerColor(ROOT.kRed)
+   if("cluster_seed" in name or "cluster_layr" in name): marker3d.SetMarkerColor(ROOT.kRed)
 
 ### initialise the noise clusters with 100 clusters
 setnoiseclusters(points["cluster_noise"],NnoiseClusters)
@@ -328,6 +424,10 @@ window_wide = setwidewindow(points["window_wide"],points["cluster_seed1"])
 
 ### discard all clusters which are not in the wide window
 trimwide(points["cluster_noise"],points["cluster_noise_wide"],points["window_wide"],points["window_yz"])
+trimsigwide(points["cluster_seed1"],points["cluster_seed1_wide"],points["window_wide"],points["window_yz"])
+trimsigwide(points["cluster_layr3"],points["cluster_layr3_wide"],points["window_wide"],points["window_yz"])
+trimsigwide(points["cluster_layr2"],points["cluster_layr2_wide"],points["window_wide"],points["window_yz"])
+trimsigwide(points["cluster_seed2"],points["cluster_seed2_wide"],points["window_wide"],points["window_yz"])
 
 ### TODO: choose one cluster in layer 1 as the second seed
 ##
@@ -337,42 +437,28 @@ window_narr = setnarrwindow(points["window_narr"],points["cluster_seed1"],points
 
 ### discard all clusters which are not in the narrow window
 trimnarr(points["cluster_noise_wide"],points["cluster_noise_narr"],points["window_narr"])
+trimsignarr(points["cluster_seed1_wide"],points["cluster_seed1_narr"],points["window_narr"])
+trimsignarr(points["cluster_layr3_wide"],points["cluster_layr3_narr"],points["window_narr"])
+trimsignarr(points["cluster_layr2_wide"],points["cluster_layr2_narr"],points["window_narr"])
+trimsignarr(points["cluster_seed2_wide"],points["cluster_seed2_narr"],points["window_narr"])
 
 ### TODO: check if there are at least 1 cluster in both layer 2 and layer 3 within the narrow window
 ##
 
-### TODO: get the seed 4-momentum
+### get the seed 4-momentum
 pseed = makeseed(points["cluster_seed1"],points["cluster_seed2"])
 
-### TODO: give the seed kinematics and the 4 clusters to the KF and perform the fit 
+### TODO: propagate the seed to the IP via the dipole
 ##
 
+### TODO: give the seed kinematics and the 4 clusters to the KF and perform the fit 
+## 
+
 ### TODO: redo last step for all other clusters in layer 2 and layer 4
+##
 
-
-##########################################
-def draw(name,title,clusters):
-   cnv = TCanvas("","",1200,1200)
-   view = TView.CreateView(1)
-   view.ShowAxis()
-   # view.SetRange(-80,-50,0, +80,+50,350)
-   view.SetRange(0,-10,190, +30,+10,340)
-   geom = getgeometry() ### get the geometry from the root file
-   for g in geom: g.Draw()
-   window_wide.Draw("same")
-   window_narr.Draw("same")
-   window_yz.Draw("same")
-   points["cluster_seed1"].Draw("same")
-   points["cluster_layr3"].Draw("same")
-   points["cluster_layr2"].Draw("same")
-   points["cluster_seed2"].Draw("same")
-   print(title+' --> N clusters:',countpoints(clusters))
-   clusters.Draw("same")
-   cnv.SaveAs(name)
-   rootname = name.replace(".pdf","."+title+".root").replace("(","").replace(")","")
-   cnv.SaveAs(rootname)
-
+### draw
 pdfname = "../output/pdf/seedingdemo.pdf"
-draw(pdfname+"(", "AllNoiseClusters",points["cluster_noise"])
-draw(pdfname,     "WideWinNoiseClusters",points["cluster_noise_wide"])
-draw(pdfname+")", "NarrWinNoiseClusters",points["cluster_noise_narr"])
+draw(pdfname+"(", "AllNoiseClusters",points,"")
+draw(pdfname,     "WideWinNoiseClusters",points,"_wide")
+draw(pdfname+")", "NarrWinNoiseClusters",points,"_narr")

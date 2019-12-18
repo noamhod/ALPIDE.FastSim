@@ -529,7 +529,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
 
    int outN = 100;
 
-   TString process = "trident";  /// trident or bppp or bppp_bkg or trident_bkg
+   TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
 
    /// get the particles from a ttree
    TFile* fIn = new TFile("data/root/raw_"+process+".root","READ");
@@ -569,6 +569,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
    vector<int>             qgen;
    vector<int>             qrec;
    vector<int>             igentrk;
+	vector<TPolyMarker3D*>  polm_clusters;
    vector<TPolyMarker3D*>  polm;
    vector<TPolyLine3D*>    poll;
    vector<TPolyMarker3D*>  polm_gen;
@@ -591,6 +592,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
    tOut->Branch("igentrk",&igentrk);
    tOut->Branch("acctrkgen",&acctrkgen);
    tOut->Branch("acctrkrec",&acctrkrec);
+   tOut->Branch("polm_clusters",&polm_clusters);
    tOut->Branch("polm",&polm);
    tOut->Branch("polm_gen",&polm_gen);
    tOut->Branch("poll_gen",&poll_gen);
@@ -604,13 +606,14 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
    TH1D* h_dxrel = new TH1D("h_dxrel",";(x_{rec}-x_{gen})/x_{gen};Tracks",200,-0.01,+0.01);
  
    /// loop on events
-   for(int iev=0;iev<nev;iev++)
-   // for(int iev=0;iev<nev and iev<10;iev++)
+   // for(int iev=0;iev<nev;iev++)
+   for(int iev=0;iev<nev and iev<10;iev++)
    {
       //// clear
       ngen = 0;    
       nres = 0;
       nrec = 0;
+ 	   for(int i=0;i<(int)polm_clusters.size();++i) delete polm_clusters[i];
  	   for(int i=0;i<(int)polm_gen.size();++i) delete polm_gen[i];
  	   for(int i=0;i<(int)poll_gen.size();++i) delete poll_gen[i];
  	   for(int i=0;i<(int)polm.size();++i)     delete polm[i];
@@ -621,6 +624,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
       qgen.clear();
       qrec.clear();
       igentrk.clear();
+      polm_clusters.clear();
       polm_gen.clear();
       poll_gen.clear();
       polm.clear();
@@ -689,7 +693,21 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
 
          // check truth acceptance
          acctrkgen[igen] = accepttrk(polm_gen,igen);
-
+			
+			// get the reconstructed propagated to the vertex
+			if(acctrkgen[igen])
+			{
+            KMCClusterFwd* cluster1 = det->GetLayer(1)->GetMCCluster();
+            KMCClusterFwd* cluster2 = det->GetLayer(3)->GetMCCluster();
+            KMCClusterFwd* cluster3 = det->GetLayer(5)->GetMCCluster();
+            KMCClusterFwd* cluster4 = det->GetLayer(7)->GetMCCluster();
+			   polm_clusters.push_back(new TPolyMarker3D());
+			   unsigned int trkcounter = polm_clusters.size()-1;
+	  	      polm_clusters[trkcounter]->SetNextPoint(cluster1->GetYLab(),cluster1->GetXLab(),cluster1->GetZLab());
+	  	      polm_clusters[trkcounter]->SetNextPoint(cluster2->GetYLab(),cluster2->GetXLab(),cluster2->GetZLab());
+	  	      polm_clusters[trkcounter]->SetNextPoint(cluster3->GetYLab(),cluster3->GetXLab(),cluster3->GetZLab());
+	  	      polm_clusters[trkcounter]->SetNextPoint(cluster4->GetYLab(),cluster4->GetXLab(),cluster4->GetZLab());
+         }
 
          // get the reconstructed propagated to the vertex 
          KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack(); 
