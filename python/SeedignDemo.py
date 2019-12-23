@@ -40,8 +40,8 @@ NnoiseClusters = 1000
 
 ### histos
 histos = {
-   "h_dxrel":TH1D("h_dxrel",";(x_{rec}-x_{tru})/x_{tru};Tracks",200,-0.01,+0.01),
-   "h_dyrel":TH1D("h_dyrel",";(y_{rec}-y_{tru})/y_{tru};Tracks",200,-0.25,+0.25),
+   "h_dxrel":TH1D("h_dxrel",";(x_{cls}-x_{tru})/x_{tru};Tracks",200,-0.01,+0.01),
+   "h_dyrel":TH1D("h_dyrel",";(y_{cls}-y_{tru})/y_{tru};Tracks",200,-0.25,+0.25),
 }
 
 
@@ -317,16 +317,10 @@ def makeseed(cluster1,cluster2,particles):
    r2 = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
    cluster1.GetPoint(0,r1[0],r1[1],r1[2])
    cluster2.GetPoint(0,r2[0],r2[1],r2[2])
-   
+
    # E1 = GetE(r1[0],4,"electrons") ## energy of the first seed cluster
    # E2 = GetE(r2[0],1,"electrons") ## energy of the second seed cluster
    # E = (E1+E2)/2.
-   # v1 = TVector3()
-   # v2 = TVector3()
-   # v1.SetXYZ(r1[0],r1[1],r1[2])
-   # v2.SetXYZ(r2[0],r2[1],r2[2])
-   # p = p4(v1,v2,E) ## TLorentzVector of the seed
-   # print("Seed: E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (p.E(),p.Pt(),p.Eta(),p.Phi(),p.Theta()) )
    
    x0 = 0
    z0 = zofx(r1,r2,x0)
@@ -357,19 +351,10 @@ def Read(event,points):
       wgt  = event.wgtgen[i]
       pgen = event.pgen[i]
       ### cut on acceptance
-      if(event.acctrkrec[i]!=1): continue 
+      if(event.acctrkgen[i]!=1): continue 
       if(i==0):
          print("Genr: P=%g, E=%g, pT=%g, eta=%g, phi=%g, theta=%g, rapidity=%g" % (pgen.P(),pgen.E(),pgen.Pt(),pgen.Eta(),pgen.Phi(),pgen.Theta(), pgen.Rapidity() ) )
          print("Genr: P=%g, E=%g, px=%g, py=%g, pz=%g" % (pgen.P(),pgen.E(),pgen.Px(),pgen.Py(),pgen.Pz() ) )
-      ### loop over points along track (generated)
-      # for jxy in range(event.polm_gen[i].GetN()):
-      #    rgen = [ ROOT.Double(), ROOT.Double(), ROOT.Double() ]
-      #    event.polm_gen[i].GetPoint(jxy,rgen[0],rgen[1],rgen[2])
-      #    if(rgen[2]<300): continue
-         # if(rgen[2]==300): can do something with the truth location
-         # if(rgen[2]==310): can do something with the truth location
-         # if(rgen[2]==320): can do something with the truth location
-         # if(rgen[2]==330): can do something with the truth location
       ### loop over clusters along track (simulated)
       for jxy in range(event.polm_clusters[i].GetN()):
          rgen = [ ROOT.Double(), ROOT.Double(), ROOT.Double() ]
@@ -379,15 +364,15 @@ def Read(event,points):
          for kxy in range(event.polm_gen[i].GetN()):
             event.polm_gen[i].GetPoint(kxy,rgen[0],rgen[1],rgen[2]) ### the truth track
             if(rgen[2]==rcls[2]): break
-         print("rgen=",rgen)
-         print("rcls=",rcls)
+         # print("rgen=",rgen)
+         # print("rcls=",rcls)
          if(rcls[2]==330): points["cluster_seed1"].SetNextPoint(rcls[0],rcls[1],rcls[2])
          if(rcls[2]==320): points["cluster_layr3"].SetNextPoint(rcls[0],rcls[1],rcls[2])
          if(rcls[2]==310): points["cluster_layr2"].SetNextPoint(rcls[0],rcls[1],rcls[2])
          if(rcls[2]==300): points["cluster_seed2"].SetNextPoint(rcls[0],rcls[1],rcls[2])
          dxrel = (rcls[0]-rgen[0])/rgen[0]
          dyrel = (rcls[1]-rgen[1])/rgen[1]
-         print("dxrel=%g, dyrel=%g" % (dxrel,dyrel) )
+         # print("dxrel=%g, dyrel=%g" % (dxrel,dyrel) )
          histos["h_dxrel"].Fill(dxrel)
          histos["h_dyrel"].Fill(dyrel)
 
@@ -412,6 +397,7 @@ def Run(tfilename,ttreename):
    nevents = EventLoop(tree)
    return nevents
 
+## drawing
 def draw(name,title,points,suffix):
    cnv = TCanvas("","",2000,2000)
    view = TView.CreateView(1)

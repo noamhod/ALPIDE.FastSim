@@ -36,7 +36,7 @@ public:
     int id = r<0 ? 0 : GetAccRegion(r);
     return (id<0) ? fXRes[0] : fXRes[id];
   }
-
+  
   Float_t GetYResId(int i)  const {return fYRes[i];}
   Float_t GetYRes(float r=-1)  const {
     int id = r<0 ? 0 : GetAccRegion(r);

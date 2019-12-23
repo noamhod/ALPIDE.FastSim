@@ -607,7 +607,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
  
    /// loop on events
    // for(int iev=0;iev<nev;iev++)
-   for(int iev=0;iev<nev and iev<10;iev++)
+   for(int iev=0;iev<nev and iev<100;iev++)
    {
       //// clear
       ngen = 0;    
@@ -641,7 +641,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
       
  	   //// get the next entry
  	   tIn->GetEntry(iev);
-      if ((iev%outN)==0) printf("Done %d out of %d\n",iev,nev);
+      if((iev%outN)==0) printf("Done %d out of %d\n",iev,nev);
       int nfakeHits = 0;
  	   TLorentzVector ptmp;
  	   int ngenall = pdgId->size();
@@ -662,6 +662,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
          pgen.push_back(ptmp);
          qgen.push_back(crg);
          acctrkgen.push_back(0);
+			polm_clusters.push_back( new TPolyMarker3D() );
          jrec.push_back(-999);
          pgen[igen].SetXYZM(px->at(igen), py->at(igen), pz->at(igen), meGeV);
          if(pdgId->at(igen)==-11) npositrons ++; // count positrons
@@ -701,12 +702,11 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
             KMCClusterFwd* cluster2 = det->GetLayer(3)->GetMCCluster();
             KMCClusterFwd* cluster3 = det->GetLayer(5)->GetMCCluster();
             KMCClusterFwd* cluster4 = det->GetLayer(7)->GetMCCluster();
-			   polm_clusters.push_back(new TPolyMarker3D());
-			   unsigned int trkcounter = polm_clusters.size()-1;
-	  	      polm_clusters[trkcounter]->SetNextPoint(cluster1->GetYLab(),-cluster1->GetXLab(),cluster1->GetZLab());
-	  	      polm_clusters[trkcounter]->SetNextPoint(cluster2->GetYLab(),-cluster2->GetXLab(),cluster2->GetZLab());
-	  	      polm_clusters[trkcounter]->SetNextPoint(cluster3->GetYLab(),-cluster3->GetXLab(),cluster3->GetZLab());
-	  	      polm_clusters[trkcounter]->SetNextPoint(cluster4->GetYLab(),-cluster4->GetXLab(),cluster4->GetZLab());
+			   // unsigned int trkcounter = polm_clusters.size()-1;
+	  	      polm_clusters[igen]->SetNextPoint(cluster1->GetYLab(),-cluster1->GetXLab(),cluster1->GetZLab());
+	  	      polm_clusters[igen]->SetNextPoint(cluster2->GetYLab(),-cluster2->GetXLab(),cluster2->GetZLab());
+	  	      polm_clusters[igen]->SetNextPoint(cluster3->GetYLab(),-cluster3->GetXLab(),cluster3->GetZLab());
+	  	      polm_clusters[igen]->SetNextPoint(cluster4->GetYLab(),-cluster4->GetXLab(),cluster4->GetZLab());
          }
 
          // get the reconstructed propagated to the vertex 
