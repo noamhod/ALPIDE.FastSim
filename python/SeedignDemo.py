@@ -5,7 +5,7 @@ import subprocess
 import array
 import numpy as np
 import ROOT
-from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TRandom, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
+from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TRandom, TVector2, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
 
 ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptFit(0);
@@ -16,20 +16,33 @@ ROOT.gStyle.SetPadLeftMargin(0.13)
 #############################################
 ### electron mass:
 me = 0.51099895/1000. ### GeV
+me2 = me*me
+cm2m = 1.e-2
 cm2um = 1.e4
 um2cm = 1.e-4
 
+### magnetic field
+B  = 1.4 # Tesla
+LB = 1   # meters
+
 ### geometry:
+zDipoleExit = 202.9
 xDipoleExitMin = +1  ## cm
 xDipoleExitMax = +30 ## cm
 xDipoleExit = (xDipoleExitMax-xDipoleExitMin)/2.
-yDipoleExitMin = -0.05 ## cm
-yDipoleExitMax = +0.05 ## cm
-xAbsMargins = 0.5 # cm
-yAbsMargins = 0.05 # cm
-zDipoleExit = 202.9
+yDipoleExitMin = -0.05 ## cm --> TODO: need tuning
+yDipoleExitMax = +0.05 ## cm --> TODO: need tuning
+xAbsMargins = 0.50 # cm --> TODO: need tuning
+yAbsMargins = 0.05 # cm --> TODO: need tuning
 
-NnoiseClusters = 2000
+### background stuff
+NnoiseClusters = 1000
+
+### histos
+histos = {
+   "h_dxrel":TH1D("h_dxrel",";(x_{rec}-x_{tru})/x_{tru};Tracks",200,-0.01,+0.01),
+   "h_dyrel":TH1D("h_dyrel",";(y_{rec}-y_{tru})/y_{tru};Tracks",200,-0.25,+0.25),
+}
 
 
 #############################################
@@ -91,12 +104,16 @@ def GetE(x,iplane,particles):
    E = fitsEx[PlaneStr(iplane)][particles].Eval(x)
    return E
 
-def rUnit(r1,r2):
+def rUnit2(r1,r2):
+   r = (r2-r1).Unit()
+   return r ## TVector2
+
+def rUnit3(r1,r2):
    r = (r2-r1).Unit()
    return r ## TVector3
 
 def p3(r1,r2,E):
-   r = rUnit(r1,r2)
+   r = rUnit3(r1,r2)
    p = TVector3()
    p.SetXYZ(E*r.X(),E*r.Y(),E*r.Z())
    return p ## TVector3
@@ -135,6 +152,14 @@ def yofz(r1,r2,z):
    b = r1[1]-a*r1[2]
    y = a*z+b
    return y
+   
+def zofx(r1,r2,x):
+   dz = r2[2]-r1[2]
+   dx = r2[0]-r1[0]
+   a = dz/dx
+   b = r1[2]-a*r1[0]
+   z = a*x+b
+   return z
 
 def countpoints(points3d):
    npoints = 0
@@ -286,53 +311,85 @@ def trimsignarr(clusters_sig_wide,clusters_sig_narr,window):
       clusters_sig_wide.GetPoint(i,r[0],r[1],r[2])
       clusters_sig_narr.SetNextPoint(r[0],r[1],r[2])
 
-def makeseed(cluster1,cluster2):
+def makeseed(cluster1,cluster2,particles):
    p = TLorentzVector()
    r1 = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
    r2 = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
    cluster1.GetPoint(0,r1[0],r1[1],r1[2])
    cluster2.GetPoint(0,r2[0],r2[1],r2[2])
-   E1 = GetE(r1[0],4,"electrons") ## energy of the first seed cluster
-   E2 = GetE(r2[0],1,"electrons") ## energy of the second seed cluster
-   E = (E1+E2)/2.
-   v1 = TVector3()
-   v2 = TVector3()
-   v1.SetXYZ(r1[0],r1[1],r1[2])
-   v2.SetXYZ(r2[0],r2[1],r2[2])
-   p = p4(v1,v2,E) ## TLorentzVector of the seed
-   # print("E1=%g, E2=%g" % (E1,E2))
+   
+   # E1 = GetE(r1[0],4,"electrons") ## energy of the first seed cluster
+   # E2 = GetE(r2[0],1,"electrons") ## energy of the second seed cluster
+   # E = (E1+E2)/2.
+   # v1 = TVector3()
+   # v2 = TVector3()
+   # v1.SetXYZ(r1[0],r1[1],r1[2])
+   # v2.SetXYZ(r2[0],r2[1],r2[2])
+   # p = p4(v1,v2,E) ## TLorentzVector of the seed
+   # print("Seed: E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (p.E(),p.Pt(),p.Eta(),p.Phi(),p.Theta()) )
+   
+   x0 = 0
+   z0 = zofx(r1,r2,x0)
+   xExit = xofz(r1,r2,zDipoleExit)*cm2m
+   q = 1 if(particles=="electrons") else -1
+   H = (zDipoleExit-z0)*cm2m
+   R = H*(LB)/xExit + xExit ## look this up in my sides
+   P = 0.3*B*R
+   
+   v1 = TVector2(r1[2],r1[1])
+   v2 = TVector2(r2[2],r2[1])
+   u = rUnit2(v2,v1)
+   uz = u.X()
+   uy = u.Y()
+   px = 0
+   py = P*uy
+   pz = P*uz
+   p.SetPxPyPzE(px,py,pz,math.sqrt(P*P+me2))
    print("Seed: E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (p.E(),p.Pt(),p.Eta(),p.Phi(),p.Theta()) )
+   
    return p
 
 
 #############################################
 ### get tracks and clusters
 def Read(event,points):
-   ntrk_gen = 0
-   for i in range(event.pgen.size()):
-      wgt = event.wgtgen[i]
+   for i in range(event.polm_clusters.size()): ## clusters' vectors are always written out (even if empty) for all gen tracks!
+      wgt  = event.wgtgen[i]
       pgen = event.pgen[i]
       ### cut on acceptance
       if(event.acctrkrec[i]!=1): continue 
-      if(i==0): print("Genr: E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (pgen.E(),pgen.Pt(),pgen.Eta(),pgen.Phi(),pgen.Theta()) )
+      if(i==0):
+         print("Genr: P=%g, E=%g, pT=%g, eta=%g, phi=%g, theta=%g, rapidity=%g" % (pgen.P(),pgen.E(),pgen.Pt(),pgen.Eta(),pgen.Phi(),pgen.Theta(), pgen.Rapidity() ) )
+         print("Genr: P=%g, E=%g, px=%g, py=%g, pz=%g" % (pgen.P(),pgen.E(),pgen.Px(),pgen.Py(),pgen.Pz() ) )
       ### loop over points along track (generated)
-      for jxy in range(event.polm_gen[i].GetN()):
-         rgen = [ ROOT.Double(), ROOT.Double(), ROOT.Double() ]
-         event.polm_gen[i].GetPoint(jxy,rgen[0],rgen[1],rgen[2])
-         if(rgen[2]<300): continue
+      # for jxy in range(event.polm_gen[i].GetN()):
+      #    rgen = [ ROOT.Double(), ROOT.Double(), ROOT.Double() ]
+      #    event.polm_gen[i].GetPoint(jxy,rgen[0],rgen[1],rgen[2])
+      #    if(rgen[2]<300): continue
          # if(rgen[2]==300): can do something with the truth location
          # if(rgen[2]==310): can do something with the truth location
          # if(rgen[2]==320): can do something with the truth location
          # if(rgen[2]==330): can do something with the truth location
       ### loop over clusters along track (simulated)
       for jxy in range(event.polm_clusters[i].GetN()):
+         rgen = [ ROOT.Double(), ROOT.Double(), ROOT.Double() ]
          rcls = [ ROOT.Double(), ROOT.Double(), ROOT.Double() ]
-         event.polm_clusters[i].GetPoint(jxy,rcls[0],rcls[1],rcls[2])
+         event.polm_clusters[i].GetPoint(jxy,rcls[0],rcls[1],rcls[2]) ### the clusters
          if(rcls[2]<300): continue
+         for kxy in range(event.polm_gen[i].GetN()):
+            event.polm_gen[i].GetPoint(kxy,rgen[0],rgen[1],rgen[2]) ### the truth track
+            if(rgen[2]==rcls[2]): break
+         print("rgen=",rgen)
+         print("rcls=",rcls)
          if(rcls[2]==330): points["cluster_seed1"].SetNextPoint(rcls[0],rcls[1],rcls[2])
          if(rcls[2]==320): points["cluster_layr3"].SetNextPoint(rcls[0],rcls[1],rcls[2])
          if(rcls[2]==310): points["cluster_layr2"].SetNextPoint(rcls[0],rcls[1],rcls[2])
          if(rcls[2]==300): points["cluster_seed2"].SetNextPoint(rcls[0],rcls[1],rcls[2])
+         dxrel = (rcls[0]-rgen[0])/rgen[0]
+         dyrel = (rcls[1]-rgen[1])/rgen[1]
+         print("dxrel=%g, dyrel=%g" % (dxrel,dyrel) )
+         histos["h_dxrel"].Fill(dxrel)
+         histos["h_dyrel"].Fill(dyrel)
 
 ## event loop
 def EventLoop(tree,nmax=0):
@@ -376,6 +433,14 @@ def draw(name,title,points,suffix):
    rootname = name.replace(".pdf","."+title+".root").replace("(","").replace(")","")
    cnv.SaveAs(rootname)
 
+def draw2(name,h1,h2):
+   cnv = TCanvas("","",1000,500)
+   cnv.Divide(2,1)
+   cnv.cd(1)
+   h1.Draw()
+   cnv.cd(2)
+   h2.Draw()
+   cnv.SaveAs(name)
 
 ##########################################################################################
 ##########################################################################################
@@ -446,7 +511,7 @@ trimsignarr(points["cluster_seed2_wide"],points["cluster_seed2_narr"],points["wi
 ##
 
 ### get the seed 4-momentum
-pseed = makeseed(points["cluster_seed1"],points["cluster_seed2"])
+pseed = makeseed(points["cluster_seed1"],points["cluster_seed2"],"electrons")
 
 ### TODO: propagate the seed to the IP via the dipole
 ##
@@ -462,3 +527,5 @@ pdfname = "../output/pdf/seedingdemo.pdf"
 draw(pdfname+"(", "AllNoiseClusters",points,"")
 draw(pdfname,     "WideWinNoiseClusters",points,"_wide")
 draw(pdfname+")", "NarrWinNoiseClusters",points,"_narr")
+pdfname = "../output/pdf/seedingdemo_clusters.pdf"
+draw2(pdfname,histos["h_dxrel"],histos["h_dyrel"])

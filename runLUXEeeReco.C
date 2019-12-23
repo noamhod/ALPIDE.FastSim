@@ -703,10 +703,10 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
             KMCClusterFwd* cluster4 = det->GetLayer(7)->GetMCCluster();
 			   polm_clusters.push_back(new TPolyMarker3D());
 			   unsigned int trkcounter = polm_clusters.size()-1;
-	  	      polm_clusters[trkcounter]->SetNextPoint(cluster1->GetYLab(),cluster1->GetXLab(),cluster1->GetZLab());
-	  	      polm_clusters[trkcounter]->SetNextPoint(cluster2->GetYLab(),cluster2->GetXLab(),cluster2->GetZLab());
-	  	      polm_clusters[trkcounter]->SetNextPoint(cluster3->GetYLab(),cluster3->GetXLab(),cluster3->GetZLab());
-	  	      polm_clusters[trkcounter]->SetNextPoint(cluster4->GetYLab(),cluster4->GetXLab(),cluster4->GetZLab());
+	  	      polm_clusters[trkcounter]->SetNextPoint(cluster1->GetYLab(),-cluster1->GetXLab(),cluster1->GetZLab());
+	  	      polm_clusters[trkcounter]->SetNextPoint(cluster2->GetYLab(),-cluster2->GetXLab(),cluster2->GetZLab());
+	  	      polm_clusters[trkcounter]->SetNextPoint(cluster3->GetYLab(),-cluster3->GetXLab(),cluster3->GetZLab());
+	  	      polm_clusters[trkcounter]->SetNextPoint(cluster4->GetYLab(),-cluster4->GetXLab(),cluster4->GetZLab());
          }
 
          // get the reconstructed propagated to the vertex 
