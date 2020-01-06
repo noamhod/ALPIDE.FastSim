@@ -109,7 +109,8 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
     zp[0] = xyz[2];
 	int nz = 0;
     for (int iz=1;iz<nZ;iz++) {
-       if (!tmp.PropagateToZBxByBz( TMath::Min(tmp.GetZ()+step, zMax), step)) break; // for different reasons the propagation may fail
+       if(!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ()+step, zMax), step)) break;
+       // if(!tmp.PropagateToZBxByBz( TMath::Min(tmp.GetZ()+step, zMax), step)) break; // for different reasons the propagation may fail
        tmp.GetXYZ(xyz);
        xp[iz] = xyz[0];
        yp[iz] = xyz[1];
@@ -146,7 +147,8 @@ TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax
     zp[0] = xyz[2];
 	 int nz = 0;
     for(int iz=1;iz<nZ;iz++) {
-       if (!tmp.PropagateToZBxByBz( tmp.GetZ()+zstep, zstep )) break; // for different reasons the propagation may fail
+       // if (!tmp.PropagateToZBxByBz( tmp.GetZ()+zstep, zstep )) break; // for different reasons the propagation may fail
+		 if(!det->PropagateToZBxByBz(&tmp, tmp.GetZ()+zstep, zstep)) break;
        tmp.GetXYZ(xyz);
        xp[iz] = xyz[0];
        yp[iz] = xyz[1];
@@ -529,7 +531,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
 
    int outN = 100;
 
-   TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
+   TString process = "trident";  /// trident or bppp or bppp_bkg or trident_bkg
 
    /// get the particles from a ttree
    TFile* fIn = new TFile("data/root/raw_"+process+".root","READ");
@@ -607,7 +609,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
  
    /// loop on events
    // for(int iev=0;iev<nev;iev++)
-   for(int iev=0;iev<nev and iev<100;iev++)
+   for(int iev=0;iev<nev and iev<10000;iev++)
    {
       //// clear
       ngen = 0;    
