@@ -29,6 +29,7 @@ LB = 1   # meters
 
 ###
 Emax = 17.5 # GeV
+Emin = 0.5 # GeV
 
 ### geometry:
 zDipoleExit = 202.9
@@ -544,7 +545,7 @@ def seed3dfitSVD(name,r1,r2,r3,r4):
    g.Draw("p0")
    lfit.Draw("smae")
    cnv.SaveAs(name)   
-   return dd ## a 1D array of the data singular values
+   return linepts, dd ## dd is a 1D array of the data singular values
    
    
 def seed2dfit(name,r1,r2,r3,r4):
@@ -695,12 +696,12 @@ histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks
            
            "h_seed_resE":  TH1D("seed_resE", ";(E_{seed}-E_{gen})/E_{gen};Tracks",    100,-3,+3),
            "h_seed_resPz": TH1D("seed_resPz",";(Pz_{seed}-Pz_{gen})/Pz_{gen};Tracks", 100,-3,+3), 
-           "h_seed_resPy": TH1D("seed_resPy",";(Py_{seed}-Py_{gen})/Py_{gen};Tracks", 100,-5,+5),
+           "h_seed_resPy": TH1D("seed_resPy",";(Py_{seed}-Py_{gen})/Py_{gen};Tracks", 100,-10,+10),
            
-           "h_N_signal":             TH1D("N_signal",             ";Track multiplicity;Events", 75,0,150),
-           "h_N_all_seeds":          TH1D("N_all_seeds",          ";Track multiplicity;Events", 75,0,150),
-           "h_N_matched_seeds":      TH1D("N_matched_seeds",      ";Track multiplicity;Events", 75,0,150),
-           "h_N_good_seeds":         TH1D("N_good_seeds",         ";Track multiplicity;Events", 75,0,150),
+           "h_N_signal":        TH1D("N_signal",        ";Track multiplicity;Events", 40,30,190),
+           "h_N_all_seeds":     TH1D("N_all_seeds",     ";Track multiplicity;Events", 40,30,190),
+           "h_N_matched_seeds": TH1D("N_matched_seeds", ";Track multiplicity;Events", 40,30,190),
+           "h_N_good_seeds":    TH1D("N_good_seeds",    ";Track multiplicity;Events", 40,30,190),
 }
 
 pdfname = "../output/pdf/seedingdemo.pdf"
@@ -879,10 +880,6 @@ for event in intree:
                issiguniq = (issig and trkid!="mult")
                if(issiguniq): Nmatched += 1
                
-               # print("r1=",r1)
-               # print("r2=",r2)
-               # print("r3=",r3)
-               # print("r4=",r4)
                # print("Seed: IsSig=%g, TrkIds={%g,%g,%g,%g} --> E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (issig,t1,t2,t3,t4,pseed.E(),pseed.Pt(),pseed.Eta(),pseed.Phi(),pseed.Theta()) )
 
                ### two independent 2d fits
@@ -905,8 +902,17 @@ for event in intree:
                   histos["h_residuals_yz_bkg"].Fill(res_yz)
                   
                ### a single 3d fit SVD
-               dd = seed3dfitSVD(pdfname,r1,r2,r3,r4)
-               # print("dd=",dd)
+               lfitpts, dd = seed3dfitSVD(pdfname,r1,r2,r3,r4)
+               
+               ### set again the pseed according to lfit
+               cluster1 = TPolyMarker3D()
+               cluster2 = TPolyMarker3D()
+               cluster1.SetNextPoint(lfitpts[0][0],lfitpts[0][1],lfitpts[0][2])
+               cluster2.SetNextPoint(lfitpts[1][0],lfitpts[1][1],lfitpts[1][2])
+               pseed = makeseed(cluster2,cluster1,0,0,particlename)
+               if(pseed.E()>Emax or pseed.E()<Emin): continue
+               
+               ### quality
                if(issiguniq):
                   histos["h_svd_dd0_sig"].Fill(dd[0])
                   histos["h_svd_dd1_sig"].Fill(dd[1])
@@ -920,6 +926,8 @@ for event in intree:
                if(not isgood): continue
                Ngood += 1
                
+               
+               ### get the generated matched track momentum
                pgen = TLorentzVector()
                igen = -1
                for k in range(iGen.size()):
