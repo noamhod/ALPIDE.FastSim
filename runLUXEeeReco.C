@@ -540,7 +540,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
 
    int outN = 100;
 
-   TString process = "trident";  /// trident or bppp or bppp_bkg or trident_bkg
+   TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
 	if(process=="trident") resetToTridentGeometry();
 
    /// get the particles from a ttree

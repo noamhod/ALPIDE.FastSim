@@ -757,13 +757,16 @@ histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks
            "h_seed_resPz": TH1D("seed_resPz",";(Pz_{seed}-Pz_{gen})/Pz_{gen};Tracks", 100,-3,+3), 
            "h_seed_resPy": TH1D("seed_resPy",";(Py_{seed}-Py_{gen})/Py_{gen};Tracks", 100,-10,+10),
            
-           "h_seed_resE_vs_x"  : TH2D("seed_resE_vs_x",  ";x;(E_{seed}-E_{gen})/E_{gen};Tracks",     100,detXmin,detXmax, 100,-5,+5),
-           "h_seed_resPy_vs_x" : TH2D("seed_resPy_vs_x", ";x;(Py_{seed}-Py_{gen})/Py_{gen};Tracks",  100,detXmin,detXmax, 100,-10,+10),
+           "h_seed_resE_vs_x"  : TH2D("seed_resE_vs_x",  ";x;(E_{seed}-E_{gen})/E_{gen};Tracks",    100,detXmin,detXmax, 100,-5,+5),
+           "h_seed_resPy_vs_x" : TH2D("seed_resPy_vs_x", ";x;(Py_{seed}-Py_{gen})/Py_{gen};Tracks", 100,detXmin,detXmax, 100,-10,+10),
            
            "h_N_sigacc":        TH1D("N_sigacc",        ";Track multiplicity;Events", 40,30,190),
            "h_N_all_seeds":     TH1D("N_all_seeds",     ";Track multiplicity;Events", 40,30,190),
            "h_N_matched_seeds": TH1D("N_matched_seeds", ";Track multiplicity;Events", 40,30,190),
            "h_N_good_seeds":    TH1D("N_good_seeds",    ";Track multiplicity;Events", 40,30,190),
+           
+           "h_seeding_score": TH1D("h_seeding_score", ";N_{seeds}^{matched}/N_{signa}^{in.acc} [%];Events", 20,91,101),
+           "h_seeding_pool":  TH1D("h_seeding_pool",  ";N_{seeds}^{all}/N_{signa}^{in.acc} [%];Events", 50,90,310),
 }
 
 pdfname = "../output/pdf/seedingdemo_"+proc+".pdf"
@@ -868,8 +871,8 @@ for event in intree:
       for layer in layers:
          isides = [0,1]
          if(proc=="trident"): isides = [0]
-         if(proc=="bppp" and side=="e+"): isides = [0]
-         if(proc=="bppp" and side=="e-"): isides = [1]
+         if(proc=="bppp" and sides=="e+"): isides = [0]
+         if(proc=="bppp" and sides=="e-"): isides = [1]
          for side in isides:
             x = 0
             if(side==0): x = rnd.Uniform(xPsideL,xPsideR)
@@ -1055,11 +1058,14 @@ for event in intree:
    histos["h_N_matched_seeds"].Fill(Nmatched)       
    histos["h_N_good_seeds"].Fill(Ngood)       
    
+   histos["h_seeding_score"].Fill(Nmatched/Nsigacc*100)
+   histos["h_seeding_pool"].Fill(Nseeds/Nsigacc*100)
+   
    if(dodraw):
       cnv = TCanvas("","",2000,2000)
       cnv.SaveAs(pdfname+")")
    print("Event: %g --> Nsigall=%g, Nsigacc=%g, Nseeds=%g, Nmatched=%g, Ngood=%g --> Seeds matching performance: Nmatched/Nsigacc=%5.1f%%" % (n,Nsigall,Nsigacc,Nseeds,Nmatched,Ngood,Nmatched/Nsigacc*100))
-   # quit()
+
    tT.Fill()
    if(n%10==0 and n>0): print("  processed %d events" % n)
    n+=1
@@ -1119,14 +1125,19 @@ cnv.cd(1); histos["h_seed_resE"].Draw("hist")
 cnv.cd(2); histos["h_seed_resPy"].Draw("hist")
 cnv.cd(3); histos["h_seed_resE_vs_x"].Draw("col")
 cnv.cd(4); histos["h_seed_resPy_vs_x"].Draw("col")
-
 cnv.SaveAs("../output/pdf/seedsres_"+proc+".pdf")
 
-cnv = TCanvas("","",1000,1000)
+cnv = TCanvas("","",1500,500)
+cnv.Divide(3,1)
+cnv.cd(1)
 histos["h_N_sigacc"].SetLineColor(ROOT.kBlack); histos["h_N_sigacc"].Draw()
 histos["h_N_all_seeds"].SetLineColor(ROOT.kBlue); histos["h_N_all_seeds"].Draw("same")
 histos["h_N_matched_seeds"].SetLineColor(ROOT.kGreen); histos["h_N_matched_seeds"].Draw("same")
 histos["h_N_good_seeds"].SetLineColor(ROOT.kRed); histos["h_N_good_seeds"].Draw("same")
+cnv.cd(2)
+histos["h_seeding_pool"].Draw("hist")
+cnv.cd(3)
+histos["h_seeding_score"].Draw("hist")
 cnv.SaveAs("../output/pdf/seedsmult_"+proc+".pdf")
 
 tF.cd()
