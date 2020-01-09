@@ -6,6 +6,19 @@ import array
 import numpy as np
 import ROOT
 from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TF2, TGraph, TGraph2D, TRandom, TVector2, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
+import argparse
+parser = argparse.ArgumentParser(description='analysis.py...')
+parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
+parser.add_argument('-s', metavar='sides',   required=False, help='detector side [e+, e-, e+e-]')
+parser.add_argument('-e', metavar='energy',  required=False, help='beam energy')
+argus = parser.parse_args()
+proc  = argus.p
+sides = "e+"
+if(argus.s is not None): sides = argus.s
+if(proc=="trident" and "e-" in sides):
+   print("ERROR: do not run tracking in the electron side for trident")
+   quit()
+
 
 ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptFit(0);
@@ -16,6 +29,8 @@ ROOT.gStyle.SetPadLeftMargin(0.13)
 ROOT.gErrorIgnoreLevel = ROOT.kError
 
 #############################################
+NeventsToDraw = 10
+
 ### electron mass:
 me = 0.51099895/1000. ### GeV
 me2 = me*me
@@ -27,19 +42,39 @@ um2cm = 1.e-4
 B  = 1.4 # Tesla
 LB = 1   # meters
 
-###
-Emax = 17.5 # GeV
-Emin = 0.5 # GeV
+### possible energies 
+Emax = 17.5 if(proc=="trident") else 16 # GeV
+Emin = 1.00 if(proc=="trident") else 2 # GeV
 
 ### geometry:
 zDipoleExit = 202.9
-xDipoleExitMinAbs = 1  ## cm
-xDipoleExitMaxAbs = 30 ## cm
-xDipoleExit = (xDipoleExitMaxAbs-xDipoleExitMinAbs)/2.
+xDipoleExitMinAbs = 1  ## cm --> TODO: need tuning
+xDipoleExitMaxAbs = 30 ## cm --> TODO: need tuning
+xDipoleExitAbs = (xDipoleExitMaxAbs-xDipoleExitMinAbs)/2.
 yDipoleExitMin = -0.05 ## cm --> TODO: need tuning
 yDipoleExitMax = +0.05 ## cm --> TODO: need tuning
 xAbsMargins = 0.025 # cm --> TODO: need tuning
-yAbsMargins = 0.025 # cm --> TODO: need tuning
+yAbsMargins = 0.025 if(proc=="bppp") else 0.1 # cm --> TODO: need tuning
+
+### stave geometry
+Hstave    = 1.5  # cm
+Lstave    = 27 if(proc=="bppp") else 50 # cm
+Rbeampipe = 4  if(proc=="bppp") else 14 # cm
+xPsideL = -Rbeampipe-Lstave # = -31
+xPsideR = -Rbeampipe        # = -4
+xEsideL = +Rbeampipe        # = +4
+xEsideR = +Rbeampipe+Lstave # = +31
+yUp = +Hstave/2.        # = +0.75
+yDn = -Hstave/2.        # = -0.75
+
+### for the histogram
+detXmin = xPsideL
+detXmax = xEsideR
+if(proc=="trident"): detXmax = xPsideR
+if(proc=="bppp" and sides=="e+"): detXmax = xPsideR
+if(proc=="bppp" and sides=="e-"): detXmin = xEsideL
+
+
 
 ### background stuff
 NnoiseClusters = 100
@@ -54,20 +89,8 @@ histos = {
 
 
 #############################################
-def GetFits():
-   finname = "../output/root/fits_E_vs_x.root"
-   tf = TFile(finname,"READ")
-   fitsEx = {
-              "Dipole":{"electrons":tf.Get("Ele_EofX0"), "positrons":tf.Get("Pos_EofX0")},
-              "Layer1":{"electrons":tf.Get("Ele_EofX1"), "positrons":tf.Get("Pos_EofX1")},
-              "Layer2":{"electrons":tf.Get("Ele_EofX2"), "positrons":tf.Get("Pos_EofX2")},
-              "Layer3":{"electrons":tf.Get("Ele_EofX3"), "positrons":tf.Get("Pos_EofX3")},
-              "Layer4":{"electrons":tf.Get("Ele_EofX4"), "positrons":tf.Get("Pos_EofX4")},
-            }
-   return fitsEx
-
 def getgeometry(dipole=False):
-   tfile = TFile("../data/root/geometry.root","READ")
+   tfile = TFile("../data/root/"+proc+"_geometry.root","READ")
    geometry = [ tfile.Get("TPolyLine3D;9"), tfile.Get("TPolyLine3D;8"),
               tfile.Get("TPolyLine3D;7"), tfile.Get("TPolyLine3D;6"),
               tfile.Get("TPolyLine3D;5"), tfile.Get("TPolyLine3D;4"),
@@ -75,42 +98,54 @@ def getgeometry(dipole=False):
    if(dipole): geometry.append(tfile.Get("TPolyLine3D;1"))
    return geometry
 
-def PlaneStr(i):
-   if  (i==0): return "Dipole"
-   elif(i==1): return "Layer1"
-   elif(i==2): return "Layer2"
-   elif(i==3): return "Layer3"
-   elif(i==4): return "Layer4"
-   print("ERROR: unsupported plane index:",i)
-   quit()
-   return ""
+# def GetFits():
+#    finname = "../output/root/fits_E_vs_x.root"
+#    tf = TFile(finname,"READ")
+#    fitsEx = {
+#               "Dipole":{"electrons":tf.Get("Ele_EofX0"), "positrons":tf.Get("Pos_EofX0")},
+#               "Layer1":{"electrons":tf.Get("Ele_EofX1"), "positrons":tf.Get("Pos_EofX1")},
+#               "Layer2":{"electrons":tf.Get("Ele_EofX2"), "positrons":tf.Get("Pos_EofX2")},
+#               "Layer3":{"electrons":tf.Get("Ele_EofX3"), "positrons":tf.Get("Pos_EofX3")},
+#               "Layer4":{"electrons":tf.Get("Ele_EofX4"), "positrons":tf.Get("Pos_EofX4")},
+#             }
+#    return fitsEx
 
-def GetE(x,iplane,particles):
-   if(iplane==0):
-      if(abs(x)<1):
-         print("ERROR: |x|<1 for iplane=0:",x)
-         quit()
-      if(abs(x)>30):
-         print("ERROR: |x|>30 for iplane=0:",x)
-         quit()
-   else:   
-      if(abs(x)<4):
-         print("ERROR: |x|<4 for iplane>0:",x)
-         quit()
-      if(abs(x)>75):
-         print("ERROR: |x|>75 for iplane>0:",x)
-         quit()
-   if(particles!="electrons" and particles!="positrons"):
-      print("ERROR: particles string unsuppoerted:",particles)
-      quit()
-   if(particles=="electrons" and x<0):
-      print("ERROR: electrons muxt come at positive x")
-      quit()
-   if(particles=="positrons" and x>0):
-      print("ERROR: positrons muxt come at negative x")
-      quit()
-   E = fitsEx[PlaneStr(iplane)][particles].Eval(x)
-   return E
+# def PlaneStr(i):
+#    if  (i==0): return "Dipole"
+#    elif(i==1): return "Layer1"
+#    elif(i==2): return "Layer2"
+#    elif(i==3): return "Layer3"
+#    elif(i==4): return "Layer4"
+#    print("ERROR: unsupported plane index:",i)
+#    quit()
+#    return ""
+
+# def GetE(x,iplane,particles):
+#    if(iplane==0):
+#       if(abs(x)<1):
+#          print("ERROR: |x|<1 for iplane=0:",x)
+#          quit()
+#       if(abs(x)>30):
+#          print("ERROR: |x|>30 for iplane=0:",x)
+#          quit()
+#    else:
+#       if(abs(x)<4):
+#          print("ERROR: |x|<4 for iplane>0:",x)
+#          quit()
+#       if(abs(x)>75):
+#          print("ERROR: |x|>75 for iplane>0:",x)
+#          quit()
+#    if(particles!="electrons" and particles!="positrons"):
+#       print("ERROR: particles string unsuppoerted:",particles)
+#       quit()
+#    if(particles=="electrons" and x<0):
+#       print("ERROR: electrons muxt come at positive x")
+#       quit()
+#    if(particles=="positrons" and x>0):
+#       print("ERROR: positrons muxt come at negative x")
+#       quit()
+#    E = fitsEx[PlaneStr(iplane)][particles].Eval(x)
+#    return E
 
 def rUnit2(r1,r2):
    r = (r2-r1).Unit()
@@ -132,18 +167,18 @@ def p4(r1,r2,E):
    tlv.SetXYZM(p.Px(),p.Py(),p.Pz(),me)
    return tlv ## TLorentzVector
 
-def setnoiseclusters(noiseclusters,N):
-   rnd = TRandom()
-   rnd.SetSeed()
-   for i in range(N):
-      x = rnd.Uniform(4,31)
-      y = rnd.Uniform(-0.75,+0.75)
-      z = rnd.Integer(4)
-      if(z==0): z = 300
-      if(z==1): z = 310
-      if(z==2): z = 320
-      if(z==3): z = 330
-      noiseclusters.SetNextPoint(x,y,z)
+# def setnoiseclusters(noiseclusters,N):
+#    rnd = TRandom()
+#    rnd.SetSeed()
+#    for i in range(N):
+#       x = rnd.Uniform(4,31)
+#       y = rnd.Uniform(-0.75,+0.75)
+#       z = rnd.Integer(4)
+#       if(z==0): z = 300
+#       if(z==1): z = 310
+#       if(z==2): z = 320
+#       if(z==3): z = 330
+#       noiseclusters.SetNextPoint(x,y,z)
 
 def xofz(r1,r2,z):
    dz = r2[2]-r1[2]
@@ -209,11 +244,11 @@ def getyzwindow(cluster,i):
    window_pts.SetNextPoint(x1,y1min,z1)
    window_pts.SetNextPoint(x1,y1max,z1)
    if(particles=="electrons"): 
-      window_pts.SetNextPoint(xDipoleExit,yDipoleExitMax,zDipoleExit)
-      window_pts.SetNextPoint(xDipoleExit,yDipoleExitMin,zDipoleExit)
+      window_pts.SetNextPoint(xDipoleExitAbs,yDipoleExitMax,zDipoleExit)
+      window_pts.SetNextPoint(xDipoleExitAbs,yDipoleExitMin,zDipoleExit)
    else:
-      window_pts.SetNextPoint(-xDipoleExit,yDipoleExitMax,zDipoleExit)
-      window_pts.SetNextPoint(-xDipoleExit,yDipoleExitMin,zDipoleExit)
+      window_pts.SetNextPoint(-xDipoleExitAbs,yDipoleExitMax,zDipoleExit)
+      window_pts.SetNextPoint(-xDipoleExitAbs,yDipoleExitMin,zDipoleExit)
    window_lin = windowline(window_pts)
    window_lin.SetLineWidth(1)
    window_lin.SetLineColor(ROOT.kBlack)
@@ -224,21 +259,22 @@ def getwidewindow(cluster,i):
    particles = "electrons" if(x1>0) else "positrons"
    x1min = 0
    x1max = 0
-   if(particles=="electrons"): 
-      x1min = x1-xAbsMargins if((x1-xAbsMargins)>4)  else 4  ## must be within stave volume
-      x1max = x1+xAbsMargins if((x1+xAbsMargins)<31) else 31 ## must be within stave volume
-   else:
-      x1min = x1-xAbsMargins if((x1-xAbsMargins)>-31) else -31 ## must be within stave volume
-      x1max = x1+xAbsMargins if((x1+xAbsMargins)<-4)  else -4  ## must be within stave volume
    window_pts = TPolyMarker3D()
-   window_pts.SetNextPoint(x1min,y1,z1)                   ## top left
-   window_pts.SetNextPoint(x1max,y1,z1)                   ## top right
    if(particles=="electrons"): 
+      x1min = x1-xAbsMargins if((x1-xAbsMargins)>xEsideL) else xEsideL ## must be within stave volume
+      x1max = x1+xAbsMargins if((x1+xAbsMargins)<xEsideR) else xEsideR ## must be within stave volume
+      window_pts.SetNextPoint(x1min,y1,z1) ## top left
+      window_pts.SetNextPoint(x1max,y1,z1) ## top right
       window_pts.SetNextPoint(xDipoleExitMaxAbs,y1,zDipoleExit) ## bottom right
       window_pts.SetNextPoint(xDipoleExitMinAbs,y1,zDipoleExit) ## bottom left
    else:
+      x1min = x1-xAbsMargins if((x1-xAbsMargins)>xPsideL) else xPsideL ## must be within stave volume
+      x1max = x1+xAbsMargins if((x1+xAbsMargins)<xPsideR) else xPsideR ## must be within stave volume
+      window_pts.SetNextPoint(x1min,y1,z1) ## top left
+      window_pts.SetNextPoint(x1max,y1,z1) ## top right
       window_pts.SetNextPoint(-xDipoleExitMinAbs,y1,zDipoleExit) ## bottom right
-      window_pts.SetNextPoint(-xDipoleExitMinAbs,y1,zDipoleExit) ## bottom left
+      window_pts.SetNextPoint(-xDipoleExitMaxAbs,y1,zDipoleExit) ## bottom left
+  
    window_lin = windowline(window_pts)
    window_lin.SetLineWidth(1)
    window_lin.SetLineColor(ROOT.kBlack)
@@ -285,7 +321,7 @@ def isinwindowxz(points,i,window):
    ### get the test point
    rTest = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
    points.GetPoint(i,rTest[0],rTest[1],rTest[2])
-   if(rTest[0]<1): return False
+   if(abs(rTest[0])<1): return False
    ### get the window x extremes at zTest
    xmin,xmax = getxminmax(window,rTest[2])
    if(rTest[0]>=xmin and rTest[0]<=xmax): return True
@@ -295,10 +331,9 @@ def isinwindowyz(points,i,window):
    ### get the test point
    rTest = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
    points.GetPoint(i,rTest[0],rTest[1],rTest[2])
-   if(rTest[0]<1): return False
+   if(abs(rTest[0])<1): return False
    ### get the window x extremes at zTest
    ymin,ymax = getyminmax(window,rTest[2])
-   # print("z=%g: y=%g --> ymin=%g, ymax=%g" % (rTest[2],rTest[1],ymin,ymax))
    if(rTest[1]>=ymin and rTest[1]<=ymax): return True
    return False
    
@@ -324,8 +359,6 @@ def trimnarr(points_wide,points_narr,window):
          if(not accept): continue
          r = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
          points_wide["Cls"][layer].GetPoint(i,r[0],r[1],r[2])
-         # if(isel(r[0]) and r[0]>1.001*xpivot):     continue
-         # if(not isel(r[0]) and r[0]<1.001*xpivot): continue
          points_narr["Cls"][layer].SetNextPoint(r[0],r[1],r[2])
          points_narr["IsSig"][layer].append(points_wide["IsSig"][layer][i])
          points_narr["TrkId"][layer].append(points_wide["TrkId"][layer][i])
@@ -336,10 +369,6 @@ def makeseed(cluster1,cluster2,i1,i2,particles):
    r2 = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
    cluster1.GetPoint(i1,r1[0],r1[1],r1[2])
    cluster2.GetPoint(i2,r2[0],r2[1],r2[2])
-
-   # E1 = GetE(r1[0],4,"electrons") ## energy of the first seed cluster
-   # E2 = GetE(r2[0],1,"electrons") ## energy of the second seed cluster
-   # E = (E1+E2)/2.
    
    x0 = 0
    z0 = zofx(r1,r2,x0)
@@ -413,12 +442,15 @@ def getNnon0(clusters):
       N += 1
    return N
    
-def draw(name,points,window_yz=None,window_xz=None):
+def draw(name,points,dodraw,particles="",window_yz=None,window_xz=None):
+   if(not dodraw): return
    cnv = TCanvas("","",2000,2000)
    view = TView.CreateView(1)
    view.ShowAxis()
    # view.SetRange(-80,-50,0, +80,+50,350)
-   view.SetRange(0,-10,190, +30,+10,340)
+   if  (particles=="electrons"): view.SetRange(0,-10,190, xEsideR,+10,340)
+   elif(particles=="positrons"): view.SetRange(xPsideL,-10,190, 0,+10,340)
+   else:                         view.SetRange(xPsideL,-10,190, xEsideR,+10,340)
    geom = getgeometry() ### get the geometry from the root file
    for g in geom: g.Draw()
    if(window_yz is not None): window_yz.Draw("same")
@@ -437,7 +469,7 @@ def line3d(z,m_xz,c_xz,m_yz,c_yz):
    y = (z - c_yz)/m_yz
    return x,y
 
-def seed3dfit(name,r1,r2,r3,r4):
+def seed3dfit(name,r1,r2,r3,r4,dodraw):
    g = TGraph2D()
    g.SetMarkerSize(3)
    g.SetMarkerStyle(20)
@@ -449,7 +481,7 @@ def seed3dfit(name,r1,r2,r3,r4):
    g.SetPoint(3,r4[2],r4[1],r4[0])
    g.GetXaxis().SetRangeUser(290,340)
    g.GetYaxis().SetRangeUser(-0.8,+0.8)
-   g.GetZaxis().SetRangeUser(0,30)
+   g.GetZaxis().SetRangeUser(0 if(isel(r1[0])) else xPsideL, xEsideR if(isel(r1[0])) else 0 )
    
    x = np.array([r1[0],r2[0],r3[0],r4[0]])
    y = np.array([r1[1],r2[1],r3[1],r4[1]])
@@ -469,28 +501,27 @@ def seed3dfit(name,r1,r2,r3,r4):
    result_yz = np.linalg.lstsq(A_yz, z,rcond=None)
    m_yz, c_yz = result_yz[0]
    residuals_yz = result_yz[1]
-   # print("residuals {xz,yz}={%g,%g}" % (residuals_xz,residuals_yz))
 
-   # zz = np.linspace(290,340)
-   zz = np.array([300,310,320,330])
-   # xx,yy = lin(zz)
-   xx,yy = line3d(zz, m_xz,c_xz,m_yz,c_yz)
-   lfit = TPolyLine3D()
-   for i in range(4):
-      # print("[%g] x=%g, y=%g --> z=%g" % (i,xx[i],yy[i],zz[i]))
-      lfit.SetNextPoint(zz[i],yy[i],xx[i])
-   lfit.SetLineColor(ROOT.kBlue)
+   if(dodraw):
+      zz = np.array([300,310,320,330])
+      xx,yy = line3d(zz, m_xz,c_xz,m_yz,c_yz)
+      lfit = TPolyLine3D()
+      for i in range(4):
+         lfit.SetNextPoint(zz[i],yy[i],xx[i])
+      lfit.SetLineColor(ROOT.kBlue)
+      cnv = TCanvas("","",2000,2000)
+      view = TView.CreateView(1)
+      xviewmin = 0 if(isel(r1[0])) else xPsideL
+      xviewmax = xEsideR if(isel(r1[0])) else 0
+      view.SetRange(290,-0.8, xviewmin , 340,+0.8,xviewmax)
+      view.ShowAxis()
+      g.Draw("p0")
+      lfit.Draw("smae")
+      cnv.SaveAs(name)
    
-   cnv = TCanvas("","",2000,2000)
-   view = TView.CreateView(1)
-   view.SetRange(290,-0.8,0, 340,+0.8,30)
-   view.ShowAxis()
-   g.Draw("p0")
-   lfit.Draw("smae")
-   cnv.SaveAs(name)   
    return residuals_xz,residuals_yz
 
-def seed3dfitSVD(name,r1,r2,r3,r4):
+def seed3dfitSVD(name,r1,r2,r3,r4,dodraw):
    g = TGraph2D()
    g.SetMarkerSize(3)
    g.SetMarkerStyle(20)
@@ -502,7 +533,7 @@ def seed3dfitSVD(name,r1,r2,r3,r4):
    g.SetPoint(3,r4[2],r4[1],r4[0])
    g.GetXaxis().SetRangeUser(290,340)
    g.GetYaxis().SetRangeUser(-0.8,+0.8)
-   g.GetZaxis().SetRangeUser(0,30)
+   g.GetZaxis().SetRangeUser( 0 if(isel(r1[0])) else xPsideL, xEsideR if(isel(r1[0])) else 0 )
    
    x = np.array([r1[0],r2[0],r3[0],r4[0]])
    y = np.array([r1[1],r2[1],r3[1],r4[1]])
@@ -528,27 +559,30 @@ def seed3dfitSVD(name,r1,r2,r3,r4):
    # and we want it to have mean 0 (like the points we did
    # the svd on). Also, it's a straight line, so we only need 2 points.
    # linepts = vv[0] * np.mgrid[-7:7:2j][:, np.newaxis]
-   linepts = vv[0] * np.mgrid[-20:20:2j][:, np.newaxis]
+   linepts = vv[0] * np.mgrid[-50:50:2j][:, np.newaxis]
 
    # shift by the mean to get the line in the right place
    linepts += datamean
    
-   lfit = TPolyLine3D()
-   for point in linepts:
-      lfit.SetNextPoint(point[2],point[1],point[0])
-   lfit.SetLineColor(ROOT.kBlue)
+   if(dodraw):
+      lfit = TPolyLine3D()
+      for point in linepts:
+         lfit.SetNextPoint(point[2],point[1],point[0])
+      lfit.SetLineColor(ROOT.kBlue)
+      cnv = TCanvas("","",2000,2000)
+      view = TView.CreateView(1)
+      xviewmin = 0 if(isel(r1[0])) else xPsideL
+      xviewmax = xEsideR if(isel(r1[0])) else 0
+      view.SetRange(290,-0.8, xviewmin , 340,+0.8,xviewmax)
+      view.ShowAxis()
+      g.Draw("p0")
+      lfit.Draw("smae")
+      cnv.SaveAs(name)
    
-   cnv = TCanvas("","",2000,2000)
-   view = TView.CreateView(1)
-   view.SetRange(290,-0.8,0, 340,+0.8,30)
-   view.ShowAxis()
-   g.Draw("p0")
-   lfit.Draw("smae")
-   cnv.SaveAs(name)   
    return linepts, dd ## dd is a 1D array of the data singular values
    
    
-def seed2dfit(name,r1,r2,r3,r4):
+def seed2dfit(name,r1,r2,r3,r4,dodraw):
    gxyz = TGraph2D()
    gxyz.SetMarkerSize(1)
    gxyz.SetMarkerStyle(24)
@@ -559,7 +593,7 @@ def seed2dfit(name,r1,r2,r3,r4):
    gxyz.SetPoint(3,r4[2],r4[1],r4[0])
    gxyz.GetXaxis().SetRangeUser(290,340)
    gxyz.GetYaxis().SetRangeUser(-0.8,+0.8)
-   gxyz.GetZaxis().SetRangeUser(0,30)
+   gxyz.GetZaxis().SetRangeUser( 0 if(isel(r1[0])) else xPsideL, xEsideR if(isel(r1[0])) else 0 )
       
    gxz = TGraph()
    gxz.SetMarkerSize(1)
@@ -570,7 +604,8 @@ def seed2dfit(name,r1,r2,r3,r4):
    gxz.SetPoint(2,r3[2],r3[0])
    gxz.SetPoint(3,r4[2],r4[0])
    gxz.GetXaxis().SetRangeUser(290,340)
-   gxz.GetYaxis().SetRangeUser(0,+30)
+   if(isel(r1[0])): gxz.GetYaxis().SetRangeUser(0,xEsideR)
+   else:            gxz.GetYaxis().SetRangeUser(xPsideL,0)
    
    gyz = TGraph()
    gyz.SetMarkerSize(1)
@@ -592,26 +627,28 @@ def seed2dfit(name,r1,r2,r3,r4):
    fitr_yz = gyz.Fit(fyz,"Q")
    fitf_yz = gyz.FindObject("fyz")
    
-   lfit = TPolyLine3D()
-   for z in [300,310,320,330]:
-      x = fitf_xz.Eval(z)
-      y = fitf_yz.Eval(z)
-      lfit.SetNextPoint(z,y,x)
-   lfit.SetLineColor(ROOT.kBlue)
-   
-   cnv = TCanvas("","",1500,500)
-   cnv.Divide(3,1)
-   cnv.cd(1)
-   view = TView.CreateView(1)
-   view.SetRange(290,-0.8,0, 340,+0.8,30)
-   view.ShowAxis()
-   gxyz.Draw("p0")
-   lfit.Draw("smae")
-   cnv.cd(2)
-   gxz.Draw()
-   cnv.cd(3)
-   gyz.Draw()
-   cnv.SaveAs(name)
+   if(dodraw):
+      lfit = TPolyLine3D()
+      for z in [300,310,320,330]:
+         x = fitf_xz.Eval(z)
+         y = fitf_yz.Eval(z)
+         lfit.SetNextPoint(z,y,x)
+      lfit.SetLineColor(ROOT.kBlue)
+      cnv = TCanvas("","",1500,500)
+      cnv.Divide(3,1)
+      cnv.cd(1)
+      view = TView.CreateView(1)
+      xviewmin = 0 if(isel(r1[0])) else xPsideL
+      xviewmax = xEsideR if(isel(r1[0])) else 0
+      view.SetRange(290,-0.8, xviewmin , 340,+0.8,xviewmax)
+      view.ShowAxis()
+      gxyz.Draw("p0")
+      lfit.Draw("smae")
+      cnv.cd(2)
+      gxz.Draw()
+      cnv.cd(3)
+      gyz.Draw()
+      cnv.SaveAs(name)
    
    chi2_xz = fitf_xz.GetChisquare()/fitf_xz.GetNDF()
    chi2_yz = fitf_yz.GetChisquare()/fitf_yz.GetNDF()
@@ -624,8 +661,17 @@ def seed2dfit(name,r1,r2,r3,r4):
 ##########################################################################################
 ##########################################################################################
 ### read fits to root file
-fitsEx = GetFits()
+# fitsEx = GetFits()
 
+svd0Seed = ROOT.std.vector( float )()
+svd1Seed = ROOT.std.vector( float )()
+svd2Seed = ROOT.std.vector( float )()
+chi2xzSeed = ROOT.std.vector( float )()
+chi2yzSeed = ROOT.std.vector( float )()
+residxzSeed = ROOT.std.vector( float )()
+residyzSeed = ROOT.std.vector( float )()
+issigSeed = ROOT.std.vector( int )()
+iGenMatch = ROOT.std.vector( int )()
 x1Seed = ROOT.std.vector( float )()
 y1Seed = ROOT.std.vector( float )()
 z1Seed = ROOT.std.vector( float )()
@@ -646,10 +692,21 @@ pxGen  = ROOT.std.vector( float )()
 pyGen  = ROOT.std.vector( float )()
 pzGen  = ROOT.std.vector( float )()
 eGen   = ROOT.std.vector( float )()
+qGen   = ROOT.std.vector( float )()
 iGen   = ROOT.std.vector( int )()
-tF = TFile("../data/root/seeds.root","RECREATE")
+tF = TFile("../data/root/seeds_"+proc+".root","RECREATE")
 tF.cd()
 tT = TTree("seeds","seeds")
+
+tT.Branch('svd0Seed',svd0Seed)
+tT.Branch('svd1Seed',svd1Seed)
+tT.Branch('svd2Seed',svd2Seed)
+tT.Branch('chi2xzSeed',chi2xzSeed)
+tT.Branch('chi2yzSeed',chi2yzSeed)
+tT.Branch('residxzSeed',residxzSeed)
+tT.Branch('residyzSeed',residyzSeed)
+tT.Branch('issigSeed',issigSeed)
+tT.Branch('iGenMatch',iGenMatch)
 tT.Branch('x1Seed',x1Seed)
 tT.Branch('y1Seed',y1Seed)
 tT.Branch('z1Seed',z1Seed)
@@ -670,7 +727,9 @@ tT.Branch('pxGen',pxGen)
 tT.Branch('pyGen',pyGen)
 tT.Branch('pzGen',pzGen)
 tT.Branch('eGen',eGen)
+tT.Branch('qGen',qGen)
 tT.Branch('iGen',iGen)
+
 
 histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks", 500,0,0.5),
            "h_residuals_yz_sig": TH1D("residuals_yz_sig",";residuals_{yz};Tracks", 500,0,500), 
@@ -694,30 +753,43 @@ histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks
            "h_chi2ndf_xz_bkg": TH1D("chi2ndf_xz_bkg",";chi2ndf_{xz};Tracks", 500,0,0.001),
            "h_chi2ndf_yz_bkg": TH1D("chi2ndf_yz_bkg",";chi2ndf_{yz};Tracks", 500,0,0.001),
            
-           "h_seed_resE":  TH1D("seed_resE", ";(E_{seed}-E_{gen})/E_{gen};Tracks",    100,-3,+3),
+           "h_seed_resE" : TH1D("seed_resE", ";(E_{seed}-E_{gen})/E_{gen};Tracks",    100,-3,+3),
            "h_seed_resPz": TH1D("seed_resPz",";(Pz_{seed}-Pz_{gen})/Pz_{gen};Tracks", 100,-3,+3), 
            "h_seed_resPy": TH1D("seed_resPy",";(Py_{seed}-Py_{gen})/Py_{gen};Tracks", 100,-10,+10),
            
-           "h_N_signal":        TH1D("N_signal",        ";Track multiplicity;Events", 40,30,190),
+           "h_seed_resE_vs_x"  : TH2D("seed_resE_vs_x",  ";x;(E_{seed}-E_{gen})/E_{gen};Tracks",     100,detXmin,detXmax, 100,-5,+5),
+           "h_seed_resPy_vs_x" : TH2D("seed_resPy_vs_x", ";x;(Py_{seed}-Py_{gen})/Py_{gen};Tracks",  100,detXmin,detXmax, 100,-10,+10),
+           
+           "h_N_sigacc":        TH1D("N_sigacc",        ";Track multiplicity;Events", 40,30,190),
            "h_N_all_seeds":     TH1D("N_all_seeds",     ";Track multiplicity;Events", 40,30,190),
            "h_N_matched_seeds": TH1D("N_matched_seeds", ";Track multiplicity;Events", 40,30,190),
            "h_N_good_seeds":    TH1D("N_good_seeds",    ";Track multiplicity;Events", 40,30,190),
 }
 
-pdfname = "../output/pdf/seedingdemo.pdf"
-intfile = TFile("../data/root/rec_bppp.root","READ")
+pdfname = "../output/pdf/seedingdemo_"+proc+".pdf"
+intfile = TFile("../data/root/rec_"+proc+".root","READ")
 intree = intfile.Get("res")
 nevents = intree.GetEntries()
 print("with %d events" % nevents)
 nmax = 10000
 n=0 ### init n
 for event in intree:
-   Nsignal = 0
+   Nsigall = 0
+   Nsigacc = 0
    Nseeds = 0
    Nmatched = 0
    Ngood = 0
    
    ## clear the output vectors
+   svd0Seed.clear()
+   svd1Seed.clear()
+   svd2Seed.clear()
+   chi2xzSeed.clear()
+   chi2yzSeed.clear()
+   residxzSeed.clear()
+   residyzSeed.clear()
+   issigSeed.clear()
+   iGenMatch.clear()
    x1Seed.clear()
    y1Seed.clear()
    z1Seed.clear()
@@ -730,46 +802,57 @@ for event in intree:
    x4Seed.clear()
    y4Seed.clear()
    z4Seed.clear()
+   
    pxSeed.clear()
    pySeed.clear()
    pzSeed.clear()
    eSeed.clear()
+   
    pxGen.clear()
    pyGen.clear()
    pzGen.clear()
    eGen.clear()
+   qGen.clear()
    iGen.clear()
+   
+   
    
    ### start the loop
    if(n>nmax): break
+   
+   ### draw?
+   dodraw = (n<=NeventsToDraw)
    
    ### container for all clusters
    allpoints = initpoints()
    
    ## clusters' vectors are always written out (even if empty) for all gen tracks!
    ## each generated track in the vector always has 4 clusters accessed via TPolyMarker3D::GetPoint()
-   # print(" NAllSigTrks=",event.polm_clusters.size())
-   
    for i in range(event.polm_clusters.size()):
       
-      #############################
-      if(event.qgen[i]>0): continue
-      #############################
+      ###############################################################
+      if(proc=="bppp"):
+         if(sides=="e+" and event.qgen[i]<0): continue ## only positrons
+         if(sides=="e-" and event.qgen[i]>0): continue ## only electrons
+      if(proc=="trident" and event.qgen[i]<0): continue ## only positrons
+      ###############################################################
       
-      Nsignal += 1
+      Nsigall += 1
       
       wgt  = event.wgtgen[i]
       pgen = event.pgen[i]
       ### cut on acceptance
-      if(event.acctrkgen[i]!=1): continue 
+      if(event.acctrkgen[i]!=1): continue
+      
+      Nsigacc += 1
       
       ### write the truth track momentum and its index
       pxGen.push_back(pgen.Px())
       pyGen.push_back(pgen.Py())
       pzGen.push_back(pgen.Pz())
       eGen.push_back(pgen.E())
+      qGen.push_back(event.qgen[i])
       iGen.push_back(i)
-      # print("Genr[%g]: E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (i,pgen.E(),pgen.Pt(),pgen.Eta(),pgen.Phi(),pgen.Theta()) )
       
       ### loop over all clusters of the track and put in the allpoints classified by the layer
       for jxy in range(event.polm_clusters[i].GetN()):
@@ -783,11 +866,14 @@ for event in intree:
    rnd.SetSeed()
    for kN in range(NnoiseClusters):
       for layer in layers:
-         # for side in [0,1]:
-         for side in [1]:
+         isides = [0,1]
+         if(proc=="trident"): isides = [0]
+         if(proc=="bppp" and side=="e+"): isides = [0]
+         if(proc=="bppp" and side=="e-"): isides = [1]
+         for side in isides:
             x = 0
-            if(side==0): x = rnd.Uniform(-31,-4)
-            if(side==1): x = rnd.Uniform(4,31)
+            if(side==0): x = rnd.Uniform(xPsideL,xPsideR)
+            if(side==1): x = rnd.Uniform(xEsideL,xEsideL)
             y = rnd.Uniform(-0.75,+0.75)
             if(layer==1): z = 300
             if(layer==2): z = 310
@@ -796,16 +882,12 @@ for event in intree:
             rnoise = [x,y,z]
             AddPoint(allpoints,rnoise)
    Nbkgsig4 = getNnon0(allpoints["Cls"][4])
-   # print(" Nbkgsig4=",Nbkgsig4)
    
    
-   draw(pdfname+"(",allpoints)
-   
+   draw(pdfname+"(",allpoints,dodraw)
    
    Nall4 = Nbkgsig4   
    ### loop over the clusters and start the seeding
-   # print(" Nall4=",Nall4)
-   # for j4 in range(allpoints["Cls"][4].GetN()):
    for j4 in range(Nall4):
       r4 = getpoint(allpoints["Cls"][4],j4)
       xpivot = r4[0]
@@ -819,14 +901,11 @@ for event in intree:
       widepoints = initpoints()
       trimwide(allpoints,widepoints,winpts_xz_wide,winpts_yz,xpivot)
       Nwide1 = getNnon0(widepoints["Cls"][1])
-      # print("  Nwide1=",Nwide1)
+      # if(Nwide1<1): print("Failed Nwide1")
       
-      draw(pdfname,widepoints,winlin_yz,winlin_xz_wide)
+      draw(pdfname,widepoints,dodraw,particlename,winlin_yz,winlin_xz_wide)
       
-      # print("  Nwide1=",widepoints["Cls"][1].GetN())
       ### choose one cluster in layer 1 as the second seed
-      # for j1 in range(widepoints["Cls"][1].GetN()):
-      # if(Nwide1<1): print("failed [sig?="+str(allpoints["IsSig"][4][j4])+"]: with Nwide1<1")
       for j1 in range(Nwide1):
          ### get the narrow window  (window corners must be added clockwise!)
          winpts_xz_narr,winlin_xz_narr = getnarrwindow(allpoints["Cls"][4],widepoints["Cls"][1],j4,j1)
@@ -836,27 +915,23 @@ for event in intree:
          Nnarr2 = getNnon0(narrpoints["Cls"][2])
          Nnarr3 = getNnon0(narrpoints["Cls"][3])
          
-         # print("   Nnarr1=",Nnarr1)
-         # print("   Nnarr2=",Nnarr2)
-         # print("   Nnarr3=",Nnarr3)
-         
-         # if(Nnarr2<1): print("failed: with Nnarr2<1")
-         # if(Nnarr3<1): print("failed: with Nnarr3<1")
-         
          ### check if there are at least 1 cluster in both layer 2 and layer 3 within the narrow window
+         # if(Nnarr2<1): print("Failed Nnarr2, sig?",allpoints["IsSig"][4][j4])
          if(Nnarr2<1): continue
+         # if(Nnarr3<1): print("Failed Nnarr3")
          if(Nnarr3<1): continue
          
-         draw(pdfname,narrpoints,None,winlin_xz_narr)
+         draw(pdfname,narrpoints,dodraw,particlename,None,winlin_xz_narr)
          
          ### get the seed - note: could be that there are several combinations but the seed momentum would be identical
          pseed = makeseed(allpoints["Cls"][4],widepoints["Cls"][1],j4,j1,particlename)
-         if(pseed.E()>Emax): continue
+         # if(pseed.E()>Emax or pseed.E()<Emin): print("pseed.E()>Emax or pseed.E()<Emin")
+         if(pseed.E()>Emax or pseed.E()<Emin): continue
          
+         ### set the cluster in layer 1
          r1 = getpoint(widepoints["Cls"][1],j1)
          
          NseedsPerWindow = Nnarr2*Nnarr3
-         # print("NseedsPerWindow=",NseedsPerWindow)
          ### loop on the clusters in layer 2 and 3:
          for j2 in range(Nnarr2):
          # for j2 in range(narrpoints["Cls"][2].GetN()):
@@ -879,21 +954,22 @@ for event in intree:
                trkid = str(trkid4) if(trkid4==trkid1 and trkid1==trkid2 and trkid2==trkid3) else "mult"
                issiguniq = (issig and trkid!="mult")
                if(issiguniq): Nmatched += 1
-               
-               # print("Seed: IsSig=%g, TrkIds={%g,%g,%g,%g} --> E=%g, pT=%g, eta=%g, phi=%g, theta=%g" % (issig,t1,t2,t3,t4,pseed.E(),pseed.Pt(),pseed.Eta(),pseed.Phi(),pseed.Theta()) )
 
                ### two independent 2d fits
-               chi2_xz,prob_xz,chi2_yz,prob_yz = seed2dfit(pdfname,r1,r2,r3,r4)
-               # print("chi2_xz=%g, prob_xz=%g, chi2_yz=%g, prob_yz=%g" % (chi2_xz,prob_xz,chi2_yz,prob_yz))
+               chi2_xz,prob_xz,chi2_yz,prob_yz = seed2dfit(pdfname,r1,r2,r3,r4,dodraw)
                if(issiguniq):
                   histos["h_chi2ndf_xz_sig"].Fill(chi2_xz)
                   histos["h_chi2ndf_yz_sig"].Fill(chi2_yz)
+                  histos["h_prob_xz_sig"].Fill(prob_xz)
+                  histos["h_prob_yz_sig"].Fill(prob_yz)
                else:
                   histos["h_chi2ndf_xz_bkg"].Fill(chi2_xz)
                   histos["h_chi2ndf_yz_bkg"].Fill(chi2_yz)
+                  histos["h_prob_xz_bkg"].Fill(prob_xz)
+                  histos["h_prob_yz_bkg"].Fill(prob_yz)
 
                ### a single 3d fit
-               res_xz, res_yz = seed3dfit(pdfname,r1,r2,r3,r4)
+               res_xz, res_yz = seed3dfit(pdfname,r1,r2,r3,r4,dodraw)
                if(issiguniq):
                   histos["h_residuals_xz_sig"].Fill(res_xz)
                   histos["h_residuals_yz_sig"].Fill(res_yz)
@@ -902,17 +978,18 @@ for event in intree:
                   histos["h_residuals_yz_bkg"].Fill(res_yz)
                   
                ### a single 3d fit SVD
-               lfitpts, dd = seed3dfitSVD(pdfname,r1,r2,r3,r4)
+               lfitpts, dd = seed3dfitSVD(pdfname,r1,r2,r3,r4,dodraw)
                
                ### set again the pseed according to lfit
                cluster1 = TPolyMarker3D()
                cluster2 = TPolyMarker3D()
                cluster1.SetNextPoint(lfitpts[0][0],lfitpts[0][1],lfitpts[0][2])
                cluster2.SetNextPoint(lfitpts[1][0],lfitpts[1][1],lfitpts[1][2])
-               pseed = makeseed(cluster2,cluster1,0,0,particlename)
+               if(isel(lfitpts[0][0])): pseed = makeseed(cluster2,cluster1,0,0,particlename)
+               else:                    pseed = makeseed(cluster1,cluster2,0,0,particlename)
                if(pseed.E()>Emax or pseed.E()<Emin): continue
                
-               ### quality
+               ### the SVD alg
                if(issiguniq):
                   histos["h_svd_dd0_sig"].Fill(dd[0])
                   histos["h_svd_dd1_sig"].Fill(dd[1])
@@ -922,11 +999,6 @@ for event in intree:
                   histos["h_svd_dd1_bkg"].Fill(dd[1])
                   histos["h_svd_dd2_bkg"].Fill(dd[2])
                
-               isgood = (dd[1]<0.005 and dd[2]<0.0025)
-               if(not isgood): continue
-               Ngood += 1
-               
-               
                ### get the generated matched track momentum
                pgen = TLorentzVector()
                igen = -1
@@ -934,15 +1006,17 @@ for event in intree:
                   if(iGen[k]==j4):
                      igen = k
                      break
-               pgen.SetPxPyPzE(pxGen[igen],pyGen[igen],pzGen[igen],eGen[igen])
-               resE = (pseed.E()-pgen.E())/pgen.E()
-               resPz = (pseed.Pz()-pgen.Pz())/pgen.Pz()
-               resPy = (pseed.Py()-pgen.Py())/pgen.Py()
-               histos["h_seed_resE"].Fill(resE)
-               histos["h_seed_resPz"].Fill(resPz)
-               histos["h_seed_resPy"].Fill(resPy)
                
                ### write out the good seeds
+               svd0Seed.push_back(dd[0])
+               svd1Seed.push_back(dd[1])
+               svd2Seed.push_back(dd[2])
+               chi2xzSeed.push_back(chi2_xz)
+               chi2yzSeed.push_back(chi2_yz)
+               residxzSeed.push_back(res_xz)
+               residyzSeed.push_back(res_yz)
+               issigSeed.push_back(issiguniq)
+               iGenMatch.push_back(igen)
                x1Seed.push_back(r1[0])
                y1Seed.push_back(r1[1])
                z1Seed.push_back(r1[2])
@@ -960,29 +1034,61 @@ for event in intree:
                pzSeed.push_back(pseed.Pz())
                eSeed.push_back(pseed.E())
                
-   histos["h_N_signal"].Fill(Nsignal)       
+               ### cut on some quality
+               isgood = (dd[1]<0.005 and dd[2]<0.0025)
+               if(not isgood): continue
+               Ngood += 1
+               
+               ### check perforrmance of seeding
+               pgen.SetPxPyPzE(pxGen[igen],pyGen[igen],pzGen[igen],eGen[igen])
+               resE = (pseed.E()-pgen.E())/pgen.E()
+               resPz = (pseed.Pz()-pgen.Pz())/pgen.Pz()
+               resPy = (pseed.Py()-pgen.Py())/pgen.Py()
+               histos["h_seed_resE"].Fill(resE)
+               histos["h_seed_resPz"].Fill(resPz)
+               histos["h_seed_resPy"].Fill(resPy)
+               histos["h_seed_resE_vs_x"].Fill(r4[0],resE)
+               histos["h_seed_resPy_vs_x"].Fill(r4[0],resPy)
+               
+   histos["h_N_sigacc"].Fill(Nsigacc)       
    histos["h_N_all_seeds"].Fill(Nseeds)       
    histos["h_N_matched_seeds"].Fill(Nmatched)       
    histos["h_N_good_seeds"].Fill(Ngood)       
    
-   cnv = TCanvas("","",2000,2000)
-   cnv.SaveAs(pdfname+")")
-   print("Event: %g --> Nsignal=%g, Nseeds=%g, Nmatched=%g, Ngood=%g" % (n,Nsignal,Nseeds,Nmatched,Ngood))   
+   if(dodraw):
+      cnv = TCanvas("","",2000,2000)
+      cnv.SaveAs(pdfname+")")
+   print("Event: %g --> Nsigall=%g, Nsigacc=%g, Nseeds=%g, Nmatched=%g, Ngood=%g --> Seeds matching performance: Nmatched/Nsigacc=%5.1f%%" % (n,Nsigall,Nsigacc,Nseeds,Nmatched,Ngood,Nmatched/Nsigacc*100))
    # quit()
    tT.Fill()
    if(n%10==0 and n>0): print("  processed %d events" % n)
    n+=1
 print("Total events processed: ",n)
 
-cnv = TCanvas("","",1000,500)
-cnv.Divide(2,1)
+
+
+
+
+
+
+
+
+
+cnv = TCanvas("","",1000,1000)
+cnv.Divide(2,2)
 cnv.cd(1)
 histos["h_chi2ndf_xz_sig"].SetLineColor(ROOT.kRed);   histos["h_chi2ndf_xz_sig"].Draw()
 histos["h_chi2ndf_xz_bkg"].SetLineColor(ROOT.kBlack); histos["h_chi2ndf_xz_bkg"].Draw("same")
 cnv.cd(2)
 histos["h_chi2ndf_yz_sig"].SetLineColor(ROOT.kRed);   histos["h_chi2ndf_yz_sig"].Draw()
 histos["h_chi2ndf_yz_bkg"].SetLineColor(ROOT.kBlack); histos["h_chi2ndf_yz_bkg"].Draw("same")
-cnv.SaveAs("../output/pdf/chi2ndf.pdf")
+cnv.cd(3)
+histos["h_prob_xz_sig"].SetLineColor(ROOT.kRed);   histos["h_prob_xz_sig"].Draw()
+histos["h_prob_xz_bkg"].SetLineColor(ROOT.kBlack); histos["h_prob_xz_bkg"].Draw("same")
+cnv.cd(4)
+histos["h_prob_yz_sig"].SetLineColor(ROOT.kRed);   histos["h_prob_yz_sig"].Draw()
+histos["h_prob_yz_bkg"].SetLineColor(ROOT.kBlack); histos["h_prob_yz_bkg"].Draw("same")
+cnv.SaveAs("../output/pdf/chi2ndf_"+proc+".pdf")
 
 cnv = TCanvas("","",1000,500)
 cnv.Divide(2,1)
@@ -992,7 +1098,7 @@ histos["h_residuals_xz_bkg"].SetLineColor(ROOT.kBlack); histos["h_residuals_xz_b
 cnv.cd(2)
 histos["h_residuals_yz_sig"].SetLineColor(ROOT.kRed);   histos["h_residuals_yz_sig"].Draw()
 histos["h_residuals_yz_bkg"].SetLineColor(ROOT.kBlack); histos["h_residuals_yz_bkg"].Draw("same")
-cnv.SaveAs("../output/pdf/res.pdf")
+cnv.SaveAs("../output/pdf/resid3dfit_"+proc+".pdf")
 
 cnv = TCanvas("","",1500,500)
 cnv.Divide(3,1)
@@ -1005,21 +1111,23 @@ histos["h_svd_dd1_bkg"].SetLineColor(ROOT.kBlack); histos["h_svd_dd1_bkg"].Draw(
 cnv.cd(3)
 histos["h_svd_dd2_sig"].SetLineColor(ROOT.kRed);   histos["h_svd_dd2_sig"].Draw()
 histos["h_svd_dd2_bkg"].SetLineColor(ROOT.kBlack); histos["h_svd_dd2_bkg"].Draw("same")
-cnv.SaveAs("../output/pdf/svd.pdf")
-
-cnv = TCanvas("","",1500,500)
-cnv.Divide(3,1)
-cnv.cd(1); histos["h_seed_resE"].Draw("hist")
-cnv.cd(2); histos["h_seed_resPz"].Draw("hist")
-cnv.cd(3); histos["h_seed_resPy"].Draw("hist")
-cnv.SaveAs("../output/pdf/seedsres.pdf")
+cnv.SaveAs("../output/pdf/svd3dfit_"+proc+".pdf")
 
 cnv = TCanvas("","",1000,1000)
-histos["h_N_signal"].SetLineColor(ROOT.kBlack); histos["h_N_signal"].Draw()
+cnv.Divide(2,2)
+cnv.cd(1); histos["h_seed_resE"].Draw("hist")
+cnv.cd(2); histos["h_seed_resPy"].Draw("hist")
+cnv.cd(3); histos["h_seed_resE_vs_x"].Draw("col")
+cnv.cd(4); histos["h_seed_resPy_vs_x"].Draw("col")
+
+cnv.SaveAs("../output/pdf/seedsres_"+proc+".pdf")
+
+cnv = TCanvas("","",1000,1000)
+histos["h_N_sigacc"].SetLineColor(ROOT.kBlack); histos["h_N_sigacc"].Draw()
 histos["h_N_all_seeds"].SetLineColor(ROOT.kBlue); histos["h_N_all_seeds"].Draw("same")
 histos["h_N_matched_seeds"].SetLineColor(ROOT.kGreen); histos["h_N_matched_seeds"].Draw("same")
 histos["h_N_good_seeds"].SetLineColor(ROOT.kRed); histos["h_N_good_seeds"].Draw("same")
-cnv.SaveAs("../output/pdf/seedmult.pdf")
+cnv.SaveAs("../output/pdf/seedsmult_"+proc+".pdf")
 
 tF.cd()
 tT.Write()

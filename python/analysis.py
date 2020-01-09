@@ -335,7 +335,7 @@ allpdf = "../output/pdf/all_"+process+".pdf"
 fn = "../output/pdf/"+process+"_"
 
 
-tfile = TFile("../data/root/geometry.root","READ")
+tfile = TFile("../data/root/"+process+"_geometry.root","READ")
 lines = [ tfile.Get("TPolyLine3D;9"), tfile.Get("TPolyLine3D;8"),
           tfile.Get("TPolyLine3D;7"), tfile.Get("TPolyLine3D;6"),
           tfile.Get("TPolyLine3D;5"), tfile.Get("TPolyLine3D;4"),
@@ -412,8 +412,8 @@ p4 = cnv_xy.cd(4)
 np=5
 ### stave geometry
 Hstave = 1.5  # cm
-Lstave = 27   # cm
-Rbeampipe = 4 # cm
+Lstave = 27 if(process=="bppp") else 50 # cm
+Rbeampipe = 4 if(process=="bppp") else 14 # cm
 x1L = -Rbeampipe-Lstave # = -31
 x1R = -Rbeampipe        # = -4
 x2L = +Rbeampipe        # = +4

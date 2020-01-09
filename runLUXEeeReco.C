@@ -29,12 +29,12 @@ vector<double>* zlayer = new vector<double>;
 double meMeV = 0.5109989461; //MeV
 double meGeV = meMeV/1000.;
 
-//// stave geometry
+//// staves geometry
 double Hstave = 1.5;  // cm
-double Lstave = 27;   // cm
-double Rbeampipe = 4; // cm
-double x1L = -Rbeampipe-Lstave; // = -31
-double x1R = -Rbeampipe;        // = -4
+double Lstave = 27;   // cm for BPPP or 50 for Trident
+double Rbeampipe = 4; // cm for BPPP or 14 for Trident
+double x1L = -Rbeampipe-Lstave; // = -31 for BPPP or -41 for Trident
+double x1R = -Rbeampipe;        // = -4 for BPPP or -14 for Trident
 double x2L = +Rbeampipe;        // = +4
 double x2R = +Rbeampipe+Lstave; // = +31
 double yUp = +Hstave/2.;        // = +0.75
@@ -46,6 +46,15 @@ double yH = 67.2;
 double z1 = 102.9;
 double z2 = 202.9;
 
+void resetToTridentGeometry()
+{
+	Lstave = 50;   // cm for BPPP or 50 for Trident
+	Rbeampipe = 14; // cm for BPPP or 14 for Trident
+	x1L = -Rbeampipe-Lstave; // = -31 for BPPP or -41 for Trident
+	x1R = -Rbeampipe;        // = -4 for BPPP or -14 for Trident
+	x2L = +Rbeampipe;        // = +4 for BPPP or +14 for Trident
+	x2R = +Rbeampipe+Lstave; // = +31 for BPPP or +41 for Trident
+}
 
 bool accept(double x, double y)
 {
@@ -282,7 +291,7 @@ void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TSt
    cnv_pm3d->SaveAs("output/root/"+process+"_tracks_pm3d.root");
    cnv_pm3d->SaveAs("output/pdf/"+process+"_tracks_pm3d.pdf");
    
-   TFile* flines = new TFile("data/root/geometry.root","RECREATE");
+   TFile* flines = new TFile("data/root/"+process+"_geometry.root","RECREATE");
    flines->cd();
    dipole->Write();
    stave1L->Write();
@@ -532,6 +541,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
    int outN = 100;
 
    TString process = "trident";  /// trident or bppp or bppp_bkg or trident_bkg
+	if(process=="trident") resetToTridentGeometry();
 
    /// get the particles from a ttree
    TFile* fIn = new TFile("data/root/raw_"+process+".root","READ");
@@ -656,7 +666,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
 			   cout << "illegal pdgId: " << pdgId->at(igen) << endl;
             break;
          }
-
+			
          //// all the rest
          ngen++;
          int crg = (pdgId->at(igen)==11) ? -1 : +1;
