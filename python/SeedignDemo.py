@@ -766,7 +766,7 @@ histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks
            "h_N_good_seeds":    TH1D("N_good_seeds",    ";Track multiplicity;Events", 40,30,190),
            
            "h_seeding_score": TH1D("h_seeding_score", ";N_{seeds}^{matched}/N_{signa}^{in.acc} [%];Events", 20,91,101),
-           "h_seeding_pool":  TH1D("h_seeding_pool",  ";N_{seeds}^{all}/N_{signa}^{in.acc} [%];Events", 50,90,310),
+           "h_seeding_pool":  TH1D("h_seeding_pool",  ";N_{seeds}^{all}/N_{signa}^{in.acc} [%];Events", 50,90,590),
 }
 
 pdfname = "../output/pdf/seedingdemo_"+proc+".pdf"
