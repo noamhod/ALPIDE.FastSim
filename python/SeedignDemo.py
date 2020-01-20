@@ -256,12 +256,17 @@ def getyzwindow(cluster,i):
    window_pts = TPolyMarker3D()
    window_pts.SetNextPoint(x1,y1min,z1)
    window_pts.SetNextPoint(x1,y1max,z1)
-   if(particles=="electrons"): 
-      window_pts.SetNextPoint(xDipoleExitAbs,yDipoleExitMax,zDipoleExit)
-      window_pts.SetNextPoint(xDipoleExitAbs,yDipoleExitMin,zDipoleExit)
+   xmiddle = +xDipoleExitMinAbs+(abs(x1)*0.99-xDipoleExitMinAbs)/2
+   if(particles=="electrons"):
+      # window_pts.SetNextPoint(xDipoleExitAbs,yDipoleExitMax,zDipoleExit)
+      window_pts.SetNextPoint(+xmiddle,yDipoleExitMax,zDipoleExit)
+      # window_pts.SetNextPoint(xDipoleExitAbs,yDipoleExitMin,zDipoleExit)
+      window_pts.SetNextPoint(+xmiddle,yDipoleExitMin,zDipoleExit)
    else:
-      window_pts.SetNextPoint(-xDipoleExitAbs,yDipoleExitMax,zDipoleExit)
-      window_pts.SetNextPoint(-xDipoleExitAbs,yDipoleExitMin,zDipoleExit)
+      # window_pts.SetNextPoint(-xDipoleExitAbs,yDipoleExitMax,zDipoleExit)
+      window_pts.SetNextPoint(-xmiddle,yDipoleExitMax,zDipoleExit)
+      # window_pts.SetNextPoint(-xDipoleExitAbs,yDipoleExitMin,zDipoleExit)
+      window_pts.SetNextPoint(-xmiddle,yDipoleExitMin,zDipoleExit)
    window_lin = windowline(window_pts)
    window_lin.SetLineWidth(1)
    window_lin.SetLineColor(ROOT.kBlack)
@@ -278,15 +283,17 @@ def getwidewindow(cluster,i):
       x1max = x1+xAbsMargins if((x1+xAbsMargins)<xEsideR) else xEsideR ## must be within stave volume
       window_pts.SetNextPoint(x1min,y1,z1) ## top left
       window_pts.SetNextPoint(x1max,y1,z1) ## top right
-      window_pts.SetNextPoint(xDipoleExitMaxAbs,y1,zDipoleExit) ## bottom right
+      # window_pts.SetNextPoint(xDipoleExitMaxAbs,y1,zDipoleExit) ## bottom right
+      window_pts.SetNextPoint(x1max*0.99,y1,zDipoleExit) ## bottom right
       window_pts.SetNextPoint(xDipoleExitMinAbs,y1,zDipoleExit) ## bottom left
    else:
       x1min = x1-xAbsMargins if((x1-xAbsMargins)>xPsideL) else xPsideL ## must be within stave volume
       x1max = x1+xAbsMargins if((x1+xAbsMargins)<xPsideR) else xPsideR ## must be within stave volume
       window_pts.SetNextPoint(x1min,y1,z1) ## top left
       window_pts.SetNextPoint(x1max,y1,z1) ## top right
+      # window_pts.SetNextPoint(-xDipoleExitMinAbs,y1,zDipoleExit) ## bottom right
       window_pts.SetNextPoint(-xDipoleExitMinAbs,y1,zDipoleExit) ## bottom right
-      window_pts.SetNextPoint(-xDipoleExitMaxAbs,y1,zDipoleExit) ## bottom left
+      window_pts.SetNextPoint(x1min*0.99,y1,zDipoleExit) ## bottom left
   
    window_lin = windowline(window_pts)
    window_lin.SetLineWidth(1)
@@ -950,7 +957,7 @@ for event in intree:
          trimwide(allpoints,widepoints,winpts_xz_wide,winpts_yz,xpivot)
          Nwide1 = getNnon0(widepoints["Cls"][1])
          # if(Nwide1<1): print("Failed Nwide1")
-         
+         ### draw the wide window
          draw(pdfname,widepoints,dodraw,particlename,winlin_yz,winlin_xz_wide)
          
          ### choose one cluster in layer 1 as the second seed
