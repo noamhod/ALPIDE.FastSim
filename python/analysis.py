@@ -413,13 +413,17 @@ np=5
 ### stave geometry
 Hstave = 1.5  # cm
 Lstave = 27 if(process=="bppp") else 50 # cm
-Rbeampipe = 4 if(process=="bppp") else 14 # cm
-x1L = -Rbeampipe-Lstave # = -31
-x1R = -Rbeampipe        # = -4
-x2L = +Rbeampipe        # = +4
-x2R = +Rbeampipe+Lstave # = +31
-yUp = +Hstave/2.        # = +0.75
-yDn = -Hstave/2.        # = -0.75
+Rbeampipe = 4 # cm
+RoffsetBfield22BPPP = 7.0  # cm for BPPP in B=2.2T
+RoffsetBfield20BPPP = 5.7  # cm for BPPP in B=2.0T
+RoffsetBfield14BPPP = 4.0  # cm for BPPP in B=1.4T
+RoffsetBfield = RoffsetBfield20BPPP if(process=="bppp") else 14 # cm
+x1L = -RoffsetBfield-Lstave 
+x1R = -RoffsetBfield        
+x2L = +RoffsetBfield        
+x2R = +RoffsetBfield+Lstave 
+yUp = +Hstave/2.        
+yDn = -Hstave/2.        
 xLlist = [x1L,x1L,x1R,x1R,x1L]
 xRlist = [x2R,x2R,x2L,x2L,x2R]
 ylist  = [yDn,yUp,yUp,yDn,yDn]

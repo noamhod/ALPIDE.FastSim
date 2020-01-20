@@ -13,12 +13,12 @@ parser.add_argument('-s', metavar='sides',   required=False, help='detector side
 parser.add_argument('-e', metavar='energy',  required=False, help='beam energy')
 argus = parser.parse_args()
 proc  = argus.p
-sides = "e+"
+sides = "e+" if(proc=="trident") else "e+e-" ## jsut the default
 if(argus.s is not None): sides = argus.s
 if(proc=="trident" and "e-" in sides):
    print("ERROR: do not run tracking in the electron side for trident")
    quit()
-
+print("Running with proc=%s and sides=%s" % (proc,sides))
 
 ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptFit(0);
@@ -39,7 +39,7 @@ cm2um = 1.e4
 um2cm = 1.e-4
 
 ### magnetic field
-B  = 1.4 # Tesla
+B  = 1.4 if(proc=="trident") else 2.0 # Tesla
 LB = 1   # meters
 
 ### possible energies 
@@ -48,8 +48,8 @@ Emin = 1.00 if(proc=="trident") else 2 # GeV
 
 ### geometry:
 zDipoleExit = 202.9
-xDipoleExitMinAbs = 1  ## cm --> TODO: need tuning
-xDipoleExitMaxAbs = 30 ## cm --> TODO: need tuning
+xDipoleExitMinAbs = 1.5 if(proc=="bppp") else 4   ## cm --> TODO: need tuning
+xDipoleExitMaxAbs = 25  if(proc=="bppp") else 30  ## cm --> TODO: need tuning
 xDipoleExitAbs = (xDipoleExitMaxAbs-xDipoleExitMinAbs)/2.
 yDipoleExitMin = -0.05 ## cm --> TODO: need tuning
 yDipoleExitMax = +0.05 ## cm --> TODO: need tuning
@@ -59,13 +59,17 @@ yAbsMargins = 0.025 if(proc=="bppp") else 0.1 # cm --> TODO: need tuning
 ### stave geometry
 Hstave    = 1.5  # cm
 Lstave    = 27 if(proc=="bppp") else 50 # cm
-Rbeampipe = 4  if(proc=="bppp") else 14 # cm
-xPsideL = -Rbeampipe-Lstave # = -31
-xPsideR = -Rbeampipe        # = -4
-xEsideL = +Rbeampipe        # = +4
-xEsideR = +Rbeampipe+Lstave # = +31
-yUp = +Hstave/2.        # = +0.75
-yDn = -Hstave/2.        # = -0.75
+Rbeampipe = 4 # cm
+RoffsetBfield22BPPP = 7.0  # cm for BPPP in B=2.2T
+RoffsetBfield20BPPP = 5.7  # cm for BPPP in B=2.0T
+RoffsetBfield14BPPP = 4.0  # cm for BPPP in B=1.4T
+RoffsetBfield = RoffsetBfield20BPPP if(proc=="bppp") else 14 # cm
+xPsideL = -RoffsetBfield-Lstave
+xPsideR = -RoffsetBfield       
+xEsideL = +RoffsetBfield       
+xEsideR = +RoffsetBfield+Lstave
+yUp = +Hstave/2.
+yDn = -Hstave/2.
 
 ### for the histogram
 detXmin = xPsideL
@@ -183,6 +187,9 @@ def p4(r1,r2,E):
 def xofz(r1,r2,z):
    dz = r2[2]-r1[2]
    dx = r2[0]-r1[0]
+   if(dx==0):
+      print("ERROR in xofz: dx=0 --> r1[0]=%g,r2[0]=%g, r1[1]=%g,r2[1]=%g, r1[2]=%g,r2[2]=%g" % (r1[0],r2[0],r1[1],r2[1],r1[2],r2[2]))
+      quit()
    a = dx/dz
    b = r1[0]-a*r1[2]
    x = a*z+b
@@ -191,6 +198,9 @@ def xofz(r1,r2,z):
 def yofz(r1,r2,z):
    dz = r2[2]-r1[2]
    dy = r2[1]-r1[1]
+   if(dz==0):
+      print("ERROR in yofz: dz=0 --> r1[0]=%g,r2[0]=%g, r1[1]=%g,r2[1]=%g, r1[2]=%g,r2[2]=%g" % (r1[0],r2[0],r1[1],r2[1],r1[2],r2[2]))
+      quit()
    a = dy/dz
    b = r1[1]-a*r1[2]
    y = a*z+b
@@ -199,6 +209,9 @@ def yofz(r1,r2,z):
 def zofx(r1,r2,x):
    dz = r2[2]-r1[2]
    dx = r2[0]-r1[0]
+   if(dx==0):
+      print("ERROR in zofx: dx=0 --> r1[0]=%g,r2[0]=%g, r1[1]=%g,r2[1]=%g, r1[2]=%g,r2[2]=%g" % (r1[0],r2[0],r1[1],r2[1],r1[2],r2[2]))
+      quit()
    a = dz/dx
    b = r1[2]-a*r1[0]
    z = a*x+b
@@ -346,8 +359,10 @@ def trimwide(allpoints,points_wide,windowxz,windowyz,xpivot):
          if(not acceptyz): continue
          r = [ROOT.Double(), ROOT.Double(), ROOT.Double()]
          allpoints["Cls"][layer].GetPoint(i,r[0],r[1],r[2])
-         if(isel(r[0]) and r[0]>1.001*xpivot):     continue
-         if(not isel(r[0]) and r[0]<1.001*xpivot): continue
+         # if(isel(r[0]) and r[0]>1.001*xpivot):     continue
+         if(isel(r[0]) and r[0]>=xpivot):     continue
+         # if(not isel(r[0]) and r[0]<1.001*xpivot): continue
+         if(not isel(r[0]) and r[0]<=xpivot): continue
          points_wide["Cls"][layer].SetNextPoint(r[0],r[1],r[2])
          points_wide["IsSig"][layer].append(allpoints["IsSig"][layer][i])
          points_wide["TrkId"][layer].append(allpoints["TrkId"][layer][i])
@@ -441,6 +456,30 @@ def getNnon0(clusters):
       if(r[2]==0): break
       N += 1
    return N
+   
+def getLogicSidesArr():
+   sidesarr = ["Eside","Pside"]
+   if(proc=="trident"): sidesarr = ["Pside"]
+   if(proc=="bppp" and sides=="e+"): sidesarr = ["Pside"]
+   if(proc=="bppp" and sides=="e-"): sidesarr = ["Eside"]
+   return sidesarr
+   
+def drawall(name,pointsEside,pointsPside,dodraw):
+   if(not dodraw): return
+   cnv = TCanvas("","",2000,2000)
+   view = TView.CreateView(1)
+   view.ShowAxis()
+   # view.SetRange(-80,-50,0, +80,+50,350)
+   if  (sides=="e-"): view.SetRange(0,-10,190, xEsideR,+10,340)
+   elif(sides=="e+"): view.SetRange(xPsideL,-10,190, 0,+10,340)
+   else:              view.SetRange(xPsideL,-10,190, xEsideR,+10,340)
+   geom = getgeometry() ### get the geometry from the root file
+   for g in geom: g.Draw()
+   for layer in layers:
+      pointsEside["Cls"][layer].Draw("same")
+      pointsPside["Cls"][layer].Draw("same")
+   cnv.SaveAs(name)
+   
    
 def draw(name,points,dodraw,particles="",window_yz=None,window_xz=None):
    if(not dodraw): return
@@ -768,7 +807,7 @@ histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks
            "h_seeding_score": TH1D("h_seeding_score", ";N_{seeds}^{matched}/N_{signa}^{in.acc} [%];Events", 20,91,101),
            "h_seeding_pool":  TH1D("h_seeding_pool",  ";N_{seeds}^{all}/N_{signa}^{in.acc} [%];Events", 50,90,590),
 }
-
+sidesarr = getLogicSidesArr()
 pdfname = "../output/pdf/seedingdemo_"+proc+".pdf"
 intfile = TFile("../data/root/rec_"+proc+".root","READ")
 intree = intfile.Get("res")
@@ -827,7 +866,8 @@ for event in intree:
    dodraw = (n<=NeventsToDraw)
    
    ### container for all clusters
-   allpoints = initpoints()
+   allpointsEside = initpoints()
+   allpointsPside = initpoints()
    
    ## clusters' vectors are always written out (even if empty) for all gen tracks!
    ## each generated track in the vector always has 4 clusters accessed via TPolyMarker3D::GetPoint()
@@ -861,206 +901,211 @@ for event in intree:
       for jxy in range(event.polm_clusters[i].GetN()):
          rcls = [ ROOT.Double(), ROOT.Double(), ROOT.Double() ]
          event.polm_clusters[i].GetPoint(jxy,rcls[0],rcls[1],rcls[2]) ### the clusters
-         AddPoint(allpoints,rcls,True,i)
-   Nsig4 = getNnon0(allpoints["Cls"][4])
-      
+         if(rcls[0]>0): AddPoint(allpointsEside,rcls,True,i)
+         if(rcls[0]<0): AddPoint(allpointsPside,rcls,True,i)
+   Nsig4 = getNnon0(allpointsEside["Cls"][4])+getNnon0(allpointsPside["Cls"][4])
+   
+   
    ### embed some noise clusters
    rnd = TRandom()
    rnd.SetSeed()
    for kN in range(NnoiseClusters):
       for layer in layers:
-         isides = [0,1]
-         if(proc=="trident"): isides = [0]
-         if(proc=="bppp" and sides=="e+"): isides = [0]
-         if(proc=="bppp" and sides=="e-"): isides = [1]
-         for side in isides:
+         for side in sidesarr:
             x = 0
-            if(side==0): x = rnd.Uniform(xPsideL,xPsideR)
-            if(side==1): x = rnd.Uniform(xEsideL,xEsideL)
+            if(side=="Pside"): x = rnd.Uniform(xPsideL,xPsideR)
+            if(side=="Eside"): x = rnd.Uniform(xEsideL,xEsideR)
             y = rnd.Uniform(-0.75,+0.75)
             if(layer==1): z = 300
             if(layer==2): z = 310
             if(layer==3): z = 320
             if(layer==4): z = 330
             rnoise = [x,y,z]
-            AddPoint(allpoints,rnoise)
-   Nbkgsig4 = getNnon0(allpoints["Cls"][4])
+            if(side=="Pside"): AddPoint(allpointsPside,rnoise)
+            if(side=="Eside"): AddPoint(allpointsEside,rnoise)
+   Nbkgsig4 = getNnon0(allpointsEside["Cls"][4])+getNnon0(allpointsPside["Cls"][4])
    
+   ### just draw the full event
+   drawall(pdfname+"(",allpointsEside,allpointsPside,dodraw)
    
-   draw(pdfname+"(",allpoints,dodraw)
-   
-   Nall4 = Nbkgsig4   
-   ### loop over the clusters and start the seeding
-   for j4 in range(Nall4):
-      r4 = getpoint(allpoints["Cls"][4],j4)
-      xpivot = r4[0]
-      ### electron / positron?
-      particlename = getparticlename(allpoints["Cls"][4],j4)
-      ### get the yz window
-      winpts_yz,winlin_yz = getyzwindow(allpoints["Cls"][4],j4)
-      ### set the wide window starting from cluster_seed1 (window corners must be added clockwise!)
-      winpts_xz_wide,winlin_xz_wide = getwidewindow(allpoints["Cls"][4],j4)
-      ### discard all clusters which are not in the wide window
-      widepoints = initpoints()
-      trimwide(allpoints,widepoints,winpts_xz_wide,winpts_yz,xpivot)
-      Nwide1 = getNnon0(widepoints["Cls"][1])
-      # if(Nwide1<1): print("Failed Nwide1")
+   ### loop on the 2 sides
+   for side in sidesarr:
+      allpoints = allpointsEside if(side=="Eside") else allpointsPside
       
-      draw(pdfname,widepoints,dodraw,particlename,winlin_yz,winlin_xz_wide)
+      ### the initial pool for pivot clusters
+      Nall4 = getNnon0(allpoints["Cls"][4])
       
-      ### choose one cluster in layer 1 as the second seed
-      for j1 in range(Nwide1):
-         ### get the narrow window  (window corners must be added clockwise!)
-         winpts_xz_narr,winlin_xz_narr = getnarrwindow(allpoints["Cls"][4],widepoints["Cls"][1],j4,j1)
-         ### discard all clusters which are not in the narrow window
-         narrpoints = initpoints()
-         trimnarr(widepoints,narrpoints,winpts_xz_narr)
-         Nnarr2 = getNnon0(narrpoints["Cls"][2])
-         Nnarr3 = getNnon0(narrpoints["Cls"][3])
+      ### loop over the clusters and start the seeding
+      for j4 in range(Nall4):
+         r4 = getpoint(allpoints["Cls"][4],j4)
+         xpivot = r4[0]
+         ### electron / positron?
+         particlename = getparticlename(allpoints["Cls"][4],j4)
+         ### get the yz window
+         winpts_yz,winlin_yz = getyzwindow(allpoints["Cls"][4],j4)
+         ### set the wide window starting from cluster_seed1 (window corners must be added clockwise!)
+         winpts_xz_wide,winlin_xz_wide = getwidewindow(allpoints["Cls"][4],j4)
+         ### discard all clusters which are not in the wide window
+         widepoints = initpoints()
+         trimwide(allpoints,widepoints,winpts_xz_wide,winpts_yz,xpivot)
+         Nwide1 = getNnon0(widepoints["Cls"][1])
+         # if(Nwide1<1): print("Failed Nwide1")
          
-         ### check if there are at least 1 cluster in both layer 2 and layer 3 within the narrow window
-         # if(Nnarr2<1): print("Failed Nnarr2, sig?",allpoints["IsSig"][4][j4])
-         if(Nnarr2<1): continue
-         # if(Nnarr3<1): print("Failed Nnarr3")
-         if(Nnarr3<1): continue
+         draw(pdfname,widepoints,dodraw,particlename,winlin_yz,winlin_xz_wide)
          
-         draw(pdfname,narrpoints,dodraw,particlename,None,winlin_xz_narr)
-         
-         ### get the seed - note: could be that there are several combinations but the seed momentum would be identical
-         pseed = makeseed(allpoints["Cls"][4],widepoints["Cls"][1],j4,j1,particlename)
-         # if(pseed.E()>Emax or pseed.E()<Emin): print("pseed.E()>Emax or pseed.E()<Emin")
-         if(pseed.E()>Emax or pseed.E()<Emin): continue
-         
-         ### set the cluster in layer 1
-         r1 = getpoint(widepoints["Cls"][1],j1)
-         
-         NseedsPerWindow = Nnarr2*Nnarr3
-         ### loop on the clusters in layer 2 and 3:
-         for j2 in range(Nnarr2):
-         # for j2 in range(narrpoints["Cls"][2].GetN()):
-            r2 = getpoint(narrpoints["Cls"][2],j2)
-            for j3 in range(Nnarr3):
-            # for j3 in range(narrpoints["Cls"][3].GetN()):
-               r3 = getpoint(narrpoints["Cls"][3],j3)
-               Nseeds += 1
-               
-               issig1 = widepoints["IsSig"][1][j1]
-               issig2 = narrpoints["IsSig"][2][j2]
-               issig3 = narrpoints["IsSig"][3][j3]
-               issig4 = allpoints["IsSig"][4][j4]
-               
-               trkid4 = allpoints["TrkId"][4][j4]
-               trkid3 = narrpoints["TrkId"][3][j3]
-               trkid2 = narrpoints["TrkId"][2][j2]
-               trkid1 = widepoints["TrkId"][1][j1]
-               issig = (issig4 and issig1 and issig2 and issig3)
-               trkid = str(trkid4) if(trkid4==trkid1 and trkid1==trkid2 and trkid2==trkid3) else "mult"
-               issiguniq = (issig and trkid!="mult")
-               if(issiguniq): Nmatched += 1
-
-               ### two independent 2d fits
-               chi2_xz,prob_xz,chi2_yz,prob_yz = seed2dfit(pdfname,r1,r2,r3,r4,dodraw)
-               if(issiguniq):
-                  histos["h_chi2ndf_xz_sig"].Fill(chi2_xz)
-                  histos["h_chi2ndf_yz_sig"].Fill(chi2_yz)
-                  histos["h_prob_xz_sig"].Fill(prob_xz)
-                  histos["h_prob_yz_sig"].Fill(prob_yz)
-               else:
-                  histos["h_chi2ndf_xz_bkg"].Fill(chi2_xz)
-                  histos["h_chi2ndf_yz_bkg"].Fill(chi2_yz)
-                  histos["h_prob_xz_bkg"].Fill(prob_xz)
-                  histos["h_prob_yz_bkg"].Fill(prob_yz)
-
-               ### a single 3d fit
-               res_xz, res_yz = seed3dfit(pdfname,r1,r2,r3,r4,dodraw)
-               if(issiguniq):
-                  histos["h_residuals_xz_sig"].Fill(res_xz)
-                  histos["h_residuals_yz_sig"].Fill(res_yz)
-               else:
-                  histos["h_residuals_xz_bkg"].Fill(res_xz)
-                  histos["h_residuals_yz_bkg"].Fill(res_yz)
+         ### choose one cluster in layer 1 as the second seed
+         for j1 in range(Nwide1):
+            ### get the narrow window  (window corners must be added clockwise!)
+            winpts_xz_narr,winlin_xz_narr = getnarrwindow(allpoints["Cls"][4],widepoints["Cls"][1],j4,j1)
+            ### discard all clusters which are not in the narrow window
+            narrpoints = initpoints()
+            trimnarr(widepoints,narrpoints,winpts_xz_narr)
+            Nnarr2 = getNnon0(narrpoints["Cls"][2])
+            Nnarr3 = getNnon0(narrpoints["Cls"][3])
+            
+            ### check if there are at least 1 cluster in both layer 2 and layer 3 within the narrow window
+            # if(Nnarr2<1): print("Failed Nnarr2, sig?",allpoints["IsSig"][4][j4])
+            if(Nnarr2<1): continue
+            # if(Nnarr3<1): print("Failed Nnarr3")
+            if(Nnarr3<1): continue
+            
+            draw(pdfname,narrpoints,dodraw,particlename,None,winlin_xz_narr)
+            
+            ### get the seed - note: could be that there are several combinations but the seed momentum would be identical
+            pseed = makeseed(allpoints["Cls"][4],widepoints["Cls"][1],j4,j1,particlename)
+            # if(pseed.E()>Emax or pseed.E()<Emin): print("pseed.E()>Emax or pseed.E()<Emin")
+            if(pseed.E()>Emax or pseed.E()<Emin): continue
+            
+            ### set the cluster in layer 1
+            r1 = getpoint(widepoints["Cls"][1],j1)
+            
+            NseedsPerWindow = Nnarr2*Nnarr3
+            ### loop on the clusters in layer 2 and 3:
+            for j2 in range(Nnarr2):
+            # for j2 in range(narrpoints["Cls"][2].GetN()):
+               r2 = getpoint(narrpoints["Cls"][2],j2)
+               for j3 in range(Nnarr3):
+               # for j3 in range(narrpoints["Cls"][3].GetN()):
+                  r3 = getpoint(narrpoints["Cls"][3],j3)
+                  Nseeds += 1
                   
-               ### a single 3d fit SVD
-               lfitpts, dd = seed3dfitSVD(pdfname,r1,r2,r3,r4,dodraw)
-               
-               ### set again the pseed according to lfit
-               cluster1 = TPolyMarker3D()
-               cluster2 = TPolyMarker3D()
-               cluster1.SetNextPoint(lfitpts[0][0],lfitpts[0][1],lfitpts[0][2])
-               cluster2.SetNextPoint(lfitpts[1][0],lfitpts[1][1],lfitpts[1][2])
-               if(isel(lfitpts[0][0])): pseed = makeseed(cluster2,cluster1,0,0,particlename)
-               else:                    pseed = makeseed(cluster1,cluster2,0,0,particlename)
-               if(pseed.E()>Emax or pseed.E()<Emin): continue
-               
-               ### the SVD alg
-               if(issiguniq):
-                  histos["h_svd_dd0_sig"].Fill(dd[0])
-                  histos["h_svd_dd1_sig"].Fill(dd[1])
-                  histos["h_svd_dd2_sig"].Fill(dd[2])
-               else:
-                  histos["h_svd_dd0_bkg"].Fill(dd[0])
-                  histos["h_svd_dd1_bkg"].Fill(dd[1])
-                  histos["h_svd_dd2_bkg"].Fill(dd[2])
-               
-               ### get the generated matched track momentum
-               pgen = TLorentzVector()
-               igen = -1
-               for k in range(iGen.size()):
-                  if(iGen[k]==j4):
-                     igen = k
-                     break
-               
-               ### write out the good seeds
-               svd0Seed.push_back(dd[0])
-               svd1Seed.push_back(dd[1])
-               svd2Seed.push_back(dd[2])
-               chi2xzSeed.push_back(chi2_xz)
-               chi2yzSeed.push_back(chi2_yz)
-               residxzSeed.push_back(res_xz)
-               residyzSeed.push_back(res_yz)
-               issigSeed.push_back(issiguniq)
-               iGenMatch.push_back(igen)
-               x1Seed.push_back(r1[0])
-               y1Seed.push_back(r1[1])
-               z1Seed.push_back(r1[2])
-               x2Seed.push_back(r2[0])
-               y2Seed.push_back(r2[1])
-               z2Seed.push_back(r2[2])
-               x3Seed.push_back(r3[0])
-               y3Seed.push_back(r3[1])
-               z3Seed.push_back(r3[2])
-               x4Seed.push_back(r4[0])
-               y4Seed.push_back(r4[1])
-               z4Seed.push_back(r4[2])
-               pxSeed.push_back(pseed.Px())
-               pySeed.push_back(pseed.Py())
-               pzSeed.push_back(pseed.Pz())
-               eSeed.push_back(pseed.E())
-               
-               ### cut on some quality
-               isgood = (dd[1]<0.005 and dd[2]<0.0025)
-               if(not isgood): continue
-               Ngood += 1
-               
-               ### check perforrmance of seeding
-               pgen.SetPxPyPzE(pxGen[igen],pyGen[igen],pzGen[igen],eGen[igen])
-               resE = (pseed.E()-pgen.E())/pgen.E()
-               resPz = (pseed.Pz()-pgen.Pz())/pgen.Pz()
-               resPy = (pseed.Py()-pgen.Py())/pgen.Py()
-               histos["h_seed_resE"].Fill(resE)
-               histos["h_seed_resPz"].Fill(resPz)
-               histos["h_seed_resPy"].Fill(resPy)
-               histos["h_seed_resE_vs_x"].Fill(r4[0],resE)
-               histos["h_seed_resPy_vs_x"].Fill(r4[0],resPy)
-               
-   histos["h_N_sigacc"].Fill(Nsigacc)       
-   histos["h_N_all_seeds"].Fill(Nseeds)       
-   histos["h_N_matched_seeds"].Fill(Nmatched)       
-   histos["h_N_good_seeds"].Fill(Ngood)       
-   
-   histos["h_seeding_score"].Fill(Nmatched/Nsigacc*100)
-   histos["h_seeding_pool"].Fill(Nseeds/Nsigacc*100)
-   
+                  issig1 = widepoints["IsSig"][1][j1]
+                  issig2 = narrpoints["IsSig"][2][j2]
+                  issig3 = narrpoints["IsSig"][3][j3]
+                  issig4 = allpoints["IsSig"][4][j4]
+                  
+                  trkid4 = allpoints["TrkId"][4][j4]
+                  trkid3 = narrpoints["TrkId"][3][j3]
+                  trkid2 = narrpoints["TrkId"][2][j2]
+                  trkid1 = widepoints["TrkId"][1][j1]
+                  issig = (issig4 and issig1 and issig2 and issig3)
+                  trkid = str(trkid4) if(trkid4==trkid1 and trkid1==trkid2 and trkid2==trkid3) else "mult"
+                  issiguniq = (issig and trkid!="mult")
+                  if(issiguniq): Nmatched += 1
+      
+                  ### two independent 2d fits
+                  chi2_xz,prob_xz,chi2_yz,prob_yz = seed2dfit(pdfname,r1,r2,r3,r4,dodraw)
+                  if(issiguniq):
+                     histos["h_chi2ndf_xz_sig"].Fill(chi2_xz)
+                     histos["h_chi2ndf_yz_sig"].Fill(chi2_yz)
+                     histos["h_prob_xz_sig"].Fill(prob_xz)
+                     histos["h_prob_yz_sig"].Fill(prob_yz)
+                  else:
+                     histos["h_chi2ndf_xz_bkg"].Fill(chi2_xz)
+                     histos["h_chi2ndf_yz_bkg"].Fill(chi2_yz)
+                     histos["h_prob_xz_bkg"].Fill(prob_xz)
+                     histos["h_prob_yz_bkg"].Fill(prob_yz)
+      
+                  ### a single 3d fit
+                  res_xz, res_yz = seed3dfit(pdfname,r1,r2,r3,r4,dodraw)
+                  if(issiguniq):
+                     histos["h_residuals_xz_sig"].Fill(res_xz)
+                     histos["h_residuals_yz_sig"].Fill(res_yz)
+                  else:
+                     histos["h_residuals_xz_bkg"].Fill(res_xz)
+                     histos["h_residuals_yz_bkg"].Fill(res_yz)
+                     
+                  ### a single 3d fit SVD
+                  lfitpts, dd = seed3dfitSVD(pdfname,r1,r2,r3,r4,dodraw)
+                  
+                  ### set again the pseed according to lfit
+                  cluster1 = TPolyMarker3D()
+                  cluster2 = TPolyMarker3D()
+                  cluster1.SetNextPoint(lfitpts[0][0],lfitpts[0][1],lfitpts[0][2])
+                  cluster2.SetNextPoint(lfitpts[1][0],lfitpts[1][1],lfitpts[1][2])
+                  if(isel(lfitpts[0][0])): pseed = makeseed(cluster2,cluster1,0,0,particlename)
+                  else:                    pseed = makeseed(cluster1,cluster2,0,0,particlename)
+                  if(pseed.E()>Emax or pseed.E()<Emin): continue
+                  
+                  ### the SVD alg
+                  if(issiguniq):
+                     histos["h_svd_dd0_sig"].Fill(dd[0])
+                     histos["h_svd_dd1_sig"].Fill(dd[1])
+                     histos["h_svd_dd2_sig"].Fill(dd[2])
+                  else:
+                     histos["h_svd_dd0_bkg"].Fill(dd[0])
+                     histos["h_svd_dd1_bkg"].Fill(dd[1])
+                     histos["h_svd_dd2_bkg"].Fill(dd[2])
+                  
+                  ### get the generated matched track momentum
+                  pgen = TLorentzVector()
+                  igen = -1
+                  for k in range(iGen.size()):
+                     if(iGen[k]==j4):
+                        igen = k
+                        break
+                  
+                  ### write out the good seeds
+                  svd0Seed.push_back(dd[0])
+                  svd1Seed.push_back(dd[1])
+                  svd2Seed.push_back(dd[2])
+                  chi2xzSeed.push_back(chi2_xz)
+                  chi2yzSeed.push_back(chi2_yz)
+                  residxzSeed.push_back(res_xz)
+                  residyzSeed.push_back(res_yz)
+                  issigSeed.push_back(issiguniq)
+                  iGenMatch.push_back(igen)
+                  x1Seed.push_back(r1[0])
+                  y1Seed.push_back(r1[1])
+                  z1Seed.push_back(r1[2])
+                  x2Seed.push_back(r2[0])
+                  y2Seed.push_back(r2[1])
+                  z2Seed.push_back(r2[2])
+                  x3Seed.push_back(r3[0])
+                  y3Seed.push_back(r3[1])
+                  z3Seed.push_back(r3[2])
+                  x4Seed.push_back(r4[0])
+                  y4Seed.push_back(r4[1])
+                  z4Seed.push_back(r4[2])
+                  pxSeed.push_back(pseed.Px())
+                  pySeed.push_back(pseed.Py())
+                  pzSeed.push_back(pseed.Pz())
+                  eSeed.push_back(pseed.E())
+                  
+                  ### cut on some quality
+                  isgood = (dd[1]<0.005 and dd[2]<0.0025)
+                  if(not isgood): continue
+                  Ngood += 1
+                  
+                  ### check perforrmance of seeding
+                  pgen.SetPxPyPzE(pxGen[igen],pyGen[igen],pzGen[igen],eGen[igen])
+                  resE = (pseed.E()-pgen.E())/pgen.E()
+                  resPz = (pseed.Pz()-pgen.Pz())/pgen.Pz()
+                  resPy = (pseed.Py()-pgen.Py())/pgen.Py()
+                  histos["h_seed_resE"].Fill(resE)
+                  histos["h_seed_resPz"].Fill(resPz)
+                  histos["h_seed_resPy"].Fill(resPy)
+                  histos["h_seed_resE_vs_x"].Fill(r4[0],resE)
+                  histos["h_seed_resPy_vs_x"].Fill(r4[0],resPy)
+                  
+      histos["h_N_sigacc"].Fill(Nsigacc)       
+      histos["h_N_all_seeds"].Fill(Nseeds)       
+      histos["h_N_matched_seeds"].Fill(Nmatched)       
+      histos["h_N_good_seeds"].Fill(Ngood)       
+      
+      histos["h_seeding_score"].Fill(Nmatched/Nsigacc*100)
+      histos["h_seeding_pool"].Fill(Nseeds/Nsigacc*100)
+      
    if(dodraw):
       cnv = TCanvas("","",2000,2000)
       cnv.SaveAs(pdfname+")")

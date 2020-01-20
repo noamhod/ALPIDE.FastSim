@@ -33,12 +33,16 @@ double meGeV = meMeV/1000.;
 double Hstave = 1.5;  // cm
 double Lstave = 27;   // cm for BPPP or 50 for Trident
 double Rbeampipe = 4; // cm for BPPP or 14 for Trident
-double x1L = -Rbeampipe-Lstave; // = -31 for BPPP or -41 for Trident
-double x1R = -Rbeampipe;        // = -4 for BPPP or -14 for Trident
-double x2L = +Rbeampipe;        // = +4
-double x2R = +Rbeampipe+Lstave; // = +31
-double yUp = +Hstave/2.;        // = +0.75
-double yDn = -Hstave/2.;        // = -0.75
+double RoffsetBfield22BPPP = 7.0; // cm for BPPP in B=2.2T
+double RoffsetBfield20BPPP = 5.7; // cm for BPPP in B=2.0T
+double RoffsetBfield14BPPP = 4.0; // cm for BPPP in B=1.4T
+double RoffsetBfield = RoffsetBfield20BPPP;
+double x1L = -RoffsetBfield-Lstave;
+double x1R = -RoffsetBfield;       
+double x2L = +RoffsetBfield;       
+double x2R = +RoffsetBfield+Lstave;
+double yUp = +Hstave/2.;
+double yDn = -Hstave/2.;
 
 //// dipole geometry
 double xW = 120;
@@ -49,11 +53,11 @@ double z2 = 202.9;
 void resetToTridentGeometry()
 {
 	Lstave = 50;   // cm for BPPP or 50 for Trident
-	Rbeampipe = 14; // cm for BPPP or 14 for Trident
-	x1L = -Rbeampipe-Lstave; // = -31 for BPPP or -41 for Trident
-	x1R = -Rbeampipe;        // = -4 for BPPP or -14 for Trident
-	x2L = +Rbeampipe;        // = +4 for BPPP or +14 for Trident
-	x2R = +Rbeampipe+Lstave; // = +31 for BPPP or +41 for Trident
+	RoffsetBfield = 14; // cm for Trident in in B=1.4T
+	x1L = -RoffsetBfield-Lstave;
+	x1R = -RoffsetBfield;       
+	x2L = +RoffsetBfield;       
+	x2R = +RoffsetBfield+Lstave;
 }
 
 bool accept(double x, double y)
@@ -277,8 +281,8 @@ void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TSt
    stave4L->Draw();
    stave4R->Draw();
    
-   for(int i=0 ; i<(int)poll.size()    ; ++i) { cnv_pl3d->cd(); poll[i]->Draw(); }
-   for(int i=0 ; i<(int)polm.size()    ; ++i) { cnv_pm3d->cd(); polm[i]->Draw(); }
+   for(int i=0 ; i<(int)poll.size() ; ++i) { cnv_pl3d->cd(); poll[i]->Draw(); }
+   for(int i=0 ; i<(int)polm.size() ; ++i) { cnv_pm3d->cd(); polm[i]->Draw(); }
    
    TLegend* leg = trkcolleg();
    cnv_pl3d->cd();
@@ -505,8 +509,9 @@ void filltrkvec(TString type, KMCProbeFwd* probe)
 }
 
 
-void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
+void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup/setupLUXE.txt")
 {
+	TString setup = "setup/setupLUXE_"+process+".txt";
    gROOT->LoadMacro("Loader.C+");
    gRandom->SetSeed(Seed);  
    det = new KMCDetectorFwd();
@@ -540,7 +545,7 @@ void runLUXEeeReco(int Seed=12345, const char* setup="setup/setupLUXE.txt")
 
    int outN = 100;
 
-   TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
+   // TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
 	if(process=="trident") resetToTridentGeometry();
 
    /// get the particles from a ttree

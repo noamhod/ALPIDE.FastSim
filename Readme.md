@@ -21,11 +21,8 @@ The reconstructed tracks are written for further analysis using python+ROOT.
   - you will see 2 files in the data/root/ directory
 
 - Run the reconstruction on the "truth" ROOT files
-  - look at the setup/setupLUXE.txt to understand/change the geometry and materials
-  - in runLUXEeeReco.C, find this line: `TString process = "trident";  /// trident or bppp`
-  - change (hardcode) as needed between "bppp" and "trident"
-  - run `root -b -q load.C runLUXEeeReco.C+`
-  - repeat the 2 steps above to flip between "bppp" and "trident"
+  - look at the setup/setupLUXE_bppp.txt or setup/setupLUXE_trident.txt to understand/change the geometry and materials
+  - run `root -b -q load.C 'runLUXEeeReco.C+("bppp")'` for bppp or root -b -q load.C 'runLUXEeeReco.C+("trident")'
   - this will produce a number of files in the data/root/ directory
 
 - Analyse the reconstructed output:
