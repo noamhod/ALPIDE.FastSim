@@ -81,7 +81,7 @@ if(proc=="bppp" and sides=="e-"): detXmin = xEsideL
 
 
 ### background stuff
-NnoiseClusters = 100
+NnoiseClusters = 200 ## uniformly distributed in x:y for each layer
 
 layers = [1,2,3,4]
 
@@ -820,7 +820,7 @@ intfile = TFile("../data/root/rec_"+proc+".root","READ")
 intree = intfile.Get("res")
 nevents = intree.GetEntries()
 print("with %d events" % nevents)
-nmax = 10000
+nmax = 100000
 n=0 ### init n
 for event in intree:
    Nsigall = 0
@@ -932,8 +932,10 @@ for event in intree:
             if(side=="Eside"): AddPoint(allpointsEside,rnoise)
    Nbkgsig4 = getNnon0(allpointsEside["Cls"][4])+getNnon0(allpointsPside["Cls"][4])
    
+   
    ### just draw the full event
    drawall(pdfname+"(",allpointsEside,allpointsPside,dodraw)
+   
    
    ### loop on the 2 sides
    for side in sidesarr:
@@ -971,11 +973,9 @@ for event in intree:
             Nnarr3 = getNnon0(narrpoints["Cls"][3])
             
             ### check if there are at least 1 cluster in both layer 2 and layer 3 within the narrow window
-            # if(Nnarr2<1): print("Failed Nnarr2, sig?",allpoints["IsSig"][4][j4])
-            if(Nnarr2<1): continue
-            # if(Nnarr3<1): print("Failed Nnarr3")
-            if(Nnarr3<1): continue
+            if(Nnarr2<1 or Nnarr3<1): continue
             
+            ### draw the narrow window
             draw(pdfname,narrpoints,dodraw,particlename,None,winlin_xz_narr)
             
             ### get the seed - note: could be that there are several combinations but the seed momentum would be identical
@@ -986,7 +986,6 @@ for event in intree:
             ### set the cluster in layer 1
             r1 = getpoint(widepoints["Cls"][1],j1)
             
-            NseedsPerWindow = Nnarr2*Nnarr3
             ### loop on the clusters in layer 2 and 3:
             for j2 in range(Nnarr2):
             # for j2 in range(narrpoints["Cls"][2].GetN()):
@@ -1105,13 +1104,12 @@ for event in intree:
                   histos["h_seed_resE_vs_x"].Fill(r4[0],resE)
                   histos["h_seed_resPy_vs_x"].Fill(r4[0],resPy)
                   
-      histos["h_N_sigacc"].Fill(Nsigacc)       
-      histos["h_N_all_seeds"].Fill(Nseeds)       
-      histos["h_N_matched_seeds"].Fill(Nmatched)       
-      histos["h_N_good_seeds"].Fill(Ngood)       
-      
-      histos["h_seeding_score"].Fill(Nmatched/Nsigacc*100)
-      histos["h_seeding_pool"].Fill(Nseeds/Nsigacc*100)
+   histos["h_N_sigacc"].Fill(Nsigacc)       
+   histos["h_N_all_seeds"].Fill(Nseeds)       
+   histos["h_N_matched_seeds"].Fill(Nmatched)       
+   histos["h_N_good_seeds"].Fill(Ngood)
+   histos["h_seeding_score"].Fill(Nmatched/Nsigacc*100)
+   histos["h_seeding_pool"].Fill(Nseeds/Nsigacc*100)
       
    if(dodraw):
       cnv = TCanvas("","",2000,2000)
