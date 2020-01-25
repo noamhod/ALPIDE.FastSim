@@ -78,6 +78,19 @@ if(proc=="bppp" and sides=="e+"): detXmax = xPsideR
 if(proc=="bppp" and sides=="e-"): detXmin = xEsideL
 
 #############################################
+def GetLogBinning(nbins,xmin,xmax):
+   logmin  = math.log10(xmin)
+   logmax  = math.log10(xmax)
+   logbinwidth = (logmax-logmin)/nbins
+   # Bin edges in GeV
+   xbins = [xmin,] #the lowest edge first
+   for i in range(1,nbins+1):
+      xbins.append( ROOT.TMath.Power( 10,(logmin + i*logbinwidth) ) )
+   arrxbins = array.array("d", xbins)
+   return nbins, arrxbins
+
+nbins_E, bins_E = GetLogBinning(40,1,15) if(proc=="bppp") else GetLogBinning(20,1,4.5)
+#############################################
 
 histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks", 500,0,0.5),
            "h_residuals_yz_sig": TH1D("residuals_yz_sig",";residuals_{yz};Tracks", 500,0,500), 
@@ -101,21 +114,33 @@ histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks
            "h_chi2ndf_xz_bkg": TH1D("chi2ndf_xz_bkg",";chi2ndf_{xz};Tracks", 500,0,0.001),
            "h_chi2ndf_yz_bkg": TH1D("chi2ndf_yz_bkg",";chi2ndf_{yz};Tracks", 500,0,0.001),
            
-           "h_seed_resE" : TH1D("seed_resE", ";(E_{seed}-E_{gen})/E_{gen};Tracks",    100,-3,+3),
-           "h_seed_resPz": TH1D("seed_resPz",";(Pz_{seed}-Pz_{gen})/Pz_{gen};Tracks", 100,-3,+3), 
+           "h_seed_resE" : TH1D("seed_resE", ";(E_{seed}-E_{gen})/E_{gen};Tracks",    100,-0.05,+0.05),
+           "h_seed_resPz": TH1D("seed_resPz",";(Pz_{seed}-Pz_{gen})/Pz_{gen};Tracks", 100,-0.05,+0.05), 
            "h_seed_resPy": TH1D("seed_resPy",";(Py_{seed}-Py_{gen})/Py_{gen};Tracks", 100,-10,+10),
            
-           "h_seed_resE_vs_x"  : TH2D("seed_resE_vs_x",  ";x;(E_{seed}-E_{gen})/E_{gen};Tracks",    100,detXmin,detXmax, 100,-5,+5),
+           "h_seed_resE_vs_x"  : TH2D("seed_resE_vs_x",  ";x;(E_{seed}-E_{gen})/E_{gen};Tracks",    100,detXmin,detXmax, 100,-0.05,+0.05),
            "h_seed_resPy_vs_x" : TH2D("seed_resPy_vs_x", ";x;(Py_{seed}-Py_{gen})/Py_{gen};Tracks", 100,detXmin,detXmax, 100,-10,+10),
            
-           "h_N_sigacc":        TH1D("N_sigacc",        ";Track multiplicity;Events", 40,30,190),
-           "h_N_all_seeds":     TH1D("N_all_seeds",     ";Track multiplicity;Events", 40,30,190),
-           "h_N_matched_seeds": TH1D("N_matched_seeds", ";Track multiplicity;Events", 40,30,190),
-           "h_N_good_seeds":    TH1D("N_good_seeds",    ";Track multiplicity;Events", 40,30,190),
+           "h_N_sigacc":        TH1D("N_sigacc",        ";Track multiplicity;Events", 100,30,330),
+           "h_N_all_seeds":     TH1D("N_all_seeds",     ";Track multiplicity;Events", 100,30,330),
+           "h_N_matched_seeds": TH1D("N_matched_seeds", ";Track multiplicity;Events", 100,30,330),
+           "h_N_good_seeds":    TH1D("N_good_seeds",    ";Track multiplicity;Events", 100,30,330),
            
            "h_seeding_score": TH1D("h_seeding_score", ";N_{seeds}^{matched}/N_{signa}^{in.acc} [%];Events", 20,91,101),
            "h_seeding_pool":  TH1D("h_seeding_pool",  ";N_{seeds}^{all}/N_{signa}^{in.acc} [%];Events", 50,90,590),
+           
+           "h_gen_E_all"     : TH1D("gen_E_all",     ";E_{gen} [GeV];Tracks",  nbins_E, bins_E),
+           "h_gen_E_mat_all" : TH1D("gen_E_mat_all", ";E_{gen} [GeV];Tracks", nbins_E, bins_E),
+           "h_gen_E_mat_sel" : TH1D("gen_E_mat_sel", ";E_{gen} [GeV];Tracks", nbins_E, bins_E),
+           "h_eff_E_mat_all" : TH1D("eff_E_mat_all", ";E_{gen} [GeV];Efficiency", nbins_E, bins_E),
+           "h_eff_E_mat_sel" : TH1D("eff_E_mat_sel", ";E_{gen} [GeV];Efficiency", nbins_E, bins_E),
 }
+histos["h_gen_E_all"].Sumw2()
+histos["h_gen_E_mat_all"].Sumw2()
+histos["h_gen_E_mat_sel"].Sumw2()
+histos["h_eff_E_mat_all"].Sumw2()
+histos["h_eff_E_mat_sel"].Sumw2()
+
 
 frootin = "../data/root/seeds_"+proc+".root"
 print("Opening root file:",frootin)
@@ -130,6 +155,9 @@ for event in intree:
    Nseeds = event.eSeed.size()
    Nmatched = 0
    Ngood = 0
+   
+   for j in range(event.eGen.size()):
+      histos["h_gen_E_all"].Fill(event.eGen[j])
    
    for i in range(event.eSeed.size()):
       # event.svd0Seed
@@ -167,11 +195,17 @@ for event in intree:
       # event.qGen
       # event.iGen
       
-      if(event.issiguniq[i]): 
+      ### get the matching seed if matched
+      igen = event.iGenMatch[i]
+      foundmatch = (igen>=0 and event.issigSeed[i])
+      pgen = TLorentzVector()
+      if(foundmatch): pgen.SetPxPyPzE(event.pxGen[igen],event.pyGen[igen],event.pzGen[igen],event.eGen[igen])
+      
+      if(event.issigSeed[i]): 
          Nmatched += 1
       
       ### 2d fit
-      if(event.issiguniq[i]):
+      if(event.issigSeed[i]):
          histos["h_chi2ndf_xz_sig"].Fill(event.chi2xzSeed[i])
          histos["h_chi2ndf_yz_sig"].Fill(event.chi2yzSeed[i])
       else:
@@ -179,7 +213,7 @@ for event in intree:
          histos["h_chi2ndf_yz_bkg"].Fill(event.chi2yzSeed[i])
 
       ### a single 3d fit
-      if(event.issiguniq[i]):
+      if(event.issigSeed[i]):
          histos["h_residuals_xz_sig"].Fill(event.residxzSeed[i])
          histos["h_residuals_yz_sig"].Fill(event.residyzSeed[i])
       else:
@@ -187,7 +221,7 @@ for event in intree:
          histos["h_residuals_yz_bkg"].Fill(event.residyzSeed[i])
          
       ### the SVD alg
-      if(event.issiguniq[i]):
+      if(event.issigSeed[i]):
          histos["h_svd_dd0_sig"].Fill(event.svd0Seed[i])
          histos["h_svd_dd1_sig"].Fill(event.svd1Seed[i])
          histos["h_svd_dd2_sig"].Fill(event.svd2Seed[i])
@@ -195,7 +229,10 @@ for event in intree:
          histos["h_svd_dd0_bkg"].Fill(event.svd0Seed[i])
          histos["h_svd_dd1_bkg"].Fill(event.svd1Seed[i])
          histos["h_svd_dd2_bkg"].Fill(event.svd2Seed[i])
-         
+      
+      ### for efficiencies before selection  
+      if(foundmatch): histos["h_gen_E_mat_all"].Fill(event.eGen[igen])
+      
       ### cut on some quality
       isgood = (event.svd1Seed[i]<0.005 and event.svd2Seed[i]<0.0025)
       if(not isgood): continue
@@ -206,11 +243,9 @@ for event in intree:
       pseed.SetPxPyPzE(event.pxSeed[i],event.pySeed[i],event.pzSeed[i],event.eSeed[i])
       
       ### get the matching seed
-      igen = event.iGen[i]
-      foundmatch = (igen>=0)
-      pgen = TLorentzVector()
       if(foundmatch):
-         pgen.SetPxPyPzE(event.pxGen[igen],event.pyGen[igen],event.pzGen[igen],event.eGen[igen])
+         ### for efficiencies after selection
+         histos["h_gen_E_mat_sel"].Fill(event.eGen[igen])
          ### check momentum perforrmance of seeding
          resE = (pseed.E()-pgen.E())/pgen.E()
          resPz = (pseed.Pz()-pgen.Pz())/pgen.Pz()
@@ -230,8 +265,8 @@ for event in intree:
    histos["h_seeding_score"].Fill(Nmatched/Nsigacc*100)
    histos["h_seeding_pool"].Fill(Nseeds/Nsigacc*100)
    
-   print("Event: %g --> Nsigacc=%g, Nseeds=%g, Nmatched=%g, Ngood=%g --> Seeds matching performance: Nmatched/Nsigacc=%5.1f%%" % (n,Nsigacc,Nseeds,Nmatched,Ngood,Nmatched/Nsigacc*100))
-   if(n%10==0 and n>0): print("  processed %d events" % n)
+   # print("Event: %g --> Nsigacc=%g, Nseeds=%g, Nmatched=%g, Ngood=%g --> Seeds matching performance: Nmatched/Nsigacc=%5.1f%%" % (n,Nsigacc,Nseeds,Nmatched,Ngood,Nmatched/Nsigacc*100))
+   if(n%100==0 and n>0): print("  processed %d events" % n)
    n+=1
 print("Total events processed: ",n-1)
 
@@ -244,9 +279,11 @@ fpdf = "../output/pdf/seedingdemoplots_"+proc+".pdf"
 cnv = TCanvas("","",1000,500)
 cnv.Divide(2,1)
 cnv.cd(1)
+ROOT.gPad.SetLogy()
 histos["h_chi2ndf_xz_sig"].SetLineColor(ROOT.kRed);   histos["h_chi2ndf_xz_sig"].Draw()
 histos["h_chi2ndf_xz_bkg"].SetLineColor(ROOT.kBlack); histos["h_chi2ndf_xz_bkg"].Draw("same")
 cnv.cd(2)
+ROOT.gPad.SetLogy()
 histos["h_chi2ndf_yz_sig"].SetLineColor(ROOT.kRed);   histos["h_chi2ndf_yz_sig"].Draw()
 histos["h_chi2ndf_yz_bkg"].SetLineColor(ROOT.kBlack); histos["h_chi2ndf_yz_bkg"].Draw("same")
 cnv.SaveAs(fpdf+"(")
@@ -254,9 +291,11 @@ cnv.SaveAs(fpdf+"(")
 cnv = TCanvas("","",1000,500)
 cnv.Divide(2,1)
 cnv.cd(1)
+ROOT.gPad.SetLogy()
 histos["h_residuals_xz_sig"].SetLineColor(ROOT.kRed);   histos["h_residuals_xz_sig"].Draw()
 histos["h_residuals_xz_bkg"].SetLineColor(ROOT.kBlack); histos["h_residuals_xz_bkg"].Draw("same")
 cnv.cd(2)
+ROOT.gPad.SetLogy()
 histos["h_residuals_yz_sig"].SetLineColor(ROOT.kRed);   histos["h_residuals_yz_sig"].Draw()
 histos["h_residuals_yz_bkg"].SetLineColor(ROOT.kBlack); histos["h_residuals_yz_bkg"].Draw("same")
 cnv.SaveAs(fpdf)
@@ -264,12 +303,15 @@ cnv.SaveAs(fpdf)
 cnv = TCanvas("","",1500,500)
 cnv.Divide(3,1)
 cnv.cd(1)
+ROOT.gPad.SetLogy()
 histos["h_svd_dd0_sig"].SetLineColor(ROOT.kRed);   histos["h_svd_dd0_sig"].Draw()
 histos["h_svd_dd0_bkg"].SetLineColor(ROOT.kBlack); histos["h_svd_dd0_bkg"].Draw("same")
 cnv.cd(2)
+ROOT.gPad.SetLogy()
 histos["h_svd_dd1_sig"].SetLineColor(ROOT.kRed);   histos["h_svd_dd1_sig"].Draw()
 histos["h_svd_dd1_bkg"].SetLineColor(ROOT.kBlack); histos["h_svd_dd1_bkg"].Draw("same")
 cnv.cd(3)
+ROOT.gPad.SetLogy()
 histos["h_svd_dd2_sig"].SetLineColor(ROOT.kRed);   histos["h_svd_dd2_sig"].Draw()
 histos["h_svd_dd2_bkg"].SetLineColor(ROOT.kBlack); histos["h_svd_dd2_bkg"].Draw("same")
 cnv.SaveAs(fpdf)
@@ -293,6 +335,24 @@ cnv.cd(2)
 histos["h_seeding_pool"].Draw("hist")
 cnv.cd(3)
 histos["h_seeding_score"].Draw("hist")
+cnv.SaveAs(fpdf)
+
+cnv = TCanvas("","",1000,500)
+cnv.Divide(2,1)
+cnv.cd(1)
+histos["h_gen_E_all"].SetLineColor(ROOT.kBlack);     histos["h_gen_E_all"].Draw("hist")
+histos["h_gen_E_mat_all"].SetLineColor(ROOT.kGreen); histos["h_gen_E_mat_all"].Draw("hist same")
+histos["h_gen_E_mat_sel"].SetLineColor(ROOT.kRed);   histos["h_gen_E_mat_sel"].Draw("hist same")
+cnv.cd(2)
+histos["h_eff_E_mat_all"].Divide(histos["h_gen_E_mat_all"],histos["h_gen_E_all"])
+histos["h_eff_E_mat_sel"].Divide(histos["h_gen_E_mat_sel"],histos["h_gen_E_all"])
+for b in range(histos["h_eff_E_mat_all"].GetNbinsX()+1):
+   if(histos["h_eff_E_mat_all"].GetBinContent(b)>1): histos["h_eff_E_mat_all"].SetBinContent(b,1)
+   if(histos["h_eff_E_mat_sel"].GetBinContent(b)>1): histos["h_eff_E_mat_sel"].SetBinContent(b,1)
+histos["h_eff_E_mat_all"].SetLineColor(ROOT.kGreen); histos["h_eff_E_mat_all"].SetMinimum(0.0); histos["h_eff_E_mat_all"].SetMaximum(1.1)
+histos["h_eff_E_mat_sel"].SetLineColor(ROOT.kRed);   histos["h_eff_E_mat_sel"].SetMinimum(0.0); histos["h_eff_E_mat_sel"].SetMaximum(1.1)
+histos["h_eff_E_mat_all"].Draw("ep")
+histos["h_eff_E_mat_sel"].Draw("ep same")
 cnv.SaveAs(fpdf+")")
 
 

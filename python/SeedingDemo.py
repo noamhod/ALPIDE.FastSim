@@ -799,17 +799,17 @@ histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks
            "h_chi2ndf_xz_bkg": TH1D("chi2ndf_xz_bkg",";chi2ndf_{xz};Tracks", 500,0,0.001),
            "h_chi2ndf_yz_bkg": TH1D("chi2ndf_yz_bkg",";chi2ndf_{yz};Tracks", 500,0,0.001),
            
-           "h_seed_resE" : TH1D("seed_resE", ";(E_{seed}-E_{gen})/E_{gen};Tracks",    100,-3,+3),
-           "h_seed_resPz": TH1D("seed_resPz",";(Pz_{seed}-Pz_{gen})/Pz_{gen};Tracks", 100,-3,+3), 
+           "h_seed_resE" : TH1D("seed_resE", ";(E_{seed}-E_{gen})/E_{gen};Tracks",    100,-0.05,+0.05),
+           "h_seed_resPz": TH1D("seed_resPz",";(Pz_{seed}-Pz_{gen})/Pz_{gen};Tracks", 100,-0.05,+0.05), 
            "h_seed_resPy": TH1D("seed_resPy",";(Py_{seed}-Py_{gen})/Py_{gen};Tracks", 100,-10,+10),
            
-           "h_seed_resE_vs_x"  : TH2D("seed_resE_vs_x",  ";x;(E_{seed}-E_{gen})/E_{gen};Tracks",    100,detXmin,detXmax, 100,-5,+5),
+           "h_seed_resE_vs_x"  : TH2D("seed_resE_vs_x",  ";x;(E_{seed}-E_{gen})/E_{gen};Tracks",    100,detXmin,detXmax, 100,-0.05,+0.05),
            "h_seed_resPy_vs_x" : TH2D("seed_resPy_vs_x", ";x;(Py_{seed}-Py_{gen})/Py_{gen};Tracks", 100,detXmin,detXmax, 100,-10,+10),
            
-           "h_N_sigacc":        TH1D("N_sigacc",        ";Track multiplicity;Events", 40,30,190),
-           "h_N_all_seeds":     TH1D("N_all_seeds",     ";Track multiplicity;Events", 40,30,190),
-           "h_N_matched_seeds": TH1D("N_matched_seeds", ";Track multiplicity;Events", 40,30,190),
-           "h_N_good_seeds":    TH1D("N_good_seeds",    ";Track multiplicity;Events", 40,30,190),
+           "h_N_sigacc":        TH1D("N_sigacc",        ";Track multiplicity;Events", 100,30,330),
+           "h_N_all_seeds":     TH1D("N_all_seeds",     ";Track multiplicity;Events", 100,30,330),
+           "h_N_matched_seeds": TH1D("N_matched_seeds", ";Track multiplicity;Events", 100,30,330),
+           "h_N_good_seeds":    TH1D("N_good_seeds",    ";Track multiplicity;Events", 100,30,330),
            
            "h_seeding_score": TH1D("h_seeding_score", ";N_{seeds}^{matched}/N_{signa}^{in.acc} [%];Events", 20,91,101),
            "h_seeding_pool":  TH1D("h_seeding_pool",  ";N_{seeds}^{all}/N_{signa}^{in.acc} [%];Events", 50,90,590),
@@ -820,7 +820,7 @@ intfile = TFile("../data/root/rec_"+proc+".root","READ")
 intree = intfile.Get("res")
 nevents = intree.GetEntries()
 print("with %d events" % nevents)
-nmax = 100000
+nmax = 1000000
 n=0 ### init n
 for event in intree:
    Nsigall = 0
@@ -1057,7 +1057,7 @@ for event in intree:
                   pgen = TLorentzVector()
                   igen = -1
                   for k in range(iGen.size()):
-                     if(iGen[k]==j4):
+                     if(iGen[k]==trkid4):
                         igen = k
                         break
                   
