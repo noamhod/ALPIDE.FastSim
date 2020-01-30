@@ -50,7 +50,6 @@ Emin = 1.00 if(proc=="trident") else 2 # GeV
 zDipoleExit = 202.9
 xDipoleExitMinAbs = 1.5 if(proc=="bppp") else 4   ## cm --> TODO: need tuning
 xDipoleExitMaxAbs = 25  if(proc=="bppp") else 30  ## cm --> TODO: need tuning
-xDipoleExitAbs = (xDipoleExitMaxAbs-xDipoleExitMinAbs)/2.
 yDipoleExitMin = -0.05 ## cm --> TODO: need tuning
 yDipoleExitMax = +0.05 ## cm --> TODO: need tuning
 xAbsMargins = 0.025 # cm --> TODO: need tuning
@@ -258,14 +257,10 @@ def getyzwindow(cluster,i):
    window_pts.SetNextPoint(x1,y1max,z1)
    xmiddle = +xDipoleExitMinAbs+(abs(x1)*0.99-xDipoleExitMinAbs)/2
    if(particles=="electrons"):
-      # window_pts.SetNextPoint(xDipoleExitAbs,yDipoleExitMax,zDipoleExit)
       window_pts.SetNextPoint(+xmiddle,yDipoleExitMax,zDipoleExit)
-      # window_pts.SetNextPoint(xDipoleExitAbs,yDipoleExitMin,zDipoleExit)
       window_pts.SetNextPoint(+xmiddle,yDipoleExitMin,zDipoleExit)
    else:
-      # window_pts.SetNextPoint(-xDipoleExitAbs,yDipoleExitMax,zDipoleExit)
       window_pts.SetNextPoint(-xmiddle,yDipoleExitMax,zDipoleExit)
-      # window_pts.SetNextPoint(-xDipoleExitAbs,yDipoleExitMin,zDipoleExit)
       window_pts.SetNextPoint(-xmiddle,yDipoleExitMin,zDipoleExit)
    window_lin = windowline(window_pts)
    window_lin.SetLineWidth(1)

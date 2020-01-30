@@ -1,0 +1,31 @@
+[Electron mass GeV]
+me = 0.00051099895
+
+[Units]
+cm2m = 1.e-2
+cm2um = 1.e4
+um2cm = 1.e-4
+
+[Magnetic field Tesla, Meter] 
+B = 1.4
+LB = 1
+
+[Possible energies GeV]
+Emax = 17.5
+Emin = 1.00
+
+[General geometry cm]
+Rbeampipe   = 4
+zDipoleExit = 202.9
+xDipoleExitMinAbs = 4.0
+xDipoleExitMaxAbs = 30
+yDipoleExitMin = -0.05
+yDipoleExitMax = +0.05
+xAbsMargins = 0.025
+yAbsMargins = 0.100
+
+[Stave geometry cm]
+Hstave = 1.5
+Lstave = 50
+Rbeampipe = 4
+RoffsetBfield = 14

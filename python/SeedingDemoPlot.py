@@ -7,6 +7,7 @@ import numpy as np
 import ROOT
 from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TF2, TGraph, TGraph2D, TRandom, TVector2, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
 import argparse
+
 parser = argparse.ArgumentParser(description='analysis.py...')
 parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
 parser.add_argument('-s', metavar='sides',   required=False, help='detector side [e+, e-, e+e-]')
@@ -49,7 +50,6 @@ Emin = 1.00 if(proc=="trident") else 2 # GeV
 zDipoleExit = 202.9
 xDipoleExitMinAbs = 1.5 if(proc=="bppp") else 4   ## cm --> TODO: need tuning
 xDipoleExitMaxAbs = 25  if(proc=="bppp") else 30  ## cm --> TODO: need tuning
-xDipoleExitAbs = (xDipoleExitMaxAbs-xDipoleExitMinAbs)/2.
 yDipoleExitMin = -0.05 ## cm --> TODO: need tuning
 yDipoleExitMax = +0.05 ## cm --> TODO: need tuning
 xAbsMargins = 0.025 # cm --> TODO: need tuning
