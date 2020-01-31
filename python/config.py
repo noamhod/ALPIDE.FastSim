@@ -35,6 +35,7 @@ def set(process,sides,doprint=False):
    map.update( {'Emin':get('Possible energies GeV','Emin')} )
 
    map.update( {'Rbeampipe':get('General geometry cm','Rbeampipe')} )
+   map.update( {'Wbeampipe':get('General geometry cm','Wbeampipe')} )
    map.update( {'zDipoleExit':get('General geometry cm','zDipoleExit')} )
    map.update( {'xDipoleExitMinAbs':get('General geometry cm','xDipoleExitMinAbs')} )
    map.update( {'xDipoleExitMaxAbs':get('General geometry cm','xDipoleExitMaxAbs')} )
@@ -46,6 +47,11 @@ def set(process,sides,doprint=False):
    map.update( {'Hstave':get('Stave geometry cm','Hstave')} )
    map.update( {'Lstave':get('Stave geometry cm','Lstave')} )
    map.update( {'RoffsetBfield':get('Stave geometry cm','RoffsetBfield')} )
+   
+   map.update( {'zLayer1':get('Layer geometry cm','zLayer1')} )
+   map.update( {'zLayer2':get('Layer geometry cm','zLayer2')} )
+   map.update( {'zLayer3':get('Layer geometry cm','zLayer3')} )
+   map.update( {'zLayer4':get('Layer geometry cm','zLayer4')} )
    
    map.update( {'xPsideL':-map['RoffsetBfield']-map['Lstave']} )
    map.update( {'xPsideR':-map['RoffsetBfield']} )

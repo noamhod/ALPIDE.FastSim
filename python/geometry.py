@@ -34,9 +34,10 @@ from ROOT import TFile, TPolyLine3D, TGeoTube, TGeoManager, TGeoMaterial, TGeoMe
 #    return topvolume
 
 class GeoLUXE():
-    def __init__(self,proc,tracksarr=[]):
+    def __init__(self,proc,stracksarr=[],btracksarr=[]):
         self.process = proc
-        self.tracks = tracksarr
+        self.stracks = stracksarr
+        self.btracks = btracksarr
         self.geoManager = ROOT.TGeoManager("geoManager","Geometry")
         self.tube = None
         self.dipole = None
@@ -46,10 +47,11 @@ class GeoLUXE():
         self.medium    = None
         self.idipole = 1
         self.ibeampipe = 2
-        self.ifirststave = 100
-        self.ifirstchcell = 1000
-        self.ifirstcalolayer = 10000
-        self.ifirsttrack = 100000
+        self.ifirststave = 10
+        self.ifirstchcell = 100
+        self.ifirstcalolayer = 1000
+        self.ifirststrack = 10000
+        self.ifirstbtrack = 100000
         
     def createWorld(self):
         ### beampipe geometry
@@ -147,16 +149,27 @@ class GeoLUXE():
         return world
 
     def createTracks(self):
-       for i in range(len(self.tracks)):
-          geotrack_index = self.geoManager.AddTrack(self.ifirsttrack+i,11);
+       for i in range(len(self.stracks)):
+          geotrack_index = self.geoManager.AddTrack(self.ifirststrack+i,11);
           geotrack = self.geoManager.GetTrack(geotrack_index)
           geotrack.SetLineWidth(1)
           geotrack.SetLineColor(ROOT.kBlack)
-          points = np.ndarray((self.tracks[i].GetN()*3), 'f', self.tracks[i].GetP()) ## GetP() returns a *float* *buffer* for GetN()*3!
+          points = np.ndarray((self.stracks[i].GetN()*3), 'f', self.stracks[i].GetP()) ## GetP() returns a *float* *buffer* for GetN()*3!
           j = 0
           while j<(len(points)):
              geotrack.AddPoint(points[j+0],points[j+1],points[j+2],0)
              j += 3
+       for i in range(len(self.btracks)):
+          geotrack_index = self.geoManager.AddTrack(self.ifirstbtrack+i,11);
+          geotrack = self.geoManager.GetTrack(geotrack_index)
+          geotrack.SetLineWidth(1)
+          geotrack.SetLineColor(ROOT.kRed)
+          points = np.ndarray((self.btracks[i].GetN()*3), 'f', self.btracks[i].GetP()) ## GetP() returns a *float* *buffer* for GetN()*3!
+          j = 0
+          while j<(len(points)):
+             if(points[j+2]>=200 and points[j+2]<=330): geotrack.AddPoint(points[j+0],points[j+1],points[j+2],0)
+             j += 3
+             
 
     def configureGeoManager(self,world):
         self.createTracks()
@@ -171,7 +184,7 @@ class GeoLUXE():
         
 
     def draw(self,world):
-        # for trk in self.tracks: trk.Draw("same") ### this is TPolyLine3D
+        # for trk in self.stracks: trk.Draw("same") ### this is TPolyLine3D
         self.geoManager.DrawTracks("same")
         world.Draw("same")
         ROOT.gPad.Modified()

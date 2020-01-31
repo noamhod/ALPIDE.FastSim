@@ -16,6 +16,7 @@ Emin = 1.00
 
 [General geometry cm]
 Rbeampipe   = 4
+Wbeampipe   = 0.5
 zDipoleExit = 202.9
 xDipoleExitMinAbs = 4.0
 xDipoleExitMaxAbs = 30
@@ -29,3 +30,9 @@ Hstave = 1.5
 Lstave = 50
 Rbeampipe = 4
 RoffsetBfield = 14
+
+[Layer geometry cm]
+zLayer1 = 300
+zLayer2 = 310
+zLayer3 = 320
+zLayer4 = 330
