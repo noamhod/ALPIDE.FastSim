@@ -107,8 +107,8 @@ TLegend* trkcolleg()
 
 TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step=1, Color_t col=kBlack)
 {
-	double xyz[3];
-	source->GetXYZ(xyz);
+	 double xyz[3];
+	 source->GetXYZ(xyz);
     double zCurr = xyz[2]; //source->GetZ();
     int nZ = (zMax - zCurr)/step + 1;
     if (nZ<2) {
@@ -705,8 +705,8 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
 
          // get the truth trajectory in the B-field
          KMCProbeFwd* trutrk = det->GetProbe();
-         poll_gen.push_back( TrackLine3d(trutrk,330,1,trkcol(pgen[igen].E())) );
-         polm_gen.push_back( TrackMarker3d(trutrk,0,331,1,trkcol(pgen[igen].E())) );
+         poll_gen.push_back( TrackLine3d(trutrk,361,1,trkcol(pgen[igen].E())) );
+         polm_gen.push_back( TrackMarker3d(trutrk,0,361,1,trkcol(pgen[igen].E())) );
          filltrkvec("gen",trutrk); // fill gen trk parameters
 
          // check truth acceptance
@@ -751,8 +751,8 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
          h_dPrel_Ruben->Fill(  (trw->GetP()-trutrk->GetP())/trutrk->GetP() );
          
          /// get the tracks
-         poll.push_back( TrackLine3d(trw,330,1,trkcol(prec[irec].E())) );
-         polm.push_back( TrackMarker3d(trw,0,331,1,trkcol(prec[irec].E())) );
+         poll.push_back( TrackLine3d(trw,361,1,trkcol(prec[irec].E())) );
+         polm.push_back( TrackMarker3d(trw,0,361,1,trkcol(prec[irec].E())) );
 
          /// in acceptance?
          acctrkrec[irec] = accepttrk(polm,irec);

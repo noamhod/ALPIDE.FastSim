@@ -4,6 +4,7 @@ import math
 import subprocess
 import array
 import numpy as np
+import config as cfg
 import ROOT
 from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TF2, TGraph, TGraph2D, TRandom, TVector2, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
 import argparse
@@ -27,6 +28,10 @@ ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
 # ROOT.gErrorIgnoreLevel = ROOT.kWarning
 ROOT.gErrorIgnoreLevel = ROOT.kError
+
+#############################################
+### read configuration from file
+cfgmap = cfg.set(proc,sides,True)
 
 #############################################
 NeventsToDraw = 10
@@ -80,7 +85,8 @@ if(proc=="bppp" and sides=="e-"): detXmin = xEsideL
 
 
 ### background stuff
-NnoiseClusters = 200 ## uniformly distributed in x:y for each layer
+NnoiseClusters = 50  ## uniformly distributed clusters in x:y for each layer
+NbkgTracks     = 200 ## uniformly distributed tracks coming from the inner part of the beampipe at the dipole-exit plane
 
 layers = [1,2,3,4]
 
@@ -101,55 +107,6 @@ def getgeometry(dipole=False):
    if(dipole): geometry.append(tfile.Get("TPolyLine3D;1"))
    return geometry
 
-# def GetFits():
-#    finname = "../output/root/fits_E_vs_x.root"
-#    tf = TFile(finname,"READ")
-#    fitsEx = {
-#               "Dipole":{"electrons":tf.Get("Ele_EofX0"), "positrons":tf.Get("Pos_EofX0")},
-#               "Layer1":{"electrons":tf.Get("Ele_EofX1"), "positrons":tf.Get("Pos_EofX1")},
-#               "Layer2":{"electrons":tf.Get("Ele_EofX2"), "positrons":tf.Get("Pos_EofX2")},
-#               "Layer3":{"electrons":tf.Get("Ele_EofX3"), "positrons":tf.Get("Pos_EofX3")},
-#               "Layer4":{"electrons":tf.Get("Ele_EofX4"), "positrons":tf.Get("Pos_EofX4")},
-#             }
-#    return fitsEx
-
-# def PlaneStr(i):
-#    if  (i==0): return "Dipole"
-#    elif(i==1): return "Layer1"
-#    elif(i==2): return "Layer2"
-#    elif(i==3): return "Layer3"
-#    elif(i==4): return "Layer4"
-#    print("ERROR: unsupported plane index:",i)
-#    quit()
-#    return ""
-
-# def GetE(x,iplane,particles):
-#    if(iplane==0):
-#       if(abs(x)<1):
-#          print("ERROR: |x|<1 for iplane=0:",x)
-#          quit()
-#       if(abs(x)>30):
-#          print("ERROR: |x|>30 for iplane=0:",x)
-#          quit()
-#    else:
-#       if(abs(x)<4):
-#          print("ERROR: |x|<4 for iplane>0:",x)
-#          quit()
-#       if(abs(x)>75):
-#          print("ERROR: |x|>75 for iplane>0:",x)
-#          quit()
-#    if(particles!="electrons" and particles!="positrons"):
-#       print("ERROR: particles string unsuppoerted:",particles)
-#       quit()
-#    if(particles=="electrons" and x<0):
-#       print("ERROR: electrons muxt come at positive x")
-#       quit()
-#    if(particles=="positrons" and x>0):
-#       print("ERROR: positrons muxt come at negative x")
-#       quit()
-#    E = fitsEx[PlaneStr(iplane)][particles].Eval(x)
-#    return E
-
 def rUnit2(r1,r2):
    r = (r2-r1).Unit()
    return r ## TVector2
@@ -169,19 +126,6 @@ def p4(r1,r2,E):
    tlv = TLorentzVector()
    tlv.SetXYZM(p.Px(),p.Py(),p.Pz(),me)
    return tlv ## TLorentzVector
-
-# def setnoiseclusters(noiseclusters,N):
-#    rnd = TRandom()
-#    rnd.SetSeed()
-#    for i in range(N):
-#       x = rnd.Uniform(4,31)
-#       y = rnd.Uniform(-0.75,+0.75)
-#       z = rnd.Integer(4)
-#       if(z==0): z = 300
-#       if(z==1): z = 310
-#       if(z==2): z = 320
-#       if(z==3): z = 330
-#       noiseclusters.SetNextPoint(x,y,z)
 
 def xofz(r1,r2,z):
    dz = r2[2]-r1[2]
@@ -815,7 +759,7 @@ intfile = TFile("../data/root/rec_"+proc+".root","READ")
 intree = intfile.Get("res")
 nevents = intree.GetEntries()
 print("with %d events" % nevents)
-nmax = 1000000
+nmax = 100000
 n=0 ### init n
 for event in intree:
    Nsigall = 0
@@ -908,7 +852,7 @@ for event in intree:
    Nsig4 = getNnon0(allpointsEside["Cls"][4])+getNnon0(allpointsPside["Cls"][4])
    
    
-   ### embed some noise clusters
+   ### embed some noise ***clusters***
    rnd = TRandom()
    rnd.SetSeed()
    for kN in range(NnoiseClusters):
@@ -925,6 +869,52 @@ for event in intree:
             rnoise = [x,y,z]
             if(side=="Pside"): AddPoint(allpointsPside,rnoise)
             if(side=="Eside"): AddPoint(allpointsEside,rnoise)
+   
+   ### embed background ***tracks***
+   resolution = 0.001 ## cm (10 um)
+   rnd = TRandom()
+   rnd.SetSeed()
+   nbkgtracks = 0
+   while (nbkgtracks<NbkgTracks):
+      # production vertex is uniform on the inner perimeter of the beampipe
+      R = cfgmap["Rbeampipe"]-cfgmap["Wbeampipe"]
+      phi = rnd.Uniform(0,2*ROOT.TMath.Pi())
+      x0 = R*ROOT.TMath.Cos(phi)
+      y0 = R*ROOT.TMath.Sin(phi)
+      z0 = cfgmap["zDipoleExit"]
+      # chose a point in the exit of the tracker 
+      z4 = cfgmap["zLayer4"]
+      x4 = rnd.Uniform(1.1*cfgmap["xPsideL"],   1.1*cfgmap["xEsideR"])
+      y4 = rnd.Uniform(-1.1*cfgmap["Hstave"]/2, 1.1*cfgmap["Hstave"]/2)
+      # require that the track is not pointing in the reange between the 2 trackr sides
+      if(x4>cfgmap["xPsideR"] and x4<cfgmap["xEsideL"]): continue
+      nbkgtracks += 1 
+      
+      # place 3 points on layers 1,2,3 along the line between r4 and r0, with some error (resolution)
+      r0 = [x0,y0,z0]
+      r4 = [x4,y4,z4]
+      z1 = cfgmap["zLayer1"]
+      x1 = xofz(r4,r0,z1)+rnd.Gaus(0,resolution)
+      y1 = yofz(r4,r0,z1)+rnd.Gaus(0,resolution)
+      z2 = cfgmap["zLayer2"]
+      x2 = xofz(r4,r0,z2)+rnd.Gaus(0,resolution)
+      y2 = yofz(r4,r0,z2)+rnd.Gaus(0,resolution)
+      z3 = cfgmap["zLayer3"]
+      x3 = xofz(r4,r0,z3)+rnd.Gaus(0,resolution)
+      y3 = yofz(r4,r0,z3)+rnd.Gaus(0,resolution)
+      r1 = [x1,y1,z1]
+      r2 = [x2,y2,z2]
+      r3 = [x3,y3,z3]
+      if(side=="Pside"):
+         AddPoint(allpointsPside,r1)
+         AddPoint(allpointsPside,r2)
+         AddPoint(allpointsPside,r3)
+      if(side=="Eside"):
+         AddPoint(allpointsEside,r1)
+         AddPoint(allpointsEside,r2)
+         AddPoint(allpointsEside,r3)
+
+   ### all points (signal, background and noise)   
    Nbkgsig4 = getNnon0(allpointsEside["Cls"][4])+getNnon0(allpointsPside["Cls"][4])
    
    

@@ -5,7 +5,7 @@ import subprocess
 import array
 import numpy as np
 import ROOT
-from ROOT import TFile, TTree, TMath, TCanvas, TView, TGraph2D, TStyle, TF2, TH1, TPolyLine3D, TRandom
+from ROOT import TFile, TTree, TMath, TCanvas, TView, TView3D, TGraph2D, TStyle, TF2, TH1, TPolyLine3D, TRandom
 import config as cfg
 import geometry as geo
 import argparse
@@ -82,8 +82,8 @@ def bkgtracks(N):
       z0 = cfgmap["zDipoleExit"]
       
       z4 = cfgmap["zLayer4"]
-      x4 = rnd.Uniform(cfgmap["xPsideL"],   cfgmap["xEsideR"])
-      y4 = rnd.Uniform(-cfgmap["Hstave"]/2, cfgmap["Hstave"]/2)
+      x4 = rnd.Uniform(1.15*cfgmap["xPsideL"],   1.15*cfgmap["xEsideR"])
+      y4 = rnd.Uniform(-1.15*cfgmap["Hstave"]/2, 1.15*cfgmap["Hstave"]/2)
       
       r0 = [x0,y0,z0]
       r4 = [x4,y4,z4]
@@ -100,12 +100,17 @@ def bkgtracks(N):
       x3 = xofz(r4,r0,z3)+rnd.Gaus(0,resolution)
       y3 = yofz(r4,r0,z3)+rnd.Gaus(0,resolution)
       
+      z5 = 360
+      x5 = xofz(r4,r0,z5)
+      y5 = yofz(r4,r0,z5)
+      
       line = TPolyLine3D()
       line.SetNextPoint(x0,y0,z0)
       line.SetNextPoint(x1,y1,z1)
       line.SetNextPoint(x2,y2,z2)
       line.SetNextPoint(x3,y3,z3)
       line.SetNextPoint(x4,y4,z4)
+      line.SetNextPoint(x5,y5,z5)
       line.SetLineColor(ROOT.kRed)
       tracks.append(line)
       
@@ -120,23 +125,29 @@ geoluxe  = geo.GeoLUXE(proc,stracks,btracks)
 world    = geoluxe.createWorld()
 geoluxe.configureGeoManager(world)
 
-cnv = TCanvas("","",2000,2000)
-view = TView.CreateView(1)
-view.ShowAxis()
-view.SetRange(-80,-50,0, +80,+50,350)
-geoluxe.draw(world)
-cnv.SaveAs("../output/pdf/bkgtrk_"+proc+".pdf(")
-
-cnv = TCanvas("","",2000,2000)
-view = TView.CreateView(1)
-view.ShowAxis()
-view.SetRange(cfgmap["xPsideL"],-10,190, cfgmap["xEsideR"],+10,340)
-geoluxe.draw(world)
-cnv.SaveAs("../output/pdf/bkgtrk_"+proc+".pdf)")
-
-
 tfileout = TFile("../output/root/bkgtrk_"+proc+".root","RECREATE")
 tfileout.cd()
-world.Write()
+
+cnv1 = TCanvas("","",2000,2000)
+view = TView3D.CreateView(1)
+view.SetPerspective()
+# view.SetParallel()
+# view.ShowAxis()
+view.SetRange(-80,-50,0, +80,+50,350)
+geoluxe.draw(world)
+cnv1.Write()
+cnv1.SaveAs("../output/pdf/bkgtrk_"+proc+".pdf(")
+
+cnv2 = TCanvas("","",2000,2000)
+view = TView3D.CreateView(1)
+view.SetPerspective()
+# view.SetParallel()
+# view.ShowAxis()
+view.SetRange(cfgmap["xPsideL"],-10,190, cfgmap["xEsideR"],+10,340)
+geoluxe.draw(world)
+cnv2.Write()
+cnv2.SaveAs("../output/pdf/bkgtrk_"+proc+".pdf)")
+
+
 tfileout.Write()
 tfileout.Close()

@@ -167,7 +167,8 @@ class GeoLUXE():
           points = np.ndarray((self.btracks[i].GetN()*3), 'f', self.btracks[i].GetP()) ## GetP() returns a *float* *buffer* for GetN()*3!
           j = 0
           while j<(len(points)):
-             if(points[j+2]>=200 and points[j+2]<=330): geotrack.AddPoint(points[j+0],points[j+1],points[j+2],0)
+             if(points[j+2]>=200 and points[j+2]<=360):
+                if(points[j+2]>points[(j-3)+2]): geotrack.AddPoint(points[j+0],points[j+1],points[j+2],0)
              j += 3
              
 
@@ -175,7 +176,6 @@ class GeoLUXE():
         self.createTracks()
         self.geoManager.SetTopVolume(world)
         self.geoManager.CloseGeometry()
-        # world.SetLineColor(8)
         # self.geoManager.SetVisLevel(3)
         # self.geoManager.SetVisOption(0)
         # self.geoManager.SetTopVisible()
