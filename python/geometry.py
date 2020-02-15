@@ -45,13 +45,13 @@ class GeoLUXE():
         self.chcell = None
         self.material  = None
         self.medium    = None
-        self.idipole = 1
-        self.ibeampipe = 2
-        self.ifirststave = 10
-        self.ifirstchcell = 100
-        self.ifirstcalolayer = 1000
-        self.ifirststrack = 10000
-        self.ifirstbtrack = 100000
+        self.ibeampipe = 1
+        self.idipole = 10
+        self.ifirststave = 100
+        self.ifirstchcell = 1000
+        self.ifirstcalolayer = 10000
+        self.ifirststrack = 100000
+        self.ifirstbtrack = 1000000
         
     def createWorld(self):
         ### beampipe geometry
@@ -59,11 +59,24 @@ class GeoLUXE():
         beampipe_Rmin = 3.6
         beampipe_Rmax = 4
         beampipe_zCenter = 200
-        ### dipole geometry
+        ### dipole geometry (full block)
         dipole_xHalfWidth = 120/2
         dipole_yHalfHeight = 67.2/2
         dipole_zHalfLength = 100/2
         dipole_zCenter = 152.9
+        ### dipole geometry (assembly)
+        dipole_horizontal_plate_xHalfWidth = 120/2
+        dipole_horizontal_plate_yHalfHeight = (67.2-beampipe_Rmax*10)/2/2
+        dipole_horizontal_plate_zHalfLength = 100/2
+        dipole_horizontal_plate_zCenter = 152.9
+        dipole_horizontal_plate_yAbsCenter = (beampipe_Rmax*10)/2+dipole_horizontal_plate_yHalfHeight
+        
+        dipole_vertical_plate_xHalfWidth = (120-beampipe_Rmax*10)/2/2
+        dipole_vertical_plate_yHalfHeight = (beampipe_Rmax*10)/2
+        dipole_vertical_plate_zHalfLength = 100/2
+        dipole_vertical_plate_zCenter = 152.9
+        dipole_vertical_plate_xAbsCenter = (beampipe_Rmax*10)/2+dipole_vertical_plate_xHalfWidth
+        
         ### stave geometry
         stave_xHalfWidth = 27/2 if(self.process=="bppp") else 50/2
         stave_yHalfHeight = 1.5/2
@@ -101,12 +114,22 @@ class GeoLUXE():
         self.material  = TGeoMaterial("Vac", 0,0,0)
         self.medium    = TGeoMedium("MED",1,self.material)
         world          = ROOT.gGeoManager.MakeBox("TOP",self.medium,10000,10000,10000)
+        
+        # self.dipole = ROOT.gGeoManager.MakeBox("dipole",self.medium,dipole_xHalfWidth,dipole_yHalfHeight,dipole_zHalfLength)
+        # self.dipole.SetLineWidth(1)
+        # self.dipole.SetLineColor(ROOT.kOrange+2)
+        
+        self.dipole_hor = ROOT.gGeoManager.MakeBox("dipole_hor",self.medium,dipole_horizontal_plate_xHalfWidth,dipole_horizontal_plate_yHalfHeight,dipole_horizontal_plate_zHalfLength)
+        self.dipole_hor.SetLineWidth(1)
+        self.dipole_hor.SetLineColor(ROOT.kOrange+2)
+        
+        self.dipole_ver = ROOT.gGeoManager.MakeBox("dipole_ver",self.medium,dipole_vertical_plate_xHalfWidth,dipole_vertical_plate_yHalfHeight,dipole_vertical_plate_zHalfLength)
+        self.dipole_ver.SetLineWidth(1)
+        self.dipole_ver.SetLineColor(ROOT.kOrange+2)
+        
         self.tube = ROOT.gGeoManager.MakeTube("beampipe",self.medium,beampipe_Rmin,beampipe_Rmax,beampipe_HalfLength)
         self.tube.SetLineWidth(1)
         self.tube.SetLineColor(ROOT.kGray)
-        self.dipole = ROOT.gGeoManager.MakeBox("dipole",self.medium,dipole_xHalfWidth,dipole_yHalfHeight,dipole_zHalfLength)
-        self.dipole.SetLineWidth(1)
-        self.dipole.SetLineColor(ROOT.kOrange+2)
         self.stave = ROOT.gGeoManager.MakeBox("stave",self.medium,stave_xHalfWidth,stave_yHalfHeight,stave_zHalfLength)
         self.stave.SetLineWidth(1)
         self.stave.SetLineColor(ROOT.kGreen+2)
@@ -118,7 +141,12 @@ class GeoLUXE():
         self.calolayer.SetLineColor(ROOT.kBlue-1)
         
         ### add nodes to world
-        world.AddNodeOverlap(self.dipole,self.idipole,ROOT.TGeoTranslation(0,0,dipole_zCenter))
+        # world.AddNodeOverlap(self.dipole,self.idipole,ROOT.TGeoTranslation(0,0,dipole_zCenter))
+        world.AddNodeOverlap(self.dipole_hor,self.idipole,  ROOT.TGeoTranslation(0,+dipole_horizontal_plate_yAbsCenter,dipole_horizontal_plate_zCenter))
+        world.AddNodeOverlap(self.dipole_hor,self.idipole+1,ROOT.TGeoTranslation(0,-dipole_horizontal_plate_yAbsCenter,dipole_horizontal_plate_zCenter))
+        world.AddNodeOverlap(self.dipole_ver,self.idipole+2,ROOT.TGeoTranslation(+dipole_vertical_plate_xAbsCenter,0,dipole_horizontal_plate_zCenter))
+        world.AddNodeOverlap(self.dipole_ver,self.idipole+3,ROOT.TGeoTranslation(-dipole_vertical_plate_xAbsCenter,0,dipole_horizontal_plate_zCenter))
+
         world.AddNodeOverlap(self.tube,self.ibeampipe,ROOT.TGeoTranslation(0,0,beampipe_zCenter))
         
         world.AddNodeOverlap(self.stave,self.ifirststave+0,ROOT.TGeoTranslation(-stave_xCenter,0,stave_z1))
@@ -176,6 +204,9 @@ class GeoLUXE():
         self.createTracks()
         self.geoManager.SetTopVolume(world)
         self.geoManager.CloseGeometry()
+        self.geoManager.GetTopVolume().Raytrace()
+        for trk in self.stracks: trk.Draw("same")
+        for trk in self.btracks: trk.Draw("same")
         # self.geoManager.SetVisLevel(3)
         # self.geoManager.SetVisOption(0)
         # self.geoManager.SetTopVisible()
