@@ -132,13 +132,13 @@ class GeoLUXE():
         self.tube.SetLineColor(ROOT.kGray)
         self.stave = ROOT.gGeoManager.MakeBox("stave",self.medium,stave_xHalfWidth,stave_yHalfHeight,stave_zHalfLength)
         self.stave.SetLineWidth(1)
-        self.stave.SetLineColor(ROOT.kGreen+2)
+        self.stave.SetLineColor(ROOT.kGreen)
         self.chcell = ROOT.gGeoManager.MakeBox("cherenkovcell",self.medium,CherCell_xHalfWidth,CherCell_yHalfWidth,CherCell_zHalfWidth)
         self.chcell.SetLineWidth(1)
-        self.chcell.SetLineColor(ROOT.kCyan+2)
+        self.chcell.SetLineColor(ROOT.kBlue)
         self.calolayer = ROOT.gGeoManager.MakeBox("calolayer",self.medium,CaloLayer_xHalfWidth,CaloLayer_yHalfWidth,CaloLayer_zHalfWidth)
         self.calolayer.SetLineWidth(1)
-        self.calolayer.SetLineColor(ROOT.kBlue-1)
+        self.calolayer.SetLineColor(ROOT.kCyan)
         
         ### add nodes to world
         # world.AddNodeOverlap(self.dipole,self.idipole,ROOT.TGeoTranslation(0,0,dipole_zCenter))
