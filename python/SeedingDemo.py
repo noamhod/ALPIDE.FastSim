@@ -8,7 +8,7 @@ import config as cfg
 import ROOT
 from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TF2, TGraph, TGraph2D, TRandom, TVector2, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
 import argparse
-parser = argparse.ArgumentParser(description='analysis.py...')
+parser = argparse.ArgumentParser(description='SeedingDemo.py...')
 parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
 parser.add_argument('-s', metavar='sides',   required=False, help='detector side [e+, e-, e+e-]')
 parser.add_argument('-e', metavar='energy',  required=False, help='beam energy')
@@ -22,8 +22,8 @@ if(proc=="trident" and "e-" in sides):
 print("Running with proc=%s and sides=%s" % (proc,sides))
 
 ROOT.gROOT.SetBatch(1)
-ROOT.gStyle.SetOptFit(0);
-ROOT.gStyle.SetOptStat(0);
+ROOT.gStyle.SetOptFit(0)
+ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
 # ROOT.gErrorIgnoreLevel = ROOT.kWarning
@@ -331,23 +331,30 @@ def makeseed(cluster1,cluster2,i1,i2,particles):
    cluster1.GetPoint(i1,r1[0],r1[1],r1[2])
    cluster2.GetPoint(i2,r2[0],r2[1],r2[2])
    
+   rnd = TRandom()
+   rnd.SetSeed()
+   posneg = rnd.Uniform(-1,+1)
+   pxgaus = rnd.Gaus(7.2e-4,5.e-4)
+   
    x0 = 0
    z0 = zofx(r1,r2,x0)
    xExit = xofz(r1,r2,zDipoleExit)*cm2m
    q = 1 if(particles=="electrons") else -1
    H = (zDipoleExit-z0)*cm2m
-   R = H*(LB)/xExit + xExit ## look this up in my sides
-   P = 0.3*B*R
+   R = H*(LB)/xExit + xExit ## look this up in my slides
+   # P = 0.3*B*R
+   P = 0.3*B*R/1.001 #- rnd.Gaus(6.54e-03,1.63e-02)
    
    v1 = TVector2(r1[2],r1[1])
    v2 = TVector2(r2[2],r2[1])
    u = rUnit2(v2,v1)
    uz = u.X()
    uy = u.Y()
-   px = 0
+   px = pxgaus if(posneg>=0) else -pxgaus
    py = P*uy
    pz = P*uz
-   p.SetPxPyPzE(px,py,pz,math.sqrt(P*P+me2))
+   # p.SetPxPyPzE(px,py,pz,math.sqrt(P*P+me2))
+   p.SetPxPyPzE(px,py,pz,math.sqrt(px*px + py*py + pz*pz + me2))
    
    return p
 
@@ -759,7 +766,7 @@ intfile = TFile("../data/root/rec_"+proc+".root","READ")
 intree = intfile.Get("res")
 nevents = intree.GetEntries()
 print("with %d events" % nevents)
-nmax = 100000
+nmax = 10
 n=0 ### init n
 for event in intree:
    Nsigall = 0

@@ -8,7 +8,7 @@ import ROOT
 from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TF2, TGraph, TGraph2D, TRandom, TVector2, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
 import argparse
 
-parser = argparse.ArgumentParser(description='analysis.py...')
+parser = argparse.ArgumentParser(description='SeedingDemoPlot.py...')
 parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
 parser.add_argument('-s', metavar='sides',   required=False, help='detector side [e+, e-, e+e-]')
 parser.add_argument('-e', metavar='energy',  required=False, help='beam energy')
@@ -22,8 +22,8 @@ if(proc=="trident" and "e-" in sides):
 print("Running with proc=%s and sides=%s" % (proc,sides))
 
 ROOT.gROOT.SetBatch(1)
-ROOT.gStyle.SetOptFit(0);
-ROOT.gStyle.SetOptStat(0);
+ROOT.gStyle.SetOptFit(0)
+ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
 # ROOT.gErrorIgnoreLevel = ROOT.kWarning
@@ -113,6 +113,9 @@ histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks
            "h_chi2ndf_yz_sig": TH1D("chi2ndf_yz_sig",";chi2ndf_{yz};Tracks", 500,0,0.001), 
            "h_chi2ndf_xz_bkg": TH1D("chi2ndf_xz_bkg",";chi2ndf_{xz};Tracks", 500,0,0.001),
            "h_chi2ndf_yz_bkg": TH1D("chi2ndf_yz_bkg",";chi2ndf_{yz};Tracks", 500,0,0.001),
+           
+           "h_seed_deltaE" : TH1D("seed_deltaE", ";E_{seed}-E_{gen};Tracks",    200,-0.2,+0.2),
+           "h_seed_ratioE" : TH1D("seed_ratioE", ";E_{seed}/E_{gen};Tracks",    200,0.95,1.05),
            
            "h_seed_resE" : TH1D("seed_resE", ";(E_{seed}-E_{gen})/E_{gen};Tracks",    100,-0.05,+0.05),
            "h_seed_resPz": TH1D("seed_resPz",";(Pz_{seed}-Pz_{gen})/Pz_{gen};Tracks", 100,-0.05,+0.05), 
@@ -250,6 +253,8 @@ for event in intree:
          resE = (pseed.E()-pgen.E())/pgen.E()
          resPz = (pseed.Pz()-pgen.Pz())/pgen.Pz()
          resPy = (pseed.Py()-pgen.Py())/pgen.Py()
+         histos["h_seed_deltaE"].Fill( pseed.E()-pgen.E() )
+         histos["h_seed_ratioE"].Fill( pseed.E()/pgen.E() )
          histos["h_seed_resE"].Fill(resE)
          histos["h_seed_resPz"].Fill(resPz)
          histos["h_seed_resPy"].Fill(resPy)
@@ -316,10 +321,32 @@ histos["h_svd_dd2_sig"].SetLineColor(ROOT.kRed);   histos["h_svd_dd2_sig"].Draw(
 histos["h_svd_dd2_bkg"].SetLineColor(ROOT.kBlack); histos["h_svd_dd2_bkg"].Draw("same")
 cnv.SaveAs(fpdf)
 
+print("\nFitting the resE histogram:")
+gaus_resE = TF1("gaus_resE","gaus",-0.02,+0.02)
+histos["h_seed_resE"].Fit(gaus_resE,"R")
+
+print("\nFitting the resPy histogram:")
+gaus_resPy = TF1("gaus_resPy","gaus",-1.5,+1.5)
+histos["h_seed_resPy"].Fit(gaus_resPy,"R")
+
+print("\nFitting the deltaE histogram:")
+gaus_dE = TF1("gaus_dE","gaus",-0.075,+0.1)
+histos["h_seed_deltaE"].Fit(gaus_dE,"R")
+
+print("\nFitting the ratioE histogram:")
+gaus_rE = TF1("gaus_rE","gaus",0.98,1.02)
+histos["h_seed_ratioE"].Fit(gaus_rE,"R")
+
+cnv = TCanvas("","",1000,500)
+cnv.Divide(2,1)
+cnv.cd(1); histos["h_seed_deltaE"].Draw("hist"); gaus_dE.Draw("same")
+cnv.cd(2); histos["h_seed_ratioE"].Draw("hist"); gaus_rE.Draw("same")
+cnv.SaveAs(fpdf)
+
 cnv = TCanvas("","",1000,1000)
 cnv.Divide(2,2)
-cnv.cd(1); histos["h_seed_resE"].Draw("hist")
-cnv.cd(2); histos["h_seed_resPy"].Draw("hist")
+cnv.cd(1); histos["h_seed_resE"].Draw("hist"); gaus_resE.Draw("same")
+cnv.cd(2); histos["h_seed_resPy"].Draw("hist"); gaus_resPy.Draw("same")
 cnv.cd(3); histos["h_seed_resE_vs_x"].Draw("col")
 cnv.cd(4); histos["h_seed_resPy_vs_x"].Draw("col")
 cnv.SaveAs(fpdf)

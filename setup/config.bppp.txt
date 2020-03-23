@@ -31,7 +31,7 @@ Lstave = 27
 RoffsetBfield22BPPP = 7.0
 RoffsetBfield20BPPP = 5.7
 RoffsetBfield14BPPP = 4.0
-RoffsetBfield    = 5.7
+RoffsetBfield       = 5.7
 
 [Layer geometry cm]
 zLayer1 = 300
