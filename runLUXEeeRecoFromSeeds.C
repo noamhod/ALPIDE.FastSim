@@ -590,7 +590,6 @@ void runLUXEeeRecoFromSeeds(TString process, int Seed=12345) //, const char* set
 
          // prepare the probe from the seed and do the KF fit
 			bool res = det->SolveSingleTrackViaKalmanMC_Noam(p_seed[iseed].Pt(),p_seed[iseed].Rapidity(),p_seed[iseed].Phi(), meGeV, crg, vX,vY,vZ,99);
-         // bool res = det->SolveSingleTrack(p_seed[iseed].Pt(),p_seed[iseed].Rapidity(),p_seed[iseed].Phi(), meGeV, crg, vX,vY,vZ, 0,1,99);
          if(!res) { cout << "SolveSingleTrackViaKalmanMC_Noam failed" << endl; continue; } // reconstruction failed (assume it didn't)
          n_res++;
 

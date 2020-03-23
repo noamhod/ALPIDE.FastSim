@@ -1123,7 +1123,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
         currTrP = lrP->GetMCTrack(itrP); 
         if(currTrP->IsKilled())
         {
-			 std::cout << "currTrP->IsKilled() 1" << std::endl;
           continue;
         }
         currTr = lr->AddMCTrack( currTrP );
@@ -1136,7 +1135,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
         {
            currTr->Kill();
 			  lr->GetMCTracks()->RemoveLast();
-			  std::cout << "cannot PropagateToLayer 1" << std::endl;
 			  continue;
 		  }
       }
@@ -1146,14 +1144,11 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
     if(lrP->IsMS() || lrP->IsTrig()) // we don't consider bg hits in MS, just update with MC cluster
 	 {
       KMCClusterFwd* clmc = lrP->GetMCCluster();
-		std::cout << "clmc xyz={: " << clmc->GetX() << "," << clmc->GetY() << "," << clmc->GetZ() << "}" << std::endl;
-		
       for(int itrP=ntPrev;itrP--;) // loop over all tracks from previous layer
 		{
         currTrP = lrP->GetMCTrack(itrP);
 		  if(currTrP->IsKilled())
         {
-          std::cout << "currTrP->IsKilled() 2" << std::endl;
           continue;
         }
         currTr = lr->AddMCTrack( currTrP );
@@ -1168,7 +1163,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
           {
             currTr->Kill();
 				lr->GetMCTracks()->RemoveLast();
-				std::cout << "canot UpdateTrack" << std::endl;
 				continue;
           }
         }
@@ -1176,7 +1170,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
         {
           currTr->Kill();
 			 lr->GetMCTracks()->RemoveLast();
-			 std::cout << "cannot PropagateToLayer 2" << std::endl;
 			 continue;
         }
       }      
@@ -1187,7 +1180,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
     for(int itrP=0;itrP<ntPrev;itrP++) // loop over all tracks from previous layer
 	 {
       currTrP = lrP->GetMCTrack(itrP);
-		if(currTrP->IsKilled()) continue;
+		if(currTrP->IsKilled())
+      {
+        continue;
+      }
       if(checkMS)
 		{
         checkMS = kFALSE;
@@ -1201,7 +1197,11 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
 		{
         trcConstr = *currTrP;
         fMuTrackLastITS = trcConstr;
-        if (!PropagateToLayer(&trcConstr,lrP,fVtx,-1))  {currTrP->Kill();continue;} // propagate to vertex
+        if(!PropagateToLayer(&trcConstr,lrP,fVtx,-1)) // propagate to vertex
+        {
+           currTrP->Kill();
+			  continue;
+        }
 	     // update with vertex point + eventual additional error
 	     float origErrX = fVtx->GetYRes(), origErrY = fVtx->GetXRes(); 
 	     KMCClusterFwd* clv = fVtx->GetMCCluster();
@@ -1212,11 +1212,19 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
         fChi2MuVtx = trcConstr.GetPredictedChi2(measCV,errCV);
         if(fHChi2Branson) fHChi2Branson->Fill(fChi2MuVtx);
         fMuTrackVertex = trcConstr;
-        if (!trcConstr.Update(measCV,errCV)) {currTrP->Kill();continue;}
+        if(!trcConstr.Update(measCV,errCV))
+        {
+          currTrP->Kill();
+			 continue;
+        }
         fMuTrackBCVertex = trcConstr;
         fMuTrackBCVertex.SetUniqueID(0);
 	
-	     if(!PropagateToLayer(&trcConstr,fVtx,lrP,1)) {currTrP->Kill();continue;}
+	     if(!PropagateToLayer(&trcConstr,fVtx,lrP,1))
+        {
+          currTrP->Kill();
+          continue;
+        }
 		  fMuTrackBCLastITS = trcConstr;
         fMuTrackBCLastITS.SetUniqueID(0);
         (*currTrP->GetTrack()) = *trcConstr.GetTrack(); // override with constraint
@@ -1246,25 +1254,35 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
       ntTot = fMaxSeedToPropagate;
     }
 
-    for (int itr=ntTot;itr--;)
+    for(int itr=ntTot;itr--;)
 	 {
       currTr = lr->GetMCTrack(itr);
-      if (currTr->IsKilled()) continue;
-      if (!PropagateToLayer(currTr,lrP,lr,-1))  {currTr->Kill();continue;} // propagate to current layer
+      if(currTr->IsKilled())
+      {
+        continue;
+      }
+      if(!PropagateToLayer(currTr,lrP,lr,-1)) // propagate to current layer
+      {
+        currTr->Kill();
+        continue;
+      }
     }
     AliDebug(1,Form("Got %d tracks on layer %s",ntTot,lr->GetName()));
-  } // end loop over layers    
+  } // end loop over layers
 
   // do we use vertex constraint?
-  if (fVtx && !fVtx->IsDead() && fIncludeVertex)
+  if(fVtx && !fVtx->IsDead() && fIncludeVertex)
   {
     int ntr = fVtx->GetNMCTracks();
     for(int itr=0;itr<ntr;itr++)
 	 {
       currTr = fVtx->GetMCTrack(itr);
-      if (currTr->IsKilled()) continue;
+      if(currTr->IsKilled())
+      {
+        continue;
+      }
       double meas[2] = {0.,0.};
-      if (fImposeVertexPosition)
+      if(fImposeVertexPosition)
 		{
         meas[0] = fRefVtx[1]; // bending
         meas[1] = fRefVtx[2]; // non-bending
@@ -1276,12 +1294,16 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
          meas[1] = clv->GetZ();
       }
       double measErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(),0,fVtx->GetXRes()*fVtx->GetXRes()}; //  Lab
-      if (!currTr->Update(meas,measErr2)) continue;
+      if(!currTr->Update(meas,measErr2))
+      {
+         continue;
+		}
       currTr->SetInnerLrChecked(fVtx->GetActiveID());
     }
   }
   
   int ntTot = lr->GetNMCTracks();
+  
   ntTot = TMath::Min(1,ntTot);
   for (int itr=ntTot;itr--;)
   {
