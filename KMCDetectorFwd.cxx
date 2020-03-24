@@ -571,7 +571,7 @@ Bool_t KMCDetectorFwd::PropagateToZBxByBz(KMCProbeFwd* trc,double z,double maxDZ
   int ib0 = GetFieldReg(curZ); // field region id of start point
   int ib1 = GetFieldReg(z);    // field region id of last point
   int nzst = 0;
-  //  AliInfo(Form("FldRegID: %d %d (%f : %f)",ib0,ib1, curZ,z));
+  //  AliDebug(2,Form("FldRegID: %d %d (%f : %f)",ib0,ib1, curZ,z));
   if (ib1>ib0) { // fwd propagation with field boundaries crossing
     for (int ib=ib0;ib<ib1;ib++) {
       if ( ib&0x1 ) { // we are in the odd (field ON) region, go till the end of field reg.
@@ -1138,7 +1138,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
         if(fst<fstLim)
         {
           fst++;
-          currTr->Print("etp");
+          // currTr->Print("etp");
         }
 	     if(!PropagateToLayer(currTr,lrP,lr,-1)) // propagate to current layer:
         {
@@ -1164,7 +1164,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
       if(fst<fstLim)
 		{
          fst++;
-         currTr->Print("etp");
+         // currTr->Print("etp");
       }
       AliDebug(2,Form("LastChecked before:%d",currTr->GetInnerLayerChecked()));
 		printf("tr%d | ", itrP); currTr->Print("etp");
@@ -1331,7 +1331,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
   //probe->GetTrack()->Print();
   //
   probe->SetInnerLrChecked(lrP->GetActiveID());
-  AliDebug(2,Form("From Lr(%d) %s to Lr(%d) %s | LastChecked %d", lrP->GetActiveID(),lrP->GetName(),lr->GetActiveID(),lr->GetName(),probe->GetInnerLayerChecked()));
+  AliInfo(Form("From Lr(%d) %s to Lr(%d) %s | LastChecked %d", lrP->GetActiveID(),lrP->GetName(),lr->GetActiveID(),lr->GetName(),probe->GetInnerLayerChecked()));
   for (int icl=-1;icl<nCl;icl++) {
     //
     if (gRandom->Rndm() > lrP->GetLayerEff()) continue; // generate layer eff
@@ -1354,7 +1354,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     meas[0] = y; meas[1] = z;
     double chi2 = probe->GetPredictedChi2(meas,measErr2);
     //
-    //    AliInfo(Form("Seed-to-cluster chi2 = Chi2=%.2f for cl:",chi2));
+    //    AliDebug(2,Form("Seed-to-cluster chi2 = Chi2=%.2f for cl:",chi2));
     //      cl->Print("lc");
     //    AliDebug(2,Form("Seed-to-cluster chi2 = Chi2=%.2f",chi2));
     if (icl<0 && fHChi2LrCorr) fHChi2LrCorr->Fill(lrP->GetActiveID(), chi2);
@@ -1365,7 +1365,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     KMCProbeFwd* newTr = lr->AddMCTrack( probe );
     if (!newTr->Update(meas,measErr2)) {
       // AliDebug(2,Form("Layer %s: Failed to update the track by measurement {%.3f,%3f} err {%.3e %.3e %.3e}", lrP->GetName(),meas[0],meas[1], measErr2[0],measErr2[1],measErr2[2]));
-      AliInfo(Form("Layer %s: Failed to update the track by measurement {%.3f,%3f} err {%.3e %.3e %.3e}", lrP->GetName(),meas[0],meas[1], measErr2[0],measErr2[1],measErr2[2]));
+      AliDebug(2,Form("Layer %s: Failed to update the track by measurement {%.3f,%3f} err {%.3e %.3e %.3e}", lrP->GetName(),meas[0],meas[1], measErr2[0],measErr2[1],measErr2[2]));
       if (AliLog::GetGlobalDebugLevel()>1) newTr->Print("l");
       newTr->Kill();
       lr->GetMCTracks()->RemoveLast();
@@ -1393,7 +1393,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
 	else                  fHChi2VtxFake->Fill(newTr->GetNITSHits(),chi2V);
       }
       // AliDebug(2,Form("Chi2 to vertex: %f | y: Tr:%+8.4f Cl:%+8.4f  z: Tr:%+8.4f Cl: %+8.4f",chi2V, propVtx.GetTrack()->GetY(),fRefVtx[0], propVtx.GetTrack()->GetZ(),fRefVtx[1]));
-      AliInfo(Form("Chi2 to vertex: %f | y: Tr:%+8.4f Cl:%+8.4f  z: Tr:%+8.4f Cl: %+8.4f",chi2V, propVtx.GetTrack()->GetY(),fRefVtx[0], propVtx.GetTrack()->GetZ(),fRefVtx[1]));
+      AliDebug(2,Form("Chi2 to vertex: %f | y: Tr:%+8.4f Cl:%+8.4f  z: Tr:%+8.4f Cl: %+8.4f",chi2V, propVtx.GetTrack()->GetY(),fRefVtx[0], propVtx.GetTrack()->GetZ(),fRefVtx[1]));
 
       if (chi2V>fMaxChi2Vtx) {
 	newTr->Kill();
@@ -1414,7 +1414,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
 
     //    if (!PropagateToLayer(newTr,lrP,lr,-1)) {newTr->Kill(); continue;} // propagate to next layer
     if (AliLog::GetGlobalDebugLevel()>1) {
-      AliInfo("Cloned updated track is:");
+      AliDebug(2,"Cloned updated track is:");
       newTr->Print();
     }
   }
@@ -1518,7 +1518,7 @@ void KMCDetectorFwd::PerformDecay(KMCProbeFwd* trc)
   static double ctau = 1e10;
   if (fDecMode==kDoRealDecay) {
     //
-    if (TMath::Abs(mass-kMassMu)<kTol) {AliInfo(Form("Decay requested but provided mass %.4f hints to muon",mass)); exit(1);}
+    if (TMath::Abs(mass-kMassMu)<kTol) {AliDebug(2,Form("Decay requested but provided mass %.4f hints to muon",mass)); exit(1);}
     if (TMath::Abs(mass-kMassPi)<kTol) {
       mass = kMassPi;
       Double_t masses[2] = {kMassMu, kMassE};
@@ -1533,7 +1533,7 @@ void KMCDetectorFwd::PerformDecay(KMCProbeFwd* trc)
       decay.SetDecay(pParCM, 2, masses);
       ctau = 371.2;
     }
-    else {AliInfo(Form("Decay requested but provided mass %.4f is not recognized as pi or K",mass)); exit(1);}
+    else {AliDebug(2,Form("Decay requested but provided mass %.4f is not recognized as pi or K",mass)); exit(1);}
     //
     decay.Generate();
     pDecMu = *decay.GetDecay(0); // muon kinematics in parent frame
@@ -1580,7 +1580,7 @@ void KMCDetectorFwd::PerformDecay(KMCProbeFwd* trc)
   //  printf("Decay %.3f Z:%+7.3f ctau: %f gamma %f wgh:%e\n",mass,fZDecay,ctau, pDecMu.Gamma(),wgh);
   //
   AliDebug(2,Form(" <<Mode:%d at Z=%f, PXYZ:%+6.3f %+6.3f %+6.3f, Mass:%.3f, Wgh:%.3e",fDecMode,fZDecay,pxyz[0],pxyz[1],pxyz[2],kMassMu,wgh));
-  //AliInfo(Form(" <<Mode:%d at Z=%f, PXYZ:%+6.3f %+6.3f %+6.3f, Mass:%.3f, Wgh:%.3e",fDecMode,fZDecay,pxyz[0],pxyz[1],pxyz[2],kMassMu,wgh));
+  //AliDebug(2,Form(" <<Mode:%d at Z=%f, PXYZ:%+6.3f %+6.3f %+6.3f, Mass:%.3f, Wgh:%.3e",fDecMode,fZDecay,pxyz[0],pxyz[1],pxyz[2],kMassMu,wgh));
   //
 }
 
@@ -1600,7 +1600,7 @@ void KMCDetectorFwd::InitDecayZHisto(double absorberLambda)
   }
   double zdmp = labs->GetZ()-labs->GetThickness()/2;
   double zmax = GetLayer(fLastActiveLayer)->GetZ();
-  AliInfo(Form("Decay will be done uniformly till Z=%.1f, then dumped with Lambda=%.1f cm",zdmp,absorberLambda));
+  AliDebug(2,Form("Decay will be done uniformly till Z=%.1f, then dumped with Lambda=%.1f cm",zdmp,absorberLambda));
   //
   int nbn = int(zmax-zdmp+1);
   TH1F* hd = new TH1F("DecayZProf","Z decay profile",nbn,0,zmax);

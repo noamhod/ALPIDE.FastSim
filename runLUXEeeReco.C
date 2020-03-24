@@ -587,6 +587,7 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
    vector<int>             qrec;
    vector<int>             igentrk;
 	vector<TPolyMarker3D*>  polm_clusters;
+	vector<TPolyMarker3D*>  polm_clusters_intrksys;
    vector<TPolyMarker3D*>  polm;
    vector<TPolyLine3D*>    poll;
    vector<TPolyMarker3D*>  polm_gen;
@@ -610,6 +611,7 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
    tOut->Branch("acctrkgen",&acctrkgen);
    tOut->Branch("acctrkrec",&acctrkrec);
    tOut->Branch("polm_clusters",&polm_clusters);
+   tOut->Branch("polm_clusters_intrksys",&polm_clusters_intrksys);
    tOut->Branch("polm",&polm);
    tOut->Branch("polm_gen",&polm_gen);
    tOut->Branch("poll_gen",&poll_gen);
@@ -624,13 +626,14 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
  
    /// loop on events
    // for(int iev=0;iev<nev;iev++)
-   for(int iev=0;iev<nev and iev<10000;iev++)
+   for(int iev=0;iev<nev and iev<10;iev++)
    {
       //// clear
       ngen = 0;    
       nres = 0;
       nrec = 0;
  	   for(int i=0;i<(int)polm_clusters.size();++i) delete polm_clusters[i];
+ 	   for(int i=0;i<(int)polm_clusters_intrksys.size();++i) delete polm_clusters_intrksys[i];
  	   for(int i=0;i<(int)polm_gen.size();++i) delete polm_gen[i];
  	   for(int i=0;i<(int)poll_gen.size();++i) delete poll_gen[i];
  	   for(int i=0;i<(int)polm.size();++i)     delete polm[i];
@@ -642,6 +645,7 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
       qrec.clear();
       igentrk.clear();
       polm_clusters.clear();
+      polm_clusters_intrksys.clear();
       polm_gen.clear();
       poll_gen.clear();
       polm.clear();
@@ -680,6 +684,7 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
          qgen.push_back(crg);
          acctrkgen.push_back(0);
 			polm_clusters.push_back( new TPolyMarker3D() );
+			polm_clusters_intrksys.push_back( new TPolyMarker3D() );
          jrec.push_back(-999);
          pgen[igen].SetXYZM(px->at(igen), py->at(igen), pz->at(igen), meGeV);
          if(pdgId->at(igen)==-11) npositrons ++; // count positrons
@@ -719,11 +724,16 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
             KMCClusterFwd* cluster2 = det->GetLayer(3)->GetMCCluster();
             KMCClusterFwd* cluster3 = det->GetLayer(5)->GetMCCluster();
             KMCClusterFwd* cluster4 = det->GetLayer(7)->GetMCCluster();
-			   // unsigned int trkcounter = polm_clusters.size()-1;
+				
 	  	      polm_clusters[igen]->SetNextPoint(cluster1->GetYLab(),-cluster1->GetXLab(),cluster1->GetZLab());
 	  	      polm_clusters[igen]->SetNextPoint(cluster2->GetYLab(),-cluster2->GetXLab(),cluster2->GetZLab());
 	  	      polm_clusters[igen]->SetNextPoint(cluster3->GetYLab(),-cluster3->GetXLab(),cluster3->GetZLab());
 	  	      polm_clusters[igen]->SetNextPoint(cluster4->GetYLab(),-cluster4->GetXLab(),cluster4->GetZLab());
+				
+				polm_clusters_intrksys[igen]->SetNextPoint(cluster1->GetX(),cluster1->GetY(),cluster1->GetZ());				
+				polm_clusters_intrksys[igen]->SetNextPoint(cluster2->GetX(),cluster2->GetY(),cluster2->GetZ());				
+				polm_clusters_intrksys[igen]->SetNextPoint(cluster3->GetX(),cluster3->GetY(),cluster3->GetZ());				
+				polm_clusters_intrksys[igen]->SetNextPoint(cluster4->GetX(),cluster4->GetY(),cluster4->GetZ());				
          }
 
          // get the reconstructed propagated to the vertex 
