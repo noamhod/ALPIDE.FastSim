@@ -468,7 +468,7 @@ void runLUXEeeRecoFromSeeds(TString process, int Seed=12345) //, const char* set
  
    /// loop on events
    // for(int iev=0;iev<nev;iev++)
-   for(int iev=0;iev<nev and iev<10000;iev++)
+   for(int iev=0;iev<nev and iev<1;iev++)
    {
 		/// global
 		int n_res = 0;
@@ -589,6 +589,11 @@ void runLUXEeeRecoFromSeeds(TString process, int Seed=12345) //, const char* set
          det->GetLayer(7)->GetMCCluster()->Set( z4Seed->at(iseed), x4Seed->at(iseed), y4Seed->at(iseed));
 
          // prepare the probe from the seed and do the KF fit
+			cout << "\n\nSeed kinematics passed on to SolveSingleTrackViaKalmanMC_Noam(...):" << endl;
+			cout << "p_seed["<<iseed<<"].Pt()=" << p_seed[iseed].Pt()
+				  << ", p_seed["<<iseed<<"].Rapidity()="<<p_seed[iseed].Rapidity()
+              <<" ,p_seed["<<iseed<<"].Phi()="<<p_seed[iseed].Phi()
+				  <<", meGeV="<<meGeV<<", crg="<<crg<< ", {vX,vY,vZ}=" << "{"<<vX<<","<<vY<<","<<vZ<< "}" << endl;
 			bool res = det->SolveSingleTrackViaKalmanMC_Noam(p_seed[iseed].Pt(),p_seed[iseed].Rapidity(),p_seed[iseed].Phi(), meGeV, crg, vX,vY,vZ,99);
          if(!res) { cout << "SolveSingleTrackViaKalmanMC_Noam failed" << endl; continue; } // reconstruction failed (assume it didn't)
          n_res++;
