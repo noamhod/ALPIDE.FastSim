@@ -1122,9 +1122,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
     KMCLayerFwd *lrP = lr;
     lr = GetLayer(j);
 	 printf("LR   |" );  lr->Print("cl");
-	 printf("LRP |" );  lrP->Print("cl");
+	 printf("LRP |" );   lrP->Print("cl");
 	 
     int ntPrev = lrP->GetNMCTracks();
+	 AliInfo(Form("Got %d ntPrev",ntPrev));
     if(lrP->IsDead()) // for passive layer just propagate the copy of all tracks of prev layer >>>
 	 {
       for(int itrP=ntPrev;itrP--;) // loop over all tracks from previous layer
@@ -1138,7 +1139,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
         if(fst<fstLim)
         {
           fst++;
-          // currTr->Print("etp");
+          currTr->Print("etp");
         }
 	     if(!PropagateToLayer(currTr,lrP,lr,-1)) // propagate to current layer:
         {
@@ -1150,7 +1151,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
       continue;
     } // end of treatment of dead layer <<<
 	 
-    AliDebug(2,Form("From Lr: %d | %d seeds, %d bg clusters",j+1,ntPrev,lrP->GetNBgClusters()));
+    AliInfo(Form("From Lr: %d | %d seeds, %d bg clusters",j+1,ntPrev,lrP->GetNBgClusters()));
     for(int itrP=0;itrP<ntPrev;itrP++) // loop over all tracks from previous layer
 	 {
       currTrP = lrP->GetMCTrack(itrP);
@@ -1166,10 +1167,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
          fst++;
          // currTr->Print("etp");
       }
-      AliDebug(2,Form("LastChecked before:%d",currTr->GetInnerLayerChecked()));
+      AliInfo(Form("LastChecked before:%d",currTr->GetInnerLayerChecked()));
 		printf("tr%d | ", itrP); currTr->Print("etp");
       CheckTrackProlongations(currTr, lrP,lr);
-      AliDebug(2,Form("LastChecked after:%d",currTr->GetInnerLayerChecked()));
+      AliInfo(Form("LastChecked after:%d",currTr->GetInnerLayerChecked()));
       ncnd++;
       if(currTr->GetNFakeITSHits()==0 && cndCorr<ncnd) cndCorr=ncnd;
       if(NeedToKill(currTr)) {currTr->Kill(); continue;}
@@ -1198,7 +1199,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
         continue;
       }
     }
-    AliDebug(1,Form("Got %d tracks on layer %s",ntTot,lr->GetName()));
+    AliInfo(Form("Got %d tracks on layer %s",ntTot,lr->GetName()));
   } // end loop over layers
 
   // do we use vertex constraint?
@@ -1234,6 +1235,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
   }
   
   int ntTot = lr->GetNMCTracks();
+  AliInfo(Form("Got %d tracks",ntTot));
   
   ntTot = TMath::Min(1,ntTot);
   for (int itr=ntTot;itr--;)
