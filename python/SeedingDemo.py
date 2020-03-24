@@ -342,8 +342,8 @@ def makeseed(cluster1,cluster2,i1,i2,particles):
    q = 1 if(particles=="electrons") else -1
    H = (zDipoleExit-z0)*cm2m
    R = H*(LB)/xExit + xExit ## look this up in my slides
-   # P = 0.3*B*R
-   P = 0.3*B*R/1.001 #- rnd.Gaus(6.54e-03,1.63e-02)
+   P = 0.3*B*R
+   # P = 0.3*B*R/1.001
    
    v1 = TVector2(r1[2],r1[1])
    v2 = TVector2(r2[2],r2[1])
@@ -794,7 +794,7 @@ intfile = TFile("../data/root/rec_"+proc+".root","READ")
 intree = intfile.Get("res")
 nevents = intree.GetEntries()
 print("with %d events" % nevents)
-nmax = 10
+nmax = 1000000
 n=0 ### init n
 for event in intree:
    Nsigall = 0

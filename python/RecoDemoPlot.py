@@ -158,10 +158,10 @@ histos = { "h_residuals_xz_sig": TH1D("residuals_xz_sig",";residuals_{xz};Tracks
            "h_gen_E_recMatched2gen_all"  : TH1D("gen_E_recMatched2gen_all",  ";E_{gen} [GeV];Tracks", nbins_E, bins_E),
            "h_gen_E_recMatched2gen_sel"  : TH1D("gen_E_recMatched2gen_sel",  ";E_{gen} [GeV];Tracks", nbins_E, bins_E),
            
-           "h_eff_E_seedMatched2gen_all" : TH1D("eff_E_seedMatched2gen_all", ";E_{gen} [GeV];Efficiency", nbins_E, bins_E),
-           "h_eff_E_seedMatched2gen_sel" : TH1D("eff_E_seedMatched2gen_sel", ";E_{gen} [GeV];Efficiency", nbins_E, bins_E),
-           "h_eff_E_recMatched2gen_all"  : TH1D("eff_E_recMatched2gen_all",  ";E_{gen} [GeV];Efficiency", nbins_E, bins_E),
-           "h_eff_E_recMatched2gen_sel"  : TH1D("eff_E_recMatched2gen_sel",  ";E_{gen} [GeV];Efficiency", nbins_E, bins_E),
+           "h_eff_E_seedMatched2gen_all" : TH1D("eff_E_seedMatched2gen_all", "Seeding efficiency;E_{gen} [GeV];Efficiency", nbins_E, bins_E),
+           "h_eff_E_seedMatched2gen_sel" : TH1D("eff_E_seedMatched2gen_sel", "Seeding efficiency;E_{gen} [GeV];Efficiency", nbins_E, bins_E),
+           "h_eff_E_recMatched2gen_all"  : TH1D("eff_E_recMatched2gen_all",  "Reconstruction efficiency;E_{gen} [GeV];Efficiency", nbins_E, bins_E),
+           "h_eff_E_recMatched2gen_sel"  : TH1D("eff_E_recMatched2gen_sel",  "Reconstruction efficiency;E_{gen} [GeV];Efficiency", nbins_E, bins_E),
            
 }
 histos["h_gen_E_all"].Sumw2()
@@ -288,15 +288,15 @@ for event in intree:
          resE  = (event.p_seed[i].E() -event.p_gen[igen].E()) /event.p_gen[igen].E()
          resPz = (event.p_seed[i].Pz()-event.p_gen[igen].Pz())/event.p_gen[igen].Pz()
          resPy = (event.p_seed[i].Py()-event.p_gen[igen].Py())/event.p_gen[igen].Py()
-         # resPx = (event.p_seed[i].Px()-event.p_gen[igen].Px())/event.p_gen[igen].Px()
+         resPx = (event.p_seed[i].Px()-event.p_gen[igen].Px())/event.p_gen[igen].Px()
          histos["h_seed_vs_gen_resE"].Fill(resE)
          histos["h_seed_vs_gen_resPz"].Fill(resPz)
          histos["h_seed_vs_gen_resPy"].Fill(resPy)
-         # histos["h_seed_vs_gen_resPx"].Fill(resPx)
+         histos["h_seed_vs_gen_resPx"].Fill(resPx)
          ### check spatial perforrmance of seeding    
          histos["h_seed_vs_gen_resE_vs_x"].Fill(event.x4_seed[i],resE)
          histos["h_seed_vs_gen_resPy_vs_x"].Fill(event.x4_seed[i],resPy)
-         # histos["h_seed_vs_gen_resPx_vs_x"].Fill(event.x4_seed[i],resPx)
+         histos["h_seed_vs_gen_resPx_vs_x"].Fill(event.x4_seed[i],resPx)
    
    
    for i in range(Nrec):
@@ -338,15 +338,15 @@ for event in intree:
          resE  = (event.p_rec[i].E() -event.p_seed[iseed].E()) /event.p_seed[iseed].E()
          resPz = (event.p_rec[i].Pz()-event.p_seed[iseed].Pz())/event.p_seed[iseed].Pz()
          resPy = (event.p_rec[i].Py()-event.p_seed[iseed].Py())/event.p_seed[iseed].Py()
-         # resPx = (event.p_rec[i].Px()-event.p_seed[iseed].Px())/event.p_seed[iseed].Px()
+         resPx = (event.p_rec[i].Px()-event.p_seed[iseed].Px())/event.p_seed[iseed].Px()
          histos["h_rec_vs_seed_resE"].Fill(resE)
          histos["h_rec_vs_seed_resPz"].Fill(resPz)
          histos["h_rec_vs_seed_resPy"].Fill(resPy)
-         # histos["h_rec_vs_seed_resPx"].Fill(resPx)
+         histos["h_rec_vs_seed_resPx"].Fill(resPx)
          ### check spatial perforrmance of reconstruction
          histos["h_rec_vs_seed_resE_vs_x"].Fill(event.x4_seed[iseed],resE)
          histos["h_rec_vs_seed_resPy_vs_x"].Fill(event.x4_seed[iseed],resPy)
-         # histos["h_rec_vs_seed_resPx_vs_x"].Fill(event.x4_seed[iseed],resPx)
+         histos["h_rec_vs_seed_resPx_vs_x"].Fill(event.x4_seed[iseed],resPx)
    
    
    ### seeding stat       

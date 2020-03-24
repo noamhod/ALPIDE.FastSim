@@ -464,8 +464,8 @@ void runLUXEeeRecoFromSeeds(TString process, int Seed=12345) //, const char* set
    TH1D* h_dErel_rec_seed = new TH1D("h_dErel_rec_seed","Rec vs Seed;(E_{rec}-E_{seed})/E_{seed};Tracks",500,-0.05,+0.05);
  
    /// loop on events
-   // for(int iev=0;iev<nev;iev++)
-   for(int iev=0;iev<nev and iev<1;iev++)
+   for(int iev=0;iev<nev;iev++)
+   // for(int iev=0;iev<nev and iev<10;iev++)
    {
 		/// global
 		int n_res = 0;
@@ -575,50 +575,26 @@ void runLUXEeeRecoFromSeeds(TString process, int Seed=12345) //, const char* set
             h_dPrel_seed_gen->Fill((p_seed[iseed].P()-p_gen[igenmatch_seed].P())/p_gen[igenmatch_seed].P());
 			}
 			
-      
 
          /// rest all the layers of the detector (including inactive if any):
 			for(Int_t i=0 ; i<det->GetLayers()->GetEntries() ; i++) det->GetLayer(i)->Reset();
 			
 			/// set the clusters of the seed
-         // double clxyzTrk1[3],clxyzLab1[3], clxyzTrk2[3],clxyzLab2[3], clxyzTrk3[3],clxyzLab3[3], clxyzTrk4[3],clxyzLab4[3];
-         // clxyzLab1[0]=z1Seed->at(iseed); clxyzLab1[1]=y1Seed->at(iseed); clxyzLab1[2]=x1Seed->at(iseed);
-         // clxyzLab2[0]=z1Seed->at(iseed); clxyzLab2[1]=y1Seed->at(iseed); clxyzLab2[2]=x1Seed->at(iseed);
-         // clxyzLab3[0]=z1Seed->at(iseed); clxyzLab3[1]=y1Seed->at(iseed); clxyzLab3[2]=x1Seed->at(iseed);
-         // clxyzLab4[0]=z1Seed->at(iseed); clxyzLab4[1]=y1Seed->at(iseed); clxyzLab4[2]=x1Seed->at(iseed);
-         // KMCProbeFwd::Lab2Trk(clxyzLab1, clxyzTrk1);
-         // KMCProbeFwd::Lab2Trk(clxyzLab2, clxyzTrk2);
-         // KMCProbeFwd::Lab2Trk(clxyzLab3, clxyzTrk3);
-         // KMCProbeFwd::Lab2Trk(clxyzLab4, clxyzTrk4);
-         // cout << clxyzTrk1[0] << ", " << clxyzTrk1[1] << ", " << clxyzTrk1[2] << endl;
-         // det->GetLayer(1)->GetMCCluster()->Set( clxyzTrk1[0], clxyzTrk1[1], clxyzTrk1[2]);
-         // det->GetLayer(3)->GetMCCluster()->Set( clxyzTrk2[0], clxyzTrk2[1], clxyzTrk2[2]);
-         // det->GetLayer(5)->GetMCCluster()->Set( clxyzTrk3[0], clxyzTrk3[1], clxyzTrk3[2]);
-         // det->GetLayer(7)->GetMCCluster()->Set( clxyzTrk4[0], clxyzTrk4[1], clxyzTrk4[2]);
-			cout << "\n\n----------------------------------" << endl;			
-			cout << "seed charge = " << crg << endl;
-			cout << "----------------------------------" << endl;
-			cout << "seed_1 in lab frame before setting the cluster in the detector: {" << x1Seed->at(iseed) << "," << y1Seed->at(iseed) << "," << z1Seed->at(iseed) << "}" << endl;
-			cout << "seed_2 in lab frame before setting the cluster in the detector: {" << x2Seed->at(iseed) << "," << y2Seed->at(iseed) << "," << z2Seed->at(iseed) << "}" << endl;
-			cout << "seed_3 in lab frame before setting the cluster in the detector: {" << x3Seed->at(iseed) << "," << y3Seed->at(iseed) << "," << z3Seed->at(iseed) << "}" << endl;
-			cout << "seed_4 in lab frame before setting the cluster in the detector: {" << x4Seed->at(iseed) << "," << y4Seed->at(iseed) << "," << z4Seed->at(iseed) << "}" << endl;
-			cout << "----------------------------------" << endl;
-         det->GetLayer(1)->GetMCCluster()->Set( z1Seed->at(iseed), y1Seed->at(iseed), -x1Seed->at(iseed));
-         det->GetLayer(3)->GetMCCluster()->Set( z2Seed->at(iseed), y2Seed->at(iseed), -x2Seed->at(iseed));
-         det->GetLayer(5)->GetMCCluster()->Set( z3Seed->at(iseed), y3Seed->at(iseed), -x3Seed->at(iseed));
-         det->GetLayer(7)->GetMCCluster()->Set( z4Seed->at(iseed), y4Seed->at(iseed), -x4Seed->at(iseed));
-			cout << "seed_1 in trk frame after setting the cluster in the detector: {" << det->GetLayer(1)->GetMCCluster()->GetX() << "," << det->GetLayer(1)->GetMCCluster()->GetY() << "," << det->GetLayer(1)->GetMCCluster()->GetZ() << "}" << endl;
-			cout << "seed_2 in trk frame after setting the cluster in the detector: {" << det->GetLayer(3)->GetMCCluster()->GetX() << "," << det->GetLayer(3)->GetMCCluster()->GetY() << "," << det->GetLayer(3)->GetMCCluster()->GetZ() << "}" << endl;
-			cout << "seed_3 in trk frame after setting the cluster in the detector: {" << det->GetLayer(5)->GetMCCluster()->GetX() << "," << det->GetLayer(5)->GetMCCluster()->GetY() << "," << det->GetLayer(5)->GetMCCluster()->GetZ() << "}" << endl;
-			cout << "seed_4 in trk frame after setting the cluster in the detector: {" << det->GetLayer(7)->GetMCCluster()->GetX() << "," << det->GetLayer(7)->GetMCCluster()->GetY() << "," << det->GetLayer(7)->GetMCCluster()->GetZ() << "}" << endl;
-         cout << "----------------------------------" << endl;
-         // prepare the probe from the seed and do the KF fit
-			cout << "Seed kinematics passed on to SolveSingleTrackViaKalmanMC_Noam(...):" << endl;
-			cout << "p_seed["<<iseed<<"].Pt()=" << p_seed[iseed].Pt()
-				  << ", p_seed["<<iseed<<"].Rapidity()="<<p_seed[iseed].Rapidity()
-			     <<" ,p_seed["<<iseed<<"].Phi()="<<p_seed[iseed].Phi()
-				  <<", meGeV="<<meGeV<<", crg="<<crg<< ", {vX,vY,vZ}=" << "{"<<vX<<","<<vY<<","<<vZ<< "}" << endl;
-			cout << "----------------------------------" << endl;
+         double clxyzTrk1[3],clxyzLab1[3], clxyzTrk2[3],clxyzLab2[3], clxyzTrk3[3],clxyzLab3[3], clxyzTrk4[3],clxyzLab4[3];
+         clxyzLab1[0]=x1Seed->at(iseed); clxyzLab1[1]=y1Seed->at(iseed); clxyzLab1[2]=z1Seed->at(iseed);
+         clxyzLab2[0]=x2Seed->at(iseed); clxyzLab2[1]=y2Seed->at(iseed); clxyzLab2[2]=z2Seed->at(iseed);
+         clxyzLab3[0]=x3Seed->at(iseed); clxyzLab3[1]=y3Seed->at(iseed); clxyzLab3[2]=z3Seed->at(iseed);
+         clxyzLab4[0]=x4Seed->at(iseed); clxyzLab4[1]=y4Seed->at(iseed); clxyzLab4[2]=z4Seed->at(iseed);
+         KMCProbeFwd::Lab2Trk(clxyzLab1, clxyzTrk1);
+         KMCProbeFwd::Lab2Trk(clxyzLab2, clxyzTrk2);
+         KMCProbeFwd::Lab2Trk(clxyzLab3, clxyzTrk3);
+         KMCProbeFwd::Lab2Trk(clxyzLab4, clxyzTrk4);
+         det->GetLayer(1)->GetMCCluster()->Set( clxyzTrk1[0], clxyzTrk1[1], clxyzTrk1[2]);
+         det->GetLayer(3)->GetMCCluster()->Set( clxyzTrk2[0], clxyzTrk2[1], clxyzTrk2[2]);
+         det->GetLayer(5)->GetMCCluster()->Set( clxyzTrk3[0], clxyzTrk3[1], clxyzTrk3[2]);
+         det->GetLayer(7)->GetMCCluster()->Set( clxyzTrk4[0], clxyzTrk4[1], clxyzTrk4[2]);
+         
+			// prepare the probe from the seed and do the KF fit
 			bool res = det->SolveSingleTrackViaKalmanMC_Noam(p_seed[iseed].Pt(),p_seed[iseed].Rapidity(),p_seed[iseed].Phi(), meGeV, crg, vX,vY,vZ,99);
          if(!res) { cout << "SolveSingleTrackViaKalmanMC_Noam failed" << endl; continue; } // reconstruction failed
          n_res++;
@@ -650,8 +626,6 @@ void runLUXEeeRecoFromSeeds(TString process, int Seed=12345) //, const char* set
          p_rec.push_back(ptmp);
          q_rec.push_back(crg);
 			issig_rec.push_back(issigSeed->at(iseed));
-			
-			cout << "iseed="<<iseed<<" --> pseed={"<< p_seed[iseed].Px()<<","<<p_seed[iseed].Py()<<","<<p_seed[iseed].Pz()<<","<<p_seed[iseed].E() <<"}, prec={"<< ptmp.Px()<<","<<ptmp.Py()<<","<<ptmp.Pz()<<","<<ptmp.E() <<"}" << endl;
 
          if(goodseed)
 			{
