@@ -20,24 +20,42 @@ The reconstructed tracks are written for further analysis using python+ROOT.
       - python stdhep2root.py -p trident
   - you will see 2 files in the data/root/ directory
 
-- Run the reconstruction on the "truth" ROOT files
+- Run the "digitisation" part on the "truth" ROOT files
+  - this will transform the truth tracks to a collection of clusters according to the realistic detector response
+  - note that the code runs on a single track at a time!
   - look at the setup/setupLUXE_bppp.txt or setup/setupLUXE_trident.txt to understand/change the geometry and materials
-  - run `root -b -q load.C 'runLUXEeeReco.C+("bppp")'` for bppp or root -b -q load.C 'runLUXEeeReco.C+("trident")'
+  - run the signal digitisation step:
+    - root -b -q load.C 'runLUXEeeReco.C+("bppp")'
+    - root -b -q load.C 'runLUXEeeReco.C+("trident")'
   - this will produce a number of files in the data/root/ directory
 
-- Analyse the reconstructed output:
-  - go to the python dir
+- Basic analysis of the digitisation output:
+  - in a separate shell, go to the python dir
   - setup python and ROOT (`source setupROOT6.brew.python3.sh` in my case)
-  - run the analysis:
-     - `python analysis.py -p bppp`
-     - `python analysis.py -p trident`
-     - check the output dir
+  - run the simple analysis on the digitisation step:
+    - python analysis.py -p bppp
+	 - python analysis.py -p trident
+  - check the data and output dirs...
 
-- Fit the truth E(x) profiles for the 4 layers and the dipole exit (together for bppp and trident)
-  - go to the python dir
-  - make sure python and ROOT is setup
-  - run the fits:
-    - `python E_vs_x.py`
-    - check the output dir
+- Run a "seeding demo" starting from the "digitisation" output:
+  - in a separate shell, go to the python dir
+  - setup python and ROOT (`source setupROOT6.brew.python3.sh` in my case)
+  - run the demo alg and plotting script:
+    - python SeedingDemo.py -p bppp
+	   - python SeedingDemoPlot.py -p bppp
+	 - python SeedingDemo.py -p trident
+	   - python SeedingDemoPlot.py -p trident
+  - check the data and output dirs...
+
+- Run a "reconstruction demo" starting from the "seeding demo" output:
+  - run the recon step:
+    - root -b -q load.C 'runLUXEeeRecoFromSeeds.C+("bppp")'
+	 - root -b -q load.C 'runLUXEeeRecoFromSeeds.C+("trident")'
+  - in a separate shell, go to the python dir
+  - setup python and ROOT (`source setupROOT6.brew.python3.sh` in my case)
+  - run the demo plotting script:
+    - python RecoDemoPlot.py -p bppp
+	 - python RecoDemoPlot.py -p trident
+  - check the data and output dirs...
 
 

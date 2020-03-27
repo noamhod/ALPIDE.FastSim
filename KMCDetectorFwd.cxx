@@ -1414,7 +1414,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     //    if (!PropagateToLayer(newTr,lrP,lr,-1)) {newTr->Kill(); continue;} // propagate to next layer
     if (AliLog::GetGlobalDebugLevel()>1) {
       AliDebug(2,"Cloned updated track is:");
-      newTr->Print();
+      // newTr->Print();
     }
   }
   //
