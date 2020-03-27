@@ -260,15 +260,15 @@ bool accepttrk(vector<TPolyMarker3D*>& polm, int itrk)
    return (acctrk==nlayers);
 }
 
-vector<float> cls_x_L1_Eside; vector<float> cls_y_L1_Eside; vector<float> cls_z_L1_Eside; vector<int> cls_id_L1_Eside; vector<int> cls_type_L1_Eside;
-vector<float> cls_x_L2_Eside; vector<float> cls_y_L2_Eside; vector<float> cls_z_L2_Eside; vector<int> cls_id_L2_Eside; vector<int> cls_type_L2_Eside;
-vector<float> cls_x_L3_Eside; vector<float> cls_y_L3_Eside; vector<float> cls_z_L3_Eside; vector<int> cls_id_L3_Eside; vector<int> cls_type_L3_Eside;
-vector<float> cls_x_L4_Eside; vector<float> cls_y_L4_Eside; vector<float> cls_z_L4_Eside; vector<int> cls_id_L4_Eside; vector<int> cls_type_L4_Eside;
+vector<float> cls_x_L1_Eside, cls_y_L1_Eside, cls_z_L1_Eside, cls_id_L1_Eside, cls_type_L1_Eside;
+vector<float> cls_x_L2_Eside, cls_y_L2_Eside, cls_z_L2_Eside, cls_id_L2_Eside, cls_type_L2_Eside;
+vector<float> cls_x_L3_Eside, cls_y_L3_Eside, cls_z_L3_Eside, cls_id_L3_Eside, cls_type_L3_Eside;
+vector<float> cls_x_L4_Eside, cls_y_L4_Eside, cls_z_L4_Eside, cls_id_L4_Eside, cls_type_L4_Eside;
 
-vector<float> cls_x_L1_Pside; vector<float> cls_y_L1_Pside; vector<float> cls_z_L1_Pside; vector<int> cls_id_L1_Pside; vector<int> cls_type_L1_Pside;
-vector<float> cls_x_L2_Pside; vector<float> cls_y_L2_Pside; vector<float> cls_z_L2_Pside; vector<int> cls_id_L2_Pside; vector<int> cls_type_L2_Pside;
-vector<float> cls_x_L3_Pside; vector<float> cls_y_L3_Pside; vector<float> cls_z_L3_Pside; vector<int> cls_id_L3_Pside; vector<int> cls_type_L3_Pside;
-vector<float> cls_x_L4_Pside; vector<float> cls_y_L4_Pside; vector<float> cls_z_L4_Pside; vector<int> cls_id_L4_Pside; vector<int> cls_type_L4_Pside;
+vector<float> cls_x_L1_Pside, cls_y_L1_Pside, cls_z_L1_Pside, cls_id_L1_Pside, cls_type_L1_Pside;
+vector<float> cls_x_L2_Pside, cls_y_L2_Pside, cls_z_L2_Pside, cls_id_L2_Pside, cls_type_L2_Pside;
+vector<float> cls_x_L3_Pside, cls_y_L3_Pside, cls_z_L3_Pside, cls_id_L3_Pside, cls_type_L3_Pside;
+vector<float> cls_x_L4_Pside, cls_y_L4_Pside, cls_z_L4_Pside, cls_id_L4_Pside, cls_type_L4_Pside;
 
 void clear_clusters()
 {
@@ -573,7 +573,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
    /// loop on events
 	Int_t nsigevents = tSig->GetEntries();
    cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
-   for(int iev=0 ; iev<tSig->GetEntries() and iev<10 ; iev++)
+   for(int iev=0 ; iev<tSig->GetEntries() and iev<1 ; iev++)
    {
 		/// global
 		int n_res = 0;
@@ -595,19 +595,20 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			{
 				float x,y,z;
 	         polm_clusters->at(i)->GetPoint(j,x,y,z); // the clusters
+				cout << "signal xyz[" << i << "] " << x << "," << y << ", " << z << endl;
 	         if(x>0) /// Eside
-				{
-					if(z==300) cls_x_L1_Eside.push_back(x); cls_y_L1_Eside.push_back(y); cls_z_L1_Eside.push_back(z); cls_id_L1_Eside.push_back(i); cls_type_L1_Eside.push_back(1);
-					if(z==310) cls_x_L2_Eside.push_back(x); cls_y_L2_Eside.push_back(y); cls_z_L2_Eside.push_back(z); cls_id_L2_Eside.push_back(i); cls_type_L2_Eside.push_back(1);
-					if(z==320) cls_x_L3_Eside.push_back(x); cls_y_L3_Eside.push_back(y); cls_z_L3_Eside.push_back(z); cls_id_L3_Eside.push_back(i); cls_type_L3_Eside.push_back(1);
-					if(z==330) cls_x_L4_Eside.push_back(x); cls_y_L4_Eside.push_back(y); cls_z_L4_Eside.push_back(z); cls_id_L4_Eside.push_back(i); cls_type_L4_Eside.push_back(1);
+				{	
+					if(z==300) { cls_x_L1_Eside.push_back(x); cls_y_L1_Eside.push_back(y); cls_z_L1_Eside.push_back(z); cls_id_L1_Eside.push_back(i); cls_type_L1_Eside.push_back(1); }
+					if(z==310) { cls_x_L2_Eside.push_back(x); cls_y_L2_Eside.push_back(y); cls_z_L2_Eside.push_back(z); cls_id_L2_Eside.push_back(i); cls_type_L2_Eside.push_back(1); }
+					if(z==320) { cls_x_L3_Eside.push_back(x); cls_y_L3_Eside.push_back(y); cls_z_L3_Eside.push_back(z); cls_id_L3_Eside.push_back(i); cls_type_L3_Eside.push_back(1); }
+					if(z==330) { cls_x_L4_Eside.push_back(x); cls_y_L4_Eside.push_back(y); cls_z_L4_Eside.push_back(z); cls_id_L4_Eside.push_back(i); cls_type_L4_Eside.push_back(1); }
 				}
 				if(x<0) /// Pside
 				{
-					if(z==300) cls_x_L1_Pside.push_back(x); cls_y_L1_Pside.push_back(y); cls_z_L1_Pside.push_back(z); cls_id_L1_Pside.push_back(i); cls_type_L1_Pside.push_back(1);
-					if(z==310) cls_x_L2_Pside.push_back(x); cls_y_L2_Pside.push_back(y); cls_z_L2_Pside.push_back(z); cls_id_L2_Pside.push_back(i); cls_type_L2_Pside.push_back(1);
-					if(z==320) cls_x_L3_Pside.push_back(x); cls_y_L3_Pside.push_back(y); cls_z_L3_Pside.push_back(z); cls_id_L3_Pside.push_back(i); cls_type_L3_Pside.push_back(1);
-					if(z==330) cls_x_L4_Pside.push_back(x); cls_y_L4_Pside.push_back(y); cls_z_L4_Pside.push_back(z); cls_id_L4_Pside.push_back(i); cls_type_L4_Pside.push_back(1);
+					if(z==300) { cls_x_L1_Pside.push_back(x); cls_y_L1_Pside.push_back(y); cls_z_L1_Pside.push_back(z); cls_id_L1_Pside.push_back(i); cls_type_L1_Pside.push_back(1); }
+					if(z==310) { cls_x_L2_Pside.push_back(x); cls_y_L2_Pside.push_back(y); cls_z_L2_Pside.push_back(z); cls_id_L2_Pside.push_back(i); cls_type_L2_Pside.push_back(1); }
+					if(z==320) { cls_x_L3_Pside.push_back(x); cls_y_L3_Pside.push_back(y); cls_z_L3_Pside.push_back(z); cls_id_L3_Pside.push_back(i); cls_type_L3_Pside.push_back(1); }
+					if(z==330) { cls_x_L4_Pside.push_back(x); cls_y_L4_Pside.push_back(y); cls_z_L4_Pside.push_back(z); cls_id_L4_Pside.push_back(i); cls_type_L4_Pside.push_back(1); }
 				}
 			}
 		}
@@ -616,7 +617,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		/// make a pool of all background and noise clusters
 		for(unsigned int i=0 ; i<x1Cluster->size() ; i++)
 		{
-			
          if(x1Cluster->at(i)>0) /// Eside
 			{
 				cls_x_L1_Eside.push_back(x1Cluster->at(i)); cls_y_L1_Eside.push_back(y1Cluster->at(i)); cls_z_L1_Eside.push_back(z1Cluster->at(i)); cls_id_L1_Eside.push_back(trkid1Cluster->at(i)); cls_type_L1_Eside.push_back(type1Cluster->at(i));
@@ -669,6 +669,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			   bool seed = makeseed(r1,r4,"Eside",pseed);
 				if(!seed) continue;
 				
+				
 			   // prepare the probe from the seed and do the KF fit
 			   bool res = det->SolveSingleTrackViaKalmanMC_Noam(pseed.Pt(),pseed.Rapidity(),pseed.Phi(),meGeV,crg,vX,vY,vZ,99);
             if(!res) continue; // reconstruction failed
@@ -679,10 +680,19 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
             if(!trw) continue; // track was not reconstructed
             n_rec++;
 				
+	         double pxyz[3]; trw->GetPXYZ(pxyz);
+	         double xyz[3];  trw->GetXYZ(xyz);
+	         TLorentzVector prec;
+				prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
 				Double_t chi2 = trw->GetChi2();
 				Double_t chi2its = trw->GetChi2ITS();
 				
 				cout << " - {i4,i1}={" << i4 << "," << i1 << "} --> Passed with chi2=" << chi2 << ", and chi2its=" << chi2its << endl;
+				if(cls_type_L4_Eside[i4]==1) // it is a signal cluster
+				{
+					int itru = cls_id_L4_Eside[i4];
+					if(itru>=0) cout << " - {i4,i1}: itru=" << itru << " --> Etru=" << pgen->at(itru).E() << ", Erec=" << prec.E() << ", Eseed=" << pseed.E() << endl;
+				}
 			}
       }
       if(n_res!=n_seed) cout << "Warning: n_res=" << n_res << ", n4=" << n_seed << " --> problem" << endl;

@@ -626,7 +626,7 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
  
    /// loop on events
    // for(int iev=0;iev<nev;iev++)
-   for(int iev=0;iev<nev and iev<100000;iev++)
+   for(int iev=0;iev<nev and iev<10;iev++)
    {
       //// clear
       ngen = 0;    
@@ -718,23 +718,20 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
          acctrkgen[igen] = accepttrk(polm_gen,igen);
 			
 			// get the reconstructed propagated to the vertex
-			if(acctrkgen[igen])
-			{
-            KMCClusterFwd* cluster1 = det->GetLayer(1)->GetMCCluster();
-            KMCClusterFwd* cluster2 = det->GetLayer(3)->GetMCCluster();
-            KMCClusterFwd* cluster3 = det->GetLayer(5)->GetMCCluster();
-            KMCClusterFwd* cluster4 = det->GetLayer(7)->GetMCCluster();
-				
-	  	      polm_clusters[igen]->SetNextPoint(cluster1->GetXLab(),cluster1->GetYLab(),cluster1->GetZLab());
-	  	      polm_clusters[igen]->SetNextPoint(cluster2->GetXLab(),cluster2->GetYLab(),cluster2->GetZLab());
-	  	      polm_clusters[igen]->SetNextPoint(cluster3->GetXLab(),cluster3->GetYLab(),cluster3->GetZLab());
-	  	      polm_clusters[igen]->SetNextPoint(cluster4->GetXLab(),cluster4->GetYLab(),cluster4->GetZLab());
-				
-				polm_clusters_intrksys[igen]->SetNextPoint(cluster1->GetX(),cluster1->GetY(),cluster1->GetZ());				
-				polm_clusters_intrksys[igen]->SetNextPoint(cluster2->GetX(),cluster2->GetY(),cluster2->GetZ());				
-				polm_clusters_intrksys[igen]->SetNextPoint(cluster3->GetX(),cluster3->GetY(),cluster3->GetZ());				
-				polm_clusters_intrksys[igen]->SetNextPoint(cluster4->GetX(),cluster4->GetY(),cluster4->GetZ());				
-         }
+         KMCClusterFwd* cluster1 = det->GetLayer(1)->GetMCCluster();
+         KMCClusterFwd* cluster2 = det->GetLayer(3)->GetMCCluster();
+         KMCClusterFwd* cluster3 = det->GetLayer(5)->GetMCCluster();
+         KMCClusterFwd* cluster4 = det->GetLayer(7)->GetMCCluster();
+			
+	  	   polm_clusters[igen]->SetNextPoint(cluster1->GetXLab(),cluster1->GetYLab(),cluster1->GetZLab());
+	  	   polm_clusters[igen]->SetNextPoint(cluster2->GetXLab(),cluster2->GetYLab(),cluster2->GetZLab());
+	  	   polm_clusters[igen]->SetNextPoint(cluster3->GetXLab(),cluster3->GetYLab(),cluster3->GetZLab());
+	  	   polm_clusters[igen]->SetNextPoint(cluster4->GetXLab(),cluster4->GetYLab(),cluster4->GetZLab());
+			
+			polm_clusters_intrksys[igen]->SetNextPoint(cluster1->GetX(),cluster1->GetY(),cluster1->GetZ());				
+			polm_clusters_intrksys[igen]->SetNextPoint(cluster2->GetX(),cluster2->GetY(),cluster2->GetZ());				
+			polm_clusters_intrksys[igen]->SetNextPoint(cluster3->GetX(),cluster3->GetY(),cluster3->GetZ());				
+			polm_clusters_intrksys[igen]->SetNextPoint(cluster4->GetX(),cluster4->GetY(),cluster4->GetZ());				
 
          // get the reconstructed propagated to the vertex 
          KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack(); 
