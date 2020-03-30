@@ -1276,7 +1276,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
 	 double x=0,y=0,z=0;
 	 probes.push_back( PrepareProbe(pseeds[s].Pt(),pseeds[s].Rapidity(),pseeds[s].Phi(),mass,charge,x,y,z) );// delete & clear later
     if(!probes[s]) continue;
-	 currTr  = 0;
     lr = GetLayer(maxLr);
     currTr = lr->AddMCTrack(probes[s]); // start with seed track at vertex
     // probes[s]->Print("etp");

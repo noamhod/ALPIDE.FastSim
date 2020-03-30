@@ -736,9 +736,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			double pxyz[3]; trw->GetPXYZ(pxyz);
 			prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
 			Double_t chi2    = trw->GetChi2();
-			Double_t chi2its = trw->GetChi2ITS();
 			h_chi2->Fill(chi2);
-			cout << " - i4=" << i4 << " --> Passed with chi2=" << chi2 << ", and chi2its=" << chi2its << endl;
+			cout << " - i4=" << i4 << " --> Passed with chi2=" << chi2 << endl;
 			if(cls_type_L4_Eside[i4]==1) // it is a signal cluster
 			{
 				int itru = cls_id_L4_Eside[i4];
@@ -746,8 +745,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				h_dErel_rec_gen->Fill( (prec.E()-pgen->at(itru).E())/pgen->at(itru).E() );
 				h_chi2_matched->Fill(chi2);
 			}
-			
-			
 			cout << "End of all seeds for i4=" << i4 << "\n\n" << endl;
 		}
 		if(n_res!=n_seed) cout << "Warning: n_res=" << n_res << ", n4=" << n_seed << " --> problem" << endl;
