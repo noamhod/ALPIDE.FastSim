@@ -671,7 +671,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	for(int iev=0 ; iev<tSig->GetEntries() and iev<1 ; iev++)
 	{
 		/// global
-		int n_res = 0;
 		TLorentzVector ptmp;
 		
 		//// clear
@@ -701,10 +700,12 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		add_all_clusters("Eside");
 		
 		/// run over all clusters of layer 4 in the pool --> these are the seed for the KalmanFilter fit
-		int n_seed = 0;
 		float crg = -1; // Eside...
 		for(unsigned int i4=0 ; i4<cls_x_L4_Eside.size() ; ++i4)
 		{
+			int n_seeds = 0;
+			int n_solved = 0;
+			int n_recons = 0;
 			// cout << "starting test of i4=" << i4 << " with N1=" << cls_x_L1_Eside.size() << endl;
 			reset_layers_tracks(); // reset all tracks from all layers
 			cout << "All seeds for i4=" << i4 << " (type="<< (cls_type_L4_Eside[i4]==1)<< ", itru=" << cls_id_L4_Eside[i4] << ")" << ":" << endl;
@@ -719,18 +720,18 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				bool seed = makeseed(r1,r4,"Eside",pseed);
 				if(!seed) continue; // cannot make a meaningful seed
 				pseeds.push_back(pseed);
-				n_seed++;
+				n_seeds++;
 			}
 			
 			// prepare the probe from the seed and do the KF fit
-			bool res = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99);
-			if(!res) continue; // reconstruction failed
-			n_res++;
+			bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99);
+			if(!solved) continue; // reconstruction failed
+			n_solved++;
 			
 			// get the reconstructed propagated to the vertex 
 			KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack(); 
 			if(!trw) continue; // track was not reconstructed
-			n_rec++;
+			n_recons++;
 			
 			TLorentzVector prec;
 			double pxyz[3]; trw->GetPXYZ(pxyz);
@@ -741,17 +742,16 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			if(cls_type_L4_Eside[i4]==1) // it is a signal cluster
 			{
 				int itru = cls_id_L4_Eside[i4];
-				if(itru>=0) cout << "         itru=" << itru << ", acc=" << acctrkgen->at(itru) << " --> Etru=" << pgen->at(itru).E() << ", Erec=" << prec.E() << endl;
+				if(itru>=0) cout << "         itru=" << itru << " --> Etru=" << pgen->at(itru).E() << ", Erec=" << prec.E() << endl;
 				h_dErel_rec_gen->Fill( (prec.E()-pgen->at(itru).E())/pgen->at(itru).E() );
 				h_chi2_matched->Fill(chi2);
 			}
 			pseeds.clear();
 			cout << "End of all seeds for i4=" << i4 << "\n\n" << endl;
+			printf("Event %d for clusterid[layer4]=%d:  n_seeds=%d, n_solved=%d and n_recons=%d\n",iev,i4,n_seeds,n_solved,n_recons);
 		}
-		if(n_res!=n_seed) cout << "Warning: n_res=" << n_res << ", n4=" << n_seed << " --> problem" << endl;
 		fOut->cd();
 		tOut->Fill();
-		printf("Event %d: n_seed=%d, n_res=%d and n_rec=%d\n",iev,n_seed,n_res,n_rec);
 	}
 	fOut->cd();
 	tOut->Write();

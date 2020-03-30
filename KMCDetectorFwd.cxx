@@ -1276,9 +1276,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
 	 double x=0,y=0,z=0;
 	 probes.push_back( PrepareProbe(pseeds[s].Pt(),pseeds[s].Rapidity(),pseeds[s].Phi(),mass,charge,x,y,z) );// delete & clear later
     if(!probes[s]) continue;
+	 currTr  = 0;
     lr = GetLayer(maxLr);
     currTr = lr->AddMCTrack(probes[s]); // start with seed track at vertex
-    // probes[s]->Print("etp");
+    probes[s]->Print("etp");
   }
     
   // randomize the starting point
@@ -1295,8 +1296,8 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
   	 int cndCorr=-1;
     KMCLayerFwd *lrP = lr;
     lr = GetLayer(j);
-  	 // printf("LR   |" );  lr->Print("cl");
-  	 // printf("LRP |" );   lrP->Print("cl");
+  	 printf("LR   |" );  lr->Print("cl");
+  	 printf("LRP |" );   lrP->Print("cl");
   	 
     int ntPrev = lrP->GetNMCTracks();
   	 // AliInfo(Form("Got %d ntPrev",ntPrev));
@@ -1313,7 +1314,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
         if(fst<fstLim)
         {
           fst++;
-          // currTr->Print("etp");
+          currTr->Print("etp");
         }
   	     if(!PropagateToLayer(currTr,lrP,lr,-1)) // propagate to current layer:
         {
@@ -1337,10 +1338,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
       if(fst<fstLim)
   		{
          fst++;
-         // currTr->Print("etp");
+         currTr->Print("etp");
       }
-      // AliInfo(Form("LastChecked before:%d",currTr->GetInnerLayerChecked()));
-  		// printf("tr%d | ", itrP); currTr->Print("etp");
+      AliInfo(Form("LastChecked before:%d",currTr->GetInnerLayerChecked()));
+  		printf("tr%d | ", itrP); currTr->Print("etp");
       CheckTrackProlongations(currTr, lrP,lr);
   
       // AliInfo(Form("LastChecked after:%d",currTr->GetInnerLayerChecked()));
@@ -1370,7 +1371,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
         continue;
       }
     }
-    // AliInfo(Form("Got %d tracks on layer %s",ntTot,lr->GetName()));
+    AliInfo(Form("Got %d tracks on layer %s",ntTot,lr->GetName()));
   } // end loop over layers
   
   // do we use vertex constraint?
@@ -1405,7 +1406,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
     }
   }
   int ntTot = lr->GetNMCTracks();
-  // AliInfo(Form("Got %d tracks",ntTot));
+  AliInfo(Form("Got %d tracks",ntTot));
   
   ntTot = TMath::Min(1,ntTot);
   for (int itr=ntTot;itr--;)
@@ -1508,7 +1509,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
   double zMax = zMin + tolerZ + tolerZ;
   //probe->GetTrack()->Print();
   probe->SetInnerLrChecked(lrP->GetActiveID());
-  // AliInfo(Form("From Lr(%d) %s to Lr(%d) %s | LastChecked %d", lrP->GetActiveID(),lrP->GetName(),lr->GetActiveID(),lr->GetName(),probe->GetInnerLayerChecked()));
+  AliInfo(Form("From Lr(%d) %s to Lr(%d) %s | LastChecked %d", lrP->GetActiveID(),lrP->GetName(),lr->GetActiveID(),lr->GetName(),probe->GetInnerLayerChecked()));
   for (int icl=-1;icl<nCl;icl++) {
     //
     if (gRandom->Rndm() > lrP->GetLayerEff()) continue; // generate layer eff
@@ -1522,7 +1523,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     double z = cl->GetZ(); //                             
     //
     // AliDebug(2,Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) z: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)", icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetTrack()->GetY(),y,yMin,yMax,probe->GetTrack()->GetZ(),z,zMin,zMax));
-    // AliInfo(Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) z: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)", icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetTrack()->GetY(),y,yMin,yMax,probe->GetTrack()->GetZ(),z,zMin,zMax));
+    AliInfo(Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) z: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)", icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetTrack()->GetY(),y,yMin,yMax,probe->GetTrack()->GetZ(),z,zMin,zMax));
     //
     if (z>zMax) {if (icl==-1) continue; else break;} // all other z will be even smaller, no chance to match
     if (z<zMin) continue;
@@ -1536,7 +1537,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     //    AliDebug(2,Form("Seed-to-cluster chi2 = Chi2=%.2f",chi2));
     if (icl<0 && fHChi2LrCorr) fHChi2LrCorr->Fill(lrP->GetActiveID(), chi2);
     if (chi2>fMaxChi2Cl) continue;
-       // printf("Lr%d | cl%d, chi:%.3f X:%+.4f Y:%+.4f | x:%+.4f y:%+.4f |Sg: %.4f %.4f\n", lrP->GetActiveID(),icl,chi2, (zMin+zMax)/2,(yMin+yMax)/2, z,y, tolerZ/TMath::Sqrt(fMaxChi2Cl),tolerY/TMath::Sqrt(fMaxChi2Cl));
+       printf("Lr%d | cl%d, chi:%.3f X:%+.4f Y:%+.4f | x:%+.4f y:%+.4f |Sg: %.4f %.4f\n", lrP->GetActiveID(),icl,chi2, (zMin+zMax)/2,(yMin+yMax)/2, z,y, tolerZ/TMath::Sqrt(fMaxChi2Cl),tolerY/TMath::Sqrt(fMaxChi2Cl));
     // update track copy
     KMCProbeFwd* newTr = lr->AddMCTrack( probe );
     if (!newTr->Update(meas,measErr2)) {
