@@ -745,6 +745,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				h_dErel_rec_gen->Fill( (prec.E()-pgen->at(itru).E())/pgen->at(itru).E() );
 				h_chi2_matched->Fill(chi2);
 			}
+			pseeds.clear();
 			cout << "End of all seeds for i4=" << i4 << "\n\n" << endl;
 		}
 		if(n_res!=n_seed) cout << "Warning: n_res=" << n_res << ", n4=" << n_seed << " --> problem" << endl;
