@@ -704,7 +704,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			cout << "All seeds for i4=" << i4 << " (type="<< (cls_type_L4_Eside[i4]==1)<< ", itru=" << cls_id_L4_Eside[i4] << ")" << ":" << endl;
 			vector<TLorentzVector> pseeds;
 			// for(unsigned int i1=0 ; i1<cls_x_L1_Eside.size() ; ++i1)
-			for(unsigned int i1=0 ; i1<1 ; ++i1)
+			for(unsigned int i1=0 ; i1<2 ; ++i1)
 			{
 				reset_layers_tracks(0); // reset all tracks from all layers but layer 0
 				/// find the momentum of the seed
