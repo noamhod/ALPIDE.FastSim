@@ -704,8 +704,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		for(unsigned int i4=0 ; i4<cls_x_L4_Eside.size() ; ++i4)
 		{
 			int n_seeds = 0;
-			int n_solved = 0;
-			int n_recons = 0;
 			// cout << "starting test of i4=" << i4 << " with N1=" << cls_x_L1_Eside.size() << endl;
 			reset_layers_tracks(); // reset all tracks from all layers
 			cout << "All seeds for i4=" << i4 << " (type="<< (cls_type_L4_Eside[i4]==1)<< ", itru=" << cls_id_L4_Eside[i4] << ")" << ":" << endl;
@@ -724,31 +722,30 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			}
 			
 			// prepare the probe from the seed and do the KF fit
-			bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99);
+		   bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99);
 			if(!solved) continue; // reconstruction failed
-			n_solved++;
+			cout << "Solved! (i4=" << i4 << ")" << endl;
 			
 			// get the reconstructed propagated to the vertex 
 			KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack(); 
 			if(!trw) continue; // track was not reconstructed
-			n_recons++;
+			cout << "Reconstructed! (i4=" << i4 << ")" << endl;
 			
 			TLorentzVector prec;
 			double pxyz[3]; trw->GetPXYZ(pxyz);
 			prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
-			Double_t chi2    = trw->GetChi2();
-			h_chi2->Fill(chi2);
-			cout << " - i4=" << i4 << " --> Passed with chi2=" << chi2 << endl;
+			Double_t normChi2    = trw->GetNormChi2();
+			h_chi2->Fill(normChi2);
+			cout << " - i4=" << i4 << " --> Passed with normChi2=" << normChi2 << endl;
 			if(cls_type_L4_Eside[i4]==1) // it is a signal cluster
 			{
 				int itru = cls_id_L4_Eside[i4];
 				if(itru>=0) cout << "         itru=" << itru << " --> Etru=" << pgen->at(itru).E() << ", Erec=" << prec.E() << endl;
 				h_dErel_rec_gen->Fill( (prec.E()-pgen->at(itru).E())/pgen->at(itru).E() );
-				h_chi2_matched->Fill(chi2);
+				h_chi2_matched->Fill(normChi2);
 			}
 			pseeds.clear();
 			cout << "End of all seeds for i4=" << i4 << "\n\n" << endl;
-			printf("Event %d for clusterid[layer4]=%d:  n_seeds=%d, n_solved=%d and n_recons=%d\n",iev,i4,n_seeds,n_solved,n_recons);
 		}
 		fOut->cd();
 		tOut->Fill();
