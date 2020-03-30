@@ -1280,12 +1280,14 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
     lr = GetLayer(maxLr);
     currTr = lr->AddMCTrack(probes[s]); // start with seed track at vertex
     probes[s]->Print("etp");
+	 
+    // randomize the starting point
+    const float kErrScale = 500.; // this is the parameter defining the initial cov.matrix error wrt sensor resolution
+    double r = currTr->GetR();
+    currTr->ResetCovariance( kErrScale*TMath::Sqrt(lr->GetXRes(r)*lr->GetYRes(r)) ); // this is the coeff to play with
+	 
   }
     
-  // randomize the starting point
-  const float kErrScale = 500.; // this is the parameter defining the initial cov.matrix error wrt sensor resolution
-  double r = currTr->GetR();
-  currTr->ResetCovariance( kErrScale*TMath::Sqrt(lr->GetXRes(r)*lr->GetYRes(r)) ); // this is the coeff to play with
   
   int fst = 0;
   const int fstLim = -1;
@@ -1326,10 +1328,11 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
       continue;
     } // end of treatment of dead layer <<<
   	 
-    // AliInfo(Form("From Lr: %d | %d seeds, %d bg clusters",j+1,ntPrev,lrP->GetNBgClusters()));
+    AliInfo(Form("From Lr: %d | %d seeds, %d bg clusters",j+1,ntPrev,lrP->GetNBgClusters()));
     for(int itrP=0;itrP<ntPrev;itrP++) // loop over all tracks from previous layer
   	 {	 
       currTrP = lrP->GetMCTrack(itrP);
+		AliInfoF("Starting %d of %d (%d) at lr %d",itrP, ntPrev, currTrP->IsKilled(),j);
   		if(currTrP->IsKilled())
       {
         continue;
@@ -1343,8 +1346,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
       AliInfo(Form("LastChecked before:%d",currTr->GetInnerLayerChecked()));
   		printf("tr%d | ", itrP); currTr->Print("etp");
       CheckTrackProlongations(currTr, lrP,lr);
-  
-      // AliInfo(Form("LastChecked after:%d",currTr->GetInnerLayerChecked()));
+      AliInfo(Form("LastChecked after:%d",currTr->GetInnerLayerChecked()));
       ncnd++;
       if(currTr->GetNFakeITSHits()==0 && cndCorr<ncnd) cndCorr=ncnd;
       if(NeedToKill(currTr)) {currTr->Kill(); continue;}

@@ -397,18 +397,6 @@ void reset_layers_tracks(Int_t skip=-1)
 	}
 }
 
-void add_seed_cluster(int iLayer, float x, float y, float z)
-{
-	/// set the clusters of the seed
-	double clxyzTrk[3];
-	double clxyzLab[3];
-	clxyzLab[0]=x;
-	clxyzLab[1]=y;
-	clxyzLab[2]=z;
-	KMCProbeFwd::Lab2Trk(clxyzLab, clxyzTrk);
-	det->GetLayer(iLayer)->GetMCCluster()->Set(clxyzTrk[0], clxyzTrk[1], clxyzTrk[2]);
-}
-
 void add_bkg_cluster(int iLayer, float x, float y, float z, int id)
 {
 	/// set the clusters of the seed
@@ -436,6 +424,12 @@ void add_all_clusters(TString side)
 	   for(unsigned int i2=0 ; i2<cls_x_L2_Pside.size() ; ++i2) add_bkg_cluster(3,cls_x_L2_Pside[i2],cls_y_L2_Pside[i2],cls_z_L2_Pside[i2],i2);
 	   for(unsigned int i3=0 ; i3<cls_x_L3_Pside.size() ; ++i3) add_bkg_cluster(5,cls_x_L3_Pside[i3],cls_y_L3_Pside[i3],cls_z_L3_Pside[i3],i3);
 	   for(unsigned int i4=0 ; i4<cls_x_L4_Pside.size() ; ++i4) add_bkg_cluster(7,cls_x_L4_Pside[i4],cls_y_L4_Pside[i4],cls_z_L4_Pside[i4],i4);
+	}
+	/// sort clusters
+	for(int l=0 ; l<det->GetLayers()->GetEntries() ; l++)
+	{
+		det->GetLayer(l)->GetMCCluster()->Kill();
+		det->GetLayer(l)->SortBGClusters();
 	}
 }
 
@@ -701,14 +695,16 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		
 		/// run over all clusters of layer 4 in the pool --> these are the seed for the KalmanFilter fit
 		float crg = -1; // Eside...
-		for(unsigned int i4=0 ; i4<cls_x_L4_Eside.size() ; ++i4)
+		// for(unsigned int i4=0 ; i4<cls_x_L4_Eside.size() ; ++i4)
+		for(unsigned int i4=0 ; i4<1 ; ++i4)
 		{
 			int n_seeds = 0;
 			// cout << "starting test of i4=" << i4 << " with N1=" << cls_x_L1_Eside.size() << endl;
 			reset_layers_tracks(); // reset all tracks from all layers
 			cout << "All seeds for i4=" << i4 << " (type="<< (cls_type_L4_Eside[i4]==1)<< ", itru=" << cls_id_L4_Eside[i4] << ")" << ":" << endl;
 			vector<TLorentzVector> pseeds;
-			for(unsigned int i1=0 ; i1<cls_x_L1_Eside.size() ; ++i1)
+			// for(unsigned int i1=0 ; i1<cls_x_L1_Eside.size() ; ++i1)
+			for(unsigned int i1=0 ; i1<1 ; ++i1)
 			{
 				reset_layers_tracks(0); // reset all tracks from all layers but layer 0
 				/// find the momentum of the seed
