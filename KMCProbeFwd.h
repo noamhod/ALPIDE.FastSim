@@ -197,7 +197,7 @@ inline Bool_t KMCProbeFwd::PropagateToZBxByBz(double z, const double *bxyz)
   //  return fTrack.PropagateToBxByBz(NegDir() ? -z:z,bxyz);
   //  printf("PropagateTo(%f, %f)\n",NegDir() ? -z:z,bxyz[2]);
   Bool_t res = fTrack.PropagateToBxByBz(z,bxyz);
-  if (!res) fTrack.Print("");
+  // if (!res) fTrack.Print("");
   return res;
   //
 }

@@ -162,7 +162,7 @@ Bool_t KMCProbeFwd::PropagateToZBxByBz(double z, double maxDZ, Double_t xOverX0,
   int nz = TMath::Abs(dz)/maxDZ + 1;
   double zstep = dz/nz;
   double xyz[3],bxyz[3],bxyzFwd[3];
-  AliDebug(2,Form("from Z=%f to Z=%f, X/X0: %f X*rho:%f, max step:%f Mode:%d (%d steps)", GetZ(),z,xOverX0,xTimesRho,maxDZ,modeMC,nz));
+  // AliDebug(2,Form("from Z=%f to Z=%f, X/X0: %f X*rho:%f, max step:%f Mode:%d (%d steps)", GetZ(),z,xOverX0,xTimesRho,maxDZ,modeMC,nz));
   for (int iz=0;iz<nz;iz++) {
     GetXYZ(xyz);              // coordinates in Lab frame
     TGeoGlobalMagField::Instance()->Field(xyz,bxyz);

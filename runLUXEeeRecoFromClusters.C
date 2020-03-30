@@ -324,6 +324,79 @@ void clear_clusters()
 	cls_type_L4_Pside.clear();
 }
 
+void cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, TString side)
+{
+	/// fill signam clusters
+	for(unsigned int i=0 ; i<polm_clusters->size() ; i++)
+	{
+		for(Int_t j=0 ; j<polm_clusters->at(i)->GetN() ; ++j)
+		{
+			float x,y,z;
+			polm_clusters->at(i)->GetPoint(j,x,y,z); // the clusters
+			cout << "signal xyz[" << i << "] " << x << "," << y << ", " << z << endl;
+			if(x>0 and (side=="Eside" or side=="both")) /// Eside
+			{	
+				if(z==300) { cls_x_L1_Eside.push_back(x); cls_y_L1_Eside.push_back(y); cls_z_L1_Eside.push_back(z); cls_id_L1_Eside.push_back(i); cls_type_L1_Eside.push_back(1); }
+				if(z==310) { cls_x_L2_Eside.push_back(x); cls_y_L2_Eside.push_back(y); cls_z_L2_Eside.push_back(z); cls_id_L2_Eside.push_back(i); cls_type_L2_Eside.push_back(1); }
+				if(z==320) { cls_x_L3_Eside.push_back(x); cls_y_L3_Eside.push_back(y); cls_z_L3_Eside.push_back(z); cls_id_L3_Eside.push_back(i); cls_type_L3_Eside.push_back(1); }
+				if(z==330) { cls_x_L4_Eside.push_back(x); cls_y_L4_Eside.push_back(y); cls_z_L4_Eside.push_back(z); cls_id_L4_Eside.push_back(i); cls_type_L4_Eside.push_back(1); }
+			}
+			if(x<0 and (side=="Pside" or side=="both")) /// Pside
+			{
+				if(z==300) { cls_x_L1_Pside.push_back(x); cls_y_L1_Pside.push_back(y); cls_z_L1_Pside.push_back(z); cls_id_L1_Pside.push_back(i); cls_type_L1_Pside.push_back(1); }
+				if(z==310) { cls_x_L2_Pside.push_back(x); cls_y_L2_Pside.push_back(y); cls_z_L2_Pside.push_back(z); cls_id_L2_Pside.push_back(i); cls_type_L2_Pside.push_back(1); }
+				if(z==320) { cls_x_L3_Pside.push_back(x); cls_y_L3_Pside.push_back(y); cls_z_L3_Pside.push_back(z); cls_id_L3_Pside.push_back(i); cls_type_L3_Pside.push_back(1); }
+				if(z==330) { cls_x_L4_Pside.push_back(x); cls_y_L4_Pside.push_back(y); cls_z_L4_Pside.push_back(z); cls_id_L4_Pside.push_back(i); cls_type_L4_Pside.push_back(1); }
+			}
+		}
+	}
+}
+
+void cache_background_clusters(
+	vector<float> *x1Cluster, vector<float> *y1Cluster, vector<float> *z1Cluster, vector<int> *type1Cluster, vector<int> *trkid1Cluster,
+	vector<float> *x2Cluster, vector<float> *y2Cluster, vector<float> *z2Cluster, vector<int> *type2Cluster, vector<int> *trkid2Cluster,
+	vector<float> *x3Cluster, vector<float> *y3Cluster, vector<float> *z3Cluster, vector<int> *type3Cluster, vector<int> *trkid3Cluster,
+	vector<float> *x4Cluster, vector<float> *y4Cluster, vector<float> *z4Cluster, vector<int> *type4Cluster, vector<int> *trkid4Cluster,
+	TString side)
+{
+	for(unsigned int i=0 ; i<x1Cluster->size() ; i++)
+	{
+		if(x1Cluster->at(i)>0 and (side=="Eside" or side=="both")) /// Eside
+		{
+			cls_x_L1_Eside.push_back(x1Cluster->at(i)); cls_y_L1_Eside.push_back(y1Cluster->at(i)); cls_z_L1_Eside.push_back(z1Cluster->at(i)); cls_id_L1_Eside.push_back(trkid1Cluster->at(i)); cls_type_L1_Eside.push_back(type1Cluster->at(i));
+			cls_x_L2_Eside.push_back(x2Cluster->at(i)); cls_y_L2_Eside.push_back(y2Cluster->at(i)); cls_z_L2_Eside.push_back(z2Cluster->at(i)); cls_id_L2_Eside.push_back(trkid2Cluster->at(i)); cls_type_L2_Eside.push_back(type2Cluster->at(i));
+			cls_x_L3_Eside.push_back(x3Cluster->at(i)); cls_y_L3_Eside.push_back(y3Cluster->at(i)); cls_z_L3_Eside.push_back(z3Cluster->at(i)); cls_id_L3_Eside.push_back(trkid3Cluster->at(i)); cls_type_L3_Eside.push_back(type3Cluster->at(i));
+			cls_x_L4_Eside.push_back(x4Cluster->at(i)); cls_y_L4_Eside.push_back(y4Cluster->at(i)); cls_z_L4_Eside.push_back(z4Cluster->at(i)); cls_id_L4_Eside.push_back(trkid4Cluster->at(i)); cls_type_L4_Eside.push_back(type4Cluster->at(i));
+		}
+		if(x1Cluster->at(i)<0 and (side=="Pside" or side=="both")) /// Pside
+		{
+			cls_x_L1_Pside.push_back(x1Cluster->at(i)); cls_y_L1_Pside.push_back(y1Cluster->at(i)); cls_z_L1_Pside.push_back(z1Cluster->at(i)); cls_id_L1_Pside.push_back(trkid1Cluster->at(i)); cls_type_L1_Pside.push_back(type1Cluster->at(i));
+			cls_x_L2_Pside.push_back(x2Cluster->at(i)); cls_y_L2_Pside.push_back(y2Cluster->at(i)); cls_z_L2_Pside.push_back(z2Cluster->at(i)); cls_id_L2_Pside.push_back(trkid2Cluster->at(i)); cls_type_L2_Pside.push_back(type2Cluster->at(i));
+			cls_x_L3_Pside.push_back(x3Cluster->at(i)); cls_y_L3_Pside.push_back(y3Cluster->at(i)); cls_z_L3_Pside.push_back(z3Cluster->at(i)); cls_id_L3_Pside.push_back(trkid3Cluster->at(i)); cls_type_L3_Pside.push_back(type3Cluster->at(i));
+			cls_x_L4_Pside.push_back(x4Cluster->at(i)); cls_y_L4_Pside.push_back(y4Cluster->at(i)); cls_z_L4_Pside.push_back(z4Cluster->at(i)); cls_id_L4_Pside.push_back(trkid4Cluster->at(i)); cls_type_L4_Pside.push_back(type4Cluster->at(i));
+		}
+	}
+}
+
+void reset_layers_all()
+{
+	for(Int_t l=0 ; l<det->GetLayers()->GetEntries() ; l++)
+	{
+		det->GetLayer(l)->ResetBgClusters();
+		det->GetLayer(l)->ResetMCTracks();
+		det->GetLayer(l)->Reset();
+	}
+}
+
+void reset_layers_tracks(Int_t skip=-1)
+{
+	Int_t l0 = (skip>=0) ? skip : 0;
+	for(Int_t l=l0 ; l<det->GetLayers()->GetEntries() ; l++)
+	{
+		det->GetLayer(l)->ResetMCTracks();
+	}
+}
+
 void add_seed_cluster(int iLayer, float x, float y, float z)
 {
 	/// set the clusters of the seed
@@ -346,6 +419,24 @@ void add_bkg_cluster(int iLayer, float x, float y, float z, int id)
 	clxyzLab[2]=z;
 	KMCProbeFwd::Lab2Trk(clxyzLab, clxyzTrk);
 	det->GetLayer(iLayer)->AddBgCluster(clxyzTrk[0], clxyzTrk[1], clxyzTrk[2], id);
+}
+
+void add_all_clusters(TString side)
+{
+	if(side=="Eside" or side=="both")
+	{
+   	for(unsigned int i1=0 ; i1<cls_x_L1_Eside.size() ; ++i1) add_bkg_cluster(1,cls_x_L1_Eside[i1],cls_y_L1_Eside[i1],cls_z_L1_Eside[i1],i1);
+	   for(unsigned int i2=0 ; i2<cls_x_L2_Eside.size() ; ++i2) add_bkg_cluster(3,cls_x_L2_Eside[i2],cls_y_L2_Eside[i2],cls_z_L2_Eside[i2],i2);
+	   for(unsigned int i3=0 ; i3<cls_x_L3_Eside.size() ; ++i3) add_bkg_cluster(5,cls_x_L3_Eside[i3],cls_y_L3_Eside[i3],cls_z_L3_Eside[i3],i3);
+	   for(unsigned int i4=0 ; i4<cls_x_L4_Eside.size() ; ++i4) add_bkg_cluster(7,cls_x_L4_Eside[i4],cls_y_L4_Eside[i4],cls_z_L4_Eside[i4],i4);
+	}
+	if(side=="Pside" or side=="both")
+	{
+	   for(unsigned int i1=0 ; i1<cls_x_L1_Pside.size() ; ++i1) add_bkg_cluster(1,cls_x_L1_Pside[i1],cls_y_L1_Pside[i1],cls_z_L1_Pside[i1],i1);
+	   for(unsigned int i2=0 ; i2<cls_x_L2_Pside.size() ; ++i2) add_bkg_cluster(3,cls_x_L2_Pside[i2],cls_y_L2_Pside[i2],cls_z_L2_Pside[i2],i2);
+	   for(unsigned int i3=0 ; i3<cls_x_L3_Pside.size() ; ++i3) add_bkg_cluster(5,cls_x_L3_Pside[i3],cls_y_L3_Pside[i3],cls_z_L3_Pside[i3],i3);
+	   for(unsigned int i4=0 ; i4<cls_x_L4_Pside.size() ; ++i4) add_bkg_cluster(7,cls_x_L4_Pside[i4],cls_y_L4_Pside[i4],cls_z_L4_Pside[i4],i4);
+	}
 }
 
 
@@ -420,7 +511,7 @@ bool makeseed(float* r1, float* r4, TString side, TLorentzVector& p)
 
 	TVector2 v1(r1[2],r1[1]);
 	TVector2 v4(r4[2],r4[1]);
-	TVector2 u = rUnit2(v4,v1);
+	TVector2 u = rUnit2(v1,v4);
 	double uz = u.X();
 	double uy = u.Y();
 	double px = (posneg>=0) ? pxgaus : -pxgaus;
@@ -569,6 +660,10 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	tOut->Branch("q_rec",    &q_rec);
 	tOut->Branch("p_rec",    &p_rec);
 	tOut->Branch("acc_rec",  &acc_rec);
+	
+   TH1D* h_dErel_rec_gen = new TH1D("h_dErel_rec_gen","Rec vs Gen;(E_{rec}-E_{gen})/E_{gen};Tracks",500,-1.,+1.);
+   TH1D* h_chi2          = new TH1D("h_chi2",";#chi^2;Tracks",100,0,25);
+   TH1D* h_chi2_matched  = new TH1D("h_chi2_matched",";#chi^2;Tracks",100,0,25);
  
 	/// loop on events
 	Int_t nsigevents = tSig->GetEntries();
@@ -585,123 +680,86 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		//// get the next entry
 		tSig->GetEntry(iev);
 		tBkg->GetEntry(iev);
-		cout << "got event " << iev << endl;
 		if((iev%outN)==0) printf("Done %d out of %d\n",iev,nsigevents);
 		
 		/// make a pool of all signal clusters
-		for(unsigned int i=0 ; i<polm_clusters->size() ; i++)
-		{
-			for(Int_t j=0 ; j<polm_clusters->at(i)->GetN() ; ++j)
-			{
-				float x,y,z;
-				polm_clusters->at(i)->GetPoint(j,x,y,z); // the clusters
-				cout << "signal xyz[" << i << "] " << x << "," << y << ", " << z << endl;
-				if(x>0) /// Eside
-				{	
-					if(z==300) { cls_x_L1_Eside.push_back(x); cls_y_L1_Eside.push_back(y); cls_z_L1_Eside.push_back(z); cls_id_L1_Eside.push_back(i); cls_type_L1_Eside.push_back(1); }
-					if(z==310) { cls_x_L2_Eside.push_back(x); cls_y_L2_Eside.push_back(y); cls_z_L2_Eside.push_back(z); cls_id_L2_Eside.push_back(i); cls_type_L2_Eside.push_back(1); }
-					if(z==320) { cls_x_L3_Eside.push_back(x); cls_y_L3_Eside.push_back(y); cls_z_L3_Eside.push_back(z); cls_id_L3_Eside.push_back(i); cls_type_L3_Eside.push_back(1); }
-					if(z==330) { cls_x_L4_Eside.push_back(x); cls_y_L4_Eside.push_back(y); cls_z_L4_Eside.push_back(z); cls_id_L4_Eside.push_back(i); cls_type_L4_Eside.push_back(1); }
-				}
-				if(x<0) /// Pside
-				{
-					if(z==300) { cls_x_L1_Pside.push_back(x); cls_y_L1_Pside.push_back(y); cls_z_L1_Pside.push_back(z); cls_id_L1_Pside.push_back(i); cls_type_L1_Pside.push_back(1); }
-					if(z==310) { cls_x_L2_Pside.push_back(x); cls_y_L2_Pside.push_back(y); cls_z_L2_Pside.push_back(z); cls_id_L2_Pside.push_back(i); cls_type_L2_Pside.push_back(1); }
-					if(z==320) { cls_x_L3_Pside.push_back(x); cls_y_L3_Pside.push_back(y); cls_z_L3_Pside.push_back(z); cls_id_L3_Pside.push_back(i); cls_type_L3_Pside.push_back(1); }
-					if(z==330) { cls_x_L4_Pside.push_back(x); cls_y_L4_Pside.push_back(y); cls_z_L4_Pside.push_back(z); cls_id_L4_Pside.push_back(i); cls_type_L4_Pside.push_back(1); }
-				}
-			}
-		}
-		cout << "Done getting signal clusters" << endl;
+		cache_signal_clusters(polm_clusters, "Eside");
 		
 		/// make a pool of all background and noise clusters
-		for(unsigned int i=0 ; i<x1Cluster->size() ; i++)
-		{
-			if(x1Cluster->at(i)>0) /// Eside
-			{
-				cls_x_L1_Eside.push_back(x1Cluster->at(i)); cls_y_L1_Eside.push_back(y1Cluster->at(i)); cls_z_L1_Eside.push_back(z1Cluster->at(i)); cls_id_L1_Eside.push_back(trkid1Cluster->at(i)); cls_type_L1_Eside.push_back(type1Cluster->at(i));
-				cls_x_L2_Eside.push_back(x2Cluster->at(i)); cls_y_L2_Eside.push_back(y2Cluster->at(i)); cls_z_L2_Eside.push_back(z2Cluster->at(i)); cls_id_L2_Eside.push_back(trkid2Cluster->at(i)); cls_type_L2_Eside.push_back(type2Cluster->at(i));
-				cls_x_L3_Eside.push_back(x3Cluster->at(i)); cls_y_L3_Eside.push_back(y3Cluster->at(i)); cls_z_L3_Eside.push_back(z3Cluster->at(i)); cls_id_L3_Eside.push_back(trkid3Cluster->at(i)); cls_type_L3_Eside.push_back(type3Cluster->at(i));
-				cls_x_L4_Eside.push_back(x4Cluster->at(i)); cls_y_L4_Eside.push_back(y4Cluster->at(i)); cls_z_L4_Eside.push_back(z4Cluster->at(i)); cls_id_L4_Eside.push_back(trkid4Cluster->at(i)); cls_type_L4_Eside.push_back(type4Cluster->at(i));
-			}
-			if(x1Cluster->at(i)<0) /// Pside
-			{
-				cls_x_L1_Pside.push_back(x1Cluster->at(i)); cls_y_L1_Pside.push_back(y1Cluster->at(i)); cls_z_L1_Pside.push_back(z1Cluster->at(i)); cls_id_L1_Pside.push_back(trkid1Cluster->at(i)); cls_type_L1_Pside.push_back(type1Cluster->at(i));
-				cls_x_L2_Pside.push_back(x2Cluster->at(i)); cls_y_L2_Pside.push_back(y2Cluster->at(i)); cls_z_L2_Pside.push_back(z2Cluster->at(i)); cls_id_L2_Pside.push_back(trkid2Cluster->at(i)); cls_type_L2_Pside.push_back(type2Cluster->at(i));
-				cls_x_L3_Pside.push_back(x3Cluster->at(i)); cls_y_L3_Pside.push_back(y3Cluster->at(i)); cls_z_L3_Pside.push_back(z3Cluster->at(i)); cls_id_L3_Pside.push_back(trkid3Cluster->at(i)); cls_type_L3_Pside.push_back(type3Cluster->at(i));
-				cls_x_L4_Pside.push_back(x4Cluster->at(i)); cls_y_L4_Pside.push_back(y4Cluster->at(i)); cls_z_L4_Pside.push_back(z4Cluster->at(i)); cls_id_L4_Pside.push_back(trkid4Cluster->at(i)); cls_type_L4_Pside.push_back(type4Cluster->at(i));
-			}
-		}
-		cout << "Done getting background clusters" << endl;
+		cache_background_clusters(
+			x1Cluster,y1Cluster,z1Cluster,type1Cluster,trkid1Cluster,
+         x2Cluster,y2Cluster,z2Cluster,type2Cluster,trkid2Cluster,
+         x3Cluster,y3Cluster,z3Cluster,type3Cluster,trkid3Cluster,
+         x4Cluster,y4Cluster,z4Cluster,type4Cluster,trkid4Cluster,
+			"Eside"
+		);
 		
 		/// rest all the layers of the detector (including inactive if any):
-		for(Int_t l=0 ; l<det->GetLayers()->GetEntries() ; l++)
-		{
-			det->GetLayer(l)->ResetBgClusters();
-			det->GetLayer(l)->ResetMCTracks();
-			det->GetLayer(l)->Reset();
-		}
+		reset_layers_all();
 		
-		/// add all clusters to the detector (Eside)
-		for(unsigned int i1=0 ; i1<cls_x_L1_Eside.size() ; ++i1) add_bkg_cluster(1,cls_x_L1_Eside[i1],cls_y_L1_Eside[i1],cls_z_L1_Eside[i1],i1);
-		for(unsigned int i2=0 ; i2<cls_x_L2_Eside.size() ; ++i2) add_bkg_cluster(3,cls_x_L2_Eside[i2],cls_y_L2_Eside[i2],cls_z_L2_Eside[i2],i2);
-		for(unsigned int i3=0 ; i3<cls_x_L3_Eside.size() ; ++i3) add_bkg_cluster(5,cls_x_L3_Eside[i3],cls_y_L3_Eside[i3],cls_z_L3_Eside[i3],i3);
-		for(unsigned int i4=0 ; i4<cls_x_L4_Eside.size() ; ++i4) add_bkg_cluster(7,cls_x_L4_Eside[i4],cls_y_L4_Eside[i4],cls_z_L4_Eside[i4],i4);
-		/// add all clusters to the detector (Pside)
-		for(unsigned int i1=0 ; i1<cls_x_L1_Pside.size() ; ++i1) add_bkg_cluster(1,cls_x_L1_Pside[i1],cls_y_L1_Pside[i1],cls_z_L1_Pside[i1],i1);
-		for(unsigned int i2=0 ; i2<cls_x_L2_Pside.size() ; ++i2) add_bkg_cluster(3,cls_x_L2_Pside[i2],cls_y_L2_Pside[i2],cls_z_L2_Pside[i2],i2);
-		for(unsigned int i3=0 ; i3<cls_x_L3_Pside.size() ; ++i3) add_bkg_cluster(5,cls_x_L3_Pside[i3],cls_y_L3_Pside[i3],cls_z_L3_Pside[i3],i3);
-		for(unsigned int i4=0 ; i4<cls_x_L4_Pside.size() ; ++i4) add_bkg_cluster(7,cls_x_L4_Pside[i4],cls_y_L4_Pside[i4],cls_z_L4_Pside[i4],i4);
-		cout << "Done setting clusters" << endl;
+		/// add all clusters to the detector (Eside/Pside/both)
+		add_all_clusters("Eside");
 		
 		/// run over all clusters of layer 4 in the pool --> these are the seed for the KalmanFilter fit
 		int n_seed = 0;
 		float crg = -1; // Eside...
 		for(unsigned int i4=0 ; i4<cls_x_L4_Eside.size() ; ++i4)
 		{
-			cout << "starting test of i4=" << i4 << " with N1=" << cls_x_L1_Eside.size() << endl;
+			// cout << "starting test of i4=" << i4 << " with N1=" << cls_x_L1_Eside.size() << endl;
+			reset_layers_tracks(); // reset all tracks from all layers
+			cout << "All seeds for i4=" << i4 << " (type="<< (cls_type_L4_Eside[i4]==1)<< ", itru=" << cls_id_L4_Eside[i4] << ")" << ":" << endl;
+			vector<TLorentzVector> pseeds;
 			for(unsigned int i1=0 ; i1<cls_x_L1_Eside.size() ; ++i1)
 			{
+				reset_layers_tracks(0); // reset all tracks from all layers but layer 0
 				/// find the momentum of the seed
+				TLorentzVector pseed;
 				float r1[3] = {cls_x_L1_Eside[i1], cls_y_L1_Eside[i1], cls_z_L1_Eside[i1]};
 				float r4[3] = {cls_x_L4_Eside[i4], cls_y_L4_Eside[i4], cls_z_L4_Eside[i4]};
-				TLorentzVector pseed;
 				bool seed = makeseed(r1,r4,"Eside",pseed);
-				if(!seed) continue;
-				
-				
-				// prepare the probe from the seed and do the KF fit
-				bool res = det->SolveSingleTrackViaKalmanMC_Noam(pseed.Pt(),pseed.Rapidity(),pseed.Phi(),meGeV,crg,vX,vY,vZ,99);
-				if(!res) continue; // reconstruction failed
-				n_res++;
-            
-				// get the reconstructed propagated to the vertex 
-				KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack(); 
-				if(!trw) continue; // track was not reconstructed
-				n_rec++;
-				
-				double pxyz[3]; trw->GetPXYZ(pxyz);
-				double xyz[3];  trw->GetXYZ(xyz);
-				TLorentzVector prec;
-				prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
-				Double_t chi2 = trw->GetChi2();
-				Double_t chi2its = trw->GetChi2ITS();
-				
-				cout << " - {i4,i1}={" << i4 << "," << i1 << "} --> Passed with chi2=" << chi2 << ", and chi2its=" << chi2its << endl;
-				if(cls_type_L4_Eside[i4]==1) // it is a signal cluster
-				{
-					int itru = cls_id_L4_Eside[i4];
-					if(itru>=0) cout << " - {i4,i1}: itru=" << itru << " --> Etru=" << pgen->at(itru).E() << ", Erec=" << prec.E() << ", Eseed=" << pseed.E() << endl;
-				}
+				if(!seed) continue; // cannot make a meaningful seed
+				pseeds.push_back(pseed);
+				n_seed++;
 			}
+			
+			// prepare the probe from the seed and do the KF fit
+			bool res = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99);
+			if(!res) continue; // reconstruction failed
+			n_res++;
+			
+			// get the reconstructed propagated to the vertex 
+			KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack(); 
+			if(!trw) continue; // track was not reconstructed
+			n_rec++;
+			
+			TLorentzVector prec;
+			double pxyz[3]; trw->GetPXYZ(pxyz);
+			prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
+			Double_t chi2    = trw->GetChi2();
+			Double_t chi2its = trw->GetChi2ITS();
+			h_chi2->Fill(chi2);
+			cout << " - i4=" << i4 << " --> Passed with chi2=" << chi2 << ", and chi2its=" << chi2its << endl;
+			if(cls_type_L4_Eside[i4]==1) // it is a signal cluster
+			{
+				int itru = cls_id_L4_Eside[i4];
+				if(itru>=0) cout << "         itru=" << itru << ", acc=" << acctrkgen->at(itru) << " --> Etru=" << pgen->at(itru).E() << ", Erec=" << prec.E() << endl;
+				h_dErel_rec_gen->Fill( (prec.E()-pgen->at(itru).E())/pgen->at(itru).E() );
+				h_chi2_matched->Fill(chi2);
+			}
+			
+			
+			cout << "End of all seeds for i4=" << i4 << "\n\n" << endl;
 		}
 		if(n_res!=n_seed) cout << "Warning: n_res=" << n_res << ", n4=" << n_seed << " --> problem" << endl;
 		fOut->cd();
 		tOut->Fill();
 		printf("Event %d: n_seed=%d, n_res=%d and n_rec=%d\n",iev,n_seed,n_res,n_rec);
 	}
-	// fOut->cd();
-	// tOut->Write();
-	// fOut->Write();
-	// fOut->Close();
+	fOut->cd();
+	tOut->Write();
+	h_chi2->Write();
+	h_chi2_matched->Write();
+	h_dErel_rec_gen->Write();
+	fOut->Write();
+	fOut->Close();
 }

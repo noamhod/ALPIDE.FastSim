@@ -16,6 +16,7 @@
 #include <TMaterial.h>
 #include <TSystem.h>
 #include <TString.h>
+#include <TLorentzVector.h>
 #include <stdio.h>
 
 
@@ -60,6 +61,7 @@ class KMCDetectorFwd : public TNamed {
   Bool_t PropagateToZBxByBz(KMCProbeFwd* trc,double z, double maxDZ=1.0, Double_t xOverX0=0., Double_t xTimesRho=0., Bool_t modeMC=kFALSE);
   Bool_t SolveSingleTrackViaKalmanMC(int offset);
   Bool_t SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, double phi, double mass, int charge, double x=0,double y=0, double z=0, int offset=-1);
+  Bool_t SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TLorentzVector>& pseed, double mass, int charge, int offset=-1);
   Bool_t TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr, Bool_t bg=kFALSE);
   Int_t GetFieldReg(double z);
   //-------------------
