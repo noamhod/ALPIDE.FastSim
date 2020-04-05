@@ -338,9 +338,8 @@ def makeseed(cluster1,cluster2,i1,i2,particles):
    
    x0 = 0
    z0 = zofx(r1,r2,x0)
-   xExit = xofz(r1,r2,zDipoleExit)*cm2m
-   q = 1 if(particles=="electrons") else -1
-   H = (zDipoleExit-z0)*cm2m
+   xExit = math.abs(xofz(r1,r2,zDipoleExit))*cm2m
+   H = math.abs((zDipoleExit-z0))*cm2m
    R = H*(LB)/xExit + xExit ## look this up in my slides
    P = 0.3*B*R
    # P = 0.3*B*R/1.001

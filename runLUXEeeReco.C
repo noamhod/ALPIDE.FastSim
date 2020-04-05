@@ -625,8 +625,8 @@ void runLUXEeeReco(TString process, int Seed=12345) //, const char* setup="setup
    TH1D* h_dxrel = new TH1D("h_dxrel",";(x_{rec}-x_{gen})/x_{gen};Tracks",200,-0.01,+0.01);
  
    /// loop on events
-   // for(int iev=0;iev<nev;iev++)
-   for(int iev=0;iev<nev and iev<10;iev++)
+   for(int iev=0;iev<nev;iev++)
+   // for(int iev=0;iev<nev and iev<10;iev++)
    {
       //// clear
       ngen = 0;    

@@ -57,6 +57,7 @@ double x2R = +RoffsetBfield+Lstave;
 double yUp = +Hstave/2.;
 double yDn = -Hstave/2.;
 
+
 //// dipole geometry
 double xW = 120;
 double yH = 67.2;
