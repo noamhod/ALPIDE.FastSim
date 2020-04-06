@@ -392,10 +392,6 @@ void add_all_clusters(TString side)
 		det->GetLayer(l)->GetMCCluster()->Kill();
 		det->GetLayer(l)->SortBGClusters();
 	}
-	// cout << "For " << side << ": L4 is filled with " << det->GetLayer(7)->GetNBgClusters() << " clusters" << endl;
-	// cout << "For " << side << ": L3 is filled with " << det->GetLayer(5)->GetNBgClusters() << " clusters" << endl;
-	// cout << "For " << side << ": L2 is filled with " << det->GetLayer(3)->GetNBgClusters() << " clusters" << endl;
-	// cout << "For " << side << ": L1 is filled with " << det->GetLayer(1)->GetNBgClusters() << " clusters" << endl;
 }
 
 TVector2 rUnit2(TVector2 r1, TVector2 r2)
@@ -514,7 +510,7 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 	if(abs(yDipoleExit)>yDipoleExitAbsMax) return false; // the track should point to y~0 at the dipole exit
 	if(abs(xDipoleExit)<xDipoleExitAbsMin) return false;
 	if(abs(xDipoleExit)>xDipoleExitAbsMax) return false;
-	if(!check_clusters(i1,i4,side))        return false; // minimum one cluster at layer 2 and one at layer 3
+	// if(!check_clusters(i1,i4,side))        return false; // minimum one cluster at layer 2 and one at layer 3
 
 	TRandom rnd;
 	rnd.SetSeed();
@@ -713,7 +709,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	/// loop on events
 	Int_t nsigevents = tSig->GetEntries();
 	cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
-	for(int iev=0 ; iev<tSig->GetEntries() and iev<10000 ; iev++)
+	for(int iev=0 ; iev<tSig->GetEntries() and iev<1 ; iev++)
 	// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	{
 		/// clear output vectors
@@ -888,11 +884,24 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		   	KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack(); 
 		   	if(!trw) continue; // track was not reconstructed
 		   	n_recos++;
-		   	
+				
+				/// get the clusters of the winner track
+				int win_cls_id1 = trw->GetClID(1);
+				int win_cls_id2 = trw->GetClID(3);
+				int win_cls_id3 = trw->GetClID(5);
+				int win_cls_id4 = trw->GetClID(7);
+				float r1_ntrksys[3] = { cached_clusters_xyz["x_L1_"+side][win_cls_id1],cached_clusters_xyz["y_L1_"+side][win_cls_id1], cached_clusters_xyz["z_L1_"+side][win_cls_id1] };
+				float r2_ntrksys[3] = { cached_clusters_xyz["x_L2_"+side][win_cls_id2],cached_clusters_xyz["y_L2_"+side][win_cls_id2], cached_clusters_xyz["z_L2_"+side][win_cls_id2] };
+				float r3_ntrksys[3] = { cached_clusters_xyz["x_L3_"+side][win_cls_id3],cached_clusters_xyz["y_L3_"+side][win_cls_id3], cached_clusters_xyz["z_L3_"+side][win_cls_id3] };
+				float r4_ntrksys[3] = { cached_clusters_xyz["x_L4_"+side][win_cls_id4],cached_clusters_xyz["y_L4_"+side][win_cls_id4], cached_clusters_xyz["z_L4_"+side][win_cls_id4] };
+								
 		   	TLorentzVector prec;
 		   	double pxyz[3];
 		   	trw->GetPXYZ(pxyz);
 		   	prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
+				
+				cout << "Etru=" << pgen->at(cached_clusters_att["id_L4_"+side][i4]).E() << " GeV, Erec=" << prec.E() << "GeV --> i4=" << i4 << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+				
 		   	int ismatched = cached_clusters_att["type_L4_"+side][i4]; // TODO: NEED TO GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
 		   	int idmatched = cached_clusters_att["id_L4_"+side][i4];
 		   	float chi2dof = trw->GetNormChi2();
@@ -935,7 +944,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		tOut->Fill();
 	}
 	
-	h_E_eff->Divide(h_E_tru_all,h_E_tru_mat);
+	h_E_eff->Divide(h_E_tru_mat,h_E_tru_all);
 	fOut->cd();
 	tOut->Write();
 	h_chi2->Write();

@@ -91,6 +91,8 @@ class KMCProbeFwd: public TObject {
   Double_t GetPredictedChi2(Double_t* p, Double_t* cov) const {return fTrack.GetPredictedChi2(p,cov);}
   Double_t GetAlpha()                    const {return fTrack.GetAlpha();}
   Double_t GetCharge()                   const {return fTrack.Charge();}
+  const int* GetClID()                   const {return fClID;}
+  int GetClID(int lr)                    const {return fClID[lr];}
 
   //
   static void   SetWBit(UInt_t &patt,UInt_t bit)               {patt |= 0x1<<bit;}
