@@ -296,8 +296,9 @@ void clear_cached_clusters()
 	for(TMapTSvi::iterator it=cached_clusters_att.begin() ; it!=cached_clusters_att.end() ; ++it) it->second.clear();
 }
 
-void cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, TString side)
+int cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, TString side)
 {
+	int ncached = 0;
 	for(unsigned int i=0 ; i<polm_clusters->size() ; i++)
 	{
 		for(Int_t j=0 ; j<polm_clusters->at(i)->GetN() ; ++j)
@@ -313,12 +314,15 @@ void cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, TString side)
 			cached_clusters_xyz["z_"+lr+"_"+sd].push_back(z);
 			cached_clusters_att["type_"+lr+"_"+sd].push_back(1);
 			cached_clusters_att["id_"+lr+"_"+sd].push_back(i);
+			ncached++;
 		}
 	}
+	return ncached;
 }
 
-void cache_background_clusters(vector<TPolyMarker3D*>* clusters_xyz, vector<int>* clusters_type, vector<int>* clusters_id, TString side)
-{	
+int cache_background_clusters(vector<TPolyMarker3D*>* clusters_xyz, vector<int>* clusters_type, vector<int>* clusters_id, TString side)
+{
+	int ncached = 0;
 	for(unsigned int i=0 ; i<clusters_xyz->size() ; i++)
 	{
 		for(Int_t j=0 ; j<clusters_xyz->at(i)->GetN() ; ++j)
@@ -334,8 +338,10 @@ void cache_background_clusters(vector<TPolyMarker3D*>* clusters_xyz, vector<int>
 			cached_clusters_xyz["z_"+lr+"_"+sd].push_back(z);
 			cached_clusters_att["type_"+lr+"_"+sd].push_back( clusters_type->at(i) );
 			cached_clusters_att["id_"+lr+"_"+sd].push_back( clusters_id->at(i) );
+			ncached++;
 		}
 	}
+	return ncached;
 }
 
 void reset_layers_all()
@@ -784,7 +790,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			unsigned int n_match = 0;
 		   
 			/// make a pool of all signal clusters
-			cache_signal_clusters(polm_clusters,side);
+			int ncached_signal_clusters = cache_signal_clusters(polm_clusters,side);
 			
 			// cout << "After signal:" << endl;
 			// cout << "cached_clusters_xyz[x_L1_'+side+'].size()=" << cached_clusters_xyz["x_L1_"+side].size() << endl;
@@ -797,7 +803,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			// cout << "cached_clusters_att[id_L4_'+side+'].size()=" << cached_clusters_att["id_L4_"+side].size() << endl;		
 			
 			/// make a pool of all background and noise clusters
-			cache_background_clusters(clusters_xyz,clusters_type,clusters_id,side);
+			int ncached_background_clusters = cache_background_clusters(clusters_xyz,clusters_type,clusters_id,side);
 			
 			// cout << "After background:" << endl;
 			// cout << "cached_clusters_xyz[x_L1_'+side+'].size()=" << cached_clusters_xyz["x_L1_"+side].size() << endl;
@@ -900,7 +906,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				trw->GetPXYZ(pxyz);
 				prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
 				
-				cout << "Etru=" << pgen->at(cached_clusters_att["id_L4_"+side][i4]).E() << " GeV, Erec=" << prec.E() << "GeV --> i4=" << i4 << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+				cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << pgen->at(cached_clusters_att["id_L4_"+side][i4]).E() << " GeV, Erec=" << prec.E() << "GeV --> i4=" << i4 << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				
 				int ismatched = cached_clusters_att["type_L4_"+side][i4]; // TODO: NEED TO GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
 				int idmatched = cached_clusters_att["id_L4_"+side][i4];

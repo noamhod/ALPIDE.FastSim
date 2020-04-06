@@ -1285,7 +1285,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
     currTr = lr->AddMCTrack( probes[p] );
     // randomize the starting point
 	 // const float kErrScale = 500.; // this is the parameter defining the initial cov.matrix error wrt sensor resolution
-	 const float kErrScale = 200.; // this is the parameter defining the initial cov.matrix error wrt sensor resolution 
+	 const float kErrScale = 250.; // this is the parameter defining the initial cov.matrix error wrt sensor resolution 
     double r = currTr->GetR(); 
     currTr->ResetCovariance( kErrScale*TMath::Sqrt(lr->GetXRes(r)*lr->GetYRes(r)) ); // this is the coeff to play with
     // currTr->Print("etp");
