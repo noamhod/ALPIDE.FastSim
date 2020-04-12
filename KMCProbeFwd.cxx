@@ -45,7 +45,7 @@ KMCProbeFwd::KMCProbeFwd(double *xyz, double *pxyz, Int_t sign, double errLoose)
 {
   // create track
   Init(xyz,pxyz,sign,errLoose);
-  for (int i=kMaxITSLr;i--;) fClID[i]=-2; 
+  for(int i=kMaxITSLr;i--;) fClID[i]=-2; 
   if (AliLog::GetGlobalDebugLevel()>=2) {
     AliDebug(2,Form("XYZ: %+e %+e %+e PXYZ: %+e %+e %+e Q=%d",xyz[0],xyz[1],xyz[2],pxyz[0],pxyz[1],pxyz[2],sign));
     Print("etp");

@@ -300,6 +300,7 @@ int cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, TString side)
 {
 	int ncached = 0;
 	for(unsigned int i=0 ; i<polm_clusters->size() ; i++)
+	// for(unsigned int i=0 ; i<20 ; i++)
 	{
 		for(Int_t j=0 ; j<polm_clusters->at(i)->GetN() ; ++j)
 		{
@@ -386,17 +387,36 @@ void add_all_clusters(TString side)
 			float x = cached_clusters_xyz["x_"+slr+"_"+side][i];
 			float y = cached_clusters_xyz["y_"+slr+"_"+side][i];
 			float z = cached_clusters_xyz["z_"+slr+"_"+side][i];
+			int  id = cached_clusters_att["id_"+slr+"_"+side][i];
 			if(zlr==300) add_bkg_cluster(1,x,y,z,i);
 			if(zlr==310) add_bkg_cluster(3,x,y,z,i);
 			if(zlr==320) add_bkg_cluster(5,x,y,z,i);
 			if(zlr==330) add_bkg_cluster(7,x,y,z,i);
 		}
-	}
+	}	
 	/// sort clusters
 	for(int l=0 ; l<det->GetLayers()->GetEntries() ; l++)
 	{
 		det->GetLayer(l)->GetMCCluster()->Kill();
 		det->GetLayer(l)->SortBGClusters();
+	}
+}
+
+void print_all_clusters(TString side, bool doprint = true)
+{	
+	if(!doprint) return;
+	for(int l=1 ; l<=7 ; l+=2) // active layers
+	{
+		for(int c=0 ; c<det->GetLayer(l)->GetNBgClusters() ; c++)
+		{
+			KMCClusterFwd* cluster = det->GetLayer(l)->GetBgCluster(c);
+			int     id = cluster->GetTrID();
+			float x = cluster->GetXLab();
+			float y = cluster->GetYLab();
+			float z = cluster->GetZLab();
+			cout << "side=" << side << ", layer=" << l << ", id=" << id << " --> r={" << x << ", " << y << ", " << z << "}" << endl;
+		}
+		cout << endl;
 	}
 }
 
@@ -450,18 +470,6 @@ float zofx(float* r1,float* r2, float x)
 	float b = r1[2]-a*r1[0];
 	float z = a*x+b;
 	return z;
-}
-
-vector<float> getxminmax(float* r1min, float* r1max, float* r4min, float* r4max, float zTest)
-{
-	vector<float> xminmax{ xofz(r1min,r4min,zTest), xofz(r1max,r4max,zTest) };
-	return xminmax;
-}
-
-vector<float> getyminmax(float* r1min, float* r1max, float* r4min, float* r4max, float zTest)
-{
-	vector<float> yminmax{ yofz(r1min,r4min,zTest), yofz(r1max,r4max,zTest) };
-	return yminmax;
 }
 
 bool check_clusters(unsigned int i1, unsigned int i4, TString side)
@@ -529,7 +537,7 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 	double H = abs((zDipoleExit-z0))*cm2m;
 	double R = H*(LB)/xExit + xExit; // look this up in my slides
 	double P = 0.3*B*R;
-	// cout << "z0=" << z0 << ", xExit=" << xExit << ", H=" << H << ", R=" << R << ", P=" << P << endl;
+	if(i4==0 and side=="Eside") cout << "z0=" << z0 << ", xExit=" << xExit << ", H=" << H << ", R=" << R << ", P=" << P << endl;
 
 	TVector2 v1(r1[2],r1[1]);
 	TVector2 v4(r4[2],r4[1]);
@@ -540,13 +548,49 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 	double py = P*uy;
 	double pz = P*uz;
 	p.SetPxPyPzE(px,py,pz,TMath::Sqrt(px*px + py*py + pz*pz + meGeV2));
-	// cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
+	if(i4==0 and side=="Eside") cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
 	
 	if(p.E()<EseedMin or p.E()>EseedMax) return false;
 
 	return true;
 }
 
+int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* polm_clusters, TString side, double maxdistance=0.5)
+{
+	int imindistance = -1;
+	double mindistance = 1e10;
+	for(unsigned int i=0 ; i<polm_clusters->size() ; i++)
+	{
+		double distance = 0;
+		for(Int_t jTru=0 ; jTru<polm_clusters->at(i)->GetN() ; ++jTru)
+		{
+			double xTru,yTru,zTru;
+			polm_clusters->at(i)->GetPoint(jTru,xTru,yTru,zTru); // the clusters
+			if(xTru>0 and side=="Pside") continue;
+			if(xTru<0 and side=="Eside") continue;
+			for(Int_t jRec=0 ; jRec<mrec->GetN() ; ++jRec)
+			{
+				double xRec,yRec,zRec;
+				mrec->GetPoint(jRec,xRec,yRec,zRec);
+				if(abs(zRec-zTru)<1e-2)
+				{
+					distance += sqrt((xRec-xTru)*(xRec-xTru)+(yRec-yTru)*(yRec-yTru));
+					// cout << "i=" << i << ", rTru={" << xTru << "," << yTru << "," << zTru << "}, rRec={" << xRec << "," << yRec << "," << zRec << "} --> distance=" << distance << endl;
+				}
+			}
+		}
+		distance = distance; // sum of sqrt{dx^2+dy^2} from all 4 rec clusters and the truth position of the truth digitised clusters
+		if(distance>0 and distance<mindistance and distance<maxdistance)
+		{
+			imindistance = i;
+			mindistance  = distance; 
+		}
+		// if(distance>0) cout << "i=" << i << ", distance=" << distance << " --> {mindistance=" << mindistance << ", imindistance=" << imindistance << "}"<< endl;
+	}
+	// cout << "imindistance=" << imindistance << ", mindistance=" << mindistance << endl;
+	return imindistance;
+}
+	
 
 
 void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* setup="setup/setupLUXE.txt")
@@ -566,29 +610,30 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// set chi2 cuts
 	det->SetMaxChi2Cl(10.);  // max track to cluster chi2
 	det->SetMaxChi2NDF(3.5); // max total chi2/ndf
-	// det->SetMaxChi2Vtx(20e9);  // fiducial cut on chi2 of convergence to vtx
-	det->SetMaxChi2Vtx(200);  // fiducial cut on chi2 of convergence to vtx
+	det->SetMaxChi2Vtx(20e9);  // fiducial cut on chi2 of convergence to vtx
+	// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
 	// IMPORTANT FOR NON-UNIFORM FIELDS
 	det->SetDefStepAir(1);
 	det->SetMinP2Propagate(0.3); //NA60+
 	det->SetIncludeVertex(kTRUE); // count vertex as an extra measured point
 	// det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
 	det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
+	// for reconstruction:
+	det->SetErrorScale(200.);
 	det->Print();
 	// det->BookControlHistos();
    
-	zlayer->push_back(0);   //// NOAM --> GET FROM THE SETUP   --> IP (vertex)
+	zlayer->push_back(0);   //// NOAM --> GET FROM THE SETUP --> IP (vertex)
 	zlayer->push_back(100); //// NOAM --> GET FROM THE SETUP --> start of dipol
 	zlayer->push_back(200); //// NOAM --> GET FROM THE SETUP --> end of dipol
-	zlayer->push_back(300); //// NOAM --> GET FROM THE SETUP
-	zlayer->push_back(310); //// NOAM --> GET FROM THE SETUP
-	zlayer->push_back(320); //// NOAM --> GET FROM THE SETUP
-	zlayer->push_back(330); //// NOAM --> GET FROM THE SETUP
+	zlayer->push_back(300); //// NOAM --> GET FROM THE SETUP --> layer 1
+	zlayer->push_back(310); //// NOAM --> GET FROM THE SETUP --> layer 2
+	zlayer->push_back(320); //// NOAM --> GET FROM THE SETUP --> layer 3
+	zlayer->push_back(330); //// NOAM --> GET FROM THE SETUP --> layer 4
 
 	int outN = (process=="trident") ? 10 : 10;
 	B = (process=="trident") ? B : 2.0;
 
-	// TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
 	if(process=="trident") resetToTridentGeometry();
 
 	/// get the signal clusters
@@ -628,6 +673,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	gInterpreter->GenerateDictionary("vector<TLorentzVector>", "vector");
 	gInterpreter->GenerateDictionary("vector<TPolyMarker3D*>", "vector");
 	gInterpreter->GenerateDictionary("vector<TPolyLine3D*>",   "vector");
+	gInterpreter->GenerateDictionary("vector<vector<int> >",   "vector");
 	TFile* fOut = new TFile("data/root/rec_from_clusters_"+process+".root","RECREATE");
 	TTree* tOut = new TTree("reco","reco");
 	/// all clusters output branches
@@ -638,6 +684,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// tOut->Branch("all_clusters_type", &all_clusters_type);
 	// tOut->Branch("all_clusters_id",   &all_clusters_id);
 	/// truth output branches
+	vector<vector<int> >     true_rec_imatch;
 	vector<float>            true_q;
 	vector<TLorentzVector>   true_p;
 	vector<TPolyMarker3D*>   true_trckmar;
@@ -646,14 +693,15 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// vector<int>              true_cluster3_id;
 	// vector<int>              true_cluster2_id;
 	// vector<int>              true_cluster1_id;
-	tOut->Branch("true_q",       &true_q);
-	tOut->Branch("true_p",       &true_p);
-	tOut->Branch("true_trckmar", &true_trckmar);
-	tOut->Branch("true_trcklin", &true_trcklin);
-	// tOut->Branch("true_cluster4_id", &true_cluster4_id);
-	// tOut->Branch("true_cluster3_id", &true_cluster3_id);
-	// tOut->Branch("true_cluster2_id", &true_cluster2_id);
-	// tOut->Branch("true_cluster1_id", &true_cluster1_id);
+	tOut->Branch("true_rec_imatch", &true_rec_imatch);
+	tOut->Branch("true_q",          &true_q);
+	tOut->Branch("true_p",          &true_p);
+	tOut->Branch("true_trckmar",    &true_trckmar);
+	tOut->Branch("true_trcklin",    &true_trcklin);
+	// tOut->Branch("true_cluster4_id",    &true_cluster4_id);
+	// tOut->Branch("true_cluster3_id",    &true_cluster3_id);
+	// tOut->Branch("true_cluster2_id",    &true_cluster2_id);
+	// tOut->Branch("true_cluster1_id",    &true_cluster1_id);
 	/// background tracks output branches
 	vector<TPolyMarker3D*>   bkgr_trckmar;
 	vector<TPolyLine3D*>     bkgr_trcklin;
@@ -701,13 +749,13 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// tOut->Branch("reco_cluster3_id", &reco_cluster3_id);
 	
 	/// monitoring histograms
-	TH1D* h_dErel_rec_gen    = new TH1D("h_dErel_rec_gen","Rec vs Gen;(E_{rec}-E_{gen})/E_{gen};Tracks",500,-1.,+1.);
+	TH1D* h_dErel_rec_gen    = new TH1D("h_dErel_rec_gen","Rec vs Gen;(E_{rec}-E_{gen})/E_{gen};Tracks",150,-0.03,+0.03);
 	TH1D* h_chi2             = new TH1D("h_chi2",";#chi^2;Tracks",50,0,15);
 	TH1D* h_chi2_matched     = new TH1D("h_chi2_matched",";#chi^2;Tracks",50,0,15);
 	TH1D* h_chi2_nonmatched  = new TH1D("h_chi2_nonmatched",";#chi^2;Tracks",50,0,15);
-	TH1D* h_E_tru_all        = new TH1D("h_E_tru_all",";#it{E}_{tru}^{all} [GeV];Tracks",34,0,17);
-	TH1D* h_E_tru_mat        = new TH1D("h_E_tru_mat",";#it{E}_{tru}^{mat} [GeV];Tracks",34,0,17);
-	TH1D* h_E_eff            = new TH1D("h_E_eff",";#it{E}_{tru} [GeV];Tracks",34,0,17);
+	TH1D* h_E_tru_all        = new TH1D("h_E_tru_all",";#it{E}_{tru}^{all} [GeV];Tracks",15,0,15);
+	TH1D* h_E_tru_mat        = new TH1D("h_E_tru_mat",";#it{E}_{tru}^{mat} [GeV];Tracks",15,0,15);
+	TH1D* h_E_eff            = new TH1D("h_E_eff",";#it{E}_{tru} [GeV];Tracks",15,0,15);
  
 	/// prepare the dictionaries
 	prepare_cahced_clusters();
@@ -716,7 +764,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	Int_t nsigevents = tSig->GetEntries();
 	cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
 	for(int iev=0 ; iev<tSig->GetEntries() and iev<1 ; iev++)
-		// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
+	// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	{
 		/// clear output vectors
 		// for(unsigned int x=0 ; x<all_clusters_xyz.size() ; ++x) delete all_clusters_xyz[x];
@@ -724,6 +772,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		// all_clusters_type.clear();
 		// all_clusters_id.clear();
 		
+		for(unsigned int x=0 ; x<true_rec_imatch.size() ; ++x) true_rec_imatch[x].clear();
+		true_rec_imatch.clear();
 		true_q.clear();
 		true_p.clear();
 		// for(unsigned int x=0 ; x<true_trckmar.size() ; ++x) delete true_trckmar[x];
@@ -773,7 +823,31 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		tSig->GetEntry(iev);
 		tBkg->GetEntry(iev);
 		
-		if((iev%outN)==0) printf("Done %d out of %d\n",iev,nsigevents);
+		/// truth tracks:
+		vector<int> vitmp;
+		for(unsigned int t=0 ; t<qgen->size() ; ++t)
+		{
+			true_q.push_back( qgen->at(t) );
+			true_p.push_back( pgen->at(t) );
+			true_trckmar.push_back( polm_gen->at(t) );
+			true_trcklin.push_back( poll_gen->at(t) );
+			true_rec_imatch.push_back( vitmp );
+			// true_cluster1_id.push_back( t );
+			// true_cluster2_id.push_back( t );
+			// true_cluster3_id.push_back( t );
+			// true_cluster4_id.push_back( t );
+		}
+		
+		// /// background tracks (allways appear )
+		// for(unsigned int b=0 ; b<trkid1Cluster->size() ; ++b)
+		// {
+		//    bkgr_trckmar.push_back(  );
+		//    bkgr_trcklin.push_back(  );
+		//    bkgr_cluster4_id.push_back( trkid4Cluster->at(b) );
+		//    bkgr_cluster3_id.push_back( trkid3Cluster->at(b) );
+		//    bkgr_cluster2_id.push_back( trkid2Cluster->at(b) );
+		//    bkgr_cluster1_id.push_back( trkid1Cluster->at(b) );
+		// 	   }
 		
 		for(unsigned int s=0 ; s<sides.size() ; ++s)
 		{
@@ -788,73 +862,27 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			unsigned int n_solve = 0;
 			unsigned int n_recos = 0;
 			unsigned int n_match = 0;
+			unsigned int n_trumt = 0;
 		   
 			/// make a pool of all signal clusters
 			int ncached_signal_clusters = cache_signal_clusters(polm_clusters,side);
-			
-			// cout << "After signal:" << endl;
-			// cout << "cached_clusters_xyz[x_L1_'+side+'].size()=" << cached_clusters_xyz["x_L1_"+side].size() << endl;
-			// cout << "cached_clusters_xyz[x_L2_'+side+'].size()=" << cached_clusters_xyz["x_L2_"+side].size() << endl;
-			// cout << "cached_clusters_xyz[x_L3_'+side+'].size()=" << cached_clusters_xyz["x_L3_"+side].size() << endl;
-			// cout << "cached_clusters_xyz[x_L4_'+side+'].size()=" << cached_clusters_xyz["x_L4_"+side].size() << endl;
-			// cout << "cached_clusters_att[id_L1_'+side+'].size()=" << cached_clusters_att["id_L1_"+side].size() << endl;
-			// cout << "cached_clusters_att[id_L2_'+side+'].size()=" << cached_clusters_att["id_L2_"+side].size() << endl;
-			// cout << "cached_clusters_att[id_L3_'+side+'].size()=" << cached_clusters_att["id_L3_"+side].size() << endl;
-			// cout << "cached_clusters_att[id_L4_'+side+'].size()=" << cached_clusters_att["id_L4_"+side].size() << endl;		
-			
+						
 			/// make a pool of all background and noise clusters
 			int ncached_background_clusters = cache_background_clusters(clusters_xyz,clusters_type,clusters_id,side);
-			
-			// cout << "After background:" << endl;
-			// cout << "cached_clusters_xyz[x_L1_'+side+'].size()=" << cached_clusters_xyz["x_L1_"+side].size() << endl;
-			// cout << "cached_clusters_xyz[x_L2_'+side+'].size()=" << cached_clusters_xyz["x_L2_"+side].size() << endl;
-			// cout << "cached_clusters_xyz[x_L3_'+side+'].size()=" << cached_clusters_xyz["x_L3_"+side].size() << endl;
-			// cout << "cached_clusters_xyz[x_L4_'+side+'].size()=" << cached_clusters_xyz["x_L4_"+side].size() << endl;
-			// cout << "cached_clusters_att[id_L1_'+side+'].size()=" << cached_clusters_att["id_L1_"+side].size() << endl;
-			// cout << "cached_clusters_att[id_L2_'+side+'].size()=" << cached_clusters_att["id_L2_"+side].size() << endl;
-			// cout << "cached_clusters_att[id_L3_'+side+'].size()=" << cached_clusters_att["id_L3_"+side].size() << endl;
-			// cout << "cached_clusters_att[id_L4_'+side+'].size()=" << cached_clusters_att["id_L4_"+side].size() << endl;
-		   
+					   
 			/// rest all the layers of the detector (including inactive if any)
 			reset_layers_all(); // reset both sides 
 			
-			/// add all clusters to the detector (Eside/Pside/both)
+			/// add all clusters to the detector
 			add_all_clusters(side);
+			print_all_clusters(side,false);
 			
 			// /// write out all clusters
 			// write_out_clusters("Eside");
 		   
-			/// truth tracks:
-			for(unsigned int t=0 ; t<qgen->size() ; ++t)
-			{
-				if(side=="Eside" and qgen->at(t)>0) continue;
-				if(side=="Pside" and qgen->at(t)<0) continue;
-				h_E_tru_all->Fill( pgen->at(t).E() );
-				n_truth++;
-				true_q.push_back( qgen->at(t) );
-				true_p.push_back( pgen->at(t) );
-				true_trckmar.push_back( polm_gen->at(t) );
-				true_trcklin.push_back( poll_gen->at(t) );
-				// true_cluster1_id.push_back( t );
-				// true_cluster2_id.push_back( t );
-				// true_cluster3_id.push_back( t );
-				// true_cluster4_id.push_back( t );
-			}
-			
-			// /// background tracks (allways appear )
-			// for(unsigned int b=0 ; b<trkid1Cluster->size() ; ++b)
-			// {
-			//    bkgr_trckmar.push_back(  );
-			//    bkgr_trcklin.push_back(  );
-			//    bkgr_cluster4_id.push_back( trkid4Cluster->at(b) );
-			//    bkgr_cluster3_id.push_back( trkid3Cluster->at(b) );
-			//    bkgr_cluster2_id.push_back( trkid2Cluster->at(b) );
-			//    bkgr_cluster1_id.push_back( trkid1Cluster->at(b) );
-			// 	   }
-	      
-		   
 			/// run over all clusters of layer 4 in the pool --> these are the seed for the KalmanFilter fit
 			for(unsigned int i4=0 ; i4<cached_clusters_xyz["x_L4_"+side].size() ; ++i4)
+			// for(unsigned int i4=0 ; i4<1 ; ++i4)
 			{
 				// reset all tracks from all layers
 				reset_layers_tracks();
@@ -879,8 +907,12 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				} // end of loop on clusters in layer 1
 				if(n_seeds<1) continue;
 		   	
+				
+				// bool doPrint = (i4==0 or i4==2 or i4==10 or i4==12 or i4==14 or i4==34 or i4==36 or i4==38 or i4==48 or i4==54 or i4==58 or i4==62 or i4==74);
+				bool doPrint = (i4==0 and side=="Eside");
+				if(doPrint) cout << "\n\n\n########################################## calling SolveSingleTrackViaKalmanMC_Noam_multiseed for i4=" << i4 << " ######################################" << endl;
 				// prepare the probe from the seed and do the KF fit
-				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99);
+				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99,doPrint);
 				if(!solved) continue; // reconstruction failed
 				n_solve++;
 				
@@ -891,7 +923,9 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				if(!trw) continue; // track was not reconstructed
 				n_recos++;
 				
-				/// get the clusters of the winner track
+				trw->Print("clid");
+				
+				/// get the clusters of the winner tracK
 				int win_cls_id1 = trw->GetClID(1);
 				int win_cls_id2 = trw->GetClID(3);
 				int win_cls_id3 = trw->GetClID(5);
@@ -900,54 +934,99 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				float r2_ntrksys[3] = { cached_clusters_xyz["x_L2_"+side][win_cls_id2],cached_clusters_xyz["y_L2_"+side][win_cls_id2], cached_clusters_xyz["z_L2_"+side][win_cls_id2] };
 				float r3_ntrksys[3] = { cached_clusters_xyz["x_L3_"+side][win_cls_id3],cached_clusters_xyz["y_L3_"+side][win_cls_id3], cached_clusters_xyz["z_L3_"+side][win_cls_id3] };
 				float r4_ntrksys[3] = { cached_clusters_xyz["x_L4_"+side][win_cls_id4],cached_clusters_xyz["y_L4_"+side][win_cls_id4], cached_clusters_xyz["z_L4_"+side][win_cls_id4] };
-								
+				
 				TLorentzVector prec;
 				double pxyz[3];
 				trw->GetPXYZ(pxyz);
 				prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
-				
-				cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << pgen->at(cached_clusters_att["id_L4_"+side][i4]).E() << " GeV, Erec=" << prec.E() << "GeV --> i4=" << i4 << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
-				
-				int ismatched = cached_clusters_att["type_L4_"+side][i4]; // TODO: NEED TO GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
-				int idmatched = cached_clusters_att["id_L4_"+side][i4];
+				int ismatched = (cached_clusters_att["type_L4_"+side][i4]==1); // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
+				int idmatched = cached_clusters_att["id_L4_"+side][i4];        // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
 				float chi2dof = trw->GetNormChi2();
-				
-				/// fill the reco branches
+				reco_chi2dof.push_back( chi2dof );
 				reco_q.push_back( crg );
 				reco_p.push_back( prec );
 				reco_trckmar.push_back( TrackMarker3d(trw,0,361,1,trkcol(prec.E())) );
 				reco_trcklin.push_back( TrackLine3d(trw,361,1,trkcol(prec.E())) );
-				reco_chi2dof.push_back( chi2dof );
+
+				n_truth = 0;
+				for(unsigned int t=0 ; t<true_q.size() ; ++t)
+				{
+					if(side=="Eside" and true_q[t]>0) continue;
+					if(side=="Pside" and true_q[t]<0) continue;
+					n_truth++;
+				}
+
+				/// TODO: this is a test
+				unsigned int irec = reco_trckmar.size()-1;
+				Int_t imatch =  imatched(reco_trckmar[irec],polm_clusters,side);
+				if(imatch>=0)
+				{
+					ismatched = 1;
+					idmatched = imatch;
+					true_rec_imatch[imatch].push_back( irec );
+					n_match++;
+					cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << pgen->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+				}
+				else
+				{
+					ismatched = 0;
+					idmatched = -1;
+					cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+				}
 				reco_ismtchd.push_back( ismatched );
 				reco_idmtchd.push_back( idmatched );
 				
-				h_chi2->Fill( chi2dof );
-				if(ismatched==1 and idmatched>=0) // i4 is a signal cluster
-				{
-					bool accept = (chi2dof<3. and (prec.E()>1. and prec.E()<18.));
+				pseeds.clear(); /// this is maybe redundant
+			} // end of loop on clusters in layer 4
+			
+			
+			//////////////////////////////////////
+			/// post-processing histos to fill
+			for(unsigned int t=0 ; t<true_q.size() ; ++t)
+			{
+				if(side=="Eside" and true_q[t]>0) continue;
+				if(side=="Pside" and true_q[t]<0) continue;
+				if(true_rec_imatch[t].size()>0) n_trumt++;
+				else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
+				h_E_tru_all->Fill( true_p[t].E() );
+			}
+			/// TODO: add a vector for all truth tracks, to have an inner vector of all matched reco tracks.
+			/// TODO: then need to check if the truth track has more than 1 reco track and take the better one when filling.
+			for(unsigned int k=0 ; k<reco_ismtchd.size() ; ++k)
+			{
+				h_chi2->Fill( reco_chi2dof[k] ); // fill regardless of matching
+				
+				/// TODO: now I skip if more than one tru track matched (later implement something to take the best one)
+				if(true_rec_imatch[reco_idmtchd[k]].size()>1) continue;
+				
+				if(reco_ismtchd[k]==1 and reco_idmtchd[k]>=0)
+				{	
+					bool accept = (reco_p[k].E()>1. and reco_p[k].E()<17.5);
 					if(accept)
 					{
-						h_E_tru_mat->Fill( pgen->at(idmatched).E() );
-						h_dErel_rec_gen->Fill( (prec.E()-pgen->at(idmatched).E())/pgen->at(idmatched).E() );
+						h_E_tru_mat->Fill( pgen->at(reco_idmtchd[k]).E() );
+						h_dErel_rec_gen->Fill( (reco_p[k].E()-pgen->at(reco_idmtchd[k]).E())/pgen->at(reco_idmtchd[k]).E() );
 					}
-					h_chi2_matched->Fill( chi2dof );
-					n_match++;
+					h_chi2_matched->Fill( reco_chi2dof[k] );
 				}
-				else h_chi2_nonmatched->Fill( chi2dof );
-				
-				/// this is maybe redundant
-				pseeds.clear();
-				
-			} // end of loop on clusters in layer 4
-
+				else
+				{
+					h_chi2_nonmatched->Fill( reco_chi2dof[k] );
+				}
+			}
+			
+			/// summarize
 			cout << "Event #" << iev << ", "<< side << ": n_truth=" << n_truth
 				<< ", n_seeds=" << n_seeds
 					<< ", n_solve=" << n_solve
 						<< ", n_recos=" << n_recos
-							<< ", n_match=" << n_match << endl;
+							<< ", n_match=" << n_match
+								<< ", n_trumt=" << n_trumt << endl;
+			print_all_clusters(side,false);
 		} // end of loop on sides
 		fOut->cd();
 		tOut->Fill();
+		if((iev%outN)==0) printf("Done %d out of %d\n",iev,nsigevents);
 	}
 	
 	h_E_eff->Divide(h_E_tru_mat,h_E_tru_all);

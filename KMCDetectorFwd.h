@@ -61,7 +61,7 @@ class KMCDetectorFwd : public TNamed {
   Bool_t PropagateToZBxByBz(KMCProbeFwd* trc,double z, double maxDZ=1.0, Double_t xOverX0=0., Double_t xTimesRho=0., Bool_t modeMC=kFALSE);
   Bool_t SolveSingleTrackViaKalmanMC(int offset);
   Bool_t SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, double phi, double mass, int charge, double x=0,double y=0, double z=0, int offset=-1);
-  Bool_t SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TLorentzVector>& pseed, double mass, int charge, int offset=-1);
+  Bool_t SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TLorentzVector>& pseed, double mass, int charge, int offset=-1, bool doPrint=false);
   Bool_t TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr, Bool_t bg=kFALSE);
   Int_t GetFieldReg(double z);
   //-------------------
@@ -96,13 +96,14 @@ class KMCDetectorFwd : public TNamed {
   Bool_t       NeedToKill(KMCProbeFwd* probe) const;
   Bool_t       GetUseBackground()          const {return fUseBackground;}
   void         SetUseBackground(Bool_t v=kTRUE)  {fUseBackground = v;}
-  void         CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lrP, KMCLayerFwd* lr);
+  void         CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lrP, KMCLayerFwd* lr, bool doPrint=false);
   Bool_t       IsCorrect(KMCProbeFwd *probe);
   void         RequirePattern(UInt_t patt);
   void         SetMinITSHits(int n);
   void         SetMinMSHits(int n);
   void         SetMinTRHits(int n);
   void         SetMaxSeedToPropagate(int n) {fMaxSeedToPropagate = n;}
+  void         SetErrorScale(double v=500)  {fErrScale = v;}
   void         SetMaxChi2Cl(double v=10)  {fMaxChi2Cl = v;}
   void         SetMaxChi2NDF(double v=10) {fMaxNormChi2NDF = v;}
   void         SetMaxChi2Vtx(double v=20) {fMaxChi2Vtx = v;}
@@ -222,6 +223,7 @@ class KMCDetectorFwd : public TNamed {
   float    fApplyBransonPCorrection; // if >=0, apply BP correction with additional error on the vertex
   Bool_t   fUseBackground; // do we want to simulate background?
   // reconstruction settings
+  Double_t fErrScale;   // parameter defining the initial cov.matrix error wrt sensor resolution 
   Double_t fMaxChi2Cl;   // max cluster-track chi2 
   Double_t fMaxNormChi2NDF;// max chi2/NDF to accept
   Double_t fMaxChi2Vtx; // cut on chi2 to vtx

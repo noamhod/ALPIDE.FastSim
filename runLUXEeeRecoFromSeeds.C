@@ -276,6 +276,8 @@ void runLUXEeeRecoFromSeeds(TString process, int Seed=12345) //, const char* set
    det->SetIncludeVertex(kTRUE); // count vertex as an extra measured point
    // det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
    det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
+	// for reconstruction:
+	det->SetErrorScale(200.);
    det->Print();
    // det->BookControlHistos();
    
