@@ -69,7 +69,7 @@ KMCProbeFwd::KMCProbeFwd(const KMCProbeFwd& src)
   ,fInnLrCheck(src.fInnLrCheck)
   ,fTrack( src.fTrack )
 {
-  for (int i=kMaxITSLr;i--;) fClID[i]=-src.fClID[i]; 
+  for (int i=kMaxITSLr;i--;) fClID[i]=src.fClID[i]; 
 }
 
 //_______________________________________________________________________

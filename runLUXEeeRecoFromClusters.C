@@ -300,7 +300,6 @@ int cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, TString side)
 {
 	int ncached = 0;
 	for(unsigned int i=0 ; i<polm_clusters->size() ; i++)
-	// for(unsigned int i=0 ; i<20 ; i++)
 	{
 		for(Int_t j=0 ; j<polm_clusters->at(i)->GetN() ; ++j)
 		{
@@ -537,7 +536,7 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 	double H = abs((zDipoleExit-z0))*cm2m;
 	double R = H*(LB)/xExit + xExit; // look this up in my slides
 	double P = 0.3*B*R;
-	if(i4==0 and side=="Eside") cout << "z0=" << z0 << ", xExit=" << xExit << ", H=" << H << ", R=" << R << ", P=" << P << endl;
+	// if(i4==0 and side=="Eside") cout << "z0=" << z0 << ", xExit=" << xExit << ", H=" << H << ", R=" << R << ", P=" << P << endl;
 
 	TVector2 v1(r1[2],r1[1]);
 	TVector2 v4(r4[2],r4[1]);
@@ -548,7 +547,8 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 	double py = P*uy;
 	double pz = P*uz;
 	p.SetPxPyPzE(px,py,pz,TMath::Sqrt(px*px + py*py + pz*pz + meGeV2));
-	if(i4==0 and side=="Eside") cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
+	// if(i4==0 and side=="Eside") cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
+	// cout << "side=" << side << ", px=" << px << ", py=" << py << ", pz=" << pz << endl;
 	
 	if(p.E()<EseedMin or p.E()>EseedMax) return false;
 
@@ -616,10 +616,10 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	det->SetDefStepAir(1);
 	det->SetMinP2Propagate(0.3); //NA60+
 	det->SetIncludeVertex(kTRUE); // count vertex as an extra measured point
-	// det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
+	det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
 	det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
 	// for reconstruction:
-	det->SetErrorScale(200.);
+	det->SetErrorScale(250.);
 	det->Print();
 	// det->BookControlHistos();
    
@@ -766,6 +766,10 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	for(int iev=0 ; iev<tSig->GetEntries() and iev<1 ; iev++)
 	// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	{
+		//// get the next entry
+		tSig->GetEntry(iev);
+		tBkg->GetEntry(iev);
+		
 		/// clear output vectors
 		// for(unsigned int x=0 ; x<all_clusters_xyz.size() ; ++x) delete all_clusters_xyz[x];
 		// all_clusters_xyz.clear();
@@ -819,11 +823,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		/// rest all the layers of the detector (including inactive if any)
 		reset_layers_all(); // reset both sides 
 		
-		//// get the next entry
-		tSig->GetEntry(iev);
-		tBkg->GetEntry(iev);
-		
-		/// truth tracks:
+		/// fill truth tracks:
 		vector<int> vitmp;
 		for(unsigned int t=0 ; t<qgen->size() ; ++t)
 		{
@@ -863,6 +863,14 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			unsigned int n_recos = 0;
 			unsigned int n_match = 0;
 			unsigned int n_trumt = 0;
+			
+			/// count truth per side
+			for(unsigned int t=0 ; t<true_q.size() ; ++t)
+			{
+				if(side=="Eside" and true_q[t]>0) continue;
+				if(side=="Pside" and true_q[t]<0) continue;
+				n_truth++;
+			}
 		   
 			/// make a pool of all signal clusters
 			int ncached_signal_clusters = cache_signal_clusters(polm_clusters,side);
@@ -880,7 +888,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			// /// write out all clusters
 			// write_out_clusters("Eside");
 		   
-			/// run over all clusters of layer 4 in the pool --> these are the seed for the KalmanFilter fit
+			/// run over all clusters of layer 4 in the pool --> these are the seeds for the KalmanFilter fit
 			for(unsigned int i4=0 ; i4<cached_clusters_xyz["x_L4_"+side].size() ; ++i4)
 			// for(unsigned int i4=0 ; i4<1 ; ++i4)
 			{
@@ -910,20 +918,18 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				
 				// bool doPrint = (i4==0 or i4==2 or i4==10 or i4==12 or i4==14 or i4==34 or i4==36 or i4==38 or i4==48 or i4==54 or i4==58 or i4==62 or i4==74);
 				bool doPrint = (i4==0 and side=="Eside");
+				// bool doPrint = false;
 				if(doPrint) cout << "\n\n\n########################################## calling SolveSingleTrackViaKalmanMC_Noam_multiseed for i4=" << i4 << " ######################################" << endl;
 				// prepare the probe from the seed and do the KF fit
 				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99,doPrint);
 				if(!solved) continue; // reconstruction failed
 				n_solve++;
 				
-				// cout << "For " << side << ": layer 4 is filled with " << det->GetLayer(7)->GetNBgClusters() << " clusters" << endl;
 				
 				// get the reconstructed propagated to the vertex 
 				KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack(); 
 				if(!trw) continue; // track was not reconstructed
 				n_recos++;
-				
-				trw->Print("clid");
 				
 				/// get the clusters of the winner tracK
 				int win_cls_id1 = trw->GetClID(1);
@@ -948,30 +954,22 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				reco_trckmar.push_back( TrackMarker3d(trw,0,361,1,trkcol(prec.E())) );
 				reco_trcklin.push_back( TrackLine3d(trw,361,1,trkcol(prec.E())) );
 
-				n_truth = 0;
-				for(unsigned int t=0 ; t<true_q.size() ; ++t)
-				{
-					if(side=="Eside" and true_q[t]>0) continue;
-					if(side=="Pside" and true_q[t]<0) continue;
-					n_truth++;
-				}
-
 				/// TODO: this is a test
 				unsigned int irec = reco_trckmar.size()-1;
-				Int_t imatch =  imatched(reco_trckmar[irec],polm_clusters,side);
+				Int_t imatch = imatched(reco_trckmar[irec],polm_clusters,side);
 				if(imatch>=0)
 				{
 					ismatched = 1;
 					idmatched = imatch;
 					true_rec_imatch[imatch].push_back( irec );
 					n_match++;
-					cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << pgen->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << pgen->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
 				else
 				{
 					ismatched = 0;
 					idmatched = -1;
-					cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
 				reco_ismtchd.push_back( ismatched );
 				reco_idmtchd.push_back( idmatched );
@@ -980,14 +978,13 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			} // end of loop on clusters in layer 4
 			
 			
-			//////////////////////////////////////
 			/// post-processing histos to fill
 			for(unsigned int t=0 ; t<true_q.size() ; ++t)
 			{
 				if(side=="Eside" and true_q[t]>0) continue;
 				if(side=="Pside" and true_q[t]<0) continue;
 				if(true_rec_imatch[t].size()>0) n_trumt++;
-				else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
+				// else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
 				h_E_tru_all->Fill( true_p[t].E() );
 			}
 			/// TODO: add a vector for all truth tracks, to have an inner vector of all matched reco tracks.
