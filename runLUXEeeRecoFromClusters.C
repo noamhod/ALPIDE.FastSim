@@ -78,7 +78,7 @@ double z2 = 202.9;
 vector<TString> sides{"Eside","Pside"};
 vector<TString> coord{"x","y","z"};
 vector<TString> attri{"id","type"};
-TMapiTS         layers = {{300,"L1"}, {310,"L2"}, {320,"L3"}, {330,"L4"} };
+TMapiTS         layers = { {300,"L1"}, {310,"L2"}, {320,"L3"}, {330,"L4"} };
 TMapTSvf        cached_clusters_xyz; /// coordinates (x,y,z)
 TMapTSvi        cached_clusters_att; /// attributes (type and id)
 
@@ -883,7 +883,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			
 			/// add all clusters to the detector
 			add_all_clusters(side);
-			print_all_clusters(side,false);
+			print_all_clusters(side,true);
 			
 			// /// write out all clusters
 			// write_out_clusters("Eside");
@@ -916,7 +916,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				if(n_seeds<1) continue;
 		   	
 				
-				// bool doPrint = (i4==0 or i4==2 or i4==10 or i4==12 or i4==14 or i4==34 or i4==36 or i4==38 or i4==48 or i4==54 or i4==58 or i4==62 or i4==74);
 				bool doPrint = (i4==0 and side=="Eside");
 				// bool doPrint = false;
 				if(doPrint) cout << "\n\n\n########################################## calling SolveSingleTrackViaKalmanMC_Noam_multiseed for i4=" << i4 << " ######################################" << endl;
@@ -963,13 +962,13 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 					idmatched = imatch;
 					true_rec_imatch[imatch].push_back( irec );
 					n_match++;
-					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << pgen->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+					cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << pgen->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
 				else
 				{
 					ismatched = 0;
 					idmatched = -1;
-					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+					cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
 				reco_ismtchd.push_back( ismatched );
 				reco_idmtchd.push_back( idmatched );
@@ -984,7 +983,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				if(side=="Eside" and true_q[t]>0) continue;
 				if(side=="Pside" and true_q[t]<0) continue;
 				if(true_rec_imatch[t].size()>0) n_trumt++;
-				// else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
+				else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
 				h_E_tru_all->Fill( true_p[t].E() );
 			}
 			/// TODO: add a vector for all truth tracks, to have an inner vector of all matched reco tracks.

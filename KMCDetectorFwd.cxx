@@ -1551,11 +1551,11 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
   if(doPrint) {AliInfo(Form("From Lr(%d) %s to Lr(%d) %s | LastChecked %d", lrP->GetActiveID(),lrP->GetName(),lr->GetActiveID(),lr->GetName(),probe->GetInnerLayerChecked()));}
   for (int icl=-1;icl<nCl;icl++) {
     //
-    if (gRandom->Rndm() > lrP->GetLayerEff()) continue; // generate layer eff
+    if(gRandom->Rndm() > lrP->GetLayerEff()) continue; // generate layer eff
     //
     KMCClusterFwd *cl = icl<0 ? lrP->GetMCCluster() : lrP->GetBgCluster(icl);  // -1 is for true MC cluster
     if (cl->IsKilled()) {
-		 if(doPrint) {if (AliLog::GetGlobalDebugLevel()>1) {printf("Skip cluster %d ",icl); cl->Print();}}
+		 if(doPrint) {AliInfo(Form("Skip cluster %d ",icl)); cl->Print();}
       continue;
     }
     double y = cl->GetY(); // ! tracking frame coordinates
@@ -1563,7 +1563,8 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     //
     if(doPrint) {AliInfo(Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) z: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)", icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetTrack()->GetY(),y,yMin,yMax,probe->GetTrack()->GetZ(),z,zMin,zMax));}
     //
-    if (z>zMax) {if (icl==-1) continue; else break;} // all other z will be even smaller, no chance to match
+    // if (z>zMax) {if (icl==-1) continue; else break;} // all other z will be even smaller, no chance to match
+    if (z>zMax) continue; // all other z will be even smaller, no chance to match
     if (z<zMin) continue;
     if (y<yMin || y>yMax) continue; 
     //
