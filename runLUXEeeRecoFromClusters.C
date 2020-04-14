@@ -273,6 +273,12 @@ bool accepttrk(vector<TPolyMarker3D*>& polm, int itrk)
 	return (acctrk==nlayers);
 }
 
+bool foundinvec(int x, vector<int>& v)
+{
+	vector<int>::iterator it = find(v.begin(),v.end(),x);
+	return (it!=v.end());
+}
+
 void prepare_cahced_clusters()
 {
 	vector<float> vf;
@@ -519,7 +525,7 @@ bool check_clusters(unsigned int i1, unsigned int i4, TString side)
 	return true;
 }
 
-bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned int i4, TString side, TLorentzVector& p)
+bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned int i4, TString side, TLorentzVector& p, bool calibrate=false)
 {
 	if(abs(r1[0])>=abs(r4[0]))            return false; // |x1| must be smaller than |x4|
 	if(r1[0]>0 and r4[0]<0)               return false;
@@ -546,6 +552,8 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 	double H = abs((zDipoleExit-z0))*cm2m;
 	double R = H*(LB)/xExit + xExit; // look this up in my slides
 	double P = 0.3*B*R;
+	P = (calibrate) ? P/1.001 : P;
+	
 	// if(i4==0 and side=="Eside") cout << "z0=" << z0 << ", xExit=" << xExit << ", H=" << H << ", R=" << R << ", P=" << P << endl;
 
 	TVector2 v1(r1[2],r1[1]);
@@ -726,12 +734,16 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// tOut->Branch("bkgr_cluster2_id", &bkgr_cluster2_id);
 	// tOut->Branch("bkgr_cluster1_id", &bkgr_cluster1_id);
 	/// seeds output branches
+	vector<int>            seed_type;
+	vector<int>            seed_id;
 	vector<float>          seed_q;
 	vector<TLorentzVector> seed_p;
 	// vector<int>            seed_cluster4_id;
 	// vector<int>            seed_cluster1_id;
-	tOut->Branch("seed_q", &seed_q);
-	tOut->Branch("seed_p", &seed_p);
+	tOut->Branch("seed_type", &seed_type);
+	tOut->Branch("seed_id",   &seed_id);
+	tOut->Branch("seed_q",    &seed_q);
+	tOut->Branch("seed_p",    &seed_p);
 	// tOut->Branch("seed_cluster4_id", &seed_cluster4_id);
 	// tOut->Branch("seed_cluster1_id", &seed_cluster1_id);
 	/// reconstructed clusters output branches
@@ -759,13 +771,16 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// tOut->Branch("reco_cluster3_id", &reco_cluster3_id);
 	
 	/// monitoring histograms
+	TH1D* h_dErel_sed_gen    = new TH1D("h_dErel_sed_gen","Seed vs Gen;(E_{seed}-E_{gen})/E_{gen};Tracks",150,-0.03,+0.03);
 	TH1D* h_dErel_rec_gen    = new TH1D("h_dErel_rec_gen","Rec vs Gen;(E_{rec}-E_{gen})/E_{gen};Tracks",150,-0.03,+0.03);
 	TH1D* h_chi2             = new TH1D("h_chi2",";#chi^2;Tracks",50,0,15);
 	TH1D* h_chi2_matched     = new TH1D("h_chi2_matched",";#chi^2;Tracks",50,0,15);
 	TH1D* h_chi2_nonmatched  = new TH1D("h_chi2_nonmatched",";#chi^2;Tracks",50,0,15);
-	TH1D* h_E_tru_all        = new TH1D("h_E_tru_all",";#it{E}_{tru}^{all} [GeV];Tracks",15,0,15);
-	TH1D* h_E_tru_mat        = new TH1D("h_E_tru_mat",";#it{E}_{tru}^{mat} [GeV];Tracks",15,0,15);
-	TH1D* h_E_eff            = new TH1D("h_E_eff",";#it{E}_{tru} [GeV];Tracks",15,0,15);
+	TH1D* h_E_tru_all        = new TH1D("h_E_tru_all",";#it{E}_{tru}^{all} [GeV];Tracks",17,0,17);
+	TH1D* h_E_tru_sed_mat    = new TH1D("h_E_tru_sed_mat",";#it{E}_{tru}^{mat} [GeV];Tracks",17,0,17);
+	TH1D* h_E_tru_rec_mat    = new TH1D("h_E_tru_rec_mat",";#it{E}_{tru}^{mat} [GeV];Tracks",17,0,17);
+	TH1D* h_E_eff_sed        = new TH1D("h_E_eff_sed",";#it{E}_{tru} [GeV];Tracks",17,0,17);
+	TH1D* h_E_eff_rec        = new TH1D("h_E_eff_rec",";#it{E}_{tru} [GeV];Tracks",17,0,17);
  
 	/// prepare the dictionaries
 	prepare_cahced_clusters();
@@ -773,8 +788,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	/// loop on events
 	Int_t nsigevents = tSig->GetEntries();
 	cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
-	for(int iev=0 ; iev<tSig->GetEntries() and iev<50 ; iev++)
-	// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
+	// for(int iev=0 ; iev<tSig->GetEntries() and iev<20 ; iev++)
+	for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	{
 		//// get the next entry
 		tSig->GetEntry(iev);
@@ -808,6 +823,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		// bkgr_cluster2_id.clear();
 		// bkgr_cluster1_id.clear();
 	
+		seed_type.clear();
+		seed_id.clear();
 		seed_q.clear();
 		seed_p.clear();
 		// seed_cluster4_id.clear();
@@ -869,6 +886,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			/// globals (per side)
 			unsigned int n_truth = 0;
 			unsigned int n_seeds = 0;
+			unsigned int n_sedmt = 0;
 			unsigned int n_solve = 0;
 			unsigned int n_recos = 0;
 			unsigned int n_match = 0;
@@ -913,18 +931,20 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 					
 					/// find the momentum of the seed
 					TLorentzVector pseed;
+					bool docalibrate = true;
 					float r1[3] = {cached_clusters_xyz["x_L1_"+side][i1], cached_clusters_xyz["y_L1_"+side][i1], cached_clusters_xyz["z_L1_"+side][i1]};
 					float r4[3] = {cached_clusters_xyz["x_L4_"+side][i4], cached_clusters_xyz["y_L4_"+side][i4], cached_clusters_xyz["z_L4_"+side][i4]};
-					bool seed = makeseed(process,r1,r4,i1,i4,side,pseed);
+					bool seed = makeseed(process,r1,r4,i1,i4,side,pseed,docalibrate);
 					if(!seed) continue; // cannot make a meaningful seed
 					pseeds.push_back(pseed);
+					seed_type.push_back( cached_clusters_att["type_L1_"+side][i1]==1 and cached_clusters_att["type_L4_"+side][i4]==1 and cached_clusters_att["id_L1_"+side][i1]==cached_clusters_att["id_L4_"+side][i4]);
+					seed_id.push_back( cached_clusters_att["id_L4_"+side][i4] );
 					n_seeds++;
 		   		
 					seed_q.push_back(crg);
 					seed_p.push_back(pseed);
 				} // end of loop on clusters in layer 1
 				if(n_seeds<1) continue;
-		   	
 				
 				// bool doPrint = (i4==2 and side=="Eside");
 				bool doPrint = false;
@@ -987,7 +1007,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			} // end of loop on clusters in layer 4
 			
 			
-			/// post-processing histos to fill
+			////////////////////////////////////////////////////////////
+			/// post-processing per side histos to fill
 			for(unsigned int t=0 ; t<true_q.size() ; ++t)
 			{
 				if(side=="Eside" and true_q[t]>0) continue;
@@ -995,39 +1016,59 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				if(true_rec_imatch[t].size()>0) n_trumt++;
 				// else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
 				h_E_tru_all->Fill( true_p[t].E() );
+				
+				for(unsigned int s=0 ; s<seed_p.size() ; ++s)
+				{
+					if(seed_type[s]!=1)    continue;
+					if(seed_id[s]!=(int)t) continue;
+					h_dErel_sed_gen->Fill((seed_p[s].E()-true_p[t].E())/true_p[t].E());
+					h_E_tru_sed_mat->Fill(seed_p[s].E());
+					n_sedmt++;
+					break;
+				}
 			}
 			/// TODO: add a vector for all truth tracks, to have an inner vector of all matched reco tracks.
 			/// TODO: then need to check if the truth track has more than 1 reco track and take the better one when filling.
+			vector<int> idtrumatched;
 			for(unsigned int k=0 ; k<reco_ismtchd.size() ; ++k)
 			{
+				if(side=="Eside" and reco_q[k]>0) continue;
+				if(side=="Pside" and reco_q[k]<0) continue;
+				
 				h_chi2->Fill( reco_chi2dof[k] ); // fill regardless of matching
 				
-				/// TODO: now I skip if more than one tru track matched (later implement something to take the best one)
-				if(true_rec_imatch[reco_idmtchd[k]].size()>1) continue;
+				// /// TODO: now I skip if more than one tru track matched (later implement something to take the best one)
+				// if(true_rec_imatch[reco_idmtchd[k]].size()>1) continue;
 				
-				if(reco_ismtchd[k]==1 and reco_idmtchd[k]>=0)
+				if(reco_ismtchd[k]==1 and reco_idmtchd[k]>=0 and !foundinvec(reco_idmtchd[k],idtrumatched))
 				{	
-					bool accept = (reco_p[k].E()>1. and reco_p[k].E()<17.5);
-					if(accept)
-					{
-						h_E_tru_mat->Fill( pgen->at(reco_idmtchd[k]).E() );
-						h_dErel_rec_gen->Fill( (reco_p[k].E()-pgen->at(reco_idmtchd[k]).E())/pgen->at(reco_idmtchd[k]).E() );
-					}
+					idtrumatched.push_back( reco_idmtchd[k] ); /// fill and check in next iterations to avoid repetition
+
 					h_chi2_matched->Fill( reco_chi2dof[k] );
+					
+					// bool accept = (reco_p[k].E()>1. and reco_p[k].E()<17.5);
+					// if(!accept) continue;
+					
+					h_E_tru_rec_mat->Fill( pgen->at(reco_idmtchd[k]).E() );
+					h_dErel_rec_gen->Fill( (reco_p[k].E()-pgen->at(reco_idmtchd[k]).E())/pgen->at(reco_idmtchd[k]).E() );
 				}
 				else
 				{
 					h_chi2_nonmatched->Fill( reco_chi2dof[k] );
 				}
 			}
-			
+			// cout << "Indices found: ";
+			// for(unsigned int l=0 ; l<idtrumatched.size() ; ++l) cout << idtrumatched[l] << ",";
+			// cout << endl;
+				
 			/// summarize
 			cout << "Event #" << iev << ", "<< side << ": n_truth=" << n_truth
 				<< ", n_seeds=" << n_seeds
-					<< ", n_solve=" << n_solve
-						<< ", n_recos=" << n_recos
-							<< ", n_match=" << n_match
-								<< ", n_trumt=" << n_trumt << endl;
+					<< ", n_sedmt=" << n_sedmt
+						<< ", n_solve=" << n_solve
+							<< ", n_recos=" << n_recos
+								<< ", n_match=" << n_match
+									<< ", n_trumt=" << n_trumt << endl;
 			print_all_clusters(side,false);
 		} // end of loop on sides
 		fOut->cd();
@@ -1035,12 +1076,14 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		if((iev%outN)==0) printf("Done %d out of %d\n",iev,nsigevents);
 	}
 	
-	h_E_eff->Divide(h_E_tru_mat,h_E_tru_all);
+	h_E_eff_sed->Divide(h_E_tru_sed_mat,h_E_tru_all);
+	h_E_eff_rec->Divide(h_E_tru_rec_mat,h_E_tru_all);
 	fOut->cd();
 	tOut->Write();
 	h_chi2->Write();
 	h_chi2_matched->Write();
 	h_chi2_nonmatched->Write();
+	h_dErel_sed_gen->Write();
 	h_dErel_rec_gen->Write();
 	fOut->Write();
 	fOut->Close();
