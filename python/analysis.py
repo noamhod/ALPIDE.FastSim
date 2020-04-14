@@ -96,6 +96,8 @@ def BookHistos(process):
    histos.update( {"h_xy_layer3_gen":TH2D("h_xy_layer3_gen","Layer 3: generated tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
    histos.update( {"h_xy_layer4_gen":TH2D("h_xy_layer4_gen","Layer 4: generated tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
 
+   histos.update( {"h_xy_layer0_gen":TH2D("h_xy_layer0_gen","Dipole exit;x [cm];y [cm];Tracks", 200,-40,+40, 200,-2.,+2.)} )
+   
    histos.update( {"h_xE_layer0_gen":TH2D("h_xE_layer0_gen","Dipole exit;x [cm];E [GeV];Tracks", 600,-75,+75, 100,0,+20)} )
    histos.update( {"h_xE_layer1_gen":TH2D("h_xE_layer1_gen","Layer 1;x [cm];E [GeV];Tracks",     600,-75,+75, 100,0,+20)} )
    histos.update( {"h_xE_layer2_gen":TH2D("h_xE_layer2_gen","Layer 2;x [cm];E [GeV];Tracks",     600,-75,+75, 100,0,+20)} )
@@ -171,6 +173,8 @@ def FillHistos(event):
          event.polm_gen[i].GetPoint(jxy,xgen,ygen,zgen)
          
          ### noam for tracking
+         if(zgen==200): histos["h_xy_layer0_gen"].Fill(xgen,ygen,wgt)
+         
          if(zgen==200): histos["h_xE_layer0_gen"].Fill(xgen,Egen,wgt)
          if(zgen==300): histos["h_xE_layer1_gen"].Fill(xgen,Egen,wgt)
          if(zgen==310): histos["h_xE_layer2_gen"].Fill(xgen,Egen,wgt)
@@ -532,6 +536,10 @@ histos["h_xE_layer0_gen"].Draw("col")
 cnv_xE_gen.SaveAs(fn+"xE_gen.pdf")
 cnv_xE_gen.SaveAs(allpdf)
 
+cnv_xy_gen = TCanvas("cnv_xy","",1000,1000)
+histos["h_xy_layer0_gen"].Draw("col")
+cnv_xy_gen.SaveAs(fn+"xy_gen.pdf")
+cnv_xy_gen.SaveAs(allpdf)
 
 
 

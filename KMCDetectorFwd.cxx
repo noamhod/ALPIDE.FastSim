@@ -1412,10 +1412,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
       currTr = fVtx->GetMCTrack(itr);
       if(currTr->IsKilled())
       {
-		  if(doPrint) AliInfo(Form("Already killed for itr=%d (VTX)",itr));
+		  // if(doPrint) AliInfo(Form("Already killed for itr=%d (VTX)",itr));
         continue;
       }
-		else {if(doPrint) AliInfoF("Track not killed after fVtx->GetMCTrack(%d)",itr);}
+		// else {if(doPrint) AliInfoF("Track not killed after fVtx->GetMCTrack(%d)",itr);}
       double meas[2] = {0.,0.};
       if(fImposeVertexPosition)
   		{
@@ -1431,12 +1431,12 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
       double measErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(),0,fVtx->GetXRes()*fVtx->GetXRes()}; //  Lab
       if(!currTr->Update(meas,measErr2))
       {
-			if(doPrint) AliInfo(Form("Failed in !currTr->Update(meas,measErr2) for itr=%d",itr));
+			// if(doPrint) AliInfo(Form("Failed in !currTr->Update(meas,measErr2) for itr=%d",itr));
 			nTotKilledVtx++;
          continue;
   		}
 		nTotNotKilledVtx++;
-		if(doPrint) AliInfo(Form("after !currTr->Update(meas,measErr2) for itr=%d",itr));
+		// if(doPrint) AliInfo(Form("after !currTr->Update(meas,measErr2) for itr=%d",itr));
       currTr->SetInnerLrChecked(fVtx->GetActiveID());
     }
   }
@@ -1659,7 +1659,7 @@ Bool_t KMCDetectorFwd::NeedToKill(KMCProbeFwd* probe) const
     int nITSMax = nITS + il; // maximum it can have
     if (nITSMax<fMinITSHits) {
       kill = kTRUE;
-		AliInfo(Form("Kill due to no chance to collect enough ITS hits: nITS=%d, nITSMax=%d, fMinITSHits=%d",nITS,nITSMax,fMinITSHits));
+		// AliInfo(Form("Kill due to no chance to collect enough ITS hits: nITS=%d, nITSMax=%d, fMinITSHits=%d",nITS,nITSMax,fMinITSHits));
       break;
     } // has no chance to collect enough ITS hits
     //
@@ -1671,7 +1671,7 @@ Bool_t KMCDetectorFwd::NeedToKill(KMCProbeFwd* probe) const
       for (int ig=ngr;ig--;) 
 	   if (!(((UInt_t)fPattITS[ig]) & patt)) {
 	     kill = kTRUE; 
-		  AliInfo(Form("Kill due to no hit pattern"));
+		  // AliInfo(Form("Kill due to no hit pattern"));
 	     break;
 	   }
       //
@@ -1686,7 +1686,7 @@ Bool_t KMCDetectorFwd::NeedToKill(KMCProbeFwd* probe) const
       chi2min /= ((nITSMax<<1)-KMCProbeFwd::kNDOF);
       if (chi2min>fMaxNormChi2NDF) {
 	      kill = kTRUE; 
-			AliInfo(Form("Kill due to chi2"));
+			// AliInfo(Form("Kill due to chi2"));
 	      break;
       }
     }
