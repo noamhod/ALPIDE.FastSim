@@ -77,12 +77,13 @@ double yH = 67.2;
 double z1 = 102.9;
 double z2 = 202.9;
 
-// vector<TString> sides{"Eside","Pside"};
-vector<TString> sides{"Eside"};
+vector<TString> sides{"Eside","Pside"};
+// vector<TString> sides{"Eside"};
 vector<TString> coord{"x","y","z"};
 vector<TString> attri{"id","type"};
 TMapiTS         layers = { {300,"L1"}, {310,"L2"}, {320,"L3"}, {330,"L4"} };
-TMapTSi         slayers = { {"L1",300}, {"L2",310}, {"L3",320}, {"L4",330} };
+TMapTSi         szlayers = { {"L1",300}, {"L2",310}, {"L3",320}, {"L4",330} };
+TMapTSi         silayers = { {"L1",1}, {"L2",2}, {"L3",3}, {"L4",4} };
 TMapTSvf        cached_clusters_xyz; /// coordinates (x,y,z)
 TMapTSvi        cached_clusters_att; /// attributes (type and id)
 
@@ -306,7 +307,7 @@ void clear_cached_clusters()
 	for(TMapTSvi::iterator it=cached_clusters_att.begin() ; it!=cached_clusters_att.end() ; ++it) it->second.clear();
 }
 
-int cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, TString side)
+int cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, vector<vector<int> >* polm_clusters_id, TString side)
 {
 	int ncached = 0;
 	for(unsigned int i=0 ; i<polm_clusters->size() ; i++)
@@ -323,7 +324,7 @@ int cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, TString side)
 			cached_clusters_xyz["y_"+lr+"_"+sd].push_back(y);
 			cached_clusters_xyz["z_"+lr+"_"+sd].push_back(z);
 			cached_clusters_att["type_"+lr+"_"+sd].push_back(1);
-			cached_clusters_att["id_"+lr+"_"+sd].push_back(i);
+			cached_clusters_att["id_"+lr+"_"+sd].push_back( polm_clusters_id->at(i)[silayers[lr]-1] );
 			ncached++;
 		}
 	}
@@ -491,10 +492,10 @@ bool check_clusters(unsigned int i1, unsigned int i4, TString side)
 	float r4max[3] = { cached_clusters_xyz["x_L4_"+side][i4]+xAbsMargins, cached_clusters_xyz["y_L4_"+side][i4]+yAbsMargins, cached_clusters_xyz["z_L4_"+side][i4] };
 
 	/// check possible clusters in layer 2
-	float y2min = yofz(r1min,r4min,(float)slayers["L2"]);
-	float y2max = yofz(r1max,r4max,(float)slayers["L2"]);
-	float x2min = xofz(r1min,r4min,(float)slayers["L2"]);
-	float x2max = xofz(r1max,r4max,(float)slayers["L2"]);
+	float y2min = yofz(r1min,r4min,(float)szlayers["L2"]);
+	float y2max = yofz(r1max,r4max,(float)szlayers["L2"]);
+	float x2min = xofz(r1min,r4min,(float)szlayers["L2"]);
+	float x2max = xofz(r1max,r4max,(float)szlayers["L2"]);
 	bool accept2 = false;
 	for(unsigned int i2=0 ; i2<cached_clusters_xyz["x_L2_"+side].size() ; ++i2)
 	{	
@@ -507,10 +508,10 @@ bool check_clusters(unsigned int i1, unsigned int i4, TString side)
 	}
 	if(!accept2) return false;
 
-	float y3min = yofz(r1min,r4min,(float)slayers["L3"]);
-	float y3max = yofz(r1max,r4max,(float)slayers["L3"]);
-	float x3min = xofz(r1min,r4min,(float)slayers["L3"]);
-	float x3max = xofz(r1max,r4max,(float)slayers["L3"]);
+	float y3min = yofz(r1min,r4min,(float)szlayers["L3"]);
+	float y3max = yofz(r1max,r4max,(float)szlayers["L3"]);
+	float x3min = xofz(r1min,r4min,(float)szlayers["L3"]);
+	float x3max = xofz(r1max,r4max,(float)szlayers["L3"]);
 	bool accept3 = false;
 	for(unsigned int i3=0 ; i3<cached_clusters_xyz["x_L3_"+side].size() ; ++i3)
 	{
@@ -668,12 +669,14 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	vector<TPolyLine3D*>*    poll_gen = 0;
 	vector<int>*             acctrkgen = 0;
 	vector<int>*             igentrk = 0;
+	vector<vector<int> >*    polm_clusters_id = 0;
 	vector<TPolyMarker3D*>*  polm_clusters = 0;
 	tSig->SetBranchAddress("wgtgen",                 &wgtgen);
 	tSig->SetBranchAddress("qgen",                   &qgen);
 	tSig->SetBranchAddress("pgen",                   &pgen);
 	tSig->SetBranchAddress("igentrk",                &igentrk);
 	tSig->SetBranchAddress("acctrkgen",              &acctrkgen);
+	tSig->SetBranchAddress("polm_clusters_id",       &polm_clusters_id);
 	tSig->SetBranchAddress("polm_clusters",          &polm_clusters);
 	tSig->SetBranchAddress("polm_gen",               &polm_gen);
 	tSig->SetBranchAddress("poll_gen",               &poll_gen);
@@ -706,6 +709,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// tOut->Branch("all_clusters_id",   &all_clusters_id);
 	/// truth output branches
 	vector<vector<int> >     true_rec_imatch;
+	vector<vector<int> >     true_id;
 	vector<float>            true_q;
 	vector<TLorentzVector>   true_p;
 	vector<TPolyMarker3D*>   true_trckmar;
@@ -715,6 +719,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// vector<int>              true_cluster2_id;
 	// vector<int>              true_cluster1_id;
 	tOut->Branch("true_rec_imatch", &true_rec_imatch);
+	tOut->Branch("true_id",         &true_id);
 	tOut->Branch("true_q",          &true_q);
 	tOut->Branch("true_p",          &true_p);
 	tOut->Branch("true_trckmar",    &true_trckmar);
@@ -738,7 +743,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// tOut->Branch("bkgr_cluster1_id", &bkgr_cluster1_id);
 	/// seeds output branches
 	vector<int>            seed_type;
-	vector<int>            seed_id;
+	vector<vector<int> >   seed_id;
 	vector<float>          seed_q;
 	vector<TLorentzVector> seed_p;
 	// vector<int>            seed_cluster4_id;
@@ -818,6 +823,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		
 		for(unsigned int x=0 ; x<true_rec_imatch.size() ; ++x) true_rec_imatch[x].clear();
 		true_rec_imatch.clear();
+		for(unsigned int x=0 ; x<true_id.size() ; ++x) true_id[x].clear();
+		true_id.clear();
 		true_q.clear();
 		true_p.clear();
 		// for(unsigned int x=0 ; x<true_trckmar.size() ; ++x) delete true_trckmar[x];
@@ -839,6 +846,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		// bkgr_cluster1_id.clear();
 	
 		seed_type.clear();
+		for(unsigned int x=0 ; x<seed_id.size() ; ++x) seed_id[x].clear();
 		seed_id.clear();
 		seed_q.clear();
 		seed_p.clear();
@@ -869,6 +877,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		vector<int> vitmp;
 		for(unsigned int t=0 ; t<qgen->size() ; ++t)
 		{
+			vector<int> vtruid{ polm_clusters_id->at(t)[0],polm_clusters_id->at(t)[1],polm_clusters_id->at(t)[2],polm_clusters_id->at(t)[3] };
+			true_id.push_back( vtruid );
 			true_q.push_back( qgen->at(t) );
 			true_p.push_back( pgen->at(t) );
 			true_trckmar.push_back( polm_gen->at(t) );
@@ -916,7 +926,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			}
 		   
 			/// make a pool of all signal clusters
-			int ncached_signal_clusters = cache_signal_clusters(polm_clusters,side);
+			int ncached_signal_clusters = cache_signal_clusters(polm_clusters,polm_clusters_id,side);
 						
 			/// make a pool of all background and noise clusters
 			int ncached_background_clusters = cache_background_clusters(clusters_xyz,clusters_type,clusters_id,side);
@@ -931,6 +941,9 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			// /// write out all clusters
 			// write_out_clusters("Eside");
 		   
+			/// offset for signal id's
+			int sigoffset = 100000; // should be multiplied by the layer number
+			
 			/// run over all clusters of layer 4 in the pool --> these are the seeds for the KalmanFilter fit
 			for(unsigned int i4=0 ; i4<cached_clusters_xyz["x_L4_"+side].size() ; ++i4)
 			// for(unsigned int i4=0 ; i4<1 ; ++i4)
@@ -952,8 +965,11 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 					bool seed = makeseed(process,r1,r4,i1,i4,side,pseed,docalibrate);
 					if(!seed) continue; // cannot make a meaningful seed
 					pseeds.push_back(pseed);
-					seed_type.push_back( cached_clusters_att["type_L1_"+side][i1]==1 and cached_clusters_att["type_L4_"+side][i4]==1 and cached_clusters_att["id_L1_"+side][i1]==cached_clusters_att["id_L4_"+side][i4]);
-					seed_id.push_back( cached_clusters_att["id_L4_"+side][i4] );
+					bool issig  = ( cached_clusters_att["type_L1_"+side][i1]==1 and cached_clusters_att["type_L4_"+side][i4]==1 );
+					bool sameid = ( (cached_clusters_att["id_L1_"+side][i1]-1*sigoffset)==(cached_clusters_att["id_L4_"+side][i4]-4*sigoffset) );
+					seed_type.push_back( issig and sameid );
+					vector<int> vidseed{cached_clusters_att["id_L1_"+side][i1],-1,-1,cached_clusters_att["id_L4_"+side][i4]};
+					seed_id.push_back(vidseed);
 					n_seeds++;
 		   		
 					seed_q.push_back(crg);
@@ -961,12 +977,13 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				} // end of loop on clusters in layer 1
 				if(n_seeds<1) continue;
 				
-				bool doPrint0 = (cached_clusters_att["id_L4_"+side][i4]==0 and cached_clusters_att["type_L4_"+side][i4]==1 and side=="Eside");
-				bool doPrint2 = (cached_clusters_att["id_L4_"+side][i4]==2 and cached_clusters_att["type_L4_"+side][i4]==1 and side=="Eside");
+				bool doPrint0 = (cached_clusters_att["id_L4_"+side][i4]==0+4*sigoffset and cached_clusters_att["type_L4_"+side][i4]==1 and side=="Eside");
+				bool doPrint2 = (cached_clusters_att["id_L4_"+side][i4]==2+4*sigoffset and cached_clusters_att["type_L4_"+side][i4]==1 and side=="Eside");
 				bool doPrint = (doPrint0 or doPrint2);
 				// bool doPrint = false;
 				if(doPrint) cout << "\n\n\n########################################## calling SolveSingleTrackViaKalmanMC_Noam_multiseed for i4=" << i4 << " ######################################" << endl;
 				// prepare the probe from the seed and do the KF fit
+				
 				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99,doPrint);
 				if(!solved) continue; // reconstruction failed
 				n_solve++;
@@ -974,7 +991,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				
 				// get the reconstructed propagated to the vertex 
 				KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack(); 
-				if(!trw) continue; // track was not reconstructed
+				if(!trw)            continue; // track was not reconstructed
+				if(trw->IsKilled()) continue; // track was killed
 				n_recos++;
 				
 				trw->Print("clid");
@@ -1040,11 +1058,13 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				if(true_rec_imatch[t].size()>0) n_trumt++;
 				else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
 				histos["h_E_tru_all_"+side]->Fill( true_p[t].E() );
-				
+				int truid1 = true_id[t][0];
+				int truid4 = true_id[t][3];
 				for(unsigned int s=0 ; s<seed_p.size() ; ++s)
 				{
-					if(seed_type[s]!=1)    continue;
-					if(seed_id[s]!=(int)t) continue;
+					if(seed_type[s]!=1)       continue;
+					if(seed_id[s][0]!=truid1) continue;
+					if(seed_id[s][3]!=truid4) continue;
 					histos["h_dErel_sed_gen_"+side]->Fill((seed_p[s].E()-true_p[t].E())/true_p[t].E());
 					histos["h_E_tru_sed_mat_"+side]->Fill(seed_p[s].E());
 					n_sedmt++;

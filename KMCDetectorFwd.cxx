@@ -1345,7 +1345,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
     for(int itrP=0;itrP<ntPrev;itrP++) // loop over all tracks from previous layer
   	 {	 
       currTrP = lrP->GetMCTrack(itrP);
-		if(doPrint) {AliInfoF("Starting %d of %d (%d) at lr %d",itrP, ntPrev, currTrP->IsKilled(),j);}
+		if(doPrint) {AliInfo(Form("Starting %d of %d (%d) at lr %d",itrP, ntPrev, currTrP->IsKilled(),j));}
   		if(currTrP->IsKilled())
       {
 		  if(doPrint) AliInfo(Form("Track already killed for layer %s, in loop over ntPrev, itrP=%d",lr->GetName(),itrP));
@@ -1412,10 +1412,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
       currTr = fVtx->GetMCTrack(itr);
       if(currTr->IsKilled())
       {
-		  if(doPrint) AliInfo(Form("Already killed for itr=%d (VTX)",itr));
+		  if(doPrint) AliInfo(Form("Already killed (VTX)"));
         continue;
       }
-		else {if(doPrint) AliInfoF("Track not killed after fVtx->GetMCTrack(%d)",itr);}
+		else {if(doPrint) AliInfo(Form("Track not killed after fVtx->GetMCTrack(...)"));}
       double meas[2] = {0.,0.};
       if(fImposeVertexPosition)
   		{
@@ -1436,7 +1436,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam_multiseed(std::vector<TL
          continue;
   		}
 		nTotNotKilledVtx++;
-		if(doPrint) AliInfo(Form("after !currTr->Update(meas,measErr2) for itr=%d",itr));
+		if(doPrint) AliInfo(Form("after !currTr->Update(meas,measErr2)"));
       currTr->SetInnerLrChecked(fVtx->GetActiveID());
     }
   }
