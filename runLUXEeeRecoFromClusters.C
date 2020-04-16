@@ -35,6 +35,7 @@ typedef map<TString, double >        TMapTSd;
 typedef map<TString, vector<int> >   TMapTSvi;
 typedef map<TString, vector<float> > TMapTSvf;
 typedef map<int,TString>             TMapiTS;
+typedef map<TString, TH1D* >         TMapTSTH1D;
 
 double vX=0,vY=0,vZ=0; // event vertex
 KMCDetectorFwd* det = 0;
@@ -76,8 +77,8 @@ double yH = 67.2;
 double z1 = 102.9;
 double z2 = 202.9;
 
-vector<TString> sides{"Eside","Pside"};
-// vector<TString> sides{"Eside"};
+// vector<TString> sides{"Eside","Pside"};
+vector<TString> sides{"Eside"};
 vector<TString> coord{"x","y","z"};
 vector<TString> attri{"id","type"};
 TMapiTS         layers = { {300,"L1"}, {310,"L2"}, {320,"L3"}, {330,"L4"} };
@@ -396,10 +397,10 @@ void add_all_clusters(TString side)
 			float y = cached_clusters_xyz["y_"+slr+"_"+side][i];
 			float z = cached_clusters_xyz["z_"+slr+"_"+side][i];
 			int  id = cached_clusters_att["id_"+slr+"_"+side][i];
-			if(zlr==300) add_bkg_cluster(1,x,y,z,i);
-			if(zlr==310) add_bkg_cluster(3,x,y,z,i);
-			if(zlr==320) add_bkg_cluster(5,x,y,z,i);
-			if(zlr==330) add_bkg_cluster(7,x,y,z,i);
+			if(zlr==300) add_bkg_cluster(1,x,y,z,id);
+			if(zlr==310) add_bkg_cluster(3,x,y,z,id);
+			if(zlr==320) add_bkg_cluster(5,x,y,z,id);
+			if(zlr==330) add_bkg_cluster(7,x,y,z,id);
 		}
 	}	
 	/// sort clusters
@@ -626,7 +627,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// max number of seeds on each layer to propagate (per muon track)
 	det->SetMaxSeedToPropagate(3000); // relevant only if backgrount is considered
 	// set chi2 cuts
-	det->SetMaxChi2Cl(10.);  // max track to cluster chi2
+	// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
+	det->SetMaxChi2Cl(8.);  // max track to cluster chi2
 	det->SetMaxChi2NDF(3.5); // max total chi2/ndf
 	det->SetMaxChi2Vtx(20e9);  // fiducial cut on chi2 of convergence to vtx
 	// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
@@ -634,10 +636,11 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	det->SetDefStepAir(1);
 	det->SetMinP2Propagate(0.3); //NA60+
 	det->SetIncludeVertex(kTRUE); // count vertex as an extra measured point
-	det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
+	// det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
 	det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
 	// for reconstruction:
-	det->SetErrorScale(250.);
+	// det->SetErrorScale(500.);
+	det->SetErrorScale(150.);
 	det->Print();
 	// det->BookControlHistos();
    
@@ -771,16 +774,28 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	// tOut->Branch("reco_cluster3_id", &reco_cluster3_id);
 	
 	/// monitoring histograms
-	TH1D* h_dErel_sed_gen    = new TH1D("h_dErel_sed_gen","Seed vs Gen;(E_{seed}-E_{gen})/E_{gen};Tracks",150,-0.03,+0.03);
-	TH1D* h_dErel_rec_gen    = new TH1D("h_dErel_rec_gen","Rec vs Gen;(E_{rec}-E_{gen})/E_{gen};Tracks",150,-0.03,+0.03);
-	TH1D* h_chi2             = new TH1D("h_chi2",";#chi^2;Tracks",50,0,15);
-	TH1D* h_chi2_matched     = new TH1D("h_chi2_matched",";#chi^2;Tracks",50,0,15);
-	TH1D* h_chi2_nonmatched  = new TH1D("h_chi2_nonmatched",";#chi^2;Tracks",50,0,15);
-	TH1D* h_E_tru_all        = new TH1D("h_E_tru_all",";#it{E}_{tru}^{all} [GeV];Tracks",17,0,17);
-	TH1D* h_E_tru_sed_mat    = new TH1D("h_E_tru_sed_mat",";#it{E}_{tru}^{mat} [GeV];Tracks",17,0,17);
-	TH1D* h_E_tru_rec_mat    = new TH1D("h_E_tru_rec_mat",";#it{E}_{tru}^{mat} [GeV];Tracks",17,0,17);
-	TH1D* h_E_eff_sed        = new TH1D("h_E_eff_sed",";#it{E}_{tru} [GeV];Tracks",17,0,17);
-	TH1D* h_E_eff_rec        = new TH1D("h_E_eff_rec",";#it{E}_{tru} [GeV];Tracks",17,0,17);
+	TMapTSTH1D histos;
+	TString hname = "";
+	hname = "h_dErel_sed_gen_Eside"  ; histos.insert( make_pair(hname, new TH1D(hname,"Seed vs Gen;(E_{seed}-E_{gen})/E_{gen};Tracks",150,-0.03,+0.03)) );
+	hname = "h_dErel_sed_gen_Pside"  ; histos.insert( make_pair(hname, new TH1D(hname,"Seed vs Gen;(E_{seed}-E_{gen})/E_{gen};Tracks",150,-0.03,+0.03)) );
+	hname = "h_dErel_rec_gen_Eside"  ; histos.insert( make_pair(hname, new TH1D(hname,"Rec vs Gen;(E_{rec}-E_{gen})/E_{gen};Tracks",150,-0.03,+0.03)) );
+	hname = "h_dErel_rec_gen_Pside"  ; histos.insert( make_pair(hname, new TH1D(hname,"Rec vs Gen;(E_{rec}-E_{gen})/E_{gen};Tracks",150,-0.03,+0.03)) );
+	hname = "h_chi2_Eside"           ; histos.insert( make_pair(hname, new TH1D(hname,";#chi^2;Tracks",50,0,15)) );
+	hname = "h_chi2_Pside"           ; histos.insert( make_pair(hname, new TH1D(hname,";#chi^2;Tracks",50,0,15)) );
+	hname = "h_chi2_matched_Eside"   ; histos.insert( make_pair(hname, new TH1D(hname,";#chi^2;Tracks",50,0,15)) );
+	hname = "h_chi2_matched_Pside"   ; histos.insert( make_pair(hname, new TH1D(hname,";#chi^2;Tracks",50,0,15)) );
+	hname = "h_chi2_nonmatched_Eside"; histos.insert( make_pair(hname, new TH1D(hname,";#chi^2;Tracks",50,0,15)) );
+	hname = "h_chi2_nonmatched_Pside"; histos.insert( make_pair(hname, new TH1D(hname,";#chi^2;Tracks",50,0,15)) );
+	hname = "h_E_tru_all_Eside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru}^{all} [GeV];Tracks",17,0,17)) );
+	hname = "h_E_tru_all_Pside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru}^{all} [GeV];Tracks",17,0,17)) );
+	hname = "h_E_tru_sed_mat_Eside"  ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru}^{mat} [GeV];Tracks",17,0,17)) );
+	hname = "h_E_tru_sed_mat_Pside"  ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru}^{mat} [GeV];Tracks",17,0,17)) );
+	hname = "h_E_tru_rec_mat_Eside"  ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru}^{mat} [GeV];Tracks",17,0,17)) );
+	hname = "h_E_tru_rec_mat_Pside"  ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru}^{mat} [GeV];Tracks",17,0,17)) );
+	hname = "h_E_eff_sed_Eside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",17,0,17)) );
+	hname = "h_E_eff_sed_Pside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",17,0,17)) );
+	hname = "h_E_eff_rec_Eside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",17,0,17)) );
+	hname = "h_E_eff_rec_Pside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",17,0,17)) );
  
 	/// prepare the dictionaries
 	prepare_cahced_clusters();
@@ -788,8 +803,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	/// loop on events
 	Int_t nsigevents = tSig->GetEntries();
 	cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
-	// for(int iev=0 ; iev<tSig->GetEntries() and iev<20 ; iev++)
-	for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
+	for(int iev=0 ; iev<tSig->GetEntries() and iev<1 ; iev++)
+	// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	{
 		//// get the next entry
 		tSig->GetEntry(iev);
@@ -946,8 +961,10 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				} // end of loop on clusters in layer 1
 				if(n_seeds<1) continue;
 				
-				// bool doPrint = (i4==2 and side=="Eside");
-				bool doPrint = false;
+				bool doPrint0 = (cached_clusters_att["id_L4_"+side][i4]==0 and cached_clusters_att["type_L4_"+side][i4]==1 and side=="Eside");
+				bool doPrint2 = (cached_clusters_att["id_L4_"+side][i4]==2 and cached_clusters_att["type_L4_"+side][i4]==1 and side=="Eside");
+				bool doPrint = (doPrint0 or doPrint2);
+				// bool doPrint = false;
 				if(doPrint) cout << "\n\n\n########################################## calling SolveSingleTrackViaKalmanMC_Noam_multiseed for i4=" << i4 << " ######################################" << endl;
 				// prepare the probe from the seed and do the KF fit
 				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99,doPrint);
@@ -960,15 +977,22 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				if(!trw) continue; // track was not reconstructed
 				n_recos++;
 				
+				trw->Print("clid");
+				
 				/// get the clusters of the winner tracK
-				int win_cls_id1 = trw->GetClID(1);
-				int win_cls_id2 = trw->GetClID(3);
-				int win_cls_id3 = trw->GetClID(5);
-				int win_cls_id4 = trw->GetClID(7);
-				float r1_ntrksys[3] = { cached_clusters_xyz["x_L1_"+side][win_cls_id1],cached_clusters_xyz["y_L1_"+side][win_cls_id1], cached_clusters_xyz["z_L1_"+side][win_cls_id1] };
-				float r2_ntrksys[3] = { cached_clusters_xyz["x_L2_"+side][win_cls_id2],cached_clusters_xyz["y_L2_"+side][win_cls_id2], cached_clusters_xyz["z_L2_"+side][win_cls_id2] };
-				float r3_ntrksys[3] = { cached_clusters_xyz["x_L3_"+side][win_cls_id3],cached_clusters_xyz["y_L3_"+side][win_cls_id3], cached_clusters_xyz["z_L3_"+side][win_cls_id3] };
-				float r4_ntrksys[3] = { cached_clusters_xyz["x_L4_"+side][win_cls_id4],cached_clusters_xyz["y_L4_"+side][win_cls_id4], cached_clusters_xyz["z_L4_"+side][win_cls_id4] };
+				int win_cls_id1 = trw->GetClID(1); // provide active layer ID, not the physical ones (most are passive)
+				int win_cls_id2 = trw->GetClID(2); // provide active layer ID, not the physical ones (most are passive)
+				int win_cls_id3 = trw->GetClID(3); // provide active layer ID, not the physical ones (most are passive)
+				int win_cls_id4 = trw->GetClID(4); // provide active layer ID, not the physical ones (most are passive)
+				// float r1_ntrksys[3] = { cached_clusters_xyz["x_L1_"+side][win_cls_id1],cached_clusters_xyz["y_L1_"+side][win_cls_id1], cached_clusters_xyz["z_L1_"+side][win_cls_id1] };
+				// float r2_ntrksys[3] = { cached_clusters_xyz["x_L2_"+side][win_cls_id2],cached_clusters_xyz["y_L2_"+side][win_cls_id2], cached_clusters_xyz["z_L2_"+side][win_cls_id2] };
+				// float r3_ntrksys[3] = { cached_clusters_xyz["x_L3_"+side][win_cls_id3],cached_clusters_xyz["y_L3_"+side][win_cls_id3], cached_clusters_xyz["z_L3_"+side][win_cls_id3] };
+				// float r4_ntrksys[3] = { cached_clusters_xyz["x_L4_"+side][win_cls_id4],cached_clusters_xyz["y_L4_"+side][win_cls_id4], cached_clusters_xyz["z_L4_"+side][win_cls_id4] };
+				
+				if(win_cls_id1>=0 and win_cls_id1<det->GetLayer(1)->GetNBgClusters()) det->GetLayer(1)->GetBgCluster( win_cls_id1 )->Reset();
+				if(win_cls_id2>=0 and win_cls_id2<det->GetLayer(3)->GetNBgClusters()) det->GetLayer(3)->GetBgCluster( win_cls_id2 )->Reset();
+				if(win_cls_id3>=0 and win_cls_id3<det->GetLayer(5)->GetNBgClusters()) det->GetLayer(5)->GetBgCluster( win_cls_id3 )->Reset();
+				if(win_cls_id4>=0 and win_cls_id4<det->GetLayer(7)->GetNBgClusters()) det->GetLayer(7)->GetBgCluster( win_cls_id4 )->Reset();
 				
 				TLorentzVector prec;
 				double pxyz[3];
@@ -992,13 +1016,13 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 					idmatched = imatch;
 					true_rec_imatch[imatch].push_back( irec );
 					n_match++;
-					if(doPrint) cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << pgen->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+					cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << pgen->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
 				else
 				{
 					ismatched = 0;
 					idmatched = -1;
-					if(doPrint) cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+					cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
 				reco_ismtchd.push_back( ismatched );
 				reco_idmtchd.push_back( idmatched );
@@ -1014,15 +1038,15 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				if(side=="Eside" and true_q[t]>0) continue;
 				if(side=="Pside" and true_q[t]<0) continue;
 				if(true_rec_imatch[t].size()>0) n_trumt++;
-				// else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
-				h_E_tru_all->Fill( true_p[t].E() );
+				else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
+				histos["h_E_tru_all_"+side]->Fill( true_p[t].E() );
 				
 				for(unsigned int s=0 ; s<seed_p.size() ; ++s)
 				{
 					if(seed_type[s]!=1)    continue;
 					if(seed_id[s]!=(int)t) continue;
-					h_dErel_sed_gen->Fill((seed_p[s].E()-true_p[t].E())/true_p[t].E());
-					h_E_tru_sed_mat->Fill(seed_p[s].E());
+					histos["h_dErel_sed_gen_"+side]->Fill((seed_p[s].E()-true_p[t].E())/true_p[t].E());
+					histos["h_E_tru_sed_mat_"+side]->Fill(seed_p[s].E());
 					n_sedmt++;
 					break;
 				}
@@ -1035,7 +1059,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				if(side=="Eside" and reco_q[k]>0) continue;
 				if(side=="Pside" and reco_q[k]<0) continue;
 				
-				h_chi2->Fill( reco_chi2dof[k] ); // fill regardless of matching
+				histos["h_chi2_"+side]->Fill( reco_chi2dof[k] ); // fill regardless of matching
 				
 				// /// TODO: now I skip if more than one tru track matched (later implement something to take the best one)
 				// if(true_rec_imatch[reco_idmtchd[k]].size()>1) continue;
@@ -1044,17 +1068,17 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				{	
 					idtrumatched.push_back( reco_idmtchd[k] ); /// fill and check in next iterations to avoid repetition
 
-					h_chi2_matched->Fill( reco_chi2dof[k] );
+					histos["h_chi2_matched_"+side]->Fill( reco_chi2dof[k] );
 					
 					// bool accept = (reco_p[k].E()>1. and reco_p[k].E()<17.5);
 					// if(!accept) continue;
 					
-					h_E_tru_rec_mat->Fill( pgen->at(reco_idmtchd[k]).E() );
-					h_dErel_rec_gen->Fill( (reco_p[k].E()-pgen->at(reco_idmtchd[k]).E())/pgen->at(reco_idmtchd[k]).E() );
+					histos["h_E_tru_rec_mat_"+side]->Fill( pgen->at(reco_idmtchd[k]).E() );
+					histos["h_dErel_rec_gen_"+side]->Fill( (reco_p[k].E()-pgen->at(reco_idmtchd[k]).E())/pgen->at(reco_idmtchd[k]).E() );
 				}
 				else
 				{
-					h_chi2_nonmatched->Fill( reco_chi2dof[k] );
+					histos["h_chi2_nonmatched_"+side]->Fill( reco_chi2dof[k] );
 				}
 			}
 			// cout << "Indices found: ";
@@ -1076,15 +1100,13 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		if((iev%outN)==0) printf("Done %d out of %d\n",iev,nsigevents);
 	}
 	
-	h_E_eff_sed->Divide(h_E_tru_sed_mat,h_E_tru_all);
-	h_E_eff_rec->Divide(h_E_tru_rec_mat,h_E_tru_all);
+	histos["h_E_eff_sed_Eside"]->Divide(histos["h_E_tru_sed_mat_Eside"],histos["h_E_tru_all_Eside"]);
+	histos["h_E_eff_sed_Pside"]->Divide(histos["h_E_tru_sed_mat_Pside"],histos["h_E_tru_all_Pside"]);
+	histos["h_E_eff_rec_Eside"]->Divide(histos["h_E_tru_rec_mat_Eside"],histos["h_E_tru_all_Eside"]);
+	histos["h_E_eff_rec_Pside"]->Divide(histos["h_E_tru_rec_mat_Pside"],histos["h_E_tru_all_Pside"]);
 	fOut->cd();
 	tOut->Write();
-	h_chi2->Write();
-	h_chi2_matched->Write();
-	h_chi2_nonmatched->Write();
-	h_dErel_sed_gen->Write();
-	h_dErel_rec_gen->Write();
+	for(TMapTSTH1D::iterator it=histos.begin() ; it!=histos.end() ; ++it) it->second->Write();
 	fOut->Write();
 	fOut->Close();
 }
