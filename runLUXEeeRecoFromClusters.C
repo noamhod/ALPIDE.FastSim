@@ -29,6 +29,7 @@
 #include <map>
 #endif
 
+typedef map<int, int>                TMapii;
 typedef map<TString, int >           TMapTSi;
 typedef map<TString, float >         TMapTSf;
 typedef map<TString, double >        TMapTSd;
@@ -86,6 +87,7 @@ TMapTSi         szlayers = { {"L1",300}, {"L2",310}, {"L3",320}, {"L4",330} };
 TMapTSi         silayers = { {"L1",1}, {"L2",2}, {"L3",3}, {"L4",4} };
 TMapTSvf        cached_clusters_xyz; /// coordinates (x,y,z)
 TMapTSvi        cached_clusters_att; /// attributes (type and id)
+TMapii          cached_clusters_all_ids; /// attributes (type and id)
 
 void resetToTridentGeometry()
 {
@@ -398,10 +400,10 @@ void add_all_clusters(TString side)
 			float y = cached_clusters_xyz["y_"+slr+"_"+side][i];
 			float z = cached_clusters_xyz["z_"+slr+"_"+side][i];
 			int  id = cached_clusters_att["id_"+slr+"_"+side][i];
-			if(zlr==300) add_bkg_cluster(1,x,y,z,id);
-			if(zlr==310) add_bkg_cluster(3,x,y,z,id);
-			if(zlr==320) add_bkg_cluster(5,x,y,z,id);
-			if(zlr==330) add_bkg_cluster(7,x,y,z,id);
+			if(zlr==300) { add_bkg_cluster(1,x,y,z,id); cached_clusters_all_ids.insert( make_pair(id,det->GetLayer(1)->GetNBgClusters()-1) ); }
+			if(zlr==310) { add_bkg_cluster(3,x,y,z,id); cached_clusters_all_ids.insert( make_pair(id,det->GetLayer(3)->GetNBgClusters()-1) ); }
+			if(zlr==320) { add_bkg_cluster(5,x,y,z,id); cached_clusters_all_ids.insert( make_pair(id,det->GetLayer(5)->GetNBgClusters()-1) ); }
+			if(zlr==330) { add_bkg_cluster(7,x,y,z,id); cached_clusters_all_ids.insert( make_pair(id,det->GetLayer(7)->GetNBgClusters()-1) ); }
 		}
 	}	
 	/// sort clusters
@@ -427,6 +429,10 @@ void print_all_clusters(TString side, bool doprint = true)
 			cout << "side=" << side << ", layer=" << l << ", id=" << id << " --> r={" << x << ", " << y << ", " << z << "}" << endl;
 		}
 		cout << endl;
+	}
+	for(TMapii::iterator it=cached_clusters_all_ids.begin() ; it!=cached_clusters_all_ids.end() ; it++)
+	{
+		cout << "id=" << it->first << " --> index=" << it->second << endl;
 	}
 }
 
@@ -574,6 +580,7 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 
 	return true;
 }
+
 
 int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* polm_clusters, TString side, double maxdistance=0.5)
 {
@@ -905,6 +912,9 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		{
 			TString side = sides[s];
 			
+			/// clear this side's indices
+			cached_clusters_all_ids.clear();
+			
 			/// set the charge
 			float crg = (side=="Eside") ? -1 : +1;
 		   
@@ -995,7 +1005,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				if(trw->IsKilled()) continue; // track was killed
 				n_recos++;
 				
-				trw->Print("clid");
+				cout << "Track fit succeeded, associated clusters are:" << endl; trw->Print("clid");
 				
 				/// get the clusters of the winner tracK
 				int win_cls_id1 = trw->GetClID(1); // provide active layer ID, not the physical ones (most are passive)
@@ -1006,11 +1016,11 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				// float r2_ntrksys[3] = { cached_clusters_xyz["x_L2_"+side][win_cls_id2],cached_clusters_xyz["y_L2_"+side][win_cls_id2], cached_clusters_xyz["z_L2_"+side][win_cls_id2] };
 				// float r3_ntrksys[3] = { cached_clusters_xyz["x_L3_"+side][win_cls_id3],cached_clusters_xyz["y_L3_"+side][win_cls_id3], cached_clusters_xyz["z_L3_"+side][win_cls_id3] };
 				// float r4_ntrksys[3] = { cached_clusters_xyz["x_L4_"+side][win_cls_id4],cached_clusters_xyz["y_L4_"+side][win_cls_id4], cached_clusters_xyz["z_L4_"+side][win_cls_id4] };
-				
-				if(win_cls_id1>=0 and win_cls_id1<det->GetLayer(1)->GetNBgClusters()) det->GetLayer(1)->GetBgCluster( win_cls_id1 )->Reset();
-				if(win_cls_id2>=0 and win_cls_id2<det->GetLayer(3)->GetNBgClusters()) det->GetLayer(3)->GetBgCluster( win_cls_id2 )->Reset();
-				if(win_cls_id3>=0 and win_cls_id3<det->GetLayer(5)->GetNBgClusters()) det->GetLayer(5)->GetBgCluster( win_cls_id3 )->Reset();
-				if(win_cls_id4>=0 and win_cls_id4<det->GetLayer(7)->GetNBgClusters()) det->GetLayer(7)->GetBgCluster( win_cls_id4 )->Reset();
+
+				if(win_cls_id1>0) {cout<<"killing cluster id="<<win_cls_id1<<endl; det->GetLayer(1)->GetBgCluster( cached_clusters_all_ids[win_cls_id1] )->Reset();}
+				if(win_cls_id2>0) {cout<<"killing cluster id="<<win_cls_id2<<endl; det->GetLayer(3)->GetBgCluster( cached_clusters_all_ids[win_cls_id2] )->Reset();}
+				if(win_cls_id3>0) {cout<<"killing cluster id="<<win_cls_id3<<endl; det->GetLayer(5)->GetBgCluster( cached_clusters_all_ids[win_cls_id3] )->Reset();}
+				if(win_cls_id4>0) {cout<<"killing cluster id="<<win_cls_id4<<endl; det->GetLayer(7)->GetBgCluster( cached_clusters_all_ids[win_cls_id4] )->Reset();}
 				
 				TLorentzVector prec;
 				double pxyz[3];
