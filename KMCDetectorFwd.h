@@ -96,6 +96,7 @@ class KMCDetectorFwd : public TNamed {
   Bool_t       NeedToKill(KMCProbeFwd* probe) const;
   Bool_t       GetUseBackground()          const {return fUseBackground;}
   void         SetUseBackground(Bool_t v=kTRUE)  {fUseBackground = v;}
+  void         CheckClusters(int i1, int i2, int i3, int i4);
   void         CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lrP, KMCLayerFwd* lr, bool doPrint=false);
   Bool_t       IsCorrect(KMCProbeFwd *probe);
   void         RequirePattern(UInt_t patt);

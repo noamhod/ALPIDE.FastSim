@@ -1516,6 +1516,16 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
 }
 
 
+void KMCDetectorFwd::CheckClusters(int i1, int i2, int i3, int i4)
+{
+	KMCLayerFwd* lr = 0;
+	KMCClusterFwd *cl = 0;
+	if(i1>=0) {lr = GetLayer(1); cl = lr->GetBgCluster(i1); if(cl->IsKilled()) AliInfo(Form("Cluster with id=%d and index=%d for layer %s is killed",cl->GetTrID(),i1,lr->GetName()));}
+	if(i2>=0) {lr = GetLayer(3); cl = lr->GetBgCluster(i2); if(cl->IsKilled()) AliInfo(Form("Cluster with id=%d and index=%d for layer %s is killed",cl->GetTrID(),i2,lr->GetName()));}
+	if(i3>=0) {lr = GetLayer(5); cl = lr->GetBgCluster(i3); if(cl->IsKilled()) AliInfo(Form("Cluster with id=%d and index=%d for layer %s is killed",cl->GetTrID(),i3,lr->GetName()));}
+	if(i4>=0) {lr = GetLayer(7); cl = lr->GetBgCluster(i4); if(cl->IsKilled()) AliInfo(Form("Cluster with id=%d and index=%d for layer %s is killed",cl->GetTrID(),i4,lr->GetName()));}
+}
+
 //____________________________________________________________________________
 void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lrP, KMCLayerFwd* lr, bool doPrint)
 {
