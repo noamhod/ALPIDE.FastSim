@@ -325,15 +325,15 @@ void clear_cached_clusters()
 	for(TMapTSvi::iterator it=cached_clusters_att.begin() ; it!=cached_clusters_att.end() ; ++it) it->second.clear();
 }
 
-int cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, vector<vector<int> >* polm_clusters_id, TString side)
+int cache_signal_clusters(vector<TPolyMarker3D*>* clsgen, vector<vector<int> >* clsgen_id, TString side)
 {
 	int ncached = 0;
-	for(unsigned int i=0 ; i<polm_clusters->size() ; i++)
+	for(unsigned int i=0 ; i<clsgen->size() ; i++)
 	{
-		for(Int_t j=0 ; j<polm_clusters->at(i)->GetN() ; ++j)
+		for(Int_t j=0 ; j<clsgen->at(i)->GetN() ; ++j)
 		{
 			float x,y,z;
-			polm_clusters->at(i)->GetPoint(j,x,y,z); // the clusters
+			clsgen->at(i)->GetPoint(j,x,y,z); // the clusters
 			if(x>0 and side=="Pside") continue;
 			if(x<0 and side=="Eside") continue;
 			TString sd = (x>0) ? "Eside" : "Pside";
@@ -342,7 +342,7 @@ int cache_signal_clusters(vector<TPolyMarker3D*>* polm_clusters, vector<vector<i
 			cached_clusters_xyz["y_"+lr+"_"+sd].push_back(y);
 			cached_clusters_xyz["z_"+lr+"_"+sd].push_back(z);
 			cached_clusters_att["type_"+lr+"_"+sd].push_back(1);
-			cached_clusters_att["id_"+lr+"_"+sd].push_back( polm_clusters_id->at(i)[silayers[lr]-1] );
+			cached_clusters_att["id_"+lr+"_"+sd].push_back( clsgen_id->at(i)[silayers[lr]-1] );
 			ncached++;
 		}
 	}
@@ -635,17 +635,17 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 }
 
 
-int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* polm_clusters, TString side, double maxdistance=0.5)
+int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* clsgen, TString side, double maxdistance=0.5)
 {
 	int imindistance = -1;
 	double mindistance = 1e10;
-	for(unsigned int i=0 ; i<polm_clusters->size() ; i++)
+	for(unsigned int i=0 ; i<clsgen->size() ; i++)
 	{
 		double distance = 0;
-		for(Int_t jTru=0 ; jTru<polm_clusters->at(i)->GetN() ; ++jTru)
+		for(Int_t jTru=0 ; jTru<clsgen->at(i)->GetN() ; ++jTru)
 		{
 			double xTru,yTru,zTru;
-			polm_clusters->at(i)->GetPoint(jTru,xTru,yTru,zTru); // the clusters
+			clsgen->at(i)->GetPoint(jTru,xTru,yTru,zTru); // the clusters
 			if(xTru>0 and side=="Pside") continue;
 			if(xTru<0 and side=="Eside") continue;
 			for(Int_t jRec=0 ; jRec<mrec->GetN() ; ++jRec)
@@ -673,7 +673,7 @@ int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* polm_clusters, TString
 	
 
 
-void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* setup="setup/setupLUXE.txt")
+void ReconstructionFromClusters(TString process, int Seed=12345) //, const char* setup="setup/setupLUXE.txt")
 {
 	cout << "Settings" << endl;
 	TString setup = "setup/setupLUXE_"+process+".txt";
@@ -721,8 +721,8 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 
 	/// get the signal clusters
 	cout << "Getting signal clusters from tree" << endl;
-	TFile* fSig = new TFile("data/root/rec_"+process+".root","READ");
-	TTree* tSig = (TTree*)fSig->Get("res");
+	TFile* fSig = new TFile("../data/root/rec_"+process+".root","READ");
+	TTree* tSig = (TTree*)fSig->Get("dig");
 	vector<double>*          wgtgen = 0;
 	vector<TLorentzVector>*  pgen = 0;
 	vector<int>*             qgen = 0;
@@ -730,28 +730,49 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	vector<TPolyLine3D*>*    poll_gen = 0;
 	vector<int>*             acctrkgen = 0;
 	vector<int>*             igentrk = 0;
-	vector<vector<int> >*    polm_clusters_id = 0;
-	vector<TPolyMarker3D*>*  polm_clusters = 0;
-	tSig->SetBranchAddress("wgtgen",           &wgtgen);
-	tSig->SetBranchAddress("qgen",             &qgen);
-	tSig->SetBranchAddress("pgen",             &pgen);
-	tSig->SetBranchAddress("igentrk",          &igentrk);
-	tSig->SetBranchAddress("acctrkgen",        &acctrkgen);
-	tSig->SetBranchAddress("polm_clusters_id", &polm_clusters_id);
-	tSig->SetBranchAddress("polm_clusters",    &polm_clusters);
-	tSig->SetBranchAddress("polm_gen",         &polm_gen);
-	tSig->SetBranchAddress("poll_gen",         &poll_gen);
+	vector<vector<int> >*    clsgen_id = 0;
+	vector<TPolyMarker3D*>*  clsgen = 0;
+	tSig->SetBranchAddress("wgtgen",    &wgtgen);
+	tSig->SetBranchAddress("qgen",      &qgen);
+	tSig->SetBranchAddress("pgen",      &pgen);
+	tSig->SetBranchAddress("igentrk",   &igentrk);
+	tSig->SetBranchAddress("acctrkgen", &acctrkgen);
+	tSig->SetBranchAddress("clsgen_id", &clsgen_id);
+	tSig->SetBranchAddress("clsgen",    &clsgen);
+	tSig->SetBranchAddress("polm_gen",  &polm_gen);
+	tSig->SetBranchAddress("poll_gen",  &poll_gen);
 	
 	/// get the background and noise clusters
 	cout << "Getting background clusters from tree" << endl;
-	TFile* fBkg = new TFile("data/root/background_clusters_"+process+".root","READ");
-	TTree* tBkg = (TTree*)fBkg->Get("clusters");
-	vector<TPolyMarker3D*> *clusters_xyz  = 0;
-	vector<int>            *clusters_type = 0;
-	vector<int>            *clusters_id   = 0;
-	tBkg->SetBranchAddress("clusters_xyz",  &clusters_xyz);
-	tBkg->SetBranchAddress("clusters_type", &clusters_type);
-	tBkg->SetBranchAddress("clusters_id",   &clusters_id);
+	// TFile* fBkg = new TFile("../data/root/background_clusters_"+process+".root","READ");
+	// TTree* tBkg = (TTree*)fBkg->Get("clusters");
+	// vector<TPolyMarker3D*> *clusters_xyz  = 0;
+	// vector<int>            *clusters_type = 0;
+	// vector<int>            *clusters_id   = 0;
+	// tBkg->SetBranchAddress("clusters_xyz",  &clusters_xyz);
+	// tBkg->SetBranchAddress("clusters_type", &clusters_type);
+	// tBkg->SetBranchAddress("clusters_id",   &clusters_id);
+	TFile* fBkg = new TFile("../data/root/dig_"+process+"_bkg.root","READ");
+	TTree* tBkg = (TTree*)fBkg->Get("dig");
+	vector<double>*          wgtbkg = 0;
+	vector<TLorentzVector>*  pbkg = 0;
+	vector<int>*             qbkg = 0;
+	vector<TPolyMarker3D*>*  polm_bkg = 0;
+	vector<TPolyLine3D*>*    poll_bkg = 0;
+	vector<int>*             acctrkbkg = 0;
+	vector<int>*             ibkgtrk = 0;
+	vector<vector<int> >*    clsgen_id = 0;
+	vector<TPolyMarker3D*>*  clsgen = 0;
+	tSig->SetBranchAddress("wgtbkg",           &wgtbkg);
+	tSig->SetBranchAddress("qbkg",             &qbkg);
+	tSig->SetBranchAddress("pbkg",             &pbkg);
+	tSig->SetBranchAddress("ibkgtrk",          &ibkgtrk);
+	tSig->SetBranchAddress("acctrkbkg",        &acctrkbkg);
+	tSig->SetBranchAddress("clsgen_id", &clsgen_id);
+	tSig->SetBranchAddress("clsgen",    &clsgen);
+	tSig->SetBranchAddress("polm_bkg",         &polm_bkg);
+	tSig->SetBranchAddress("poll_bkg",         &poll_bkg);
+	
 
 	// output tree
 	cout << "Setting the output tree" << endl;
@@ -827,18 +848,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	vector<double>           reco_sigma1PtTgl;
 	vector<double>           reco_sigma1Pt2;
 	vector<double>           reco_invpT;
-	vector<double>           reco_px;
-	vector<double>           reco_py;
-	vector<double>           reco_pz;
-	vector<double>           reco_pT;
-	vector<double>           reco_p;
-	vector<double>           reco_phi;
-	vector<double>           reco_phipos;
-	vector<double>           reco_theta;
-	vector<double>           reco_E;
-	vector<double>           reco_M;
-	vector<double>           reco_eta;
-	vector<double>           reco_Rap;
 	vector<double>           reco_signedpT;
 	
 	tOut->Branch("reco_q",           &reco_q);
@@ -870,18 +879,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	tOut->Branch("reco_sigma1PtTgl", &reco_sigma1PtTgl);
 	tOut->Branch("reco_sigma1Pt2",   &reco_sigma1Pt2  );
 	tOut->Branch("reco_invpT",       &reco_invpT      );
-	tOut->Branch("reco_px",          &reco_px         );
-	tOut->Branch("reco_py",          &reco_py         );
-	tOut->Branch("reco_pz",          &reco_pz         );
-	tOut->Branch("reco_pT",          &reco_pT         );
-	tOut->Branch("reco_p",           &reco_p          );
-	tOut->Branch("reco_phi",         &reco_phi        );
-	tOut->Branch("reco_phipos",      &reco_phipos     );
-	tOut->Branch("reco_theta",       &reco_theta      );
-	tOut->Branch("reco_E",           &reco_E          );
-	tOut->Branch("reco_M",           &reco_M          );
-	tOut->Branch("reco_eta",         &reco_eta        );
-	tOut->Branch("reco_Rap",         &reco_Rap        );
 	tOut->Branch("reco_signedpT",    &reco_signedpT   );
 	
 	/// monitoring histograms
@@ -986,18 +983,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		reco_sigma1PtTgl.clear();
 		reco_sigma1Pt2.clear();
 		reco_invpT.clear();
-		reco_px.clear();
-		reco_py.clear();
-		reco_pz.clear();
-		reco_pT.clear();
-		reco_p.clear();
-		reco_phi.clear();
-		reco_phipos.clear();
-		reco_theta.clear();
-		reco_E.clear();
-		reco_M.clear();
-		reco_eta.clear();
-		reco_Rap.clear();
 		reco_signedpT.clear();
 		
 		//// clear cached clusters
@@ -1010,7 +995,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		vector<int> vitmp;
 		for(unsigned int t=0 ; t<qgen->size() ; ++t)
 		{
-			vector<int> vtruid{ polm_clusters_id->at(t)[0],polm_clusters_id->at(t)[1],polm_clusters_id->at(t)[2],polm_clusters_id->at(t)[3] };
+			vector<int> vtruid{ clsgen_id->at(t)[0],clsgen_id->at(t)[1],clsgen_id->at(t)[2],clsgen_id->at(t)[3] };
 			true_clusters_id.push_back( vtruid );
 			true_q.push_back( qgen->at(t) );
 			true_p.push_back( pgen->at(t) );
@@ -1054,7 +1039,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 			}
 		   
 			/// make a pool of all signal clusters
-			int ncached_signal_clusters = cache_signal_clusters(polm_clusters,polm_clusters_id,side);
+			int ncached_signal_clusters = cache_signal_clusters(clsgen,clsgen_id,side);
 						
 			/// make a pool of all background and noise clusters
 			int ncached_background_clusters = cache_background_clusters(clusters_xyz,clusters_type,clusters_id,side);
@@ -1160,7 +1145,7 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 
 				/// TODO: this is a test
 				unsigned int irec = reco_trckmar.size()-1;
-				Int_t imatch = imatched(reco_trckmar[irec],polm_clusters,side);
+				Int_t imatch = imatched(reco_trckmar[irec],clsgen,side);
 				if(imatch>=0)
 				{
 					ismatched = 1;
@@ -1198,18 +1183,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				reco_sigma1PtTgl.push_back( trw->GetSigma1PtTgl() );
 				reco_sigma1Pt2.push_back( trw->GetSigma1Pt2() );
 				reco_invpT.push_back( trw->OneOverPt() );
-				reco_px.push_back( trw->Px() );
-				reco_py.push_back( trw->Py() );
-				reco_pz.push_back( trw->Pz() );
-				reco_pT.push_back( trw->Pt() );
-				reco_p.push_back( trw->P() );
-				reco_phi.push_back( trw->Phi() );
-				reco_phipos.push_back( trw->PhiPos() );      
-				reco_theta.push_back( trw->Theta() );
-				reco_E.push_back( trw->E() );
-				reco_M.push_back( trw->M() );
-				reco_eta.push_back( trw->Eta() );
-				reco_Rap.push_back( trw->Y() );
 				reco_signedpT.push_back( trw->GetSignedPt() );
 				
 				pseeds.clear(); /// this is maybe redundant

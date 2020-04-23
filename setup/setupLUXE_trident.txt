@@ -1,8 +1,8 @@
 # keep this if slices are to be ordered in decreasing z
 #define:zinverted
 
-#                  ID	zminDipole  zmaxDipole  Bdipole(kGauss)   
-define:magfield    0	100.0       200.0       14 
+#                  ID	xminDipole  xmaxDipole  yminDipole  ymaxDipole  zminDipole  zmaxDipole  Bdipole(kGauss)   
+define:magfield    0	   -60.0       +60.0       -33.6       +33.6       100.0       202.9       14
 
 # dummy layer as a vertex	Zc	DZ		resX	resY
 vertex:		      			0.	25e-4	1e-5	1e-5

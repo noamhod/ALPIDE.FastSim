@@ -226,9 +226,14 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   if ( (narg=inp->FindEntry("define","magfield","d?f?f?f?f?f?f?f?f",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
   printf("Magnetic Field: %d\n",fMagFieldID);
   int nreg = 0;
-  Double_t zminDipole  = narg > 1 ? inp->GetArgF(1) : -9999;  
-  Double_t zmaxDipole  = narg > 2 ? inp->GetArgF(2) : -9999;  
-  Double_t dipoleField = narg > 3 ? inp->GetArgF(3) : -9999;
+  Double_t xminDipole  = narg > 1 ? inp->GetArgF(1) : -9999;  
+  Double_t xmaxDipole  = narg > 2 ? inp->GetArgF(2) : -9999;  
+  Double_t yminDipole  = narg > 3 ? inp->GetArgF(3) : -9999;  
+  Double_t ymaxDipole  = narg > 4 ? inp->GetArgF(4) : -9999;  
+  Double_t zminDipole  = narg > 5 ? inp->GetArgF(5) : -9999;  
+  Double_t zmaxDipole  = narg > 6 ? inp->GetArgF(6) : -9999;  
+  Double_t dipoleField = narg > 7 ? inp->GetArgF(7) : -9999;
+  std::cout << "dipole dimensions: x=["<<xminDipole<<","<<xmaxDipole<<"], y=["<<yminDipole<<","<<ymaxDipole<<"], z=["<<zminDipole<<","<<zmaxDipole<<"]" << std::endl;
   if (narg>3) nreg = 1;
   // this part is relevant for exra mag field, e.g. MS toroid
   Double_t zminToroid  = narg > 4 ? inp->GetArgF(4) : -9999;  
@@ -338,12 +343,16 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     fld = new MagField(TMath::Abs(fMagFieldID));
     if (nreg>0) {
       fld->SetNReg(nreg);
-      if (zminDipole>-9999) ((MagField *) fld)->SetZMin(0,zminDipole);
-      if (zmaxDipole>-9999) ((MagField *) fld)->SetZMax(0,zmaxDipole);
-      if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
+      if (xminDipole>-9999)  ((MagField *) fld)->SetXMin(0,xminDipole);
+      if (xmaxDipole>-9999)  ((MagField *) fld)->SetXMax(0,xmaxDipole);
+      if (yminDipole>-9999)  ((MagField *) fld)->SetYMin(0,yminDipole);
+      if (ymaxDipole>-9999)  ((MagField *) fld)->SetYMax(0,ymaxDipole);
+      if (zminDipole>-9999)  ((MagField *) fld)->SetZMin(0,zminDipole);
+      if (zmaxDipole>-9999)  ((MagField *) fld)->SetZMax(0,zmaxDipole);
       if (dipoleField>-9999) ((MagField *) fld)->SetBVals(0,1,dipoleField);
     }
     if (nreg>1) {
+		if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
       if (zmaxToroid>-9999) ((MagField *) fld)->SetZMax(1,zmaxToroid);
       if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
       if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);

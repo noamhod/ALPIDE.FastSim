@@ -263,16 +263,16 @@ inline Bool_t KMCProbeFwd::CorrectForMeanMaterial(double xOverX0, double xTimesR
   Bool_t res;
   if (modeMC) {
     if (!(res=ApplyMSEL(xOverX0,xTimesRho))) {
-      printf("%s\n",Form("Failed to apply MS, %f",xOverX0));
-      fTrack.Print();
+      // printf("%s\n",Form("Failed to apply MS, %f",xOverX0));
+      // fTrack.Print();
       return kFALSE;
     }
     else xTimesRho = 0; // don't apply e.loss in the ETP
   }
   res = fTrack.CorrectForMeanMaterial(xOverX0, xTimesRho, fMass, anglecorr);
   if (!res) {
-    printf("%s\n",Form("Failed to CorrectForMeanMaterial: %f %f",xOverX0,xTimesRho));
-    fTrack.Print();
+    // printf("%s\n",Form("Failed to CorrectForMeanMaterial: %f %f",xOverX0,xTimesRho));
+    // fTrack.Print();
     return res;
   }
   return kTRUE;
