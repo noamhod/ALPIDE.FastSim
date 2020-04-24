@@ -17,7 +17,7 @@ Emin = 2.00
 [General geometry cm]
 Rbeampipe   = 4
 Wbeampipe   = 0.5
-zDipoleExit = 202.9
+zDipoleExit = 200.0
 xDipoleExitMinAbs = 1.5
 xDipoleExitMaxAbs = 25
 yDipoleExitMin = -0.05

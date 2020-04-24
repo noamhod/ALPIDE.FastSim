@@ -23,7 +23,6 @@
 #include "TTreeStream.h"
 #endif
 
-double vX=0,vY=0,vZ=0; // event vertex
 KMCDetectorFwd* det = 0;
 vector<double>* zlayer = new vector<double>;
 double meMeV = 0.5109989461; //MeV
@@ -37,35 +36,40 @@ double RoffsetBfield22BPPP = 7.0; // cm for BPPP in B=2.2T
 double RoffsetBfield20BPPP = 5.7; // cm for BPPP in B=2.0T
 double RoffsetBfield14BPPP = 4.0; // cm for BPPP in B=1.4T
 double RoffsetBfield = RoffsetBfield20BPPP;
-double x1L = -RoffsetBfield-Lstave;
-double x1R = -RoffsetBfield;       
-double x2L = +RoffsetBfield;       
-double x2R = +RoffsetBfield+Lstave;
+double xPsideL = -RoffsetBfield-Lstave;
+double xPsideR = -RoffsetBfield;       
+double xEsideL = +RoffsetBfield;       
+double xEsideR = +RoffsetBfield+Lstave;
 double yUp = +Hstave/2.;
 double yDn = -Hstave/2.;
 
 //// dipole geometry
 double xW = 120;
 double yH = 67.2;
-double z1 = 102.9;
-double z2 = 202.9;
+double z1 = 100;
+double z2 = 200;
 
 void resetToTridentGeometry()
 {
 	Lstave = 50;   // cm for BPPP or 50 for Trident
 	RoffsetBfield = 14; // cm for Trident in in B=1.4T
-	x1L = -RoffsetBfield-Lstave;
-	x1R = -RoffsetBfield;       
-	x2L = +RoffsetBfield;       
-	x2R = +RoffsetBfield+Lstave;
+	xPsideL = -RoffsetBfield-Lstave;
+	xPsideR = -RoffsetBfield;       
+	xEsideL = +RoffsetBfield;       
+	xEsideR = +RoffsetBfield+Lstave;
 }
 
-bool accept(double x, double y)
+int acceptcls(double x, double y, double z)
 {
-   bool failx = (x<x1L || (x>x1R && x<x2L) || x>x2R);
-   bool faily = (y>yUp || y<yDn);
-   if(failx || faily) return false;
-   return true;
+   // bool failx = (x<xPsideL || (x>xPsideR && x<xEsideL) || x>xEsideR);
+	bool failx = (abs(x)>xEsideR or abs(x)<xEsideL);
+	if(failx) return 0;
+   // bool faily = (y>yUp || y<yDn);
+   bool faily = (abs(y)>yUp);
+	if(faily) return 0;
+	bool failz = (z!=300 && z!=310 && z!=320 && z!=330);
+   if(failz) return 0;
+   return 1;
 }
 
 Color_t trkcol(double E)
@@ -113,7 +117,7 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
 {	 
 	 double xyz[3];
 	 source->GetXYZ(xyz);
-    double zCurr = xyz[2]; //source->GetZ();
+    double zCurr = round(xyz[2]); //source->GetZ();
     int nZ = (zMax - zCurr)/step + 1;
     if(nZ<2)
 	 {
@@ -124,11 +128,11 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
     double xp[nZ],yp[nZ],zp[nZ];
     xp[0] = xyz[0]; // x-vertex
     yp[0] = xyz[1]; // y-vertex
-    zp[0] = xyz[2]; // z-vertex
+    zp[0] = round(xyz[2]); // z-vertex
 	 int nz = 0;
     for(int iz=1 ; iz<nZ ; iz++)
 	 {
-       if(!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ()+step, zMax), step)) break;
+       if(!det->PropagateToZBxByBz(&tmp, TMath::Min(round(tmp.GetZ())+step, zMax), step)) break;
        tmp.GetXYZ(xyz);
        xp[iz] = xyz[0];
        yp[iz] = xyz[1];
@@ -153,7 +157,10 @@ bool islayer(double z, int layerindex=-1, double stepsize=1)
 		for(int j=0 ; j<(int)zlayer->size() ; ++j)
 		{
 			double dz = abs(zlayer->at(j)-z);
-			if(dz<stepsize) return true;
+			if(dz<stepsize/2.)
+			{
+				return true;
+			}
 		}
 	}
 	return false;
@@ -168,11 +175,11 @@ TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax
     tmp.GetXYZ(xyz);
     xp[0] = xyz[0];
     yp[0] = xyz[1];
-    zp[0] = xyz[2];
+    zp[0] = round(xyz[2]);
 	 int nz = 0;
     for(int iz=1;iz<nZ;iz++)
 	 {
-		 if(!det->PropagateToZBxByBz(&tmp, tmp.GetZ()+zstep, zstep)) break;
+		 if(!det->PropagateToZBxByBz(&tmp, round(tmp.GetZ())+zstep, zstep)) break;
        tmp.GetXYZ(xyz);
        xp[iz] = xyz[0];
        yp[iz] = xyz[1];
@@ -205,8 +212,8 @@ TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax
 TPolyLine3D* GetLayer(TString side, double z, Color_t col)
 {
    Int_t n=5;
-   Double_t xL[] = {x1L,x1L,x1R,x1R,x1L};
-   Double_t xR[] = {x2R,x2R,x2L,x2L,x2R};
+   Double_t xL[] = {xPsideL,xPsideL,xPsideR,xPsideR,xPsideL};
+   Double_t xR[] = {xEsideR,xEsideR,xEsideL,xEsideL,xEsideR};
    Double_t y[] = {yDn,yUp,yUp,yDn,yDn};
    Double_t zC[] = {z,z,z,z,z};
    TPolyLine3D* polyline = 0;
@@ -291,16 +298,21 @@ void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TSt
    stave4L->Draw();
    stave4R->Draw();
    
+	cnv_pl3d->cd();
+	vector<int> problems;
    for(int i=0 ; i<(int)poll.size() ; ++i)
 	{
-		cnv_pl3d->cd();
-		if(inacc[i])
-		{
-			poll[i]->Draw();
-			clusters[i]->Draw();
-		}
+		if(!inacc[i]) continue;
+		poll[i]->Draw();
+		clusters[i]->Draw();
 	}
-   for(int i=0 ; i<(int)polm.size() ; ++i) { cnv_pm3d->cd(); if(inacc[i]) polm[i]->Draw(); }
+	
+	cnv_pm3d->cd();
+   for(int i=0 ; i<(int)polm.size() ; ++i)
+	{
+		if(!inacc[i]) continue;
+		polm[i]->Draw();
+	}
    
    TLegend* leg = trkcolleg();
    cnv_pl3d->cd();
@@ -329,37 +341,55 @@ void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TSt
    flines->Close();
 }
 
-// bool accepttrk(vector<TPolyMarker3D*>& polm, int itrk)
+bool accepttrk(TPolyMarker3D* clusters, bool fullacc)
+{
+	/// in acceptance?
+   int nlayers = 4;
+   int acc = 0;
+   Double_t xr,yr,zr;
+   clusters->GetPoint(0,xr,yr,zr);
+   acc += acceptcls(xr,yr,zr);
+   clusters->GetPoint(1,xr,yr,zr);
+   acc += acceptcls(xr,yr,zr);
+   clusters->GetPoint(2,xr,yr,zr);
+   acc += acceptcls(xr,yr,zr);
+   clusters->GetPoint(3,xr,yr,zr);
+   acc += acceptcls(xr,yr,zr);
+   return (fullacc) ? (acc==nlayers) : (acc>0);
+}
+
+// bool accepttrk(TPolyMarker3D* marker, bool fullacc, double inflate=1, double zstep=1)
 // {
 // 	/// in acceptance?
 //    int nlayers = 4;
 //    int acc = 0;
-//    for (int i=0 ; i<polm[itrk]->GetN() ; i++)
+//    for(int i=0 ; i<marker->GetN() ; i++)
 //    {
 //       Double_t xr,yr,zr;
-//       polm[itrk]->GetPoint(i,xr,yr,zr);
-//       if(zr<300) continue; //// count only the active layers
-//       int inacclayer = accept(xr,yr);
+//       marker->GetPoint(i,xr,yr,zr);
+//       // if(zr<300) continue; //// count only the active layers
+// 		if(!islayer(zr,-1,zstep)) continue;
+//       int inacclayer = acceptcls(xr,yr,inflate,inflate);
 //       acc += inacclayer;
 //    }
-//    return (acc==nlayers);
+//    return (fullacc) ? (acc==nlayers) : (acc>0);
 // }
 
-bool accepttrk4(TPolyMarker3D* marker, double zstep=1)
-{
-	/// in acceptance of layer 4?
-   for(int i=marker->GetN()-1 ; i>=0 ; --i)
-   {
-      Double_t xr,yr,zr;
-      marker->GetPoint(i,xr,yr,zr);
-      if(islayer(zr,zlayer->size()-1,zstep))
-		{
-			bool inacc = accept(xr,yr);
-			return inacc;
-		}
-   }
-   return false;
-}
+// bool accepttrk4(TPolyMarker3D* marker, double zstep=1)
+// {
+// 	/// in acceptance of layer 4?
+//    for(int i=marker->GetN()-1 ; i>=0 ; --i)
+//    {
+//       Double_t xr,yr,zr;
+//       marker->GetPoint(i,xr,yr,zr);
+//       if(islayer(zr,zlayer->size()-1,zstep))
+// 		{
+// 			bool inacc = acceptcls(xr,yr,1.,1.);
+// 			return inacc;
+// 		}
+//    }
+//    return false;
+// }
 
 void Digitization(TString process, int Seed=12345) //, const char* setup="setup/setupLUXE.txt")
 {
@@ -452,11 +482,13 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 
    TFile* fOut = new TFile("../data/root/dig_"+process+".root","RECREATE");
    TTree* tOut = new TTree("dig","dig");
+   tOut->Branch("ngen",         &ngen);
+   tOut->Branch("nslv",         &nslv);
+   tOut->Branch("nacc",         &nacc);
    tOut->Branch("wgt",          &wgt);
    tOut->Branch("xvtx",         &xvtx);
    tOut->Branch("yvtx",         &yvtx);
    tOut->Branch("zvtx",         &zvtx);
-   tOut->Branch("ngen",         &ngen);
    tOut->Branch("crg",          &crg);
    tOut->Branch("trkp4",        &trkp4);
    tOut->Branch("acc",          &acc);
@@ -515,22 +547,11 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
          int q = (pdgId->at(igen)==11) ? -1 : +1;
 			ptmp.SetXYZM(px->at(igen), py->at(igen), pz->at(igen), meGeV);
 			
-         wgt.push_back(wgt0->at(igen));
-         xvtx.push_back(vx->at(igen));
-         yvtx.push_back(vy->at(igen));
-         zvtx.push_back(vz->at(igen));
-         trkp4.push_back(ptmp);
-         crg.push_back(q);
-         acc.push_back(0);
-			clusters_id.push_back( vtmp );
-			clusters_type.push_back( vtmp );
-			clusters_xyz.push_back( new TPolyMarker3D() );
-			trklin.push_back( 0 );
-			trkpts.push_back( 0 );
-
-			
          // prepare the probe
-         bool slv = det->SolveSingleTrack(trkp4[igen].Pt(),trkp4[igen].Rapidity(),trkp4[igen].Phi(), meGeV, q, vx->at(igen),vy->at(igen),vz->at(igen), 0,1,99);
+			double vX = (process.Contains("bkg")) ? vx->at(igen) : 0.;
+			double vY = (process.Contains("bkg")) ? vy->at(igen) : 0.;
+			double vZ = (process.Contains("bkg")) ? vz->at(igen) : 0.;
+         bool slv = det->SolveSingleTrack(ptmp.Pt(),ptmp.Rapidity(),ptmp.Phi(), meGeV, q, vX,vY,vZ, 0,1,99);
          if(!slv) continue; // reconstruction failed
          nslv++;
 			
@@ -539,39 +560,47 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 			// double pxyztmp[3];
 			// trutrk->GetPXYZ(pxyztmp);
 			
-			trklin[igen] = TrackLine3d(trutrk,361,1,trkcol(trkp4[igen].E()));
-			trkpts[igen] = TrackMarker3d(trutrk,0,361,1,trkcol(trkp4[igen].E()));
-
-			/// check acceptance
-         acc[igen] = accepttrk4(trkpts[igen]);
-			if(acc[igen]) nacc++;
+			int slvidx = nslv-1;
+         wgt.push_back( wgt0->at(igen) );
+         xvtx.push_back( vx->at(igen) );
+         yvtx.push_back( vy->at(igen) );
+         zvtx.push_back( vz->at(igen) );
+         crg.push_back( q );
+         trkp4.push_back( ptmp );
+			trklin.push_back( TrackLine3d(trutrk,361,1,trkcol(ptmp.E())) );
+			trkpts.push_back( TrackMarker3d(trutrk,0,361,1,trkcol(ptmp.E())) );
+         
+			clusters_id.push_back( vtmp );
+			clusters_type.push_back( vtmp );
+			clusters_xyz.push_back( new TPolyMarker3D() );
+			acc.push_back( 0 );
 			
 			// get the reconstructed propagated to the vertex
          KMCClusterFwd* cluster1 = det->GetLayer(1)->GetMCCluster();
          KMCClusterFwd* cluster2 = det->GetLayer(3)->GetMCCluster();
          KMCClusterFwd* cluster3 = det->GetLayer(5)->GetMCCluster();
          KMCClusterFwd* cluster4 = det->GetLayer(7)->GetMCCluster();
+	  	   clusters_xyz[slvidx]->SetNextPoint(cluster1->GetXLab(),cluster1->GetYLab(),cluster1->GetZLab());
+	  	   clusters_xyz[slvidx]->SetNextPoint(cluster2->GetXLab(),cluster2->GetYLab(),cluster2->GetZLab());
+	  	   clusters_xyz[slvidx]->SetNextPoint(cluster3->GetXLab(),cluster3->GetYLab(),cluster3->GetZLab());
+	  	   clusters_xyz[slvidx]->SetNextPoint(cluster4->GetXLab(),cluster4->GetYLab(),cluster4->GetZLab());
+			clusters_id[slvidx].push_back( 1*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
+			clusters_id[slvidx].push_back( 2*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
+			clusters_id[slvidx].push_back( 3*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
+			clusters_id[slvidx].push_back( 4*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
+			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
+			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
+			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
+			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
 			
-	  	   clusters_xyz[igen]->SetNextPoint(cluster1->GetXLab(),cluster1->GetYLab(),cluster1->GetZLab());
-	  	   clusters_xyz[igen]->SetNextPoint(cluster2->GetXLab(),cluster2->GetYLab(),cluster2->GetZLab());
-	  	   clusters_xyz[igen]->SetNextPoint(cluster3->GetXLab(),cluster3->GetYLab(),cluster3->GetZLab());
-	  	   clusters_xyz[igen]->SetNextPoint(cluster4->GetXLab(),cluster4->GetYLab(),cluster4->GetZLab());
-
-			clusters_id[igen].push_back( 1*index_offset+igen ); // assuming no chance to have >index_offset tracks
-			clusters_id[igen].push_back( 2*index_offset+igen ); // assuming no chance to have >index_offset tracks
-			clusters_id[igen].push_back( 3*index_offset+igen ); // assuming no chance to have >index_offset tracks
-			clusters_id[igen].push_back( 4*index_offset+igen ); // assuming no chance to have >index_offset tracks
+			/// check acceptance
+			acc[slvidx] = accepttrk(clusters_xyz[slvidx],false);
+			if(acc[slvidx]) nacc++;
 			
-			clusters_type[igen].push_back( (process.Contains("bkg")) ? 0 : 1 );
-			clusters_type[igen].push_back( (process.Contains("bkg")) ? 0 : 1 );
-			clusters_type[igen].push_back( (process.Contains("bkg")) ? 0 : 1 );
-			clusters_type[igen].push_back( (process.Contains("bkg")) ? 0 : 1 );
       }
-		
+		if(iev==0) WriteGeometry(trkpts,trklin,process,acc,clusters_xyz,"_truth");
 		if(iev%1==0) cout << "iev=" << iev << " --> ngen=" << ngen << ", nslv=" << nslv << ", nacc=" << nacc << endl;
-		
       if(nslv!=ngen and !process.Contains("bkg")) cout << "Warning: nslv=" << nslv << ", ngen=" << ngen << " --> problem" << endl;
-      if(iev==0) WriteGeometry(trkpts,trklin,process,acc,clusters_xyz,"_truth");
 		
       fOut->cd();
       tOut->Fill();

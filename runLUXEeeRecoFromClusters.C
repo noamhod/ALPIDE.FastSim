@@ -827,18 +827,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	vector<double>           reco_sigma1PtTgl;
 	vector<double>           reco_sigma1Pt2;
 	vector<double>           reco_invpT;
-	vector<double>           reco_px;
-	vector<double>           reco_py;
-	vector<double>           reco_pz;
-	vector<double>           reco_pT;
-	vector<double>           reco_p;
-	vector<double>           reco_phi;
-	vector<double>           reco_phipos;
-	vector<double>           reco_theta;
-	vector<double>           reco_E;
-	vector<double>           reco_M;
-	vector<double>           reco_eta;
-	vector<double>           reco_Rap;
 	vector<double>           reco_signedpT;
 	
 	tOut->Branch("reco_q",           &reco_q);
@@ -870,18 +858,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 	tOut->Branch("reco_sigma1PtTgl", &reco_sigma1PtTgl);
 	tOut->Branch("reco_sigma1Pt2",   &reco_sigma1Pt2  );
 	tOut->Branch("reco_invpT",       &reco_invpT      );
-	tOut->Branch("reco_px",          &reco_px         );
-	tOut->Branch("reco_py",          &reco_py         );
-	tOut->Branch("reco_pz",          &reco_pz         );
-	tOut->Branch("reco_pT",          &reco_pT         );
-	tOut->Branch("reco_p",           &reco_p          );
-	tOut->Branch("reco_phi",         &reco_phi        );
-	tOut->Branch("reco_phipos",      &reco_phipos     );
-	tOut->Branch("reco_theta",       &reco_theta      );
-	tOut->Branch("reco_E",           &reco_E          );
-	tOut->Branch("reco_M",           &reco_M          );
-	tOut->Branch("reco_eta",         &reco_eta        );
-	tOut->Branch("reco_Rap",         &reco_Rap        );
 	tOut->Branch("reco_signedpT",    &reco_signedpT   );
 	
 	/// monitoring histograms
@@ -986,18 +962,6 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 		reco_sigma1PtTgl.clear();
 		reco_sigma1Pt2.clear();
 		reco_invpT.clear();
-		reco_px.clear();
-		reco_py.clear();
-		reco_pz.clear();
-		reco_pT.clear();
-		reco_p.clear();
-		reco_phi.clear();
-		reco_phipos.clear();
-		reco_theta.clear();
-		reco_E.clear();
-		reco_M.clear();
-		reco_eta.clear();
-		reco_Rap.clear();
 		reco_signedpT.clear();
 		
 		//// clear cached clusters
@@ -1178,39 +1142,28 @@ void runLUXEeeRecoFromClusters(TString process, int Seed=12345) //, const char* 
 				reco_ismtchd.push_back( ismatched );
 				reco_idmtchd.push_back( idmatched );
 				
-				reco_Tgl.push_back( trw->GetTgl() );
-				reco_Snp.push_back( trw->GetSnp() );
-				reco_alpha.push_back( trw->GetAlpha() );
-				reco_signedinvpT.push_back( trw->GetSigned1Pt() );
-				reco_sigmaY2.push_back( trw->GetSigmaY2() );
-				reco_sigmaZY.push_back( trw->GetSigmaZY() );
-				reco_sigmaZ2.push_back( trw->GetSigmaZ2() );
-				reco_sigmaSnpY.push_back( trw->GetSigmaSnpY() );
-				reco_sigmaSnpZ.push_back( trw->GetSigmaSnpZ() );
-				reco_sigmaSnp2.push_back( trw->GetSigmaSnp2() );
-				reco_sigmaTglY.push_back( trw->GetSigmaTglY() );
-				reco_sigmaTglZ.push_back( trw->GetSigmaTglZ() );
-				reco_sigmaTglSnp.push_back( trw->GetSigmaTglSnp() );
-				reco_sigmaTgl2.push_back( trw->GetSigmaTgl2() );
-				reco_sigma1PtY.push_back( trw->GetSigma1PtY() );
-				reco_sigma1PtZ.push_back( trw->GetSigma1PtZ() );
-				reco_sigma1PtSnp.push_back( trw->GetSigma1PtSnp() );
-				reco_sigma1PtTgl.push_back( trw->GetSigma1PtTgl() );
-				reco_sigma1Pt2.push_back( trw->GetSigma1Pt2() );
-				reco_invpT.push_back( trw->OneOverPt() );
-				reco_px.push_back( trw->Px() );
-				reco_py.push_back( trw->Py() );
-				reco_pz.push_back( trw->Pz() );
-				reco_pT.push_back( trw->Pt() );
-				reco_p.push_back( trw->P() );
-				reco_phi.push_back( trw->Phi() );
-				reco_phipos.push_back( trw->PhiPos() );      
-				reco_theta.push_back( trw->Theta() );
-				reco_E.push_back( trw->E() );
-				reco_M.push_back( trw->M() );
-				reco_eta.push_back( trw->Eta() );
-				reco_Rap.push_back( trw->Y() );
-				reco_signedpT.push_back( trw->GetSignedPt() );
+				TrackPar* trk = trw->GetTrack();
+				reco_Tgl.push_back( trk->GetTgl() );
+				reco_Snp.push_back( trk->GetSnp() );
+				reco_alpha.push_back( trk->GetAlpha() );
+				reco_signedinvpT.push_back( trk->GetSigned1Pt() );
+				reco_sigmaY2.push_back( trk->GetSigmaY2() );
+				reco_sigmaZY.push_back( trk->GetSigmaZY() );
+				reco_sigmaZ2.push_back( trk->GetSigmaZ2() );
+				reco_sigmaSnpY.push_back( trk->GetSigmaSnpY() );
+				reco_sigmaSnpZ.push_back( trk->GetSigmaSnpZ() );
+				reco_sigmaSnp2.push_back( trk->GetSigmaSnp2() );
+				reco_sigmaTglY.push_back( trk->GetSigmaTglY() );
+				reco_sigmaTglZ.push_back( trk->GetSigmaTglZ() );
+				reco_sigmaTglSnp.push_back( trk->GetSigmaTglSnp() );
+				reco_sigmaTgl2.push_back( trk->GetSigmaTgl2() );
+				reco_sigma1PtY.push_back( trk->GetSigma1PtY() );
+				reco_sigma1PtZ.push_back( trk->GetSigma1PtZ() );
+				reco_sigma1PtSnp.push_back( trk->GetSigma1PtSnp() );
+				reco_sigma1PtTgl.push_back( trk->GetSigma1PtTgl() );
+				reco_sigma1Pt2.push_back( trk->GetSigma1Pt2() );
+				reco_invpT.push_back( trk->OneOverPt() );
+				reco_signedpT.push_back( trk->GetSignedPt() );
 				
 				pseeds.clear(); /// this is maybe redundant
 			} // end of loop on clusters in layer 4
