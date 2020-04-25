@@ -175,14 +175,25 @@ class GeoLUXE():
            if(self.process=="bppp"): world.AddNodeOverlap(self.calolayer,self.ifirstcalolayer+(j+100),ROOT.TGeoTranslation(+CaloLayer_xCenter,0,CaloLayer_zMin+j*(CaloLayer_zGap+2*CaloLayer_zHalfWidth)))
         
         return world
+    
+    ### for tracks which somehow enter the list but are far from acceptance in x:y
+    def skiptrack(self,points):
+       j = 0
+       while j<(len(points)):
+          if(abs(points[j+0])>40 or abs(points[j+1])>5):
+             return True
+          j += 3
+       return False
 
     def createTracks(self):
        for i in range(len(self.stracks)):
           geotrack_index = self.geoManager.AddTrack(self.ifirststrack+i,11);
           geotrack = self.geoManager.GetTrack(geotrack_index)
           geotrack.SetLineWidth(1)
-          geotrack.SetLineColor(ROOT.kBlack)
-          points = np.ndarray((self.stracks[i].GetN()*3), 'f', self.stracks[i].GetP()) ## GetP() returns a *float* *buffer* for GetN()*3!
+          geotrack.SetLineColor(ROOT.kYellow)
+          ## GetP() returns a *float* *buffer* for GetN()*3!
+          points = np.ndarray((self.stracks[i].GetN()*3), 'f', self.stracks[i].GetP())
+          ## fill the track
           j = 0
           while j<(len(points)):
              geotrack.AddPoint(points[j+0],points[j+1],points[j+2],0)
@@ -192,10 +203,13 @@ class GeoLUXE():
           geotrack = self.geoManager.GetTrack(geotrack_index)
           geotrack.SetLineWidth(1)
           geotrack.SetLineColor(ROOT.kRed)
-          points = np.ndarray((self.btracks[i].GetN()*3), 'f', self.btracks[i].GetP()) ## GetP() returns a *float* *buffer* for GetN()*3!
+          ## GetP() returns a *float* *buffer* for GetN()*3!
+          points = np.ndarray((self.btracks[i].GetN()*3), 'f', self.btracks[i].GetP())
+          ## fill the track
+          skiptrk = self.skiptrack(points)
           j = 0
-          while j<(len(points)):
-             if(points[j+2]>=200 and points[j+2]<=360):
+          while (j<(len(points)) and not skiptrk):
+             if(points[j+2]>=200 and points[j+2]<=360):   
                 if(points[j+2]>points[(j-3)+2]): geotrack.AddPoint(points[j+0],points[j+1],points[j+2],0)
              j += 3
              
@@ -205,8 +219,8 @@ class GeoLUXE():
         self.geoManager.SetTopVolume(world)
         self.geoManager.CloseGeometry()
         self.geoManager.GetTopVolume().Raytrace()
-        for trk in self.stracks: trk.Draw("same")
-        for trk in self.btracks: trk.Draw("same")
+        # for trk in self.stracks: trk.Draw("same")
+        # for trk in self.btracks: trk.Draw("same")
         # self.geoManager.SetVisLevel(3)
         # self.geoManager.SetVisOption(0)
         # self.geoManager.SetTopVisible()

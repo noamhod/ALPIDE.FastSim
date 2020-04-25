@@ -51,8 +51,9 @@ if(shwtrks!="n"):
          r = [ROOT.Double(),ROOT.Double(),ROOT.Double(),ROOT.Double()]
          tracks.At(i).GetPoint(k,r[0],r[1],r[2],r[3])
          eveline.SetNextPoint(r[0],r[1],r[2])
-      if(npoints<10): eveline.SetLineColor(ROOT.kRed)
-      else:           eveline.SetLineColor(ROOT.kYellow)
+      eveline.SetLineColor( tracks.At(i).GetLineColor() )
+      # if(npoints<10): eveline.SetLineColor(ROOT.kRed)
+      # else:           eveline.SetLineColor(ROOT.kYellow)
       ROOT.gEve.AddElement(eveline)
    
 

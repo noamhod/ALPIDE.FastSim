@@ -35,9 +35,8 @@ Nb = tfile.Get("Nb")[0]
 print("Ns=%g, Nb=%g" % (Ns,Nb))
 for i in range(1,Ns+1):
    trk = tfile.Get("SigTracks/TPolyLine3D;"+str(i))
-   eveline = TEveLine()
-   for i in 
-   eveline.SetNextPoint(120*sin(0.2*i), 120*cos(0.2*i), 80-i);
+   eveline = ROOT.TEveLine()
+   eveline.SetNextPoint(120*math.sin(0.2*i), 120*math.cos(0.2*i), 80-i);
    
 for i in range(1,Nb+1):
    trk = tfile.Get("BkgTracks/TPolyLine3D;"+str(i))
