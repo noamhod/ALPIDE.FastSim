@@ -330,9 +330,9 @@ int cache_clusters(vector<TPolyMarker3D*>* clusters_xyz, vector<vector<int> >* c
 	int ncached = 0;
 	for(unsigned int i=0 ; i<clusters_xyz->size() ; i++)
 	{
-		if(acc)
+		if(acc) // if the vector is provided (for background only)
 		{
-			if(!acc->at(i)) continue;
+			if(!acc->at(i)) continue; // check acceptnce
 		}
 		for(Int_t j=0 ; j<clusters_xyz->at(i)->GetN() ; ++j)
 		{
@@ -466,8 +466,9 @@ void print_all_clusters(TString side, bool doprint = true)
 	}
 }
 
-void write_all_clusters(TString side, vector<TPolyMarker3D*>& cxyz, vector<int>& ctype, vector<int>& cid)
+int fill_out_clusters(TString side, vector<TPolyMarker3D*>& cxyz, vector<int>& ctype, vector<int>& cid)
 {
+	int nclusters = 0;
 	for(int l=1 ; l<=7 ; l+=2) // active layers
 	{
 		for(int c=0 ; c<det->GetLayer(l)->GetNBgClusters() ; c++)
@@ -489,8 +490,10 @@ void write_all_clusters(TString side, vector<TPolyMarker3D*>& cxyz, vector<int>&
 			cxyz.push_back(point);
 			ctype.push_back(typ);
 			cid.push_back(id);
+			nclusters++;
 		}
 	}
+	return nclusters;
 }
 
 TVector2 rUnit2(TVector2 r1, TVector2 r2)
@@ -937,19 +940,22 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 	/// loop on events
 	Int_t nsigevents = tSig->GetEntries();
 	cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
-	for(int iev=0 ; iev<tSig->GetEntries() and iev<10 ; iev++)
-	// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
+	// for(int iev=0 ; iev<tSig->GetEntries() and iev<10 ; iev++)
+	for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	{
-		//// get the next entry
-		tSig->GetEntry(iev);
-		tBkg->GetEntry(iev);
+		//////////////////////////////
+		//// get the next input entry
+		tSig->GetEntry(iev); /// signal
+		tBkg->GetEntry(iev); /// background tree must have *at least* tSig->GetEntries() events...
 		
-		/// clear output vectors
+		
+		////////////////////////////////////////////
+		/// clear output vectors: digitized clusters
 		for(unsigned int x=0 ; x<all_clusters_xyz.size() ; ++x) delete all_clusters_xyz[x];
 		all_clusters_xyz.clear();
 		all_clusters_type.clear();
 		all_clusters_id.clear();
-		
+		/// clear output vectors: truth signal physics
 		for(unsigned int x=0 ; x<true_rec_imatch.size() ; ++x) true_rec_imatch[x].clear();
 		true_rec_imatch.clear();
 		for(unsigned int x=0 ; x<true_clusters_id.size() ; ++x) true_clusters_id[x].clear();
@@ -958,20 +964,20 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 		true_p.clear();
 		true_trckmar.clear();
 		true_trcklin.clear();
-	
+		/// clear output vectors: truth background physics
 		bkgr_q.clear();
 		bkgr_p.clear();
 		bkgr_trckmar.clear();
 		bkgr_trcklin.clear();
 		for(unsigned int x=0 ; x<bkgr_clusters_id.size() ; ++x) bkgr_clusters_id[x].clear();
 		bkgr_clusters_id.clear();
-	
+		/// clear output vectors: seeds
 		seed_type.clear();
 		for(unsigned int x=0 ; x<seed_clusters_id.size() ; ++x) seed_clusters_id[x].clear();
 		seed_clusters_id.clear();
 		seed_q.clear();
 		seed_p.clear();
-	
+		/// clear output vectors: reconstruction
 		reco_q.clear();
 		reco_p.clear();
 		for(unsigned int x=0 ; x<reco_trckmar.size() ; ++x) delete reco_trckmar[x];
@@ -1005,6 +1011,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 		reco_invpT.clear();
 		reco_signedpT.clear();
 		
+		
 		//// clear cached clusters
 		clear_cached_clusters(); /// clear for both sides
 		
@@ -1037,6 +1044,8 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 		   bkgr_trcklin.push_back( bkg_trklin->at(b) );
 		}
 		
+		
+		/////////////////////
 		/// loop on the sides
 		for(unsigned int s=0 ; s<sides.size() ; ++s)
 		{
@@ -1079,8 +1088,9 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 			print_all_clusters(side,false);
 			
 			/// write out all clusters when these are sorted
-			write_all_clusters(side,all_clusters_xyz,all_clusters_type,all_clusters_id);
-		   
+			int all_clusters = fill_out_clusters(side,all_clusters_xyz,all_clusters_type,all_clusters_id);
+			// cout << "ncached_signal_clusters=" << ncached_signal_clusters << ", ncached_background_clusters=" << ncached_background_clusters << ", all_clusters=" << all_clusters << endl;
+			
 			/// offset for signal id's !!!
 			int sigoffset = 100000; // should be multiplied by the layer number
 			
