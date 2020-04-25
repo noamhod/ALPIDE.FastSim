@@ -7,7 +7,7 @@ import numpy as np
 import ROOT
 from ROOT import TFile, TTree, TMath, TCanvas, TView, TView3D, TGraph2D, TStyle, TF2, TH1, TPolyLine3D, TRandom
 import config as cfg
-import geometry as geo
+import EventDisplayBase as geo
 import argparse
 
 parser = argparse.ArgumentParser(description='GenerateGeoWithTracks.py...')
