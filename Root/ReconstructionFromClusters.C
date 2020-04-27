@@ -466,7 +466,7 @@ void print_all_clusters(TString side, bool doprint = true)
 	}
 }
 
-int fill_out_clusters(TString side, vector<TPolyMarker3D*>& cxyz, vector<int>& ctype, vector<int>& cid)
+int fill_output_clusters(TString side, vector<TPolyMarker3D*>& cxyz, vector<int>& ctype, vector<int>& cid)
 {
 	int nclusters = 0;
 	for(int l=1 ; l<=7 ; l+=2) // active layers
@@ -813,24 +813,28 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 	tOut->Branch("all_clusters_type", &all_clusters_type);
 	tOut->Branch("all_clusters_id",   &all_clusters_id);
 	/// truth output branches
+	vector<float>          true_wgt;
 	vector<float>          true_q;
 	vector<TLorentzVector> true_p;
 	vector<TPolyMarker3D*> true_trckmar;
 	vector<TPolyLine3D*>   true_trcklin;
 	vector<vector<int> >   true_rec_imatch;
 	vector<vector<int> >   true_clusters_id;
-	tOut->Branch("true_rec_imatch",  &true_rec_imatch);
-	tOut->Branch("true_clusters_id", &true_clusters_id);
+	tOut->Branch("true_wgt",         &true_wgt);
 	tOut->Branch("true_q",           &true_q);
 	tOut->Branch("true_p",           &true_p);
 	tOut->Branch("true_trckmar",     &true_trckmar);
 	tOut->Branch("true_trcklin",     &true_trcklin);
+	tOut->Branch("true_rec_imatch",  &true_rec_imatch);
+	tOut->Branch("true_clusters_id", &true_clusters_id);
 	/// background tracks output branches
+	vector<float>            bkgr_wgt;
 	vector<float>            bkgr_q;
 	vector<TLorentzVector>   bkgr_p;
 	vector<TPolyMarker3D*>   bkgr_trckmar;
 	vector<TPolyLine3D*>     bkgr_trcklin;
 	vector<vector<int> >     bkgr_clusters_id;
+	tOut->Branch("bkgr_wgt",         &bkgr_wgt);
 	tOut->Branch("bkgr_q",           &bkgr_q);
 	tOut->Branch("bkgr_p",           &bkgr_p);
 	tOut->Branch("bkgr_trckmar",     &bkgr_trckmar);
@@ -852,6 +856,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 	vector<TPolyLine3D*>     reco_trcklin;
 	vector<float>            reco_chi2dof;
 	vector<int>              reco_ismtchd;
+	vector<int>              reco_ixmtchd;
 	vector<int>              reco_idmtchd;
 	vector<vector<int> >     reco_clusters_id;
 	vector<double>           reco_Tgl;
@@ -881,6 +886,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 	tOut->Branch("reco_trcklin",     &reco_trcklin);
 	tOut->Branch("reco_chi2dof",     &reco_chi2dof);
 	tOut->Branch("reco_ismtchd",     &reco_ismtchd);
+	tOut->Branch("reco_ixmtchd",     &reco_ixmtchd);
 	tOut->Branch("reco_idmtchd",     &reco_idmtchd);
 	tOut->Branch("reco_clusters_id", &reco_clusters_id);
 	tOut->Branch("reco_Tgl",         &reco_Tgl        );
@@ -948,7 +954,6 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 		tSig->GetEntry(iev); /// signal
 		tBkg->GetEntry(iev); /// background tree must have *at least* tSig->GetEntries() events...
 		
-		
 		////////////////////////////////////////////
 		/// clear output vectors: digitized clusters
 		for(unsigned int x=0 ; x<all_clusters_xyz.size() ; ++x) delete all_clusters_xyz[x];
@@ -960,11 +965,13 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 		true_rec_imatch.clear();
 		for(unsigned int x=0 ; x<true_clusters_id.size() ; ++x) true_clusters_id[x].clear();
 		true_clusters_id.clear();
+		true_wgt.clear();
 		true_q.clear();
 		true_p.clear();
 		true_trckmar.clear();
 		true_trcklin.clear();
 		/// clear output vectors: truth background physics
+		bkgr_wgt.clear();
 		bkgr_q.clear();
 		bkgr_p.clear();
 		bkgr_trckmar.clear();
@@ -986,6 +993,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 		reco_trcklin.clear();
 		reco_chi2dof.clear();
 		reco_ismtchd.clear();
+		reco_ixmtchd.clear();
 		reco_idmtchd.clear();
 		for(unsigned int x=0 ; x<reco_clusters_id.size() ; ++x) reco_clusters_id[x].clear();
 		reco_clusters_id.clear();
@@ -1024,6 +1032,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 		{
 			vector<int> vtruid{ sig_clusters_id->at(t)[0],sig_clusters_id->at(t)[1],sig_clusters_id->at(t)[2],sig_clusters_id->at(t)[3] };
 			true_clusters_id.push_back( vtruid );
+			true_wgt.push_back( sig_wgt->at(t) );
 			true_q.push_back( sig_crg->at(t) );
 			true_p.push_back( sig_trkp4->at(t) );
 			true_trckmar.push_back( sig_trkpts->at(t) );
@@ -1038,12 +1047,12 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 
 			vector<int> vbkgid{ bkg_clusters_id->at(b)[0],bkg_clusters_id->at(b)[1],bkg_clusters_id->at(b)[2],bkg_clusters_id->at(b)[3] };
 			bkgr_clusters_id.push_back( vbkgid );
+			bkgr_wgt.push_back( bkg_wgt->at(b) );
 			bkgr_q.push_back( bkg_crg->at(b) );
 			bkgr_p.push_back( bkg_trkp4->at(b) );
 		   bkgr_trckmar.push_back( bkg_trkpts->at(b) );
 		   bkgr_trcklin.push_back( bkg_trklin->at(b) );
 		}
-		
 		
 		/////////////////////
 		/// loop on the sides
@@ -1088,7 +1097,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 			print_all_clusters(side,false);
 			
 			/// write out all clusters when these are sorted
-			int all_clusters = fill_out_clusters(side,all_clusters_xyz,all_clusters_type,all_clusters_id);
+			int all_clusters = fill_output_clusters(side,all_clusters_xyz,all_clusters_type,all_clusters_id);
 			// cout << "ncached_signal_clusters=" << ncached_signal_clusters << ", ncached_background_clusters=" << ncached_background_clusters << ", all_clusters=" << all_clusters << endl;
 			
 			/// offset for signal id's !!!
@@ -1170,8 +1179,9 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 				double pxyz[3];
 				trw->GetPXYZ(pxyz);
 				prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
-				int ismatched = (cached_clusters_att["type_L4_"+side][i4]==1); // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
-				int idmatched = cached_clusters_att["id_L4_"+side][i4];        // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
+				int ismatched =  0; // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
+				int ixmatched = -1; // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
+				int idmatched = -1; // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
 				float chi2dof = trw->GetNormChi2();
 				reco_chi2dof.push_back( chi2dof );
 				reco_q.push_back( crg );
@@ -1185,18 +1195,21 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 				if(imatch>=0)
 				{
 					ismatched = 1;
-					idmatched = imatch;
+					ixmatched = imatch;
+					idmatched = true_clusters_id[imatch][0];
 					true_rec_imatch[imatch].push_back( irec );
 					n_match++;
 					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << sig_trkp4->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
 				else
 				{
-					ismatched = 0;
+					ismatched =  0;
+					ixmatched = -1;
 					idmatched = -1;
 					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
 				reco_ismtchd.push_back( ismatched );
+				reco_ixmtchd.push_back( ixmatched );
 				reco_idmtchd.push_back( idmatched );
 				
 				TrackPar* trk = trw->GetTrack();
@@ -1250,7 +1263,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 			}
 			/// TODO: add a vector for all truth tracks, to have an inner vector of all matched reco tracks.
 			/// TODO: then need to check if the truth track has more than 1 reco track and take the better one when filling.
-			vector<int> idtrumatched;
+			vector<int> ixtrumatched;
 			for(unsigned int k=0 ; k<reco_ismtchd.size() ; ++k)
 			{
 				if(side=="Eside" and reco_q[k]>0) continue;
@@ -1259,19 +1272,18 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 				histos["h_chi2_"+side]->Fill( reco_chi2dof[k] ); // fill regardless of matching
 				
 				// /// TODO: now I skip if more than one tru track matched (later implement something to take the best one)
-				// if(true_rec_imatch[reco_idmtchd[k]].size()>1) continue;
+				// if(true_rec_imatch[reco_ixmtchd[k]].size()>1) continue;
 				
-				if(reco_ismtchd[k]==1 and reco_idmtchd[k]>=0 and !foundinvec(reco_idmtchd[k],idtrumatched))
+				if(reco_ismtchd[k]==1 and reco_ixmtchd[k]>=0 and !foundinvec(reco_ixmtchd[k],ixtrumatched))
 				{	
-					idtrumatched.push_back( reco_idmtchd[k] ); /// fill and check in next iterations to avoid repetition
+					ixtrumatched.push_back( reco_ixmtchd[k] ); /// fill and check in next iterations to avoid repetition
 
 					histos["h_chi2_matched_"+side]->Fill( reco_chi2dof[k] );
 					
 					// bool accept = (reco_p[k].E()>1. and reco_p[k].E()<17.5);
 					// if(!accept) continue;
-					
-					histos["h_E_tru_rec_mat_"+side]->Fill( sig_trkp4->at(reco_idmtchd[k]).E() );
-					histos["h_dErel_rec_gen_"+side]->Fill( (reco_p[k].E()-sig_trkp4->at(reco_idmtchd[k]).E())/sig_trkp4->at(reco_idmtchd[k]).E() );
+					histos["h_E_tru_rec_mat_"+side]->Fill( sig_trkp4->at(reco_ixmtchd[k]).E() );
+					histos["h_dErel_rec_gen_"+side]->Fill( (reco_p[k].E()-sig_trkp4->at(reco_ixmtchd[k]).E())/sig_trkp4->at(reco_ixmtchd[k]).E() );
 				}
 				else
 				{

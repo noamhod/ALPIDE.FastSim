@@ -128,7 +128,6 @@ for n in range(Nevt):
    while(nbkgtrks<NbkgTracks):
       ### draw vertex position
       R = cfgmap["Rbeampipe"]-cfgmap["Wbeampipe"] ## for now assume vetex can be only on the beampipe
-      # SigmaZ = 1 ## cm, around the dipole exit
       SigmaZ = 25 ## cm, around the dipole exit
       phi = rnd.Uniform(0,2*ROOT.TMath.Pi())
       vx0 = R*ROOT.TMath.Cos(phi)
