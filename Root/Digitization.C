@@ -640,15 +640,15 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 		{
 			if(nevprocessed%nMaxEventsPerFile==0)
 			{
-				cout << "Killing file with " << iev << " events and redefining new one" << endl;
+				cout << "Killing file #" << nFiles << " and redefining new one" << endl;
 		   	KillOutTree();
 				
-				cout << "Renaming file ("<< nFiles << " so far)" << endl;
+				cout << "Renaming file #" << nFiles << " to include its index" << endl;
 				RenameOutTree(fOutName,nFiles);
 				nFiles++; // must propagate!
 				
 				// reset the file and tree as usual
-				cout << "Resetting the output file and tree" << endl;
+				cout << "Resetting file #" << nFiles << " and tree" << endl;
 				SetOutTree(fOutName);
 			}
 		}
