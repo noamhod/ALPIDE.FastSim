@@ -391,6 +391,65 @@ bool accepttrk(TPolyMarker3D* clusters, bool fullacc)
 //    return false;
 // }
 
+/// for the output tree
+int ngen = 0;
+int nslv = 0;
+int nacc = 0;
+vector<double>          wgt;
+vector<float>           xvtx;
+vector<float>           yvtx;
+vector<float>           zvtx;
+vector<TLorentzVector>  trkp4;
+vector<int>             crg;
+vector<vector<int> >    clusters_id;
+vector<vector<int> >    clusters_type;
+vector<TPolyMarker3D*>  clusters_xyz;
+vector<TPolyMarker3D*>  trkpts;
+vector<TPolyLine3D*>    trklin;
+vector<int>             acc;
+TFile* fOut = 0;
+TTree* tOut = 0;
+void SetOutTree(TString fOutName)
+{
+   fOut = new TFile(fOutName,"RECREATE");
+   tOut = new TTree("dig","dig");
+   tOut->Branch("ngen",         &ngen);
+   tOut->Branch("nslv",         &nslv);
+   tOut->Branch("nacc",         &nacc);
+   tOut->Branch("wgt",          &wgt);
+   tOut->Branch("xvtx",         &xvtx);
+   tOut->Branch("yvtx",         &yvtx);
+   tOut->Branch("zvtx",         &zvtx);
+   tOut->Branch("crg",          &crg);
+   tOut->Branch("trkp4",        &trkp4);
+   tOut->Branch("acc",          &acc);
+   tOut->Branch("clusters_id",  &clusters_id);
+   tOut->Branch("clusters_type",&clusters_type);
+   tOut->Branch("clusters_xyz", &clusters_xyz);
+   tOut->Branch("trkpts",       &trkpts);
+   tOut->Branch("trklin",       &trklin);
+}
+void KillOutTree()
+{
+   fOut->cd();
+   tOut->Write();
+   fOut->Write();
+   fOut->Close();
+}
+void RenameOutTree(TString fOutName, int nFiles)
+{
+	TString sf = "";
+	if(nFiles<10)                      sf = Form("0000%d", nFiles);
+	if(nFiles>=10 && nFiles<100)       sf = Form("000%d", nFiles);
+	if(nFiles>=100 && nFiles<1000)     sf = Form("00%d", nFiles);
+	if(nFiles>=1000 && nFiles<10000)   sf = Form("0%d", nFiles);
+	if(nFiles>=10000 && nFiles<100000) sf = Form("%d", nFiles); // assume no more than 99,999 files...
+	TString fOutNameNew = fOutName;
+	fOutNameNew = fOutNameNew.ReplaceAll(".root","_"+sf+".root");
+	gSystem->Exec("mv "+fOutName+" "+fOutNameNew);
+}
+
+
 void Digitization(TString process, int Seed=12345) //, const char* setup="setup/setupLUXE.txt")
 {
 	TString proc = process;
@@ -430,6 +489,8 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
    zlayer->push_back(330); //// NOAM --> GET FROM THE SETUP
 
    int outN = 100;
+   int nMaxEventsPerFile = 100;
+	int nFiles = 1;
 
    // TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
 	if(process=="trident") resetToTridentGeometry();
@@ -464,43 +525,12 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
    gInterpreter->GenerateDictionary("vector<TPolyMarker3D*>", "vector");
    gInterpreter->GenerateDictionary("vector<TPolyLine3D*>",   "vector");
 	gInterpreter->GenerateDictionary("vector<vector<int> >",   "vector");
-   int ngen = 0;
-   int nslv = 0;
-	int nacc = 0;
-   vector<double>          wgt;
-   vector<float>           xvtx;
-   vector<float>           yvtx;
-   vector<float>           zvtx;
-   vector<TLorentzVector>  trkp4;
-   vector<int>             crg;
-	vector<vector<int> >    clusters_id;
-	vector<vector<int> >    clusters_type;
-	vector<TPolyMarker3D*>  clusters_xyz;
-   vector<TPolyMarker3D*>  trkpts;
-   vector<TPolyLine3D*>    trklin;
-   vector<int>             acc;
-
-   TFile* fOut = new TFile("../data/root/dig_"+process+".root","RECREATE");
-   TTree* tOut = new TTree("dig","dig");
-   tOut->Branch("ngen",         &ngen);
-   tOut->Branch("nslv",         &nslv);
-   tOut->Branch("nacc",         &nacc);
-   tOut->Branch("wgt",          &wgt);
-   tOut->Branch("xvtx",         &xvtx);
-   tOut->Branch("yvtx",         &yvtx);
-   tOut->Branch("zvtx",         &zvtx);
-   tOut->Branch("crg",          &crg);
-   tOut->Branch("trkp4",        &trkp4);
-   tOut->Branch("acc",          &acc);
-   tOut->Branch("clusters_id",  &clusters_id);
-   tOut->Branch("clusters_type",&clusters_type);
-   tOut->Branch("clusters_xyz", &clusters_xyz);
-   tOut->Branch("trkpts",       &trkpts);
-   tOut->Branch("trklin",       &trklin);
+	TString fOutName = "../data/root/dig_"+process+".root";
+	SetOutTree(fOutName);
 	 
    /// loop on events
    for(int iev=0;iev<nev;iev++)
-   // for(int iev=0;iev<nev and iev<50;iev++)
+   // for(int iev=0;iev<nev and iev<10;iev++)
    {	
       //// clear
       ngen = 0;    
@@ -596,17 +626,34 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 			/// check acceptance
 			acc[slvidx] = accepttrk(clusters_xyz[slvidx],false);
 			if(acc[slvidx]) nacc++;
-			
       }
 		if(iev==0) WriteGeometry(trkpts,trklin,process,acc,clusters_xyz,"_truth");
 		if(iev%1==0) cout << "iev=" << iev << " --> ngen=" << ngen << ", nslv=" << nslv << ", nacc=" << nacc << endl;
       if(nslv!=ngen and !process.Contains("bkg")) cout << "Warning: nslv=" << nslv << ", ngen=" << ngen << " --> problem" << endl;
 		
+		/// fill the tree
       fOut->cd();
       tOut->Fill();
+		
+		int nevprocessed = iev+1; // iev starts from 0
+		if(process.Contains("bkg"))
+		{
+			if(nevprocessed%nMaxEventsPerFile==0)
+			{
+				cout << "Killing file with " << iev << " events and redefining new one" << endl;
+		   	KillOutTree();
+				
+				cout << "Renaming file ("<< nFiles << " so far)" << endl;
+				RenameOutTree(fOutName,nFiles);
+				nFiles++; // must propagate!
+				
+				// reset the file and tree as usual
+				cout << "Resetting the output file and tree" << endl;
+				SetOutTree(fOutName);
+			}
+		}
+		
    }
-   fOut->cd();
-   tOut->Write();
-   fOut->Write();
-   fOut->Close();
+   KillOutTree();
+	if(process.Contains("bkg")) RenameOutTree(fOutName,nFiles);
 }
