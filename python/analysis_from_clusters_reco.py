@@ -121,15 +121,15 @@ def BookHistos(process):
    dEeemax = 15 if(process=="bppp") else 20
    histos.update( {"h_dEee_rec":TH1D("h_dEee_rec",";|E_{1}-E_{2}| [GeV];Tracks", 100,0,dEeemax)} )
    histos.update( {"h_dEee_sig":TH1D("h_dEee_sig",";|E_{1}-E_{2}| [GeV];Tracks", 100,0,dEeemax)} )
-   histos.update( {"h_px_rec":TH1D("h_px_rec",";p_{x} [GeV];Tracks", 200,-1,+1)} )
-   histos.update( {"h_px_sig":TH1D("h_px_sig",";p_{x} [GeV];Tracks", 200,-1,+1)} )
-   histos.update( {"h_px_bkg":TH1D("h_px_bkg",";p_{x} [GeV];Tracks", 200,-1,+1)} )
-   histos.update( {"h_py_rec":TH1D("h_py_rec",";p_{y} [GeV];Tracks", 200,-1,+1)} )
-   histos.update( {"h_py_sig":TH1D("h_py_sig",";p_{y} [GeV];Tracks", 200,-1,+1)} )
-   histos.update( {"h_py_bkg":TH1D("h_py_bkg",";p_{y} [GeV];Tracks", 200,-1,+1)} )
-   histos.update( {"h_pz_rec":TH1D("h_pz_rec",";p_{z} [GeV];Tracks", 200,0,20)} )
-   histos.update( {"h_pz_sig":TH1D("h_pz_sig",";p_{z} [GeV];Tracks", 200,0,20)} )
-   histos.update( {"h_pz_bkg":TH1D("h_pz_bkg",";p_{z} [GeV];Tracks", 200,0,20)} )
+   histos.update( {"h_px_rec":TH1D("h_px_rec",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_px_sig":TH1D("h_px_sig",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_px_bkg":TH1D("h_px_bkg",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_py_rec":TH1D("h_py_rec",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_py_sig":TH1D("h_py_sig",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_py_bkg":TH1D("h_py_bkg",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_pz_rec":TH1D("h_pz_rec",";p_{z} [GeV];Tracks", 170,0,17)} )
+   histos.update( {"h_pz_sig":TH1D("h_pz_sig",";p_{z} [GeV];Tracks", 170,0,17)} )
+   histos.update( {"h_pz_bkg":TH1D("h_pz_bkg",";p_{z} [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_E_rec":TH1D("h_E_rec",";E [GeV];Tracks", 200,0,20)} )
    histos.update( {"h_E_sig":TH1D("h_E_sig",";E [GeV];Tracks", 200,0,20)} )
    histos.update( {"h_E_bkg":TH1D("h_E_bkg",";E [GeV];Tracks", 200,0,20)} )
@@ -206,21 +206,28 @@ def BookHistos(process):
 def GetTracks(event):
    for i in range(event.reco_trcklin.size()):
       tracks.append( event.reco_trcklin[i].Clone() )
-   for i in range(event.reco_trckmar.size()):
       points.append( event.reco_trckmar[i].Clone() )
 
 
 def GetSigTracks(event):
    for i in range(event.true_trcklin.size()):
       sigtracks.append( event.true_trcklin[i].Clone() )
-   for i in range(event.true_trckmar.size()):
       sigpoints.append( event.true_trckmar[i].Clone() )
 
 
 def GetBkgTracks(event):
    for i in range(event.bkgr_trcklin.size()):
+      skip = False
+      for jxy in range(event.bkgr_trckmar[i].GetN()):
+         x = ROOT.Double()
+         y = ROOT.Double()
+         z = ROOT.Double()
+         event.bkgr_trckmar[i].GetPoint(jxy,x,y,z)
+         if(abs(x)>40 or abs(y)>5 or (z>300 and abs(x)<x2L)):
+            skip = True
+            break
+      if(skip): continue
       bkgtracks.append( event.bkgr_trcklin[i].Clone() )
-   for i in range(event.bkgr_trckmar.size()):
       bkgpoints.append( event.bkgr_trckmar[i].Clone() )
 
 
