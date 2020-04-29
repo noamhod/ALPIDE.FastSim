@@ -254,6 +254,17 @@ TPolyLine3D* GeDipole(Color_t col)
    return polyline;
 }
 
+bool skipglitches(TPolyMarker3D* points)
+{
+	Double_t x,y,z;
+	for(int n=0 ; n<points->GetN() ; ++n)
+	{
+		points->GetPoint(n,x,y,z);
+		if(abs(x)>40 || abs(y)>5) return true;
+	}
+	return false;
+}
+
 void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TString process, vector<int>& inacc, vector<TPolyMarker3D*>& clusters, TString suff="")
 {
    TCanvas* cnv_pl3d = new TCanvas("cnv_pl3d"+suff,"",500,500);
@@ -298,19 +309,18 @@ void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TSt
    stave4L->Draw();
    stave4R->Draw();
    
-	cnv_pl3d->cd();
-	vector<int> problems;
    for(int i=0 ; i<(int)poll.size() ; ++i)
 	{
+		/// check acceptance
 		if(!inacc[i]) continue;
+		/// check for glitches
+		if(skipglitches(polm[i])) continue;
+		
+		cnv_pl3d->cd();
 		poll[i]->Draw();
 		clusters[i]->Draw();
-	}
-	
-	cnv_pm3d->cd();
-   for(int i=0 ; i<(int)polm.size() ; ++i)
-	{
-		if(!inacc[i]) continue;
+		
+		cnv_pm3d->cd();
 		polm[i]->Draw();
 	}
    
