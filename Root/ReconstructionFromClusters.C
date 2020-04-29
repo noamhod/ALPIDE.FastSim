@@ -20,6 +20,7 @@
 #include "GenMUONLMR.h"
 #include "TStopwatch.h"
 #include "TTree.h"
+#include "TChain.h"
 #include "TTreeStream.h"
 #include "TList.h"
 #include "TVector2.h"
@@ -763,8 +764,19 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 	
 	/// get the background clusters
 	cout << "Getting background clusters from tree" << endl;
-	TFile* fBkg = new TFile("../data/root/dig_"+process+"_bkg.root","READ");
-	TTree* tBkg = (TTree*)fBkg->Get("dig");
+	TChain* tBkg = new TChain("dig");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00001.root");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00002.root");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00003.root");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00004.root");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00005.root");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00006.root");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00007.root");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00008.root");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00009.root");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_00010.root");
+	// TFile* fBkg = new TFile("../data/root/dig_"+process+"_bkg.root","READ");
+	// TTree* tBkg = (TTree*)fBkg->Get("dig");
 	int                      bkg_ngen          = 0;
 	int                      bkg_nslv          = 0;
 	int                      bkg_nacc          = 0;
