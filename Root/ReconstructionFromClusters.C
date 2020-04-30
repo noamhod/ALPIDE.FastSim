@@ -354,30 +354,6 @@ int cache_clusters(vector<TPolyMarker3D*>* clusters_xyz, vector<vector<int> >* c
 	return ncached;
 }
 
-// int cache_background_clusters(vector<TPolyMarker3D*>* clusters_xyz, vector<int>* clusters_type, vector<int>* clusters_id, TString side)
-// {
-// 	int ncached = 0;
-// 	for(unsigned int i=0 ; i<clusters_xyz->size() ; i++)
-// 	{
-// 		for(Int_t j=0 ; j<clusters_xyz->at(i)->GetN() ; ++j)
-// 		{
-// 			float x,y,z;
-// 			clusters_xyz->at(i)->GetPoint(j,x,y,z); // the clusters
-// 			if(x>0 and side=="Pside") continue;
-// 			if(x<0 and side=="Eside") continue;
-// 			TString sd = (x>0) ? "Eside" : "Pside";
-// 			TString lr = layers[z];
-// 			cached_clusters_xyz["x_"+lr+"_"+sd].push_back(x);
-// 			cached_clusters_xyz["y_"+lr+"_"+sd].push_back(y);
-// 			cached_clusters_xyz["z_"+lr+"_"+sd].push_back(z);
-// 			cached_clusters_att["type_"+lr+"_"+sd].push_back( clusters_type->at(i) );
-// 			cached_clusters_att["id_"+lr+"_"+sd].push_back( clusters_id->at(i) );
-// 			ncached++;
-// 		}
-// 	}
-// 	return ncached;
-// }
-
 void reset_layers_all()
 {
 	for(Int_t l=0 ; l<det->GetLayers()->GetEntries() ; l++)
@@ -825,6 +801,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 	tOut->Branch("all_clusters_type", &all_clusters_type);
 	tOut->Branch("all_clusters_id",   &all_clusters_id);
 	/// truth output branches
+	vector<int>            true_acc;
 	vector<float>          true_wgt;
 	vector<float>          true_q;
 	vector<TLorentzVector> true_p;
@@ -832,6 +809,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 	vector<TPolyLine3D*>   true_trcklin;
 	vector<vector<int> >   true_rec_imatch;
 	vector<vector<int> >   true_clusters_id;
+	tOut->Branch("true_acc",         &true_acc);
 	tOut->Branch("true_wgt",         &true_wgt);
 	tOut->Branch("true_q",           &true_q);
 	tOut->Branch("true_p",           &true_p);
@@ -840,12 +818,14 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 	tOut->Branch("true_rec_imatch",  &true_rec_imatch);
 	tOut->Branch("true_clusters_id", &true_clusters_id);
 	/// background tracks output branches
+	vector<int>              bkgr_acc;
 	vector<float>            bkgr_wgt;
 	vector<float>            bkgr_q;
 	vector<TLorentzVector>   bkgr_p;
 	vector<TPolyMarker3D*>   bkgr_trckmar;
 	vector<TPolyLine3D*>     bkgr_trcklin;
 	vector<vector<int> >     bkgr_clusters_id;
+	tOut->Branch("bkgr_acc",         &bkgr_acc);
 	tOut->Branch("bkgr_wgt",         &bkgr_wgt);
 	tOut->Branch("bkgr_q",           &bkgr_q);
 	tOut->Branch("bkgr_p",           &bkgr_p);
@@ -957,6 +937,14 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
  
 	/// loop on events
 	Int_t nsigevents = tSig->GetEntries();
+	Int_t nbkgevents = tBkg->GetEntries();
+	if(nsigevents<nbkgevents)
+	{
+		cout << "ERROR: nsigevents<nbkgevents" << endl;
+		cout << "       nsigevents=" << nsigevents << endl;
+		cout << "       nbkgevents=" << nbkgevents << endl;
+		exit(-1);
+	}
 	cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
 	// for(int iev=0 ; iev<tSig->GetEntries() and iev<10 ; iev++)
 	for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
@@ -977,12 +965,14 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 		true_rec_imatch.clear();
 		for(unsigned int x=0 ; x<true_clusters_id.size() ; ++x) true_clusters_id[x].clear();
 		true_clusters_id.clear();
+		true_acc.clear();
 		true_wgt.clear();
 		true_q.clear();
 		true_p.clear();
 		true_trckmar.clear();
 		true_trcklin.clear();
 		/// clear output vectors: truth background physics
+		bkgr_acc.clear();
 		bkgr_wgt.clear();
 		bkgr_q.clear();
 		bkgr_p.clear();
@@ -1044,6 +1034,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 		{
 			vector<int> vtruid{ sig_clusters_id->at(t)[0],sig_clusters_id->at(t)[1],sig_clusters_id->at(t)[2],sig_clusters_id->at(t)[3] };
 			true_clusters_id.push_back( vtruid );
+			true_acc.push_back( sig_acc->at(t) );
 			true_wgt.push_back( sig_wgt->at(t) );
 			true_q.push_back( sig_crg->at(t) );
 			true_p.push_back( sig_trkp4->at(t) );
@@ -1059,6 +1050,7 @@ void ReconstructionFromClusters(TString process, int Seed=12345) //, const char*
 
 			vector<int> vbkgid{ bkg_clusters_id->at(b)[0],bkg_clusters_id->at(b)[1],bkg_clusters_id->at(b)[2],bkg_clusters_id->at(b)[3] };
 			bkgr_clusters_id.push_back( vbkgid );
+			bkgr_acc.push_back( bkg_acc->at(b) );
 			bkgr_wgt.push_back( bkg_wgt->at(b) );
 			bkgr_q.push_back( bkg_crg->at(b) );
 			bkgr_p.push_back( bkg_trkp4->at(b) );

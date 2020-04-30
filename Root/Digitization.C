@@ -61,14 +61,10 @@ void resetToTridentGeometry()
 
 int acceptcls(double x, double y, double z)
 {
-   // bool failx = (x<xPsideL || (x>xPsideR && x<xEsideL) || x>xEsideR);
-	bool failx = (abs(x)>xEsideR or abs(x)<xEsideL);
-	if(failx) return 0;
-   // bool faily = (y>yUp || y<yDn);
-   bool faily = (abs(y)>yUp);
-	if(faily) return 0;
-	bool failz = (z!=300 && z!=310 && z!=320 && z!=330);
-   if(failz) return 0;
+	if(abs(x)<xEsideL)                        return 0;
+	if(abs(x)>xEsideR)                        return 0;
+   if(abs(y)>yUp)                            return 0;
+	if(z!=300 && z!=310 && z!=320 && z!=330): return 0;
    return 1;
 }
 
@@ -356,50 +352,17 @@ bool accepttrk(TPolyMarker3D* clusters, bool fullacc)
 	/// in acceptance?
    int nlayers = 4;
    int acc = 0;
-   Double_t xr,yr,zr;
-   clusters->GetPoint(0,xr,yr,zr);
-   acc += acceptcls(xr,yr,zr);
-   clusters->GetPoint(1,xr,yr,zr);
-   acc += acceptcls(xr,yr,zr);
-   clusters->GetPoint(2,xr,yr,zr);
-   acc += acceptcls(xr,yr,zr);
-   clusters->GetPoint(3,xr,yr,zr);
-   acc += acceptcls(xr,yr,zr);
+   Double_t x,y,z;
+   clusters->GetPoint(0,x,y,z);
+   acc += acceptcls(x,y,z);
+   clusters->GetPoint(1,x,y,z);
+   acc += acceptcls(x,y,z);
+   clusters->GetPoint(2,x,y,z);
+   acc += acceptcls(x,y,z);
+   clusters->GetPoint(3,x,y,z);
+   acc += acceptcls(x,y,z);
    return (fullacc) ? (acc==nlayers) : (acc>0);
 }
-
-// bool accepttrk(TPolyMarker3D* marker, bool fullacc, double inflate=1, double zstep=1)
-// {
-// 	/// in acceptance?
-//    int nlayers = 4;
-//    int acc = 0;
-//    for(int i=0 ; i<marker->GetN() ; i++)
-//    {
-//       Double_t xr,yr,zr;
-//       marker->GetPoint(i,xr,yr,zr);
-//       // if(zr<300) continue; //// count only the active layers
-// 		if(!islayer(zr,-1,zstep)) continue;
-//       int inacclayer = acceptcls(xr,yr,inflate,inflate);
-//       acc += inacclayer;
-//    }
-//    return (fullacc) ? (acc==nlayers) : (acc>0);
-// }
-
-// bool accepttrk4(TPolyMarker3D* marker, double zstep=1)
-// {
-// 	/// in acceptance of layer 4?
-//    for(int i=marker->GetN()-1 ; i>=0 ; --i)
-//    {
-//       Double_t xr,yr,zr;
-//       marker->GetPoint(i,xr,yr,zr);
-//       if(islayer(zr,zlayer->size()-1,zstep))
-// 		{
-// 			bool inacc = acceptcls(xr,yr,1.,1.);
-// 			return inacc;
-// 		}
-//    }
-//    return false;
-// }
 
 /// for the output tree
 int ngen = 0;
