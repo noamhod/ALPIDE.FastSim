@@ -153,18 +153,32 @@ def BookHistos(process):
    histos.update( {"h_px_rec":TH1D("h_px_rec",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_px_sig":TH1D("h_px_sig",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_px_bkg":TH1D("h_px_bkg",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_px_zoom_rec":TH1D("h_px_zoom_rec",";p_{x} [GeV];Tracks", 200,-0.01,+0.01)} )
+   histos.update( {"h_px_zoom_sig":TH1D("h_px_zoom_sig",";p_{x} [GeV];Tracks", 200,-0.01,+0.01)} )
+   histos.update( {"h_px_zoom_bkg":TH1D("h_px_zoom_bkg",";p_{x} [GeV];Tracks", 200,-0.01,+0.01)} )
    histos.update( {"h_py_rec":TH1D("h_py_rec",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_py_sig":TH1D("h_py_sig",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_py_bkg":TH1D("h_py_bkg",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_py_zoom_rec":TH1D("h_py_zoom_rec",";p_{y} [GeV];Tracks", 200,-0.015,+0.015)} )
+   histos.update( {"h_py_zoom_sig":TH1D("h_py_zoom_sig",";p_{y} [GeV];Tracks", 200,-0.015,+0.015)} )
+   histos.update( {"h_py_zoom_bkg":TH1D("h_py_zoom_bkg",";p_{y} [GeV];Tracks", 200,-0.015,+0.015)} )
    histos.update( {"h_pz_rec":TH1D("h_pz_rec",";p_{z} [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_pz_sig":TH1D("h_pz_sig",";p_{z} [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_pz_bkg":TH1D("h_pz_bkg",";p_{z} [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_E_rec":TH1D("h_E_rec",";E [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_E_sig":TH1D("h_E_sig",";E [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_E_bkg":TH1D("h_E_bkg",";E [GeV];Tracks", 170,0,17)} )
-   histos.update( {"h_chi2dof_rec"        :TH1D("h_chi2dof_rec",";#chi^{2}/N_{DOF};Tracks",150,0,15)} )
-   histos.update( {"h_chi2dof_rec_sig_mat":TH1D("h_chi2dof_rec_sig_mat",";#chi^{2}/N_{DOF};Tracks",150,0,15)} )
-   histos.update( {"h_chi2dof_rec_sig_non":TH1D("h_chi2dof_rec_sig_non",";#chi^{2}/N_{DOF};Tracks",150,0,15)} )
+   
+   histos.update( {"h_chi2dof_rec"        :TH1D("h_chi2dof_rec","Inclusive;#chi^{2}/N_{DOF};Tracks",150,0,15)} )
+   histos.update( {"h_chi2dof_rec_sig_mat":TH1D("h_chi2dof_rec_sig_mat","Signal matched;#chi^{2}/N_{DOF};Tracks",150,0,15)} )
+   histos.update( {"h_chi2dof_rec_sig_non":TH1D("h_chi2dof_rec_sig_non","Non-signal mathed;#chi^{2}/N_{DOF};Tracks",150,0,15)} )
+   histos.update( {"h_SnpSig_rec" :TH1D("h_SnpSig_rec", "Inclusive;Snp/#sigma(Snp);Tracks",  150,-500,+500)} )
+   histos.update( {"h_SnpSig_rec_sig_mat" :TH1D("h_SnpSig_rec_sig_mat", "Signal matched;Snp/#sigma(Snp);Tracks",  150,-500,+500)} )
+   histos.update( {"h_SnpSig_rec_sig_non" :TH1D("h_SnpSig_rec_sig_non", "Non-signal matched;Snp/#sigma(Snp);Tracks",  150,-500,+500)} )
+   histos.update( {"h_TglSig_rec" :TH1D("h_TglSig_rec", "Inclusive;Tgl/#sigma(Tgl);Tracks",  150,-1000,+1000)} )   
+   histos.update( {"h_TglSig_rec_sig_mat" :TH1D("h_TglSig_rec_sig_mat", "Signal matched;Tgl/#sigma(Tgl);Tracks",  150,-1000,+1000)} )   
+   histos.update( {"h_TglSig_rec_sig_non" :TH1D("h_TglSig_rec_sig_non", "Non-signal matched;Tgl/#sigma(Tgl);Tracks",  150,-1000,+1000)} )   
+   
    ntrkmax = 450  if(process=="bppp") else 1250
    ntrkmin = 0    if(process=="bppp") else 1000
    ntrkbins = 100 if(process=="bppp") else 50
@@ -180,7 +194,7 @@ def BookHistos(process):
    histos.update( {"h_res_pT":TH1D("h_res_pT",";(p_{T}^{rec}-p_{T}^{tru})/p_{T}^{tru};Tracks", 200,-1.5,+2)} )
    histos.update( {"h_res_theta":TH1D("h_res_theta",";(#theta_{rec}-#theta_{tru})/#theta_{tru};Tracks", 200,-1.5,+2)} )
    histos.update( {"h_res_phi":TH1D("h_res_phi",";(#phi_{rec}-#phi_{tru})/#phi_{tru};Tracks", 200,-1.5,+2)} )
-   
+      
    histos.update( {"h_E_tru_sig"        :TH1D("h_E_tru_sig",        ";#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
    histos.update( {"h_E_tru_sig_acc"    :TH1D("h_E_tru_sig_acc",    ";#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
    histos.update( {"h_E_tru_rec_mat"    :TH1D("h_E_tru_rec_mat",    ";#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
@@ -220,6 +234,11 @@ def BookHistos(process):
    histos.update( {"h_xy_layer0_sig":TH2D("h_xy_layer0_sig","Dipole exit;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
    histos.update( {"h_xy_layer0_bkg":TH2D("h_xy_layer0_bkg","Dipole exit;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
    histos.update( {"h_xy_layer0_sigbkg":TH2D("h_xy_layer0_sigbkg","Dipole exit;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
+
+   histos.update( {"h_xy_vtx_rec":TH2D("h_xy_vtx_rec","Vertex;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
+   histos.update( {"h_xy_vtx_sig":TH2D("h_xy_vtx_sig","Vertex;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
+   histos.update( {"h_xy_vtx_bkg":TH2D("h_xy_vtx_bkg","Vertex;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
+   histos.update( {"h_xy_vtx_sigbkg":TH2D("h_xy_vtx_sigbkg","Vertex;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
    
    histos.update( {"h_xE_layer0_sig":TH2D("h_xE_layer0_sig","Dipole exit;x [cm];E [GeV];Tracks", 600,-75,+75, 100,0,+20)} )
    histos.update( {"h_xE_layer1_sig":TH2D("h_xE_layer1_sig","Layer 1;x [cm];E [GeV];Tracks",     600,-75,+75, 100,0,+20)} )
@@ -271,7 +290,9 @@ def FillHistos(event):
       phi = event.true_p[i].Phi()
       histos["h_E_sig"].Fill(E,wgt)
       histos["h_px_sig"].Fill(px,wgt)
+      histos["h_px_zoom_sig"].Fill(px,wgt)
       histos["h_py_sig"].Fill(py,wgt)
+      histos["h_py_zoom_sig"].Fill(py,wgt)
       histos["h_pz_sig"].Fill(pz,wgt)
       histos["h_E_tru_sig"].Fill(E,wgt)
       if(accepttrk(i,event.true_clusters_id,event.all_clusters_xyz,True)): histos["h_E_tru_sig_acc"].Fill(E,wgt)
@@ -323,7 +344,9 @@ def FillHistos(event):
       phi = event.bkgr_p[i].Phi()
       histos["h_E_bkg"].Fill(E,wgt)
       histos["h_px_bkg"].Fill(px,wgt)
+      histos["h_px_zoom_bkg"].Fill(px,wgt)
       histos["h_py_bkg"].Fill(py,wgt)
+      histos["h_py_zoom_bkg"].Fill(py,wgt)
       histos["h_pz_bkg"].Fill(pz,wgt)
       ### loop over points along track (generated)
       for jxy in range(event.bkgr_trckmar[i].GetN()):
@@ -370,26 +393,33 @@ def FillHistos(event):
       thetarec = event.reco_p[i].Theta()
       phirec   = event.reco_p[i].Phi()
       chi2dof  = event.reco_chi2dof[i]
-      # Tgl      = event.reco_Tgl[i]
-      # Snp      = event.reco_Snp[i]
-      # alpha    = event.reco_alpha[i]
-      # signedinvpT = event.reco_signedinvpT[i]
-      # sigmaY2     = event.reco_sigmaY2[i]
-      # sigmaZY     = event.reco_sigmaZY[i]
-      # sigmaZ2     = event.reco_sigmaZ2[i]
-      # sigmaSnpY   = event.reco_sigmaSnpY[i]
-      # sigmaSnpZ   = event.reco_sigmaSnpZ[i]
-      # sigmaSnp2   = event.reco_sigmaSnp2[i]
-      # sigmaTglY   = event.reco_sigmaTglY[i]
-      # sigmaTglZ   = event.reco_sigmaTglZ[i]
-      # sigmaTglSnp = event.reco_sigmaTglSnp[i]
-      # sigmaTgl2   = event.reco_sigmaTgl2[i]
-      # sigma1PtY   = event.reco_sigma1PtY[i]
-      # sigma1PtZ   = event.reco_sigma1PtZ[i]
-      # sigma1PtSnp = event.reco_sigma1PtSnp[i]
-      # sigma1PtTgl = event.reco_sigma1PtTgl[i]
-      # sigma1Pt2   = event.reco_sigma1Pt2[i]
-      # invpT       = event.reco_invpT[i]
+      Tgl         = event.reco_Tgl[i]
+      Snp         = event.reco_Snp[i] ## the slope in X direction: probe->GetTrack()->GetSnp()
+      alpha       = event.reco_alpha[i]
+      signedinvpT = event.reco_signedinvpT[i] ## the curvature (q/Pyz): probe->GetTrack()->GetSigned1Pt()
+      sigmaY2     = event.reco_sigmaY2[i]
+      sigmaZY     = event.reco_sigmaZY[i]
+      sigmaZ2     = event.reco_sigmaZ2[i]
+      sigmaSnpY   = event.reco_sigmaSnpY[i]
+      sigmaSnpZ   = event.reco_sigmaSnpZ[i]
+      sigmaSnp2   = event.reco_sigmaSnp2[i] ## probe->GetTrack()->GetSigmaSnp2()
+      sigmaTglY   = event.reco_sigmaTglY[i]
+      sigmaTglZ   = event.reco_sigmaTglZ[i]
+      sigmaTglSnp = event.reco_sigmaTglSnp[i]
+      sigmaTgl2   = event.reco_sigmaTgl2[i]
+      sigma1PtY   = event.reco_sigma1PtY[i]
+      sigma1PtZ   = event.reco_sigma1PtZ[i]
+      sigma1PtSnp = event.reco_sigma1PtSnp[i]
+      sigma1PtTgl = event.reco_sigma1PtTgl[i]
+      sigma1Pt2   = event.reco_sigma1Pt2[i]
+      invpT       = event.reco_invpT[i]
+      signedpT    = event.reco_signedpT[i]
+      xvtx        = event.reco_x[i]
+      yvtx        = event.reco_y[i]
+      zvtx        = event.reco_z[i]
+      
+      SnpSig = Snp/math.sqrt(sigmaSnp2) if(sigmaSnp2>0) else -1e10
+      TglSig = Tgl/math.sqrt(sigmaTgl2) if(sigmaTgl2>0) else -1e10
       
       
       ### loop over points along track (generated)
@@ -411,14 +441,20 @@ def FillHistos(event):
       ### fill histos
       histos["h_E_rec"].Fill(Erec,wgt)
       histos["h_px_rec"].Fill(pxrec,wgt)
+      histos["h_px_zoom_rec"].Fill(pxrec,wgt)
       histos["h_py_rec"].Fill(pyrec,wgt)
+      histos["h_py_zoom_rec"].Fill(pyrec,wgt)
       histos["h_pz_rec"].Fill(pzrec,wgt)
       histos["h_chi2dof_rec"].Fill(chi2dof,wgt)
+      histos["h_SnpSig_rec"].Fill(SnpSig,wgt)
+      histos["h_TglSig_rec"].Fill(TglSig,wgt)
       
       ismatched = event.reco_ismtchd[i]
       isig = event.reco_ixmtchd[i]
       if(not ismatched or isig<0):
          histos["h_chi2dof_rec_sig_non"].Fill(chi2dof,wgt)
+         histos["h_SnpSig_rec_sig_non"].Fill(SnpSig,wgt)
+         histos["h_TglSig_rec_sig_non"].Fill(TglSig,wgt)
          continue
       
       Esig     = event.true_p[isig].E()
@@ -439,6 +475,8 @@ def FillHistos(event):
       
       ### fill histos
       histos["h_chi2dof_rec_sig_mat"].Fill(chi2dof,wgt)
+      histos["h_SnpSig_rec_sig_mat"].Fill(SnpSig,wgt)
+      histos["h_TglSig_rec_sig_mat"].Fill(TglSig,wgt)
       histos["h_E_tru_rec_mat"].Fill(Esig)
       if(accepttrk(isig,event.true_clusters_id,event.all_clusters_xyz,True)): histos["h_E_tru_rec_mat_acc"].Fill(Esig)
       histos["h_res_E"].Fill(dErel,wgt)
@@ -858,6 +896,34 @@ cnv_pxyz.SaveAs(fn+"Momentum.pdf")
 cnv_pxyz.SaveAs(allpdf)
 
 
+cnv_pxy_zoom = TCanvas("cnv_E","",1000,500)
+cnv_pxy_zoom.Divide(2,1)
+cnv_pxy_zoom.cd(1)
+ROOT.gPad.SetLogy()
+hmin,hmax = minmax(histos["h_px_zoom_sig"],histos["h_px_zoom_bkg"])
+hmin,hmax = minmax(histos["h_px_zoom_sig"],histos["h_px_zoom_rec"])
+histos["h_px_zoom_sig"].SetLineColor(ROOT.kRed)
+histos["h_px_zoom_bkg"].SetLineColor(ROOT.kBlue)
+histos["h_px_zoom_rec"].SetLineColor(ROOT.kBlack)
+histos["h_px_zoom_sig"].Draw("hist")
+histos["h_px_zoom_bkg"].Draw("hist same")
+histos["h_px_zoom_rec"].Draw("hist same")
+leg_rec_sig.Draw("same")
+cnv_pxy_zoom.cd(2)
+ROOT.gPad.SetLogy()
+hmin,hmax = minmax(histos["h_py_zoom_sig"],histos["h_py_zoom_bkg"])
+hmin,hmax = minmax(histos["h_py_zoom_sig"],histos["h_py_zoom_rec"])
+histos["h_py_zoom_sig"].SetLineColor(ROOT.kRed)
+histos["h_py_zoom_bkg"].SetLineColor(ROOT.kBlue)
+histos["h_py_zoom_rec"].SetLineColor(ROOT.kBlack)
+histos["h_py_zoom_sig"].Draw("hist")
+histos["h_py_zoom_bkg"].Draw("hist same")
+histos["h_py_zoom_rec"].Draw("hist same")
+leg_rec_sig.Draw("same")
+cnv_pxy_zoom.SaveAs(fn+"pxy_zoom.pdf")
+cnv_pxy_zoom.SaveAs(allpdf)
+
+
 cnv_ntrks = TCanvas("cnv_ntrks","",500,500)
 cnv_ntrks.cd()
 hmin,hmax = minmax(histos["h_ntrks_sig"],histos["h_ntrks_bkg"])
@@ -910,7 +976,7 @@ cnv_eff.SaveAs(allpdf)
 # cnv_res_y.SaveAs(fn+"res_y.pdf")
 # cnv_res_y.SaveAs(allpdf)
 
-cnv_chi2 = TCanvas("cnv_res_E","",1500,500)
+cnv_chi2 = TCanvas("cnv_chi2","",1500,500)
 cnv_chi2.Divide(3,1)
 cnv_chi2.cd(1)
 ROOT.gPad.SetLogy()
@@ -923,6 +989,34 @@ ROOT.gPad.SetLogy()
 histos["h_chi2dof_rec_sig_non"].Draw("hist")
 cnv_chi2.SaveAs(fn+"chi2dof.pdf")
 cnv_chi2.SaveAs(allpdf)
+
+cnv_SnpSig = TCanvas("cnv_SnpSig","",1500,500)
+cnv_SnpSig.Divide(3,1)
+cnv_SnpSig.cd(1)
+ROOT.gPad.SetLogy()
+histos["h_SnpSig_rec"].Draw("hist")
+cnv_SnpSig.cd(2)
+ROOT.gPad.SetLogy()
+histos["h_SnpSig_rec_sig_mat"].Draw("hist")
+cnv_SnpSig.cd(3)
+ROOT.gPad.SetLogy()
+histos["h_SnpSig_rec_sig_non"].Draw("hist")
+cnv_SnpSig.SaveAs(fn+"SnpSig.pdf")
+cnv_SnpSig.SaveAs(allpdf)
+
+cnv_TglSig = TCanvas("cnv_TglSig","",1500,500)
+cnv_TglSig.Divide(3,1)
+cnv_TglSig.cd(1)
+ROOT.gPad.SetLogy()
+histos["h_TglSig_rec"].Draw("hist")
+cnv_TglSig.cd(2)
+ROOT.gPad.SetLogy()
+histos["h_TglSig_rec_sig_mat"].Draw("hist")
+cnv_TglSig.cd(3)
+ROOT.gPad.SetLogy()
+histos["h_TglSig_rec_sig_non"].Draw("hist")
+cnv_TglSig.SaveAs(fn+"TglSig.pdf")
+cnv_TglSig.SaveAs(allpdf)
 
 cnv_res_E = TCanvas("cnv_res_E","",500,500)
 cnv_res_E.cd()

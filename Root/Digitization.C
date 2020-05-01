@@ -61,10 +61,10 @@ void resetToTridentGeometry()
 
 int acceptcls(double x, double y, double z)
 {
-	if(abs(x)<xEsideL)                        return 0;
-	if(abs(x)>xEsideR)                        return 0;
-   if(abs(y)>yUp)                            return 0;
-	if(z!=300 && z!=310 && z!=320 && z!=330): return 0;
+	if(z!=300 && z!=310 && z!=320 && z!=330) return 0;
+	if(abs(x)<xEsideL)                       return 0;
+	if(abs(x)>xEsideR)                       return 0;
+   if(abs(y)>yUp)                           return 0;
    return 1;
 }
 
@@ -364,6 +364,21 @@ bool accepttrk(TPolyMarker3D* clusters, bool fullacc)
    return (fullacc) ? (acc==nlayers) : (acc>0);
 }
 
+bool acceptpts(TPolyMarker3D* points, bool fullacc)
+{
+   int nlayers = 4;
+   int acc = 0;
+   Double_t x,y,z;
+	for(int p=0 ; p<points->GetN() ; p++)
+	{
+   	points->GetPoint(p,x,y,z);
+		if(z!=300 && z!=310 && z!=320 && z!=330) continue;
+		if(z>330) break;
+   	acc += acceptcls(x,y,z);
+	}
+   return (fullacc) ? (acc==nlayers) : (acc>0);
+}
+
 /// for the output tree
 int ngen = 0;
 int nslv = 0;
@@ -419,7 +434,7 @@ void RenameOutTree(TString fOutName, int nFiles)
 	if(nFiles>=10000 && nFiles<100000) sf = Form("%d", nFiles); // assume no more than 99,999 files...
 	TString fOutNameNew = fOutName;
 	fOutNameNew = fOutNameNew.ReplaceAll(".root","_"+sf+".root");
-	gSystem->Exec("mv "+fOutName+" "+fOutNameNew);
+	gSystem->Exec("mv -f "+fOutName+" "+fOutNameNew);
 }
 
 
@@ -597,7 +612,8 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
 			
 			/// check acceptance
-			acc[slvidx] = accepttrk(clusters_xyz[slvidx],false);
+			acc[slvidx] = (accepttrk(clusters_xyz[slvidx],false) && acceptpts(trkpts[slvidx],false));
+			// acc[slvidx] = (accepttrk(clusters_xyz[slvidx],false));
 			if(acc[slvidx]) nacc++;
       }
 		if(iev==0) WriteGeometry(trkpts,trklin,process,acc,clusters_xyz,"_truth");
