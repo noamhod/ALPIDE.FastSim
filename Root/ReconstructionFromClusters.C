@@ -62,22 +62,21 @@ double x2R = +RoffsetBfield+Lstave;
 double yUp = +Hstave/2.;
 double yDn = -Hstave/2.;
 double zDipoleExit = 202.9;
-double B  = 1.4; // Tesla if(proc=="trident") else 2.0 
+double B  = 2.0; // Tesla if(proc=="bppp") else 1.4 
 double LB = 1;   // meters
 double EseedMin = 1.0; // GeV
 double EseedMaxBPPP = 16.0; // GeV
 double EseedMaxTRIDENT = 5.0; // GeV
+//// dipole geometry
+double xWdipole = 120;
+double yHdipole = 67.2;
+double z1dipole = 102.9;
+double z2dipole = 202.9;
 
 // double yDipoleExitMin = -0.05; ## cm --> TODO: need tuning
 // double yDipoleExitMax = +0.05; ## cm --> TODO: need tuning
 // double xAbsMargins = 0.025; # cm --> TODO: need tuning
 // double yAbsMargins = 0.025 if(proc=="bppp") else 0.1 # cm --> TODO: need tuning
-
-//// dipole geometry
-double xW = 120;
-double yH = 67.2;
-double z1 = 102.9;
-double z2 = 202.9;
 
 vector<TString> sides{"Eside","Pside"};
 // vector<TString> sides{"Eside"};
@@ -244,29 +243,29 @@ TPolyLine3D* GetLayer(TString side, double z, Color_t col)
 TPolyLine3D* GeDipole(Color_t col)
 {
 	TPolyLine3D* polyline = new TPolyLine3D();
-	polyline->SetPoint(0,-xW/2,-yH/2,z1);
-	polyline->SetPoint(1,-xW/2,+yH/2,z1);
-	polyline->SetPoint(2,+xW/2,+yH/2,z1);
-	polyline->SetPoint(3,+xW/2,-yH/2,z1);
-	polyline->SetPoint(4,-xW/2,-yH/2,z1);
+	polyline->SetPoint(0,-xWdipole/2,-yHdipole/2,z1dipole);
+	polyline->SetPoint(1,-xWdipole/2,+yHdipole/2,z1dipole);
+	polyline->SetPoint(2,+xWdipole/2,+yHdipole/2,z1dipole);
+	polyline->SetPoint(3,+xWdipole/2,-yHdipole/2,z1dipole);
+	polyline->SetPoint(4,-xWdipole/2,-yHdipole/2,z1dipole);
 
-	polyline->SetPoint(5,-xW/2,-yH/2,z2); // go up
+	polyline->SetPoint(5,-xWdipole/2,-yHdipole/2,z2dipole); // go up
 
-	polyline->SetPoint(6,-xW/2,+yH/2,z2); // move
-	polyline->SetPoint(7,-xW/2,+yH/2,z1); // go down
-	polyline->SetPoint(8,-xW/2,+yH/2,z2); // up again
+	polyline->SetPoint(6,-xWdipole/2,+yHdipole/2,z2dipole); // move
+	polyline->SetPoint(7,-xWdipole/2,+yHdipole/2,z1dipole); // go down
+	polyline->SetPoint(8,-xWdipole/2,+yHdipole/2,z2dipole); // up again
 
-	polyline->SetPoint(9,+xW/2,+yH/2,z2); // move
-	polyline->SetPoint(10,+xW/2,+yH/2,z1); // go down
-	polyline->SetPoint(11,+xW/2,+yH/2,z2); // up again
+	polyline->SetPoint(9,+xWdipole/2,+yHdipole/2,z2dipole); // move
+	polyline->SetPoint(10,+xWdipole/2,+yHdipole/2,z1dipole); // go down
+	polyline->SetPoint(11,+xWdipole/2,+yHdipole/2,z2dipole); // up again
 
-	polyline->SetPoint(12,+xW/2,-yH/2,z2); // move
-	polyline->SetPoint(13,+xW/2,-yH/2,z1); // go down
-	polyline->SetPoint(14,+xW/2,-yH/2,z2); // up again
+	polyline->SetPoint(12,+xWdipole/2,-yHdipole/2,z2dipole); // move
+	polyline->SetPoint(13,+xWdipole/2,-yHdipole/2,z1dipole); // go down
+	polyline->SetPoint(14,+xWdipole/2,-yHdipole/2,z2dipole); // up again
 
-	polyline->SetPoint(15,-xW/2,-yH/2,z2); // move
-	polyline->SetPoint(16,-xW/2,-yH/2,z1); // go down
-	polyline->SetPoint(17,-xW/2,-yH/2,z2); // up again
+	polyline->SetPoint(15,-xWdipole/2,-yHdipole/2,z2dipole); // move
+	polyline->SetPoint(16,-xWdipole/2,-yHdipole/2,z1dipole); // go down
+	polyline->SetPoint(17,-xWdipole/2,-yHdipole/2,z2dipole); // up again
 
 	polyline->SetLineColor(col);
 	return polyline;

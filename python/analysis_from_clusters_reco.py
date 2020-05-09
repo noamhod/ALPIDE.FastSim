@@ -148,23 +148,41 @@ def GetBkgTracks(event):
       if(not accepttrkpts(event.bkgr_trckmar[i],False)): continue
       bkgtracks.append( event.bkgr_trcklin[i].Clone() )
       bkgpoints.append( event.bkgr_trckmar[i].Clone() )
+      
+def GetLogBinning(nbins,xmin,xmax):
+   logmin  = math.log10(xmin)
+   logmax  = math.log10(xmax)
+   logbinwidth = (logmax-logmin)/nbins
+   # Bin edges in GeV
+   xbins = [xmin,] #the lowest edge first
+   for i in range(1,nbins+1):
+      xbins.append( ROOT.TMath.Power( 10,(logmin + i*logbinwidth) ) )
+   arrxbins = array.array("d", xbins)
+   return nbins, arrxbins
+
 
 def BookHistos(process):
+   histos.update( {"h_px_sed":TH1D("h_px_sed",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_px_rec":TH1D("h_px_rec",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_px_sig":TH1D("h_px_sig",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_px_bkg":TH1D("h_px_bkg",";p_{x} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_px_zoom_sed":TH1D("h_px_zoom_sed",";p_{x} [GeV];Tracks", 200,-0.01,+0.01)} )
    histos.update( {"h_px_zoom_rec":TH1D("h_px_zoom_rec",";p_{x} [GeV];Tracks", 200,-0.01,+0.01)} )
    histos.update( {"h_px_zoom_sig":TH1D("h_px_zoom_sig",";p_{x} [GeV];Tracks", 200,-0.01,+0.01)} )
    histos.update( {"h_px_zoom_bkg":TH1D("h_px_zoom_bkg",";p_{x} [GeV];Tracks", 200,-0.01,+0.01)} )
+   histos.update( {"h_py_sed":TH1D("h_py_sed",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_py_rec":TH1D("h_py_rec",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_py_sig":TH1D("h_py_sig",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
    histos.update( {"h_py_bkg":TH1D("h_py_bkg",";p_{y} [GeV];Tracks", 200,-0.1,+0.1)} )
+   histos.update( {"h_py_zoom_sed":TH1D("h_py_zoom_sed",";p_{y} [GeV];Tracks", 200,-0.015,+0.015)} )
    histos.update( {"h_py_zoom_rec":TH1D("h_py_zoom_rec",";p_{y} [GeV];Tracks", 200,-0.015,+0.015)} )
    histos.update( {"h_py_zoom_sig":TH1D("h_py_zoom_sig",";p_{y} [GeV];Tracks", 200,-0.015,+0.015)} )
    histos.update( {"h_py_zoom_bkg":TH1D("h_py_zoom_bkg",";p_{y} [GeV];Tracks", 200,-0.015,+0.015)} )
+   histos.update( {"h_pz_sed":TH1D("h_pz_sed",";p_{z} [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_pz_rec":TH1D("h_pz_rec",";p_{z} [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_pz_sig":TH1D("h_pz_sig",";p_{z} [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_pz_bkg":TH1D("h_pz_bkg",";p_{z} [GeV];Tracks", 170,0,17)} )
+   histos.update( {"h_E_sed":TH1D("h_E_sed",";E [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_E_rec":TH1D("h_E_rec",";E [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_E_sig":TH1D("h_E_sig",";E [GeV];Tracks", 170,0,17)} )
    histos.update( {"h_E_bkg":TH1D("h_E_bkg",";E [GeV];Tracks", 170,0,17)} )
@@ -178,37 +196,70 @@ def BookHistos(process):
    histos.update( {"h_TglSig_rec" :TH1D("h_TglSig_rec", "Inclusive;Tgl/#sigma(Tgl);Tracks",  150,-1000,+1000)} )   
    histos.update( {"h_TglSig_rec_sig_mat" :TH1D("h_TglSig_rec_sig_mat", "Signal matched;Tgl/#sigma(Tgl);Tracks",  150,-1000,+1000)} )   
    histos.update( {"h_TglSig_rec_sig_non" :TH1D("h_TglSig_rec_sig_non", "Non-signal matched;Tgl/#sigma(Tgl);Tracks",  150,-1000,+1000)} )   
-   
+   histos.update( {"h_xVtxSig_rec"         :TH1D("h_xVtxSig_rec",         "Inclusive;x_{vtx}/#sigma(x_{vtx});Tracks",  150,-0.5,+0.5)} )   
+   histos.update( {"h_xVtxSig_rec_sig_mat" :TH1D("h_xVtxSig_rec_sig_mat", "Signal matched;x_{vtx}/#sigma(x_{vtx});Tracks",  150,-0.5,+0.5)} )   
+   histos.update( {"h_xVtxSig_rec_sig_non" :TH1D("h_xVtxSig_rec_sig_non", "Non-signal matched;x_{vtx}/#sigma(x_{vtx});Tracks",  150,-0.5,+0.5)} )   
+   histos.update( {"h_yVtxSig_rec"         :TH1D("h_yVtxSig_rec",         "Inclusive;y_{vtx}/#sigma(y_{vtx});Tracks",  150,-0.5,+0.5)} )   
+   histos.update( {"h_yVtxSig_rec_sig_mat" :TH1D("h_yVtxSig_rec_sig_mat", "Signal matched;y_{vtx}/#sigma(y_{vtx});Tracks",  150,-0.5,+0.5)} )   
+   histos.update( {"h_yVtxSig_rec_sig_non" :TH1D("h_yVtxSig_rec_sig_non", "Non-signal matched;y_{vtx}/#sigma(y_{vtx});Tracks",  150,-0.5,+0.5)} )   
+
    ntrkmax = 450  if(process=="bppp") else 1250
    ntrkmin = 0    if(process=="bppp") else 1000
    ntrkbins = 100 if(process=="bppp") else 50
    histos.update( {"h_ntrks_rec":TH1D("h_ntrks_rec",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
+   histos.update( {"h_ntrks_sed":TH1D("h_ntrks_sed",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
    histos.update( {"h_ntrks_sig":TH1D("h_ntrks_sig",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
    histos.update( {"h_ntrks_bkg":TH1D("h_ntrks_bkg",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
    histos.update( {"h_ntrks_acc":TH1D("h_ntrks_acc",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
 
-   histos.update( {"h_res_E" :TH1D("h_res_E", ";(E_{rec}-E_{tru})/E_{tru};Tracks",             200,-0.015,+0.015)} )
+   histos.update( {"h_res_E"     :TH1D("h_res_E", ";(E_{rec}-E_{tru})/E_{tru};Tracks",             200,-0.015,+0.015)} )
+   histos.update( {"h_res_sed_E" :TH1D("h_res_sed_E", ";(E_{rec}-E_{tru})/E_{tru};Tracks",             200,-0.015,+0.015)} )
+   histos.update( {"h_res_sed_pz":TH1D("h_res_sed_pz",";(p_{z}^{rec}-p_{z}^{tru})/p_{z}^{tru};Tracks", 200,-0.015,+0.015)} )
    histos.update( {"h_res_pz":TH1D("h_res_pz",";(p_{z}^{rec}-p_{z}^{tru})/p_{z}^{tru};Tracks", 200,-0.015,+0.015)} )
    histos.update( {"h_res_px":TH1D("h_res_px",";(p_{x}^{rec}-p_{x}^{tru})/p_{x}^{tru};Tracks", 200,-8,+8)} )
+   histos.update( {"h_res_sed_px":TH1D("h_res_sed_px",";(p_{x}^{rec}-p_{x}^{tru})/p_{x}^{tru};Tracks", 200,-8,+8)} )
    histos.update( {"h_res_py":TH1D("h_res_py",";(p_{y}^{rec}-p_{y}^{tru})/p_{y}^{tru};Tracks", 200,-0.12,+0.12)} )
+   histos.update( {"h_res_py_zoomout":TH1D("h_res_py_zoomout",";(p_{y}^{rec}-p_{y}^{tru})/p_{y}^{tru};Tracks", 100,-5,+5)} )
+   histos.update( {"h_res_sed_py":TH1D("h_res_sed_py",";(p_{y}^{rec}-p_{y}^{tru})/p_{y}^{tru};Tracks", 200,-0.12,+0.12)} )
+   histos.update( {"h_res_sed_py_zoomout":TH1D("h_res_sed_py_zoomout",";(p_{y}^{rec}-p_{y}^{tru})/p_{y}^{tru};Tracks", 100,-5,+5)} )
    histos.update( {"h_res_pT":TH1D("h_res_pT",";(p_{T}^{rec}-p_{T}^{tru})/p_{T}^{tru};Tracks", 200,-1.5,+2)} )
+   histos.update( {"h_res_sed_pT":TH1D("h_res_sed_pT",";(p_{T}^{rec}-p_{T}^{tru})/p_{T}^{tru};Tracks", 200,-1.5,+2)} )
    histos.update( {"h_res_theta":TH1D("h_res_theta",";(#theta_{rec}-#theta_{tru})/#theta_{tru};Tracks", 200,-1.5,+2)} )
+   histos.update( {"h_res_sed_theta":TH1D("h_res_sed_theta",";(#theta_{rec}-#theta_{tru})/#theta_{tru};Tracks", 200,-1.5,+2)} )
    histos.update( {"h_res_phi":TH1D("h_res_phi",";(#phi_{rec}-#phi_{tru})/#phi_{tru};Tracks", 200,-1.5,+2)} )
+   histos.update( {"h_res_sed_phi":TH1D("h_res_sed_phi",";(#phi_{rec}-#phi_{tru})/#phi_{tru};Tracks", 200,-1.5,+2)} )
       
+   histos.update( {"h_res_x_truvscls":TH1D("h_res_x_truvscls",";(x_{cls}-x_{tru})/x_{tru};Tracks", 200,-0.0005,+0.0005)} )
+   histos.update( {"h_res_y_truvscls":TH1D("h_res_y_truvscls",";(y_{cls}-y_{tru})/y_{tru};Tracks", 200,-0.10,+0.10)} )
+   histos.update( {"h_res_x_recvscls":TH1D("h_res_x_recvscls",";(x_{rec}-x_{cls})/x_{cls};Tracks", 200,-0.00015,+0.00015)} )
+   histos.update( {"h_res_y_recvscls":TH1D("h_res_y_recvscls",";(y_{rec}-y_{cls})/y_{cls};Tracks", 200,-0.05,+0.05)} )
+   histos.update( {"h_res_x_recvstru":TH1D("h_res_x_recvstru",";(x_{rec}-x_{tru})/x_{tru};Tracks", 200,-0.0004,+0.0004)} )
+   histos.update( {"h_res_y_recvstru":TH1D("h_res_y_recvstru",";(y_{rec}-y_{tru})/y_{tru};Tracks", 200,-0.03,+0.03)} )
+   
    histos.update( {"h_E_tru_sig"        :TH1D("h_E_tru_sig",        ";#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
    histos.update( {"h_E_tru_sig_acc"    :TH1D("h_E_tru_sig_acc",    ";#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
    histos.update( {"h_E_tru_rec_mat"    :TH1D("h_E_tru_rec_mat",    ";#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
+   histos.update( {"h_E_tru_sed_mat"    :TH1D("h_E_tru_sed_mat",    ";#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
    histos.update( {"h_E_tru_rec_mat_acc":TH1D("h_E_tru_rec_mat_acc",";#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
+   histos.update( {"h_E_tru_eff_sed"    :TH1D("h_E_tru_eff_sed",    "Seeding efficiency;#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
    histos.update( {"h_E_tru_eff"        :TH1D("h_E_tru_eff",        "Inclusive efficiency;#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
    histos.update( {"h_E_tru_eff_acc"    :TH1D("h_E_tru_eff_acc",    "In-acceptance efficiency;#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
    
-   histos.update( {"h_res_E_vs_E":TH2D("h_res_E_vs_E",";E_{gen} [GeV];(E_{rec}-E_{gen})/E_{gen};Tracks", 34, 0, 17, 100,-0.05,+0.05)} )
-   histos.update( {"h_res_x_vs_x":TH2D("h_res_x_vs_x",";x_{gen} [cm];(x_{rec}-x_{gen})/x_{gen};Tracks", 180, -40, +40, 100,0,+0.01)} )
+   histos.update( {"h_res_E_vs_Etru_recvstru":TH2D("h_res_E_vs_Etru_recvstru",";E_{tru} [GeV];(E_{rec}-E_{tru})/E_{tru};Tracks", 34, 0, 17,    200,-0.05,+0.05)} )
+   histos.update( {"h_res_x_vs_xtru_recvstru":TH2D("h_res_x_vs_xtru_recvstru",";x_{tru} [cm];(x_{rec}-x_{tru})/x_{tru};Tracks", 200,-70,+70,   200,-0.0007,+0.0007)} )
+   histos.update( {"h_res_y_vs_ytru_recvstru":TH2D("h_res_y_vs_ytru_recvstru",";y_{tru} [cm];(y_{rec}-y_{tru})/y_{tru};Tracks", 200,-0.4,+0.4, 200,-0.05,+0.05)} )
 
-   histos.update( {"h_res_y_vs_x_1":TH2D("h_res_y_vs_x_1","Layer1;(x_{rec}-x_{gen})/x_{gen};(y_{rec}-y_{gen})/y_{gen};Tracks", 100,-0.01, +0.01, 100,-0.25,+0.25)} )
-   histos.update( {"h_res_y_vs_x_2":TH2D("h_res_y_vs_x_2","Layer2;(x_{rec}-x_{gen})/x_{gen};(y_{rec}-y_{gen})/y_{gen};Tracks", 100,-0.01, +0.01, 100,-0.25,+0.25)} )
-   histos.update( {"h_res_y_vs_x_3":TH2D("h_res_y_vs_x_3","Layer3;(x_{rec}-x_{gen})/x_{gen};(y_{rec}-y_{gen})/y_{gen};Tracks", 100,-0.01, +0.01, 100,-0.25,+0.25)} )
-   histos.update( {"h_res_y_vs_x_4":TH2D("h_res_y_vs_x_4","Layer4;(x_{rec}-x_{gen})/x_{gen};(y_{rec}-y_{gen})/y_{gen};Tracks", 100,-0.01, +0.01, 100,-0.25,+0.25)} )
+   nxbinstmp,xbinstmp = GetLogBinning(100,1,70)
+   xbins = []
+   for n in reversed(range(len(xbinstmp))): xbins.append(-xbinstmp[n])
+   for n in range(len(xbinstmp)):           xbins.append(+xbinstmp[n])
+   histos.update( {"h_res_x_vs_xtru_recvstru_logbins":TH2D("h_res_x_vs_xtru_recvstru_logbins",";x_{tru} [cm];(x_{rec}-x_{tru})/x_{tru};Tracks", len(xbins)+1,array.array("d",xbins), 200,-0.0007,+0.0007)} )
+   
+   nybinstmp,ybinstmp = GetLogBinning(100,0.001,0.4)
+   ybins = []
+   for n in reversed(range(len(ybinstmp))): ybins.append(-ybinstmp[n])
+   for n in range(len(ybinstmp)):           ybins.append(+ybinstmp[n])   
+   histos.update( {"h_res_y_vs_ytru_recvstru_logbins":TH2D("h_res_y_vs_ytru_recvstru_logbins",";y_{tru} [cm];(y_{rec}-y_{tru})/y_{tru};Tracks", len(ybins)+1,array.array("d",ybins), 200,-0.05,+0.05)} )
 
    histos.update( {"h_xy_layer1_rec":TH2D("h_xy_layer1_rec","Layer 1: reconstructed tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
    histos.update( {"h_xy_layer2_rec":TH2D("h_xy_layer2_rec","Layer 2: reconstructed tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
@@ -234,11 +285,6 @@ def BookHistos(process):
    histos.update( {"h_xy_layer0_sig":TH2D("h_xy_layer0_sig","Dipole exit;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
    histos.update( {"h_xy_layer0_bkg":TH2D("h_xy_layer0_bkg","Dipole exit;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
    histos.update( {"h_xy_layer0_sigbkg":TH2D("h_xy_layer0_sigbkg","Dipole exit;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
-
-   histos.update( {"h_xy_vtx_rec":TH2D("h_xy_vtx_rec","Vertex;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
-   histos.update( {"h_xy_vtx_sig":TH2D("h_xy_vtx_sig","Vertex;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
-   histos.update( {"h_xy_vtx_bkg":TH2D("h_xy_vtx_bkg","Vertex;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
-   histos.update( {"h_xy_vtx_sigbkg":TH2D("h_xy_vtx_sigbkg","Vertex;x [cm];y [cm];Tracks", 200,-30,+30, 200,-0.55,+0.55)} )
    
    histos.update( {"h_xE_layer0_sig":TH2D("h_xE_layer0_sig","Dipole exit;x [cm];E [GeV];Tracks", 600,-75,+75, 100,0,+20)} )
    histos.update( {"h_xE_layer1_sig":TH2D("h_xE_layer1_sig","Layer 1;x [cm];E [GeV];Tracks",     600,-75,+75, 100,0,+20)} )
@@ -268,6 +314,7 @@ def BookHistos(process):
 
 
 def FillHistos(event):
+   ntrk_sed = 0
    ntrk_sig = 0
    ntrk_bkg = 0
    ntrk_rec = 0
@@ -275,6 +322,66 @@ def FillHistos(event):
    sigoffset = 100000
    bkgoffset = 10000
    Buildid2indexDict(event.all_clusters_id)
+   
+   ###############################
+   ### loop on signal particles
+   nseedsmat = 0
+   for i in range(event.seed_p.size()):
+      wgt = 1 # event.seed_wgt[i]
+      ntrk_sed     += wgt
+      seedtype     = event.seed_type[i]
+      clusterids   = event.seed_clusters_id[i]
+      seed_q       = event.seed_q[i]
+      seed_p       = event.seed_p[i]
+      
+      histos["h_E_sed"].Fill(seed_p.E(),wgt)
+      histos["h_px_sed"].Fill(seed_p.Px(),wgt)
+      histos["h_px_zoom_sed"].Fill(seed_p.Px(),wgt)
+      histos["h_py_sed"].Fill(seed_p.Py(),wgt)
+      histos["h_py_zoom_sed"].Fill(seed_p.Py(),wgt)
+      histos["h_pz_sed"].Fill(seed_p.Pz(),wgt)
+      
+      if(event.seed_type[i]==1):
+         seed_true_id = event.seed_clusters_id[i][0] ## id of cluster at layer 1
+         seed_true_ix = -1
+         for j in range(event.true_clusters_id.size()):
+            if(event.true_clusters_id[j][0]==seed_true_id): ## id of cluster at layer 1
+               seed_true_ix = j
+               break
+         if(seed_true_ix>=0):
+            nseedsmat += 1
+            histos["h_E_tru_sed_mat"].Fill(event.true_p[seed_true_ix].E(),wgt)
+            
+            E_sig     = event.true_p[seed_true_ix].E()
+            px_sig    = event.true_p[seed_true_ix].Px()
+            py_sig    = event.true_p[seed_true_ix].Py()
+            pz_sig    = event.true_p[seed_true_ix].Pz()
+            pT_sig    = event.true_p[seed_true_ix].Pt()
+            theta_sig = event.true_p[seed_true_ix].Theta()
+            phi_sig   = event.true_p[seed_true_ix].Phi()
+      
+            sed_dErel  = (seed_p.E()-E_sig)/E_sig
+            sed_dpxrel = (seed_p.Px()-px_sig)/px_sig
+            sed_dpyrel = (seed_p.Py()-py_sig)/py_sig
+            sed_dpzrel = (seed_p.Pz()-pz_sig)/pz_sig
+            sed_dpTrel = (seed_p.Pt()-pT_sig)/pT_sig
+            sed_dthetarel = (seed_p.Theta()-theta_sig)/theta_sig
+            sed_dphirel = (seed_p.Phi()-phi_sig)/phi_sig
+            
+            # print("sed_dpyrel=%g, seed_p.Py()=%g, py_sig=%g" %(sed_dpyrel,seed_p.Py(),py_sig))
+      
+            histos["h_res_sed_E"].Fill(sed_dErel,wgt)
+            histos["h_res_sed_px"].Fill(sed_dpxrel,wgt)
+            histos["h_res_sed_py"].Fill(sed_dpyrel,wgt)
+            histos["h_res_sed_py_zoomout"].Fill(sed_dpyrel,wgt)
+            histos["h_res_sed_pz"].Fill(sed_dpzrel,wgt)
+            histos["h_res_sed_pT"].Fill(sed_dpTrel,wgt)
+            histos["h_res_sed_phi"].Fill(sed_dphirel,wgt)
+            histos["h_res_sed_theta"].Fill(sed_dthetarel,wgt)
+            
+            
+   # print("Ntrues=%g, Nseeds=%g, Nseedsmat=%g" % (event.true_p.size(),event.seed_p.size(),nseedsmat))
+   
    
    ###############################
    ### loop on signal particles
@@ -288,6 +395,29 @@ def FillHistos(event):
       pT = event.true_p[i].Pt()
       theta = event.true_p[i].Theta()
       phi = event.true_p[i].Phi()
+      
+      ### get the true clusters
+      cls_tru_id1 = event.true_clusters_id[i][0]
+      cls_tru_id2 = event.true_clusters_id[i][1]
+      cls_tru_id3 = event.true_clusters_id[i][2]
+      cls_tru_id4 = event.true_clusters_id[i][3]
+      cls_tru_ix1 = id2index[cls_tru_id1] if(cls_tru_id1>=0) else -1
+      cls_tru_ix2 = id2index[cls_tru_id2] if(cls_tru_id2>=0) else -1
+      cls_tru_ix3 = id2index[cls_tru_id3] if(cls_tru_id3>=0) else -1
+      cls_tru_ix4 = id2index[cls_tru_id4] if(cls_tru_id4>=0) else -1
+      cls_tru_r1  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
+      cls_tru_r2  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
+      cls_tru_r3  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
+      cls_tru_r4  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
+      if(cls_tru_ix1>=0): event.all_clusters_xyz[cls_tru_ix1].GetPoint(0,cls_tru_r1[0],cls_tru_r1[1],cls_tru_r1[2])
+      else:               cls_tru_r1 = [-999,-999,-999]
+      if(cls_tru_ix2>=0): event.all_clusters_xyz[cls_tru_ix2].GetPoint(0,cls_tru_r2[0],cls_tru_r2[1],cls_tru_r2[2])
+      else:               cls_tru_r2 = [-999,-999,-999] 
+      if(cls_tru_ix3>=0): event.all_clusters_xyz[cls_tru_ix3].GetPoint(0,cls_tru_r3[0],cls_tru_r3[1],cls_tru_r3[2])
+      else:               cls_tru_r3 = [-999,-999,-999] 
+      if(cls_tru_ix4>=0): event.all_clusters_xyz[cls_tru_ix4].GetPoint(0,cls_tru_r4[0],cls_tru_r4[1],cls_tru_r4[2])
+      else:               cls_tru_r4 = [-999,-999,-999]
+      
       histos["h_E_sig"].Fill(E,wgt)
       histos["h_px_sig"].Fill(px,wgt)
       histos["h_px_zoom_sig"].Fill(px,wgt)
@@ -296,6 +426,7 @@ def FillHistos(event):
       histos["h_pz_sig"].Fill(pz,wgt)
       histos["h_E_tru_sig"].Fill(E,wgt)
       if(accepttrk(i,event.true_clusters_id,event.all_clusters_xyz,True)): histos["h_E_tru_sig_acc"].Fill(E,wgt)
+      
       ### loop over points along track (generated)
       for jxy in range(event.true_trckmar[i].GetN()):
          x = ROOT.Double()
@@ -306,26 +437,39 @@ def FillHistos(event):
          if(z==200):
             histos["h_xy_layer0_sig"].Fill(x,y,wgt)
             histos["h_xy_layer0_sigbkg"].Fill(x,y,wgt)
-         
-         if(z==200): histos["h_xE_layer0_sig"].Fill(x,E,wgt)
-         if(z==300): histos["h_xE_layer1_sig"].Fill(x,E,wgt)
-         if(z==310): histos["h_xE_layer2_sig"].Fill(x,E,wgt)
-         if(z==320): histos["h_xE_layer3_sig"].Fill(x,E,wgt)
-         if(z==330): histos["h_xE_layer4_sig"].Fill(x,E,wgt)
-         
-         if(z<300): continue
+            histos["h_xE_layer0_sig"].Fill(x,E,wgt)
          if(z==300):
+            histos["h_xE_layer1_sig"].Fill(x,E,wgt)
             histos["h_xy_layer1_sig"].Fill(x,y,wgt)
             histos["h_xy_layer1_sigbkg"].Fill(x,y,wgt)
+            dxrel = (cls_tru_r1[0]-x)/x if(cls_tru_r1[0]!=-999 and x!=0) else -999
+            dyrel = (cls_tru_r1[1]-y)/y if(cls_tru_r1[1]!=-999 and y!=0) else -999
+            histos["h_res_x_truvscls"].Fill(dxrel,wgt)
+            histos["h_res_y_truvscls"].Fill(dyrel,wgt)
          if(z==310):
+            histos["h_xE_layer2_sig"].Fill(x,E,wgt)
             histos["h_xy_layer2_sig"].Fill(x,y,wgt)
             histos["h_xy_layer2_sigbkg"].Fill(x,y,wgt)
+            dxrel = (cls_tru_r2[0]-x)/x if(cls_tru_r2[0]!=-999 and x!=0) else -999
+            dyrel = (cls_tru_r2[1]-y)/y if(cls_tru_r2[1]!=-999 and y!=0) else -999
+            histos["h_res_x_truvscls"].Fill(dxrel,wgt)
+            histos["h_res_y_truvscls"].Fill(dyrel,wgt)
          if(z==320):
+            histos["h_xE_layer3_sig"].Fill(x,E,wgt)
             histos["h_xy_layer3_sig"].Fill(x,y,wgt)
             histos["h_xy_layer3_sigbkg"].Fill(x,y,wgt)
+            dxrel = (cls_tru_r3[0]-x)/x if(cls_tru_r3[0]!=-999 and x!=0) else -999
+            dyrel = (cls_tru_r3[1]-y)/y if(cls_tru_r3[1]!=-999 and y!=0) else -999
+            histos["h_res_x_truvscls"].Fill(dxrel,wgt)
+            histos["h_res_y_truvscls"].Fill(dyrel,wgt)
          if(z==330):
+            histos["h_xE_layer4_sig"].Fill(x,E,wgt)
             histos["h_xy_layer4_sig"].Fill(x,y,wgt)
             histos["h_xy_layer4_sigbkg"].Fill(x,y,wgt)
+            dxrel = (cls_tru_r4[0]-x)/x if(cls_tru_r4[0]!=-999 and x!=0) else -999
+            dyrel = (cls_tru_r4[1]-y)/y if(cls_tru_r4[1]!=-999 and y!=0) else -999
+            histos["h_res_x_truvscls"].Fill(dxrel,wgt)
+            histos["h_res_y_truvscls"].Fill(dyrel,wgt)
          
    ###############################
    ### loop on backgrouns particles
@@ -342,12 +486,14 @@ def FillHistos(event):
       pT = event.bkgr_p[i].Pt()
       theta = event.bkgr_p[i].Theta()
       phi = event.bkgr_p[i].Phi()
+      
       histos["h_E_bkg"].Fill(E,wgt)
       histos["h_px_bkg"].Fill(px,wgt)
       histos["h_px_zoom_bkg"].Fill(px,wgt)
       histos["h_py_bkg"].Fill(py,wgt)
       histos["h_py_zoom_bkg"].Fill(py,wgt)
       histos["h_pz_bkg"].Fill(pz,wgt)
+      
       ### loop over points along track (generated)
       for jxy in range(event.bkgr_trckmar[i].GetN()):
          x = ROOT.Double()
@@ -378,6 +524,7 @@ def FillHistos(event):
          if(z==330):
             histos["h_xy_layer4_bkg"].Fill(x,y,wgt)
             histos["h_xy_layer4_sigbkg"].Fill(x,y,wgt)
+
 
    ###################################
    ### loop on reconstructed particles
@@ -414,15 +561,39 @@ def FillHistos(event):
       sigma1Pt2   = event.reco_sigma1Pt2[i]
       invpT       = event.reco_invpT[i]
       signedpT    = event.reco_signedpT[i]
-      xvtx        = event.reco_x[i]
-      yvtx        = event.reco_y[i]
-      zvtx        = event.reco_z[i]
+      xVtx        = event.reco_x[i]
+      yVtx        = event.reco_y[i]
       
-      SnpSig = Snp/math.sqrt(sigmaSnp2) if(sigmaSnp2>0) else -1e10
-      TglSig = Tgl/math.sqrt(sigmaTgl2) if(sigmaTgl2>0) else -1e10
+      ### significances
+      SnpSig  = Snp/math.sqrt(sigmaSnp2) if(sigmaSnp2>0) else -1e10
+      TglSig  = Tgl/math.sqrt(sigmaTgl2) if(sigmaTgl2>0) else -1e10
+      xVtxSig = xVtx/math.sqrt(sigmaY2)  if(sigmaY2>0)   else -1e10
+      yVtxSig = yVtx/math.sqrt(sigmaZ2)  if(sigmaZ2>0)   else -1e10
+      
+      ### get the reco clusters
+      cls_rec_id1 = event.reco_clusters_id[i][0]
+      cls_rec_id2 = event.reco_clusters_id[i][1]
+      cls_rec_id3 = event.reco_clusters_id[i][2]
+      cls_rec_id4 = event.reco_clusters_id[i][3]
+      cls_rec_ix1 = id2index[cls_rec_id1] if(cls_rec_id1>=0) else -1
+      cls_rec_ix2 = id2index[cls_rec_id2] if(cls_rec_id2>=0) else -1
+      cls_rec_ix3 = id2index[cls_rec_id3] if(cls_rec_id3>=0) else -1
+      cls_rec_ix4 = id2index[cls_rec_id4] if(cls_rec_id4>=0) else -1
+      cls_rec_r1  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
+      cls_rec_r2  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
+      cls_rec_r3  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
+      cls_rec_r4  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
+      if(cls_rec_ix1>=0): event.all_clusters_xyz[cls_rec_ix1].GetPoint(0,cls_rec_r1[0],cls_rec_r1[1],cls_rec_r1[2])
+      else:               cls_rec_r1 = [-999,-999,-999]
+      if(cls_rec_ix2>=0): event.all_clusters_xyz[cls_rec_ix2].GetPoint(0,cls_rec_r2[0],cls_rec_r2[1],cls_rec_r2[2])
+      else:               cls_rec_r2 = [-999,-999,-999] 
+      if(cls_rec_ix3>=0): event.all_clusters_xyz[cls_rec_ix3].GetPoint(0,cls_rec_r3[0],cls_rec_r3[1],cls_rec_r3[2])
+      else:               cls_rec_r3 = [-999,-999,-999] 
+      if(cls_rec_ix4>=0): event.all_clusters_xyz[cls_rec_ix4].GetPoint(0,cls_rec_r4[0],cls_rec_r4[1],cls_rec_r4[2])
+      else:               cls_rec_r4 = [-999,-999,-999]
       
       
-      ### loop over points along track (generated)
+      ### loop over points along the reco track
       for jxy in range(event.reco_trckmar[i].GetN()):
          x = ROOT.Double()
          y = ROOT.Double()
@@ -430,12 +601,30 @@ def FillHistos(event):
          event.reco_trckmar[i].GetPoint(jxy,x,y,z)
          
          if(z==200): histos["h_xy_layer0_rec"].Fill(x,y,wgt)
-         
-         if(z<300): continue
-         if(z==300): histos["h_xy_layer1_rec"].Fill(x,y,wgt)
-         if(z==310): histos["h_xy_layer2_rec"].Fill(x,y,wgt)
-         if(z==320): histos["h_xy_layer3_rec"].Fill(x,y,wgt)
-         if(z==330): histos["h_xy_layer4_rec"].Fill(x,y,wgt)
+         if(z==300):
+            histos["h_xy_layer1_rec"].Fill(x,y,wgt)
+            dxrel = (x-cls_rec_r1[0])/cls_rec_r1[0] if(cls_rec_r1[0]!=-999 and cls_rec_r1[0]!=0) else -999
+            dyrel = (y-cls_rec_r1[1])/cls_rec_r1[1] if(cls_rec_r1[1]!=-999 and cls_rec_r1[1]!=0) else -999
+            histos["h_res_x_recvscls"].Fill(dxrel,wgt)
+            histos["h_res_y_recvscls"].Fill(dyrel,wgt)
+         if(z==310):
+            histos["h_xy_layer2_rec"].Fill(x,y,wgt)
+            dxrel = (x-cls_rec_r2[0])/cls_rec_r2[0] if(cls_rec_r2[0]!=-999 and cls_rec_r2[0]!=0) else -999
+            dyrel = (y-cls_rec_r2[1])/cls_rec_r2[1] if(cls_rec_r2[1]!=-999 and cls_rec_r2[1]!=0) else -999
+            histos["h_res_x_recvscls"].Fill(dxrel,wgt)
+            histos["h_res_y_recvscls"].Fill(dyrel,wgt)
+         if(z==320):
+            histos["h_xy_layer3_rec"].Fill(x,y,wgt)
+            dxrel = (x-cls_rec_r3[0])/cls_rec_r3[0] if(cls_rec_r3[0]!=-999 and cls_rec_r3[0]!=0) else -999
+            dyrel = (y-cls_rec_r3[1])/cls_rec_r3[1] if(cls_rec_r3[1]!=-999 and cls_rec_r3[1]!=0) else -999
+            histos["h_res_x_recvscls"].Fill(dxrel,wgt)
+            histos["h_res_y_recvscls"].Fill(dyrel,wgt)
+         if(z==330):
+            histos["h_xy_layer4_rec"].Fill(x,y,wgt)
+            dxrel = (x-cls_rec_r4[0])/cls_rec_r4[0] if(cls_rec_r4[0]!=-999 and cls_rec_r4[0]!=0) else -999
+            dyrel = (y-cls_rec_r4[1])/cls_rec_r4[1] if(cls_rec_r4[1]!=-999 and cls_rec_r4[1]!=0) else -999
+            histos["h_res_x_recvscls"].Fill(dxrel,wgt)
+            histos["h_res_y_recvscls"].Fill(dyrel,wgt)
       
       
       ### fill histos
@@ -448,6 +637,8 @@ def FillHistos(event):
       histos["h_chi2dof_rec"].Fill(chi2dof,wgt)
       histos["h_SnpSig_rec"].Fill(SnpSig,wgt)
       histos["h_TglSig_rec"].Fill(TglSig,wgt)
+      histos["h_xVtxSig_rec"].Fill(xVtxSig,wgt)
+      histos["h_yVtxSig_rec"].Fill(yVtxSig,wgt)
       
       ismatched = event.reco_ismtchd[i]
       isig = event.reco_ixmtchd[i]
@@ -455,7 +646,32 @@ def FillHistos(event):
          histos["h_chi2dof_rec_sig_non"].Fill(chi2dof,wgt)
          histos["h_SnpSig_rec_sig_non"].Fill(SnpSig,wgt)
          histos["h_TglSig_rec_sig_non"].Fill(TglSig,wgt)
+         histos["h_xVtxSig_rec_sig_non"].Fill(xVtxSig,wgt)
+         histos["h_yVtxSig_rec_sig_non"].Fill(yVtxSig,wgt)
          continue
+      
+      ### loop over points along the reco track
+      for jxy_rec in range(event.reco_trckmar[i].GetN()):
+         xrec = ROOT.Double()
+         yrec = ROOT.Double()
+         zrec = ROOT.Double()
+         event.reco_trckmar[i].GetPoint(jxy_rec,xrec,yrec,zrec)
+         if(zrec!=300 and zrec!=310 and zrec!=320 and zrec!=330): continue
+         for jxy_tru in range(event.true_trckmar[isig].GetN()):
+            xtru = ROOT.Double()
+            ytru = ROOT.Double()
+            ztru = ROOT.Double()
+            event.true_trckmar[isig].GetPoint(jxy_tru,xtru,ytru,ztru)
+            if(ztru!=zrec): continue
+            dxrel = (xrec-xtru)/xtru if(xtru!=0) else -999
+            dyrel = (yrec-ytru)/ytru if(ytru!=0) else -999
+            histos["h_res_x_recvstru"].Fill(dxrel,wgt)
+            histos["h_res_y_recvstru"].Fill(dyrel,wgt)
+            histos["h_res_x_vs_xtru_recvstru"].Fill(xtru,dxrel,wgt)
+            histos["h_res_y_vs_ytru_recvstru"].Fill(ytru,dyrel,wgt)
+            histos["h_res_x_vs_xtru_recvstru_logbins"].Fill(xtru,dxrel,wgt)
+            histos["h_res_y_vs_ytru_recvstru_logbins"].Fill(ytru,dyrel,wgt)
+         
       
       Esig     = event.true_p[isig].E()
       pxsig    = event.true_p[isig].Px()
@@ -477,12 +693,15 @@ def FillHistos(event):
       histos["h_chi2dof_rec_sig_mat"].Fill(chi2dof,wgt)
       histos["h_SnpSig_rec_sig_mat"].Fill(SnpSig,wgt)
       histos["h_TglSig_rec_sig_mat"].Fill(TglSig,wgt)
+      histos["h_xVtxSig_rec_sig_mat"].Fill(xVtxSig,wgt)
+      histos["h_yVtxSig_rec_sig_mat"].Fill(yVtxSig,wgt)
       histos["h_E_tru_rec_mat"].Fill(Esig)
       if(accepttrk(isig,event.true_clusters_id,event.all_clusters_xyz,True)): histos["h_E_tru_rec_mat_acc"].Fill(Esig)
       histos["h_res_E"].Fill(dErel,wgt)
-      histos["h_res_E_vs_E"].Fill(Erec,dErel,wgt)
+      histos["h_res_E_vs_Etru_recvstru"].Fill(Esig,dErel,wgt)
       histos["h_res_px"].Fill(dpxrel,wgt)
       histos["h_res_py"].Fill(dpyrel,wgt)
+      histos["h_res_py_zoomout"].Fill(dpyrel,wgt)
       histos["h_res_pz"].Fill(dpzrel,wgt)
       histos["h_res_pT"].Fill(dpTrel,wgt)
       histos["h_res_phi"].Fill(dphirel,wgt)
@@ -491,6 +710,7 @@ def FillHistos(event):
    ### summary filling
    histos["h_ntrks_sig"].Fill(ntrk_sig)
    histos["h_ntrks_bkg"].Fill(ntrk_bkg)
+   histos["h_ntrks_sed"].Fill(ntrk_sed)
    histos["h_ntrks_rec"].Fill(ntrk_rec)
 
 #############################################
@@ -843,14 +1063,19 @@ cnv_E.cd()
 cnv_E.SetLogy()
 hmin,hmax = minmax(histos["h_E_sig"],histos["h_E_bkg"])
 hmin,hmax = minmax(histos["h_E_sig"],histos["h_E_rec"])
+hmin,hmax = minmax(histos["h_E_rec"],histos["h_E_sed"])
+hmin,hmax = minmax(histos["h_E_sed"],histos["h_E_sig"])
 histos["h_E_sig"].SetLineColor(ROOT.kRed)
 histos["h_E_bkg"].SetLineColor(ROOT.kBlue)
+histos["h_E_sed"].SetLineColor(ROOT.kGreen+2)
 histos["h_E_rec"].SetLineColor(ROOT.kBlack)
 histos["h_E_sig"].Draw("hist")
 histos["h_E_bkg"].Draw("hist same")
 histos["h_E_rec"].Draw("hist same")
+histos["h_E_sed"].Draw("hist same")
 leg_rec_sig.AddEntry(histos["h_E_sig"],"Signal","l")
 leg_rec_sig.AddEntry(histos["h_E_bkg"],"Background","l")
+leg_rec_sig.AddEntry(histos["h_E_sed"],"Seeds","l")
 leg_rec_sig.AddEntry(histos["h_E_rec"],"Reconstructed","l")
 leg_rec_sig.Draw("same")
 cnv_E.SaveAs(fn+"Energy.pdf")
@@ -863,34 +1088,46 @@ cnv_pxyz.cd(1)
 ROOT.gPad.SetLogy()
 hmin,hmax = minmax(histos["h_px_sig"],histos["h_px_bkg"])
 hmin,hmax = minmax(histos["h_px_sig"],histos["h_px_rec"])
+hmin,hmax = minmax(histos["h_px_rec"],histos["h_px_sed"])
+hmin,hmax = minmax(histos["h_px_sed"],histos["h_px_sig"])
 histos["h_px_sig"].SetLineColor(ROOT.kRed)
 histos["h_px_bkg"].SetLineColor(ROOT.kBlue)
 histos["h_px_rec"].SetLineColor(ROOT.kBlack)
+histos["h_px_sed"].SetLineColor(ROOT.kGreen+2)
 histos["h_px_sig"].Draw("hist")
 histos["h_px_bkg"].Draw("hist same")
 histos["h_px_rec"].Draw("hist same")
+histos["h_px_sed"].Draw("hist same")
 leg_rec_sig.Draw("same")
 cnv_pxyz.cd(2)
 ROOT.gPad.SetLogy()
 hmin,hmax = minmax(histos["h_py_sig"],histos["h_py_bkg"])
 hmin,hmax = minmax(histos["h_py_sig"],histos["h_py_rec"])
+hmin,hmax = minmax(histos["h_py_rec"],histos["h_py_sed"])
+hmin,hmax = minmax(histos["h_py_sed"],histos["h_py_sig"])
 histos["h_py_sig"].SetLineColor(ROOT.kRed)
 histos["h_py_bkg"].SetLineColor(ROOT.kBlue)
 histos["h_py_rec"].SetLineColor(ROOT.kBlack)
+histos["h_py_sed"].SetLineColor(ROOT.kGreen+2)
 histos["h_py_sig"].Draw("hist")
 histos["h_py_bkg"].Draw("hist same")
 histos["h_py_rec"].Draw("hist same")
+histos["h_py_sed"].Draw("hist same")
 leg_rec_sig.Draw("same")
 cnv_pxyz.cd(3)
 ROOT.gPad.SetLogy()
 hmin,hmax = minmax(histos["h_pz_sig"],histos["h_pz_bkg"])
 hmin,hmax = minmax(histos["h_pz_sig"],histos["h_pz_rec"])
+hmin,hmax = minmax(histos["h_pz_rec"],histos["h_pz_sed"])
+hmin,hmax = minmax(histos["h_pz_sed"],histos["h_pz_sig"])
 histos["h_pz_sig"].SetLineColor(ROOT.kRed)
 histos["h_pz_bkg"].SetLineColor(ROOT.kBlue)
 histos["h_pz_rec"].SetLineColor(ROOT.kBlack)
+histos["h_pz_sed"].SetLineColor(ROOT.kGreen+2)
 histos["h_pz_sig"].Draw("hist")
 histos["h_pz_bkg"].Draw("hist same")
 histos["h_pz_rec"].Draw("hist same")
+histos["h_pz_sed"].Draw("hist same")
 leg_rec_sig.Draw("same")
 cnv_pxyz.SaveAs(fn+"Momentum.pdf")
 cnv_pxyz.SaveAs(allpdf)
@@ -902,42 +1139,64 @@ cnv_pxy_zoom.cd(1)
 ROOT.gPad.SetLogy()
 hmin,hmax = minmax(histos["h_px_zoom_sig"],histos["h_px_zoom_bkg"])
 hmin,hmax = minmax(histos["h_px_zoom_sig"],histos["h_px_zoom_rec"])
+hmin,hmax = minmax(histos["h_px_zoom_rec"],histos["h_px_zoom_sed"])
+hmin,hmax = minmax(histos["h_px_zoom_sed"],histos["h_px_zoom_sig"])
 histos["h_px_zoom_sig"].SetLineColor(ROOT.kRed)
 histos["h_px_zoom_bkg"].SetLineColor(ROOT.kBlue)
 histos["h_px_zoom_rec"].SetLineColor(ROOT.kBlack)
+histos["h_px_zoom_sed"].SetLineColor(ROOT.kGreen+2)
 histos["h_px_zoom_sig"].Draw("hist")
 histos["h_px_zoom_bkg"].Draw("hist same")
 histos["h_px_zoom_rec"].Draw("hist same")
+histos["h_px_zoom_sed"].Draw("hist same")
 leg_rec_sig.Draw("same")
 cnv_pxy_zoom.cd(2)
 ROOT.gPad.SetLogy()
 hmin,hmax = minmax(histos["h_py_zoom_sig"],histos["h_py_zoom_bkg"])
 hmin,hmax = minmax(histos["h_py_zoom_sig"],histos["h_py_zoom_rec"])
+hmin,hmax = minmax(histos["h_py_zoom_rec"],histos["h_py_zoom_sed"])
+hmin,hmax = minmax(histos["h_py_zoom_sed"],histos["h_py_zoom_sig"])
 histos["h_py_zoom_sig"].SetLineColor(ROOT.kRed)
 histos["h_py_zoom_bkg"].SetLineColor(ROOT.kBlue)
 histos["h_py_zoom_rec"].SetLineColor(ROOT.kBlack)
+histos["h_py_zoom_sed"].SetLineColor(ROOT.kGreen+2)
 histos["h_py_zoom_sig"].Draw("hist")
 histos["h_py_zoom_bkg"].Draw("hist same")
 histos["h_py_zoom_rec"].Draw("hist same")
+histos["h_py_zoom_sed"].Draw("hist same")
 leg_rec_sig.Draw("same")
 cnv_pxy_zoom.SaveAs(fn+"pxy_zoom.pdf")
 cnv_pxy_zoom.SaveAs(allpdf)
-
 
 cnv_ntrks = TCanvas("cnv_ntrks","",500,500)
 cnv_ntrks.cd()
 hmin,hmax = minmax(histos["h_ntrks_sig"],histos["h_ntrks_bkg"])
 hmin,hmax = minmax(histos["h_ntrks_sig"],histos["h_ntrks_rec"])
+hmin,hmax = minmax(histos["h_ntrks_rec"],histos["h_ntrks_sed"])
+hmin,hmax = minmax(histos["h_ntrks_sed"],histos["h_ntrks_sig"])
 histos["h_ntrks_sig"].SetLineColor(ROOT.kRed)
 histos["h_ntrks_bkg"].SetLineColor(ROOT.kBlue)
 histos["h_ntrks_rec"].SetLineColor(ROOT.kBlack)
+histos["h_ntrks_sed"].SetLineColor(ROOT.kGreen+2)
 histos["h_ntrks_sig"].Draw("hist")
 histos["h_ntrks_bkg"].Draw("hist same")
 histos["h_ntrks_rec"].Draw("hist same")
+histos["h_ntrks_sed"].Draw("hist same")
 leg_rec_sig.Draw("same")
 cnv_ntrks.SaveAs(fn+"ntrks.pdf")
 cnv_ntrks.SaveAs(allpdf)
 
+histos["h_E_tru_eff_sed"].Divide(histos["h_E_tru_sed_mat"],histos["h_E_tru_sig"]);
+cnv_eff_seeds = TCanvas("cnv_eff_seeds","",500,500)
+cnv_eff_seeds.cd()
+histos["h_E_tru_eff_sed"].SetMinimum(0)
+histos["h_E_tru_eff_sed"].SetMaximum(1.05)
+histos["h_E_tru_eff_sed"].SetLineColor(ROOT.kBlack)
+histos["h_E_tru_eff_sed"].SetMarkerColor(ROOT.kBlack)
+histos["h_E_tru_eff_sed"].SetMarkerStyle(20)
+histos["h_E_tru_eff_sed"].Draw("ep")
+cnv_eff_seeds.SaveAs(fn+"eff_seeds.pdf")
+cnv_eff_seeds.SaveAs(allpdf)
 
 histos["h_E_tru_eff"].Divide(histos["h_E_tru_rec_mat"],histos["h_E_tru_sig"]);
 histos["h_E_tru_eff_acc"].Divide(histos["h_E_tru_rec_mat_acc"],histos["h_E_tru_sig_acc"]);
@@ -962,22 +1221,61 @@ cnv_eff.SaveAs(allpdf)
 
 
 
-# cnv_res_x = TCanvas("cnv_res_x","",500,500)
-# cnv_res_x.cd()
-# # histos["h_res_x"].Fit("gaus","LEM")
-# histos["h_res_x"].Draw("hist")
-# cnv_res_x.SaveAs(fn+"res_x.pdf")
-# cnv_res_x.SaveAs(allpdf)
-#
-# cnv_res_y = TCanvas("cnv_res_y","",500,500)
-# cnv_res_y.cd()
-# # histos["h_res_y"].Fit("gaus","LEM")
-# histos["h_res_y"].Draw("hist")
-# cnv_res_y.SaveAs(fn+"res_y.pdf")
-# cnv_res_y.SaveAs(allpdf)
+cnv_res_xy = TCanvas("cnv_res_xy","",1000,1500)
+cnv_res_xy.Divide(2,3)
+cnv_res_xy.cd(1)
+gaus_res_x_truvscls = TF1("gaus_res_x_truvscls","gaus",-0.00005,+0.00005)
+res = histos["h_res_x_truvscls"].Fit(gaus_res_x_truvscls,"EMRS")
+chi2dof = gaus_res_x_truvscls.GetChisquare()/gaus_res_x_truvscls.GetNDF() if(gaus_res_x_truvscls.GetNDF()>0) else -1
+print("Res(x tru:cls) chi2/Ndof=",chi2dof)
+histos["h_res_x_truvscls"].Draw("hist")
+gaus_res_x_truvscls.Draw("same")
+cnv_res_xy.cd(2);
+gaus_res_y_truvscls = TF1("gaus_res_y_truvscls","gaus",-0.01,+0.01)
+res = histos["h_res_y_truvscls"].Fit(gaus_res_y_truvscls,"EMRS")
+chi2dof = gaus_res_y_truvscls.GetChisquare()/gaus_res_y_truvscls.GetNDF() if(gaus_res_y_truvscls.GetNDF()>0) else -1
+print("Res(y tru:cls) chi2/Ndof=",chi2dof)
+histos["h_res_y_truvscls"].Draw("hist")
+gaus_res_y_truvscls.Draw("same")
+cnv_res_xy.cd(3);
+gaus_res_x_recvscls = TF1("gaus_res_x_recvscls","gaus",-0.00002,+0.00002)
+res = histos["h_res_x_recvscls"].Fit(gaus_res_x_recvscls,"EMRS")
+chi2dof = gaus_res_x_recvscls.GetChisquare()/gaus_res_x_recvscls.GetNDF() if(gaus_res_x_recvscls.GetNDF()>0) else -1
+print("Res(x rec:cls) chi2/Ndof=",chi2dof)
+histos["h_res_x_recvscls"].Draw("hist")
+gaus_res_x_recvscls.Draw("same")
+cnv_res_xy.cd(4)
+gaus_res_y_recvscls = TF1("gaus_res_y_recvscls","gaus",-0.005,+0.005)
+res = histos["h_res_y_recvscls"].Fit(gaus_res_y_recvscls,"EMRS")
+chi2dof = gaus_res_y_recvscls.GetChisquare()/gaus_res_y_recvscls.GetNDF() if(gaus_res_y_recvscls.GetNDF()>0) else -1
+print("Res(y rec:cls) chi2/Ndof=",chi2dof)
+histos["h_res_y_recvscls"].Draw("hist")
+gaus_res_y_recvscls.Draw("same")
+cnv_res_xy.cd(5)
+gaus_res_x_recvstru = TF1("gaus_res_x_recvstru","gaus",-0.000075,+0.000075)
+res = histos["h_res_x_recvstru"].Fit(gaus_res_x_recvstru,"EMRS")
+chi2dof = gaus_res_x_recvstru.GetChisquare()/gaus_res_x_recvstru.GetNDF() if(gaus_res_x_recvstru.GetNDF()>0) else -1
+print("Res(x rec:tru) chi2/Ndof=",chi2dof)
+histos["h_res_x_recvstru"].Draw("hist")
+gaus_res_x_recvstru.Draw("same")
+cnv_res_xy.cd(6)
+gaus_res_y_recvstru = TF1("gaus_res_y_recvstru","gaus",-0.01,+0.01)
+res = histos["h_res_y_recvstru"].Fit(gaus_res_y_recvstru,"EMRS")
+chi2dof = gaus_res_y_recvstru.GetChisquare()/gaus_res_y_recvstru.GetNDF() if(gaus_res_y_recvstru.GetNDF()>0) else -1
+print("Res(y rec:tru) chi2/Ndof=",chi2dof)
+histos["h_res_y_recvstru"].Draw("hist")
+gaus_res_y_recvstru.Draw("same")
+cnv_res_xy.SaveAs(fn+"res_xy.pdf")
+cnv_res_xy.SaveAs(allpdf)
+
 
 cnv_chi2 = TCanvas("cnv_chi2","",1500,500)
 cnv_chi2.Divide(3,1)
+hmin,hmax = minmax(histos["h_chi2dof_rec"],histos["h_chi2dof_rec_sig_mat"])
+hmin,hmax = minmax(histos["h_chi2dof_rec_sig_mat"],histos["h_chi2dof_rec_sig_non"])
+histos["h_chi2dof_rec"].SetMinimum(0.5)
+histos["h_chi2dof_rec_sig_mat"].SetMinimum(0.5)
+histos["h_chi2dof_rec_sig_non"].SetMinimum(0.5)
 cnv_chi2.cd(1)
 ROOT.gPad.SetLogy()
 histos["h_chi2dof_rec"].Draw("hist")
@@ -992,6 +1290,11 @@ cnv_chi2.SaveAs(allpdf)
 
 cnv_SnpSig = TCanvas("cnv_SnpSig","",1500,500)
 cnv_SnpSig.Divide(3,1)
+hmin,hmax = minmax(histos["h_SnpSig_rec"],histos["h_SnpSig_rec_sig_mat"])
+hmin,hmax = minmax(histos["h_SnpSig_rec_sig_mat"],histos["h_SnpSig_rec_sig_non"])
+histos["h_SnpSig_rec"].SetMinimum(0.5)
+histos["h_SnpSig_rec_sig_mat"].SetMinimum(0.5)
+histos["h_SnpSig_rec_sig_non"].SetMinimum(0.5)
 cnv_SnpSig.cd(1)
 ROOT.gPad.SetLogy()
 histos["h_SnpSig_rec"].Draw("hist")
@@ -1006,6 +1309,11 @@ cnv_SnpSig.SaveAs(allpdf)
 
 cnv_TglSig = TCanvas("cnv_TglSig","",1500,500)
 cnv_TglSig.Divide(3,1)
+hmin,hmax = minmax(histos["h_TglSig_rec"],histos["h_TglSig_rec_sig_mat"])
+hmin,hmax = minmax(histos["h_TglSig_rec_sig_mat"],histos["h_TglSig_rec_sig_non"])
+histos["h_TglSig_rec"].SetMinimum(0.5)
+histos["h_TglSig_rec_sig_mat"].SetMinimum(0.5)
+histos["h_TglSig_rec_sig_non"].SetMinimum(0.5)
 cnv_TglSig.cd(1)
 ROOT.gPad.SetLogy()
 histos["h_TglSig_rec"].Draw("hist")
@@ -1018,100 +1326,171 @@ histos["h_TglSig_rec_sig_non"].Draw("hist")
 cnv_TglSig.SaveAs(fn+"TglSig.pdf")
 cnv_TglSig.SaveAs(allpdf)
 
+cnv_vtxSig = TCanvas("cnv_vtxSig","",1500,1000)
+cnv_vtxSig.Divide(3,2)
+cnv_vtxSig.cd(1)
+ROOT.gPad.SetLogy()
+hmin,hmax = minmax(histos["h_xVtxSig_rec"],histos["h_xVtxSig_rec_sig_mat"])
+hmin,hmax = minmax(histos["h_xVtxSig_rec_sig_mat"],histos["h_xVtxSig_rec_sig_non"])
+histos["h_xVtxSig_rec"].SetMinimum(0.5)
+histos["h_xVtxSig_rec_sig_mat"].SetMinimum(0.5)
+histos["h_xVtxSig_rec_sig_non"].SetMinimum(0.5)
+histos["h_xVtxSig_rec"].Draw("hist")
+cnv_vtxSig.cd(2)
+ROOT.gPad.SetLogy()
+histos["h_xVtxSig_rec_sig_mat"].Draw("hist")
+cnv_vtxSig.cd(3)
+ROOT.gPad.SetLogy()
+histos["h_xVtxSig_rec_sig_non"].Draw("hist")
+hmin,hmax = minmax(histos["h_yVtxSig_rec"],histos["h_yVtxSig_rec_sig_mat"])
+hmin,hmax = minmax(histos["h_yVtxSig_rec_sig_mat"],histos["h_yVtxSig_rec_sig_non"])
+histos["h_yVtxSig_rec"].SetMinimum(0.5)
+histos["h_yVtxSig_rec_sig_mat"].SetMinimum(0.5)
+histos["h_yVtxSig_rec_sig_non"].SetMinimum(0.5)
+cnv_vtxSig.cd(4)
+ROOT.gPad.SetLogy()
+histos["h_yVtxSig_rec"].Draw("hist")
+cnv_vtxSig.cd(5)
+ROOT.gPad.SetLogy()
+histos["h_yVtxSig_rec_sig_mat"].Draw("hist")
+cnv_vtxSig.cd(6)
+ROOT.gPad.SetLogy()
+histos["h_yVtxSig_rec_sig_non"].Draw("hist")
+cnv_vtxSig.SaveAs(fn+"vtxSig.pdf")
+cnv_vtxSig.SaveAs(allpdf)
+
+
+
 cnv_res_E = TCanvas("cnv_res_E","",500,500)
 cnv_res_E.cd()
+hmin,hmax = minmax(histos["h_res_E"],histos["h_res_E"])
 gaus_resE = TF1("gaus_resE","gaus",-0.004,+0.004)
 res = histos["h_res_E"].Fit(gaus_resE,"EMRS")
 chi2dof = gaus_resE.GetChisquare()/gaus_resE.GetNDF() if(gaus_resE.GetNDF()>0) else -1
 print("Res(E) chi2/Ndof=",chi2dof)
 histos["h_res_E"].Draw("hist")
 gaus_resE.Draw("same")
+histos["h_res_sed_E"].SetLineColor(ROOT.kGreen+2)
+histos["h_res_sed_E"].Draw("hist same")
+leg_rec_sed = TLegend(0.60,0.73,0.87,0.87)
+leg_rec_sed.SetFillStyle(4000) # will be transparent
+leg_rec_sed.SetFillColor(0)
+leg_rec_sed.SetTextFont(42)
+leg_rec_sed.SetBorderSize(0)
+leg_rec_sed.AddEntry(histos["h_res_sed_E"],"Seeding","l")
+leg_rec_sed.AddEntry(histos["h_res_E"],"Reconstruction","l")
+leg_rec_sed.Draw("same")
 cnv_res_E.SaveAs(fn+"res_E.pdf")
 cnv_res_E.SaveAs(allpdf)
 
 cnv_res_pz = TCanvas("cnv_res_pz","",500,500)
 cnv_res_pz.cd()
+hmin,hmax = minmax(histos["h_res_pz"],histos["h_res_pz"])
 gaus_respz = TF1("gaus_respz","gaus",-0.003,+0.003)
 res = histos["h_res_pz"].Fit(gaus_respz,"EMRS")
 chi2dof = gaus_respz.GetChisquare()/gaus_respz.GetNDF() if(gaus_respz.GetNDF()>0) else -1
 print("Res(pz) chi2/Ndof=",chi2dof)
 histos["h_res_pz"].Draw("hist")
 gaus_respz.Draw("same")
+histos["h_res_sed_pz"].SetLineColor(ROOT.kGreen+2)
+histos["h_res_sed_pz"].Draw("hist same")
+leg_rec_sed.Draw("same")
 cnv_res_pz.SaveAs(fn+"res_pz.pdf")
 cnv_res_pz.SaveAs(allpdf)
 
 cnv_res_px = TCanvas("cnv_res_px","",500,500)
 cnv_res_px.cd()
+hmin,hmax = minmax(histos["h_res_px"],histos["h_res_px"])
 gaus_respx = TF1("gaus_respx","gaus",-0.75,+0.75)
 res = histos["h_res_px"].Fit(gaus_respx,"EMRS")
 chi2dof = gaus_respx.GetChisquare()/gaus_respx.GetNDF() if(gaus_respx.GetNDF()>0) else -1
 print("Res(px) chi2/Ndof=",chi2dof)
 histos["h_res_px"].Draw("hist")
 gaus_respx.Draw("same")
+histos["h_res_sed_px"].SetLineColor(ROOT.kGreen+2)
+histos["h_res_sed_px"].Draw("hist same")
+leg_rec_sed.Draw("same")
 cnv_res_px.SaveAs(fn+"res_px.pdf")
 cnv_res_px.SaveAs(allpdf)
 
 cnv_res_py = TCanvas("cnv_res_py","",500,500)
 cnv_res_py.cd()
+hmin,hmax = minmax(histos["h_res_py"],histos["h_res_sed_py"])
 gaus_respy = TF1("gaus_respy","gaus",-0.012,+0.012)
 res = histos["h_res_py"].Fit(gaus_respy,"EMRS")
 chi2dof = gaus_respy.GetChisquare()/gaus_respy.GetNDF() if(gaus_respy.GetNDF()>0) else -1
 print("Res(py) chi2/Ndof=",chi2dof)
 histos["h_res_py"].Draw("hist")
 gaus_respy.Draw("same")
+histos["h_res_sed_py"].SetLineColor(ROOT.kGreen+2)
+histos["h_res_sed_py"].Draw("hist same")
+leg_rec_sed.Draw("same")
 cnv_res_py.SaveAs(fn+"res_py.pdf")
 cnv_res_py.SaveAs(allpdf)
 
+cnv_res_py_zoomout = TCanvas("cnv_res_py_zoomout","",500,500)
+cnv_res_py_zoomout.cd()
+hmin,hmax = minmax(histos["h_res_py_zoomout"],histos["h_res_sed_py_zoomout"])
+histos["h_res_py_zoomout"].Draw("hist")
+histos["h_res_sed_py_zoomout"].SetLineColor(ROOT.kGreen+2)
+histos["h_res_sed_py_zoomout"].Draw("hist same")
+leg_rec_sed.Draw("same")
+cnv_res_py_zoomout.SaveAs(fn+"res_py_zoomout.pdf")
+cnv_res_py_zoomout.SaveAs(allpdf)
+
 cnv_res_pT = TCanvas("cnv_res_pT","",500,500)
 cnv_res_pT.cd()
+hmin,hmax = minmax(histos["h_res_pT"],histos["h_res_pT"])
 histos["h_res_pT"].Draw("hist")
+histos["h_res_sed_pT"].SetLineColor(ROOT.kGreen+2)
+histos["h_res_sed_pT"].Draw("hist same")
+leg_rec_sed.Draw("same")
 cnv_res_pT.SaveAs(fn+"res_pT.pdf")
 cnv_res_pT.SaveAs(allpdf)
 
 cnv_res_theta = TCanvas("cnv_res_theta","",500,500)
 cnv_res_theta.cd()
+hmin,hmax = minmax(histos["h_res_theta"],histos["h_res_theta"])
 histos["h_res_theta"].Draw("hist")
+histos["h_res_sed_theta"].SetLineColor(ROOT.kGreen+2)
+histos["h_res_sed_theta"].Draw("hist same")
+leg_rec_sed.Draw("same")
 cnv_res_theta.SaveAs(fn+"res_theta.pdf")
 cnv_res_theta.SaveAs(allpdf)
 
 cnv_res_phi = TCanvas("cnv_res_phi","",500,500)
 cnv_res_phi.cd()
+hmin,hmax = minmax(histos["h_res_phi"],histos["h_res_phi"])
 histos["h_res_phi"].Draw("hist")
+histos["h_res_sed_phi"].SetLineColor(ROOT.kGreen+2)
+histos["h_res_sed_phi"].Draw("hist same")
+leg_rec_sed.Draw("same")
 cnv_res_phi.SaveAs(fn+"res_phi.pdf")
 cnv_res_phi.SaveAs(allpdf)
 
-
-
 cnv_res_E_vs_E = TCanvas("cnv_res_E_vs_E","",500,500)
 cnv_res_E_vs_E.cd()
-histos["h_res_E_vs_E"].Draw("col")
+histos["h_res_E_vs_Etru_recvstru"].Draw("col")
 cnv_res_E_vs_E.SaveAs(fn+"res_E_vs_E.pdf")
-cnv_res_E_vs_E.SaveAs(allpdf+")")
+cnv_res_E_vs_E.SaveAs(allpdf)
 
-# cnv_res_x_vs_x = TCanvas("cnv_res_x_vs_x","",500,500)
-# cnv_res_x_vs_x.cd()
-# histos["h_res_x_vs_x"].Draw("col")
-# cnv_res_x_vs_x.SaveAs(fn+"res_x_vs_x.pdf")
-# cnv_res_x_vs_x.SaveAs(allpdf)
-# 
-# cnv_dx_vs_E = TCanvas("cnv_dx_vs_E","",500,500)
-# cnv_dx_vs_E.cd()
-# histos["h_dx_vs_E"].Draw("col")
-# cnv_dx_vs_E.SaveAs(fn+"dx_vs_E.pdf")
-# cnv_dx_vs_E.SaveAs(allpdf)
-#
-# cnv_dx_vs_x = TCanvas("cnv_dx_vs_x","",500,500)
-# cnv_dx_vs_x.cd()
-# histos["h_dx_vs_x"].Draw("col")
-# cnv_dx_vs_x.SaveAs(fn+"dx_vs_x.pdf")
-# cnv_dx_vs_x.SaveAs(allpdf)
-#
-# cnv_dE_vs_x = TCanvas("cnv_dE_vs_x","",500,500)
-# cnv_dE_vs_x.cd()
-# histos["h_dE_vs_x"].Draw("col")
-# cnv_dE_vs_x.SaveAs(fn+"dE_vs_x.pdf")
-# cnv_dE_vs_x.SaveAs(allpdf+")")
+cnv_res_xy_vs_xy = TCanvas("cnv_res_xy_vs_xy","",1000,500)
+cnv_res_xy_vs_xy.Divide(2,1)
+cnv_res_xy_vs_xy.cd(1)
+histos["h_res_x_vs_xtru_recvstru"].Draw("col")
+cnv_res_xy_vs_xy.cd(2)
+histos["h_res_y_vs_ytru_recvstru"].Draw("col")
+cnv_res_xy_vs_xy.SaveAs(fn+"res_xy_vs_xy.pdf")
+cnv_res_xy_vs_xy.SaveAs(allpdf)
 
+cnv_res_xy_vs_xy_log = TCanvas("cnv_res_xy_vs_xy_log_log","",1000,500)
+cnv_res_xy_vs_xy_log.Divide(2,1)
+cnv_res_xy_vs_xy_log.cd(1)
+histos["h_res_x_vs_xtru_recvstru_logbins"].Draw("col")
+cnv_res_xy_vs_xy_log.cd(2)
+histos["h_res_y_vs_ytru_recvstru_logbins"].Draw("col")
+cnv_res_xy_vs_xy_log.SaveAs(fn+"res_xy_vs_xy_log.pdf")
+cnv_res_xy_vs_xy_log.SaveAs(allpdf+")")
 
 
 ########### write all histos to a root file
