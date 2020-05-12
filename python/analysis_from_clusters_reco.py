@@ -9,10 +9,8 @@ from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TPolyMarker3D, TPolyLine3D
 import argparse
 parser = argparse.ArgumentParser(description='analysis.py...')
 parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
-parser.add_argument('-e', metavar='energy', required=False,  help='beam energy')
 argus = parser.parse_args()
 proc  = argus.p
-ebeam = argus.e
 
 ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptFit(0);
@@ -23,7 +21,6 @@ ROOT.gStyle.SetPadLeftMargin(0.13)
 #############################################
 
 process = proc
-beamenergy = ebeam
 
 ### stave geometry
 np=5
@@ -246,20 +243,30 @@ def BookHistos(process):
    histos.update( {"h_E_tru_eff_acc"    :TH1D("h_E_tru_eff_acc",    "In-acceptance efficiency;#it{E}_{tru}^{all} [GeV];Tracks",68,0,17)})
    
    histos.update( {"h_res_E_vs_Etru_recvstru":TH2D("h_res_E_vs_Etru_recvstru",";E_{tru} [GeV];(E_{rec}-E_{tru})/E_{tru};Tracks", 34, 0, 17,    200,-0.05,+0.05)} )
-   histos.update( {"h_res_x_vs_xtru_recvstru":TH2D("h_res_x_vs_xtru_recvstru",";x_{tru} [cm];(x_{rec}-x_{tru})/x_{tru};Tracks", 200,-70,+70,   200,-0.0007,+0.0007)} )
-   histos.update( {"h_res_y_vs_ytru_recvstru":TH2D("h_res_y_vs_ytru_recvstru",";y_{tru} [cm];(y_{rec}-y_{tru})/y_{tru};Tracks", 200,-0.4,+0.4, 200,-0.05,+0.05)} )
+   histos.update( {"h_res_x_vs_xtru_recvstru":TH2D("h_res_x_vs_xtru_recvstru",";x_{tru} [cm];(x_{rec}-x_{tru})/x_{tru};Tracks", 200,-70,+70,   200,-0.001,+0.001)} )
+   histos.update( {"h_res_y_vs_ytru_recvstru":TH2D("h_res_y_vs_ytru_recvstru",";y_{tru} [cm];(y_{rec}-y_{tru})/y_{tru};Tracks", 200,-0.4,+0.4, 200,-0.075,+0.075)} )
 
-   nxbinstmp,xbinstmp = GetLogBinning(100,1,70)
+   nxbinstmp,xbinstmp = GetLogBinning(50,1,70)
    xbins = []
    for n in reversed(range(len(xbinstmp))): xbins.append(-xbinstmp[n])
    for n in range(len(xbinstmp)):           xbins.append(+xbinstmp[n])
-   histos.update( {"h_res_x_vs_xtru_recvstru_logbins":TH2D("h_res_x_vs_xtru_recvstru_logbins",";x_{tru} [cm];(x_{rec}-x_{tru})/x_{tru};Tracks", len(xbins)+1,array.array("d",xbins), 200,-0.0007,+0.0007)} )
+   histos.update( {"h_res_x_vs_xtru_clsvstru_logbins":TH2D("h_res_x_vs_xtru_clsvstru_logbins",";x_{tru} [cm];(x_{cls}-x_{tru})/x_{tru};Tracks", len(xbins)-1,array.array("d",xbins), 200,-0.001,+0.001)} )
+   histos.update( {"h_res_x_vs_xcls_recvscls_logbins":TH2D("h_res_x_vs_xcls_recvscls_logbins",";x_{cls} [cm];(x_{rec}-x_{cls})/x_{cls};Tracks", len(xbins)-1,array.array("d",xbins), 200,-0.001,+0.001)} )
+   histos.update( {"h_res_x_vs_xtru_recvstru_logbins":TH2D("h_res_x_vs_xtru_recvstru_logbins",";x_{tru} [cm];(x_{rec}-x_{tru})/x_{tru};Tracks", len(xbins)-1,array.array("d",xbins), 200,-0.001,+0.001)} )
+   histos.update( {"h_dx_vs_xtru_clsvstru_logbins":TH2D("h_dx_vs_xtru_clsvstru_logbins",";x_{tru} [cm];x_{cls}-x_{tru} [cm];Tracks", len(xbins)-1,array.array("d",xbins), 200,-0.02,+0.02)} )
+   histos.update( {"h_dx_vs_xcls_recvscls_logbins":TH2D("h_dx_vs_xcls_recvscls_logbins",";x_{cls} [cm];x_{rec}-x_{cls} [cm];Tracks", len(xbins)-1,array.array("d",xbins), 200,-0.02,+0.02)} )
+   histos.update( {"h_dx_vs_xtru_recvstru_logbins":TH2D("h_dx_vs_xtru_recvstru_logbins",";x_{tru} [cm];x_{rec}-x_{tru} [cm];Tracks", len(xbins)-1,array.array("d",xbins), 200,-0.02,+0.02)} )
    
-   nybinstmp,ybinstmp = GetLogBinning(100,0.001,0.4)
+   nybinstmp,ybinstmp = GetLogBinning(50,0.001,0.4)
    ybins = []
    for n in reversed(range(len(ybinstmp))): ybins.append(-ybinstmp[n])
-   for n in range(len(ybinstmp)):           ybins.append(+ybinstmp[n])   
-   histos.update( {"h_res_y_vs_ytru_recvstru_logbins":TH2D("h_res_y_vs_ytru_recvstru_logbins",";y_{tru} [cm];(y_{rec}-y_{tru})/y_{tru};Tracks", len(ybins)+1,array.array("d",ybins), 200,-0.05,+0.05)} )
+   for n in range(len(ybinstmp)):           ybins.append(+ybinstmp[n])
+   histos.update( {"h_res_y_vs_ytru_clsvstru_logbins":TH2D("h_res_y_vs_ytru_clsvstru_logbins",";y_{tru} [cm];(y_{cls}-y_{tru})/y_{tru};Tracks", len(ybins)-1,array.array("d",ybins), 200,-0.075,+0.075)} )  
+   histos.update( {"h_res_y_vs_ycls_recvscls_logbins":TH2D("h_res_y_vs_ycls_recvscls_logbins",";y_{cls} [cm];(y_{rec}-y_{cls})/y_{cls};Tracks", len(ybins)-1,array.array("d",ybins), 200,-0.075,+0.075)} )
+   histos.update( {"h_res_y_vs_ytru_recvstru_logbins":TH2D("h_res_y_vs_ytru_recvstru_logbins",";y_{tru} [cm];(y_{rec}-y_{tru})/y_{tru};Tracks", len(ybins)-1,array.array("d",ybins), 200,-0.075,+0.075)} )
+   histos.update( {"h_dy_vs_ytru_clsvstru_logbins":TH2D("h_dy_vs_ytru_clsvstru_logbins",";y_{tru} [cm];y_{cls}-y_{tru} [cm];Tracks", len(ybins)-1,array.array("d",ybins), 200,-0.0075,+0.0075)} )
+   histos.update( {"h_dy_vs_ycls_recvscls_logbins":TH2D("h_dy_vs_ycls_recvscls_logbins",";y_{cls} [cm];y_{rec}-y_{cls} [cm];Tracks", len(ybins)-1,array.array("d",ybins), 200,-0.0075,+0.0075)} )
+   histos.update( {"h_dy_vs_ytru_recvstru_logbins":TH2D("h_dy_vs_ytru_recvstru_logbins",";y_{tru} [cm];y_{rec}-y_{tru} [cm];Tracks", len(ybins)-1,array.array("d",ybins), 200,-0.0075,+0.0075)} )
 
    histos.update( {"h_xy_layer1_rec":TH2D("h_xy_layer1_rec","Layer 1: reconstructed tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
    histos.update( {"h_xy_layer2_rec":TH2D("h_xy_layer2_rec","Layer 2: reconstructed tracks per event in bins of 250#times250 #mum^{2};x [cm];y [cm];Tracks", 6000,-75,+75, 80,-1,+1)} )
@@ -324,7 +331,7 @@ def FillHistos(event):
    Buildid2indexDict(event.all_clusters_id)
    
    ###############################
-   ### loop on signal particles
+   ### loop on seeds
    nseedsmat = 0
    for i in range(event.seed_p.size()):
       wgt = 1 # event.seed_wgt[i]
@@ -378,9 +385,6 @@ def FillHistos(event):
             histos["h_res_sed_pT"].Fill(sed_dpTrel,wgt)
             histos["h_res_sed_phi"].Fill(sed_dphirel,wgt)
             histos["h_res_sed_theta"].Fill(sed_dthetarel,wgt)
-            
-            
-   # print("Ntrues=%g, Nseeds=%g, Nseedsmat=%g" % (event.true_p.size(),event.seed_p.size(),nseedsmat))
    
    
    ###############################
@@ -442,34 +446,58 @@ def FillHistos(event):
             histos["h_xE_layer1_sig"].Fill(x,E,wgt)
             histos["h_xy_layer1_sig"].Fill(x,y,wgt)
             histos["h_xy_layer1_sigbkg"].Fill(x,y,wgt)
-            dxrel = (cls_tru_r1[0]-x)/x if(cls_tru_r1[0]!=-999 and x!=0) else -999
-            dyrel = (cls_tru_r1[1]-y)/y if(cls_tru_r1[1]!=-999 and y!=0) else -999
+            dx = (cls_tru_r1[0]-x)
+            dy = (cls_tru_r1[1]-y)
+            dxrel = dx/x if(cls_tru_r1[0]!=-999 and x!=0) else -999
+            dyrel = dy/y if(cls_tru_r1[1]!=-999 and y!=0) else -999
             histos["h_res_x_truvscls"].Fill(dxrel,wgt)
             histos["h_res_y_truvscls"].Fill(dyrel,wgt)
+            histos["h_res_x_vs_xtru_clsvstru_logbins"].Fill(x,dxrel,wgt)
+            histos["h_res_y_vs_ytru_clsvstru_logbins"].Fill(y,dyrel,wgt)
+            histos["h_dx_vs_xtru_clsvstru_logbins"].Fill(x,dx,wgt)
+            histos["h_dy_vs_ytru_clsvstru_logbins"].Fill(y,dy,wgt)
          if(z==310):
             histos["h_xE_layer2_sig"].Fill(x,E,wgt)
             histos["h_xy_layer2_sig"].Fill(x,y,wgt)
             histos["h_xy_layer2_sigbkg"].Fill(x,y,wgt)
-            dxrel = (cls_tru_r2[0]-x)/x if(cls_tru_r2[0]!=-999 and x!=0) else -999
-            dyrel = (cls_tru_r2[1]-y)/y if(cls_tru_r2[1]!=-999 and y!=0) else -999
+            dx = (cls_tru_r2[0]-x)
+            dy = (cls_tru_r2[1]-y)
+            dxrel = dx/x if(cls_tru_r2[0]!=-999 and x!=0) else -999
+            dyrel = dy/y if(cls_tru_r2[1]!=-999 and y!=0) else -999
             histos["h_res_x_truvscls"].Fill(dxrel,wgt)
             histos["h_res_y_truvscls"].Fill(dyrel,wgt)
+            histos["h_res_x_vs_xtru_clsvstru_logbins"].Fill(x,dxrel,wgt)
+            histos["h_res_y_vs_ytru_clsvstru_logbins"].Fill(y,dyrel,wgt)
+            histos["h_dx_vs_xtru_clsvstru_logbins"].Fill(x,dx,wgt)
+            histos["h_dy_vs_ytru_clsvstru_logbins"].Fill(y,dy,wgt)
          if(z==320):
             histos["h_xE_layer3_sig"].Fill(x,E,wgt)
             histos["h_xy_layer3_sig"].Fill(x,y,wgt)
             histos["h_xy_layer3_sigbkg"].Fill(x,y,wgt)
-            dxrel = (cls_tru_r3[0]-x)/x if(cls_tru_r3[0]!=-999 and x!=0) else -999
-            dyrel = (cls_tru_r3[1]-y)/y if(cls_tru_r3[1]!=-999 and y!=0) else -999
+            dx = (cls_tru_r3[0]-x)
+            dy = (cls_tru_r3[1]-y)
+            dxrel = dx/x if(cls_tru_r3[0]!=-999 and x!=0) else -999
+            dyrel = dy/y if(cls_tru_r3[1]!=-999 and y!=0) else -999
             histos["h_res_x_truvscls"].Fill(dxrel,wgt)
             histos["h_res_y_truvscls"].Fill(dyrel,wgt)
+            histos["h_res_x_vs_xtru_clsvstru_logbins"].Fill(x,dxrel,wgt)
+            histos["h_res_y_vs_ytru_clsvstru_logbins"].Fill(y,dyrel,wgt)
+            histos["h_dx_vs_xtru_clsvstru_logbins"].Fill(x,dx,wgt)
+            histos["h_dy_vs_ytru_clsvstru_logbins"].Fill(y,dy,wgt)
          if(z==330):
             histos["h_xE_layer4_sig"].Fill(x,E,wgt)
             histos["h_xy_layer4_sig"].Fill(x,y,wgt)
             histos["h_xy_layer4_sigbkg"].Fill(x,y,wgt)
-            dxrel = (cls_tru_r4[0]-x)/x if(cls_tru_r4[0]!=-999 and x!=0) else -999
-            dyrel = (cls_tru_r4[1]-y)/y if(cls_tru_r4[1]!=-999 and y!=0) else -999
+            dx = (cls_tru_r4[0]-x)
+            dy = (cls_tru_r4[1]-y)
+            dxrel = dx/x if(cls_tru_r4[0]!=-999 and x!=0) else -999
+            dyrel = dy/y if(cls_tru_r4[1]!=-999 and y!=0) else -999
             histos["h_res_x_truvscls"].Fill(dxrel,wgt)
             histos["h_res_y_truvscls"].Fill(dyrel,wgt)
+            histos["h_res_x_vs_xtru_clsvstru_logbins"].Fill(x,dxrel,wgt)
+            histos["h_res_y_vs_ytru_clsvstru_logbins"].Fill(y,dyrel,wgt)
+            histos["h_dx_vs_xtru_clsvstru_logbins"].Fill(x,dx,wgt)
+            histos["h_dy_vs_ytru_clsvstru_logbins"].Fill(y,dy,wgt)
          
    ###############################
    ### loop on backgrouns particles
@@ -603,28 +631,52 @@ def FillHistos(event):
          if(z==200): histos["h_xy_layer0_rec"].Fill(x,y,wgt)
          if(z==300):
             histos["h_xy_layer1_rec"].Fill(x,y,wgt)
-            dxrel = (x-cls_rec_r1[0])/cls_rec_r1[0] if(cls_rec_r1[0]!=-999 and cls_rec_r1[0]!=0) else -999
-            dyrel = (y-cls_rec_r1[1])/cls_rec_r1[1] if(cls_rec_r1[1]!=-999 and cls_rec_r1[1]!=0) else -999
+            dx = (x-cls_rec_r1[0])
+            dy = (y-cls_rec_r1[1])
+            dxrel = dx/cls_rec_r1[0] if(cls_rec_r1[0]!=-999 and cls_rec_r1[0]!=0) else -999
+            dyrel = dy/cls_rec_r1[1] if(cls_rec_r1[1]!=-999 and cls_rec_r1[1]!=0) else -999
             histos["h_res_x_recvscls"].Fill(dxrel,wgt)
             histos["h_res_y_recvscls"].Fill(dyrel,wgt)
+            histos["h_res_x_vs_xcls_recvscls_logbins"].Fill(cls_rec_r1[0],dxrel,wgt)
+            histos["h_res_y_vs_ycls_recvscls_logbins"].Fill(cls_rec_r1[1],dyrel,wgt)
+            histos["h_dx_vs_xcls_recvscls_logbins"].Fill(cls_rec_r1[0],dx,wgt)
+            histos["h_dy_vs_ycls_recvscls_logbins"].Fill(cls_rec_r1[1],dy,wgt)
          if(z==310):
             histos["h_xy_layer2_rec"].Fill(x,y,wgt)
-            dxrel = (x-cls_rec_r2[0])/cls_rec_r2[0] if(cls_rec_r2[0]!=-999 and cls_rec_r2[0]!=0) else -999
-            dyrel = (y-cls_rec_r2[1])/cls_rec_r2[1] if(cls_rec_r2[1]!=-999 and cls_rec_r2[1]!=0) else -999
+            dx = (x-cls_rec_r2[0])
+            dy = (y-cls_rec_r2[1])
+            dxrel = dx/cls_rec_r2[0] if(cls_rec_r2[0]!=-999 and cls_rec_r2[0]!=0) else -999
+            dyrel = dy/cls_rec_r2[1] if(cls_rec_r2[1]!=-999 and cls_rec_r2[1]!=0) else -999
             histos["h_res_x_recvscls"].Fill(dxrel,wgt)
             histos["h_res_y_recvscls"].Fill(dyrel,wgt)
+            histos["h_res_x_vs_xcls_recvscls_logbins"].Fill(cls_rec_r2[0],dxrel,wgt)
+            histos["h_res_y_vs_ycls_recvscls_logbins"].Fill(cls_rec_r2[1],dyrel,wgt)
+            histos["h_dx_vs_xcls_recvscls_logbins"].Fill(cls_rec_r2[0],dx,wgt)
+            histos["h_dy_vs_ycls_recvscls_logbins"].Fill(cls_rec_r2[1],dy,wgt)
          if(z==320):
             histos["h_xy_layer3_rec"].Fill(x,y,wgt)
-            dxrel = (x-cls_rec_r3[0])/cls_rec_r3[0] if(cls_rec_r3[0]!=-999 and cls_rec_r3[0]!=0) else -999
-            dyrel = (y-cls_rec_r3[1])/cls_rec_r3[1] if(cls_rec_r3[1]!=-999 and cls_rec_r3[1]!=0) else -999
+            dx = (x-cls_rec_r3[0])
+            dy = (y-cls_rec_r3[1])
+            dxrel = dx/cls_rec_r3[0] if(cls_rec_r3[0]!=-999 and cls_rec_r3[0]!=0) else -999
+            dyrel = dy/cls_rec_r3[1] if(cls_rec_r3[1]!=-999 and cls_rec_r3[1]!=0) else -999
             histos["h_res_x_recvscls"].Fill(dxrel,wgt)
             histos["h_res_y_recvscls"].Fill(dyrel,wgt)
+            histos["h_res_x_vs_xcls_recvscls_logbins"].Fill(cls_rec_r3[0],dxrel,wgt)
+            histos["h_res_y_vs_ycls_recvscls_logbins"].Fill(cls_rec_r3[1],dyrel,wgt)
+            histos["h_dx_vs_xcls_recvscls_logbins"].Fill(cls_rec_r3[0],dx,wgt)
+            histos["h_dy_vs_ycls_recvscls_logbins"].Fill(cls_rec_r3[1],dy,wgt)
          if(z==330):
             histos["h_xy_layer4_rec"].Fill(x,y,wgt)
-            dxrel = (x-cls_rec_r4[0])/cls_rec_r4[0] if(cls_rec_r4[0]!=-999 and cls_rec_r4[0]!=0) else -999
-            dyrel = (y-cls_rec_r4[1])/cls_rec_r4[1] if(cls_rec_r4[1]!=-999 and cls_rec_r4[1]!=0) else -999
+            dx = (x-cls_rec_r4[0])
+            dy = (y-cls_rec_r4[1])
+            dxrel = dx/cls_rec_r4[0] if(cls_rec_r4[0]!=-999 and cls_rec_r4[0]!=0) else -999
+            dyrel = dy/cls_rec_r4[1] if(cls_rec_r4[1]!=-999 and cls_rec_r4[1]!=0) else -999
             histos["h_res_x_recvscls"].Fill(dxrel,wgt)
             histos["h_res_y_recvscls"].Fill(dyrel,wgt)
+            histos["h_res_x_vs_xcls_recvscls_logbins"].Fill(cls_rec_r4[0],dxrel,wgt)
+            histos["h_res_y_vs_ycls_recvscls_logbins"].Fill(cls_rec_r4[1],dyrel,wgt)
+            histos["h_dx_vs_xcls_recvscls_logbins"].Fill(cls_rec_r4[0],dx,wgt)
+            histos["h_dy_vs_ycls_recvscls_logbins"].Fill(cls_rec_r4[1],dy,wgt)
       
       
       ### fill histos
@@ -663,14 +715,18 @@ def FillHistos(event):
             ztru = ROOT.Double()
             event.true_trckmar[isig].GetPoint(jxy_tru,xtru,ytru,ztru)
             if(ztru!=zrec): continue
-            dxrel = (xrec-xtru)/xtru if(xtru!=0) else -999
-            dyrel = (yrec-ytru)/ytru if(ytru!=0) else -999
+            dx = (xrec-xtru)
+            dy = (yrec-ytru)
+            dxrel = dx/xtru if(xtru!=0) else -999
+            dyrel = dy/ytru if(ytru!=0) else -999
             histos["h_res_x_recvstru"].Fill(dxrel,wgt)
             histos["h_res_y_recvstru"].Fill(dyrel,wgt)
             histos["h_res_x_vs_xtru_recvstru"].Fill(xtru,dxrel,wgt)
             histos["h_res_y_vs_ytru_recvstru"].Fill(ytru,dyrel,wgt)
             histos["h_res_x_vs_xtru_recvstru_logbins"].Fill(xtru,dxrel,wgt)
             histos["h_res_y_vs_ytru_recvstru_logbins"].Fill(ytru,dyrel,wgt)
+            histos["h_dx_vs_xtru_recvstru_logbins"].Fill(xtru,dx,wgt)
+            histos["h_dy_vs_ytru_recvstru_logbins"].Fill(ytru,dy,wgt)
          
       
       Esig     = event.true_p[isig].E()
@@ -1238,21 +1294,21 @@ print("Res(y tru:cls) chi2/Ndof=",chi2dof)
 histos["h_res_y_truvscls"].Draw("hist")
 gaus_res_y_truvscls.Draw("same")
 cnv_res_xy.cd(3);
-gaus_res_x_recvscls = TF1("gaus_res_x_recvscls","gaus",-0.00002,+0.00002)
+gaus_res_x_recvscls = TF1("gaus_res_x_recvscls","gaus",-0.00001,+0.00001)
 res = histos["h_res_x_recvscls"].Fit(gaus_res_x_recvscls,"EMRS")
 chi2dof = gaus_res_x_recvscls.GetChisquare()/gaus_res_x_recvscls.GetNDF() if(gaus_res_x_recvscls.GetNDF()>0) else -1
 print("Res(x rec:cls) chi2/Ndof=",chi2dof)
 histos["h_res_x_recvscls"].Draw("hist")
 gaus_res_x_recvscls.Draw("same")
 cnv_res_xy.cd(4)
-gaus_res_y_recvscls = TF1("gaus_res_y_recvscls","gaus",-0.005,+0.005)
+gaus_res_y_recvscls = TF1("gaus_res_y_recvscls","gaus",-0.0035,+0.0035)
 res = histos["h_res_y_recvscls"].Fit(gaus_res_y_recvscls,"EMRS")
 chi2dof = gaus_res_y_recvscls.GetChisquare()/gaus_res_y_recvscls.GetNDF() if(gaus_res_y_recvscls.GetNDF()>0) else -1
 print("Res(y rec:cls) chi2/Ndof=",chi2dof)
 histos["h_res_y_recvscls"].Draw("hist")
 gaus_res_y_recvscls.Draw("same")
 cnv_res_xy.cd(5)
-gaus_res_x_recvstru = TF1("gaus_res_x_recvstru","gaus",-0.000075,+0.000075)
+gaus_res_x_recvstru = TF1("gaus_res_x_recvstru","gaus",-0.00006,+0.00006)
 res = histos["h_res_x_recvstru"].Fit(gaus_res_x_recvstru,"EMRS")
 chi2dof = gaus_res_x_recvstru.GetChisquare()/gaus_res_x_recvstru.GetNDF() if(gaus_res_x_recvstru.GetNDF()>0) else -1
 print("Res(x rec:tru) chi2/Ndof=",chi2dof)
@@ -1490,7 +1546,24 @@ histos["h_res_x_vs_xtru_recvstru_logbins"].Draw("col")
 cnv_res_xy_vs_xy_log.cd(2)
 histos["h_res_y_vs_ytru_recvstru_logbins"].Draw("col")
 cnv_res_xy_vs_xy_log.SaveAs(fn+"res_xy_vs_xy_log.pdf")
-cnv_res_xy_vs_xy_log.SaveAs(allpdf+")")
+cnv_res_xy_vs_xy_log.SaveAs(allpdf)
+
+cnv_dxy_vs_xy_log = TCanvas("cnv_dxy_vs_xy_log_log","",1000,1500)
+cnv_dxy_vs_xy_log.Divide(2,3)
+cnv_dxy_vs_xy_log.cd(1)
+histos["h_dx_vs_xtru_clsvstru_logbins"].Draw("col")
+cnv_dxy_vs_xy_log.cd(2)
+histos["h_dy_vs_ytru_clsvstru_logbins"].Draw("col")
+cnv_dxy_vs_xy_log.cd(3)
+histos["h_dx_vs_xcls_recvscls_logbins"].Draw("col")
+cnv_dxy_vs_xy_log.cd(4)
+histos["h_dy_vs_ycls_recvscls_logbins"].Draw("col")
+cnv_dxy_vs_xy_log.cd(5)
+histos["h_dx_vs_xtru_recvstru_logbins"].Draw("col")
+cnv_dxy_vs_xy_log.cd(6)
+histos["h_dy_vs_ytru_recvstru_logbins"].Draw("col")
+cnv_dxy_vs_xy_log.SaveAs(fn+"dxy_vs_xy_log.pdf")
+cnv_dxy_vs_xy_log.SaveAs(allpdf+")")
 
 
 ########### write all histos to a root file
