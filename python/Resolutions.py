@@ -51,7 +51,7 @@ def GetRMSy(h,bx):
    rms = math.sqrt(rms/norm)
    return rms,av
    
-def GetSigma(fitf,name):
+def GetMeanSigma(fitf,name):
    xmin = fitf.GetXmin()
    xmax = fitf.GetXmax()
    mean = fitf.Mean(xmin,xmax)
@@ -61,7 +61,7 @@ def GetSigma(fitf,name):
    mean = fitf.Mean(xmin,xmax)
    sigma = ROOT.TMath.Sqrt(fitf.Variance(xmin,xmax))
    print("%s: mean=%.5f, sigma=%.5f" % (name,mean,sigma))
-   return sigma
+   return mean,sigma
 
 #############################################
 
@@ -171,6 +171,41 @@ peak6 = "(0.5*[6]*[7]/TMath::Pi()) / TMath::Max(1.e-10, (x[0]-[8])*(x[0]-[8])+ .
 peakfunc0 = "gaus"
 peakfunc6 = "gaus(6)"
 
+cnv = TCanvas("cnv_rat_E","",500,500)
+hrate = tfile.Get("h_rat_E")
+g1 = TF1("g1", "gaus", 0.99,1.01);    g1.SetLineColor(ROOT.kViolet)
+g2 = TF1("g2", "gaus", 0.99,1.01);    g2.SetLineColor(ROOT.kGreen+2)
+l0 = TF1("l0", peakfunc0, 0.99,1.01); l0.SetLineColor(ROOT.kYellow+2)
+hrate.Fit(g1,"EMRS")
+hrate.Fit(g2,"EMRS")
+hrate.Fit(l0,"EMRS")
+fite = TF1("fite", "gaus(0)+gaus(3)+"+peakfunc6, 0.99,1.01)
+fite.SetLineWidth(1)
+fite.SetParameter(0,g1.GetParameter(0))
+fite.SetParameter(1,g1.GetParameter(1))
+fite.SetParameter(2,g1.GetParameter(2))
+fite.SetParameter(3,g2.GetParameter(0))
+fite.SetParameter(4,g2.GetParameter(1))
+fite.SetParameter(5,g2.GetParameter(2))
+fite.SetParameter(6,l0.GetParameter(0))
+fite.SetParameter(7,l0.GetParameter(1))
+fite.SetParameter(8,l0.GetParameter(2))
+rat = hrate.Fit(fite,"EMRS")
+chi2dof = fite.GetChisquare()/fite.GetNDF() if(fite.GetNDF()>0) else -1
+print("Rat(E rec:tru) chi2/Ndof=",chi2dof)
+hrate.Draw("hist")
+fite.Draw("same")
+mean,sigma = GetMeanSigma(fite,"E")
+s = ROOT.TLatex()
+s.SetNDC(1);
+s.SetTextAlign(13);
+s.SetTextColor(ROOT.kBlack)
+s.SetTextSize(0.03)
+s.DrawLatex(0.2,0.85,ROOT.Form("Mean(E)=%.6f" % (mean)))
+s.DrawLatex(0.2,0.78,ROOT.Form("Sigma(E)=%.4f" % (sigma)))
+s.DrawLatex(0.2,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.3f" % (chi2dof)))
+cnv.SaveAs(fn+"rat_E.pdf")
+
 cnv = TCanvas("cnv_res_E","",500,500)
 hrese = tfile.Get("h_res_E")
 g1 = TF1("g1", "gaus", -0.01,+0.01);    g1.SetLineColor(ROOT.kViolet)
@@ -195,7 +230,7 @@ chi2dof = fite.GetChisquare()/fite.GetNDF() if(fite.GetNDF()>0) else -1
 print("Res(E rec:tru) chi2/Ndof=",chi2dof)
 hrese.Draw("hist")
 fite.Draw("same")
-sigma = GetSigma(fite,"E")
+mean,sigma = GetMeanSigma(fite,"E")
 s = ROOT.TLatex()
 s.SetNDC(1);
 s.SetTextAlign(13);
@@ -230,7 +265,7 @@ res = hrespx.Fit(fitpx,"EMRS")
 chi2dof = fitpx.GetChisquare()/fitpx.GetNDF() if(fitpx.GetNDF()>0) else -1
 print("Res(Px rec:tru) chi2/Ndof=",chi2dof)
 hrespx.Draw("hist")
-sigma = GetSigma(fitpx,"Px")
+mean,sigma = GetMeanSigma(fitpx,"Px")
 s = ROOT.TLatex()
 s.SetNDC(1);
 s.SetTextAlign(13);
@@ -263,7 +298,7 @@ res = hrespy.Fit(fitpy,"EMRS")
 chi2dof = fitpy.GetChisquare()/fitpy.GetNDF() if(fitpy.GetNDF()>0) else -1
 print("Res(Py rec:tru) chi2/Ndof=",chi2dof)
 hrespy.Draw("hist")
-sigma = GetSigma(fitpy,"Py")
+mean,sigma = GetMeanSigma(fitpy,"Py")
 s = ROOT.TLatex()
 s.SetNDC(1);
 s.SetTextAlign(13);
@@ -297,7 +332,7 @@ chi2dof = fitpz.GetChisquare()/fitpz.GetNDF() if(fitpz.GetNDF()>0) else -1
 print("Res(Pz rec:tru) chi2/Ndof=",chi2dof)
 hrespz.Draw("hist")
 fitpz.Draw("same")
-sigma = GetSigma(fitpz,"Pz")
+mean,sigma = GetMeanSigma(fitpz,"Pz")
 s = ROOT.TLatex()
 s.SetNDC(1);
 s.SetTextAlign(13);
