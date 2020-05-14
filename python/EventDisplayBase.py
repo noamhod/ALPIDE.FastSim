@@ -56,8 +56,9 @@ class GeoLUXE():
     def createWorld(self):
         ### beampipe geometry
         beampipe_HalfLength = 200
-        beampipe_Rmin = 3.6
-        beampipe_Rmax = 4
+        beampipe_Wall = 0.2
+        beampipe_Rmax = 2.413 #4 ### TODO: should be 2.413 cm
+        beampipe_Rmin = beampipe_Rmax-beampipe_Wall #3.6 ### TODO: should be 2.413-0.2 cm
         beampipe_zCenter = 200
         ### dipole geometry (full block)
         dipole_xHalfWidth = 120/2

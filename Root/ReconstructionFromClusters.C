@@ -26,6 +26,7 @@
 #include "TVector2.h"
 #include "TRandom.h"
 #include "TObject.h"
+#include "TStopwatch.h"
 #include <iterator> 
 #include <map>
 #endif
@@ -50,7 +51,7 @@ double cm2m = 0.01;
 //// staves geometry
 double Hstave = 1.5;  // cm
 double Lstave = 27;   // cm for BPPP or 50 for Trident
-double Rbeampipe = 4; // cm for BPPP or 14 for Trident
+double Rbeampipe = 2.413; // cm
 double RoffsetBfield22BPPP = 7.0; // cm for BPPP in B=2.2T
 double RoffsetBfield20BPPP = 5.7; // cm for BPPP in B=2.0T
 double RoffsetBfield14BPPP = 4.0; // cm for BPPP in B=1.4T
@@ -663,7 +664,10 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 	cout << "Settings" << endl;
 	TString setup = "../setup/setupLUXE_"+process+".txt";
 	gROOT->LoadMacro("Loader.C+");
-	gRandom->SetSeed(Seed);  
+	gRandom->SetSeed(Seed);
+	
+	TStopwatch stopwatch;
+	
 	det = new KMCDetectorFwd();
 	det->ReadSetup(setup,setup);
 	det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VertexTelescope
@@ -954,6 +958,10 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 	/// prepare the dictionaries
 	prepare_cahced_clusters();
  
+	/// for timing
+	Double_t av_cputime  = 0;
+	Double_t av_realtime = 0;
+ 
 	/// loop on events
 	Int_t nsigevents = tSig->GetEntries();
 	Int_t nbkgevents = (nMaxBkgTrks>0) ? nMaxBkgTrks : tBkg->GetEntries();
@@ -968,6 +976,8 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 	// for(int iev=0 ; iev<tSig->GetEntries() and iev<10 ; iev++)
 	for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	{
+		stopwatch.Start();
+		
 		//////////////////////////////
 		//// get the next input entry
 		tSig->GetEntry(iev); /// signal
@@ -1283,7 +1293,6 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 				pseeds.clear(); /// this is maybe redundant
 			} // end of loop on clusters in layer 4
 			
-			
 			////////////////////////////////////////////////////////////
 			/// post-processing per side histos to fill
 			for(unsigned int t=0 ; t<true_q.size() ; ++t)
@@ -1335,10 +1344,8 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 					histos["h_chi2_nonmatched_"+side]->Fill( reco_chi2dof[k] );
 				}
 			}
-			// cout << "Indices found: ";
-			// for(unsigned int l=0 ; l<idtrumatched.size() ; ++l) cout << idtrumatched[l] << ",";
-			// cout << endl;
-				
+			
+			
 			/// summarize
 			int mateff = (int)((float)n_trumt/(float)n_truth*100.);
 			cout << "Event #" << iev << ", "<< side << ": n_truth=" << n_truth
@@ -1354,7 +1361,13 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 		fOut->cd();
 		tOut->Fill();
 		
-		if((iev%outN)==0) printf("Done %d out of %d\n",iev,nsigevents);
+		stopwatch.Stop();
+		Double_t cputime  = stopwatch.CpuTime();
+		Double_t realtime = stopwatch.RealTime();
+		av_cputime  += cputime;
+		av_realtime += realtime;
+		cout << "Event #" << iev << ": CPU time=" << cputime << ", Real time=" << realtime << endl;
+		if((iev%outN)==0) printf("Done %d out of %d --> CPUav=%g, REAL=%g\n",iev,nsigevents,av_cputime/(iev+1),av_realtime/(iev+1));
 	}
 	
 	histos["h_E_eff_sed_Eside"]->Divide(histos["h_E_tru_sed_mat_Eside"],histos["h_E_tru_all_Eside"]);

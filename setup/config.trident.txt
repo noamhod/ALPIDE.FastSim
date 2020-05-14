@@ -15,8 +15,8 @@ Emax = 17.5
 Emin = 1.00
 
 [General geometry cm]
-Rbeampipe   = 4
-Wbeampipe   = 0.5
+Rbeampipe   = 2.413
+Wbeampipe   = 0.2
 zDipoleExit = 200.0
 xDipoleExitMinAbs = 4.0
 xDipoleExitMaxAbs = 30

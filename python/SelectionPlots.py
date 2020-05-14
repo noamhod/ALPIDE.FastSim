@@ -217,7 +217,7 @@ rp_acc.SetH1DrawOpt("ep")
 rp_acc.SetH2DrawOpt("ep")
 rp_acc.SetGraphDrawOpt("ALX")
 ratioMax = 1.008 #maximum value on ratio plot Y axis
-ratioMin = 0.97 #minimum value on ratio plot Y axis
+ratioMin = 0.96 #minimum value on ratio plot Y axis
 rp_acc.Draw("ep0 nohide")
 rp_acc.GetLowerRefGraph().SetMaximum(ratioMax)
 rp_acc.GetLowerRefGraph().SetMinimum(ratioMin)

@@ -31,7 +31,7 @@ double meGeV = meMeV/1000.;
 //// staves geometry
 double Hstave = 1.5;  // cm
 double Lstave = 27;   // cm for BPPP or 50 for Trident
-double Rbeampipe = 4; // cm for BPPP or 14 for Trident
+double Rbeampipe = 2.413; // cm
 double RoffsetBfield22BPPP = 7.0; // cm for BPPP in B=2.2T
 double RoffsetBfield20BPPP = 5.7; // cm for BPPP in B=2.0T
 double RoffsetBfield14BPPP = 4.0; // cm for BPPP in B=1.4T
