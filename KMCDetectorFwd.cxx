@@ -234,6 +234,7 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   Double_t zmaxDipole  = narg > 6 ? inp->GetArgF(6) : -9999;  
   Double_t dipoleField = narg > 7 ? inp->GetArgF(7) : -9999;
   std::cout << "dipole dimensions: x=["<<xminDipole<<","<<xmaxDipole<<"], y=["<<yminDipole<<","<<ymaxDipole<<"], z=["<<zminDipole<<","<<zmaxDipole<<"]" << std::endl;
+  std::cout << "dipole strength  : B=" << dipoleField << " kG" << std::endl;
   if (narg>3) nreg = 1;
   // this part is relevant for exra mag field, e.g. MS toroid
   Double_t zminToroid  = narg > 4 ? inp->GetArgF(4) : -9999;  

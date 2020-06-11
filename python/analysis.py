@@ -417,7 +417,7 @@ np=5
 ### stave geometry
 Hstave = 1.5  # cm
 Lstave = 27 if(process=="bppp") else 50 # cm
-Rbeampipe = 4 # cm
+Rbeampipe = 2.413 # cm
 RoffsetBfield22BPPP = 7.0  # cm for BPPP in B=2.2T
 RoffsetBfield20BPPP = 5.7  # cm for BPPP in B=2.0T
 RoffsetBfield14BPPP = 4.0  # cm for BPPP in B=1.4T

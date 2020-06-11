@@ -23,6 +23,12 @@
 #include "TTreeStream.h"
 #endif
 
+typedef map<TString, TH1D* > TMapTSTH1D;
+typedef map<TString, TH2D* > TMapTSTH2D;
+
+TMapTSTH1D histos1;
+TMapTSTH2D histos2;
+
 KMCDetectorFwd* det = 0;
 vector<double>* zlayer = new vector<double>;
 double meMeV = 0.5109989461; //MeV
@@ -30,7 +36,7 @@ double meGeV = meMeV/1000.;
 
 //// staves geometry
 double Hstave = 1.5;  // cm
-double Lstave = 27;   // cm for BPPP or 50 for Trident
+double Lstave = 27.12;   // cm
 double Rbeampipe = 2.413; // cm
 double RoffsetBfield22BPPP = 7.0; // cm for BPPP in B=2.2T
 double RoffsetBfield20BPPP = 5.7; // cm for BPPP in B=2.0T
@@ -128,7 +134,8 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
 	 int nz = 0;
     for(int iz=1 ; iz<nZ ; iz++)
 	 {
-       if(!det->PropagateToZBxByBz(&tmp, TMath::Min(round(tmp.GetZ())+step, zMax), step)) break;
+       // if(!det->PropagateToZBxByBz(&tmp, TMath::Min(round(tmp.GetZ())+step, zMax), step)) break;
+       if(!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ()+step, zMax), step)) break;
        tmp.GetXYZ(xyz);
        xp[iz] = xyz[0];
        yp[iz] = xyz[1];
@@ -162,7 +169,7 @@ bool islayer(double z, int layerindex=-1, double stepsize=1)
 	return false;
 }
 
-TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax, double zstep, Color_t col, bool doPrint=false)
+TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax, double zstep, Color_t col, bool doPrint=false, bool fullrange=false)
 {
     KMCProbeFwd tmp(*source);
 	 int nZ = (int)(zmax-zmin)/zstep;
@@ -175,7 +182,8 @@ TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax
 	 int nz = 0;
     for(int iz=1;iz<nZ;iz++)
 	 {
-		 if(!det->PropagateToZBxByBz(&tmp, round(tmp.GetZ())+zstep, zstep)) break;
+		 // if(!det->PropagateToZBxByBz(&tmp, round(tmp.GetZ())+zstep, zstep)) break;
+		 if(!det->PropagateToZBxByBz(&tmp, tmp.GetZ()+zstep, zstep)) break;
        tmp.GetXYZ(xyz);
        xp[iz] = xyz[0];
        yp[iz] = xyz[1];
@@ -186,7 +194,7 @@ TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax
 	 polymarker->SetMarkerColor(col);
 	 int n = 0;
     for(int i=0;i<nz+1;i++) {
-       if(!islayer(zp[i],-1,zstep)) continue;
+       if(!fullrange && !islayer(zp[i],-1,zstep)) continue;
        polymarker->SetPoint(n,xp[i],yp[i],zp[i]);
        n++;
     }
@@ -392,6 +400,7 @@ vector<int>             crg;
 vector<vector<int> >    clusters_id;
 vector<vector<int> >    clusters_type;
 vector<TPolyMarker3D*>  clusters_xyz;
+vector<TPolyMarker3D*>  trkpts_fullrange;
 vector<TPolyMarker3D*>  trkpts;
 vector<TPolyLine3D*>    trklin;
 vector<int>             acc;
@@ -414,6 +423,7 @@ void SetOutTree(TString fOutName)
    tOut->Branch("clusters_id",  &clusters_id);
    tOut->Branch("clusters_type",&clusters_type);
    tOut->Branch("clusters_xyz", &clusters_xyz);
+   tOut->Branch("trkpts_fullrange", &trkpts_fullrange);
    tOut->Branch("trkpts",       &trkpts);
    tOut->Branch("trklin",       &trklin);
 }
@@ -421,6 +431,8 @@ void KillOutTree()
 {
    fOut->cd();
    tOut->Write();
+	for(TMapTSTH1D::iterator it=histos1.begin() ; it!=histos1.end() ; ++it) it->second->Write();
+	for(TMapTSTH2D::iterator it=histos2.begin() ; it!=histos2.end() ; ++it) it->second->Write();
    fOut->Write();
    fOut->Close();
 }
@@ -515,7 +527,11 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 	gInterpreter->GenerateDictionary("vector<vector<int> >",   "vector");
 	TString fOutName = "../data/root/dig_"+process+".root";
 	SetOutTree(fOutName);
-	 
+	
+	// TString hname = "";
+	// hname = "h2_z_vs_x"; histos2.insert( make_pair(hname, new TH2D(hname,";x [cm];z [cm];Tracks",1000,-100,+100, 2000,0,+400)) );
+	// hname = "h2_z_vs_y"; histos2.insert( make_pair(hname, new TH2D(hname,";y [cm];z [cm];Tracks",1000,-100,+100, 2000,0,+400)) );
+	
    /// loop on events
    for(int iev=0;iev<nev;iev++)
    // for(int iev=0;iev<nev and iev<10;iev++)
@@ -528,6 +544,7 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
  	   for(int i=0;i<(int)clusters_id.size();++i) clusters_id[i].clear();
  	   for(int i=0;i<(int)clusters_type.size();++i) clusters_type[i].clear();
  	   for(int i=0;i<(int)clusters_xyz.size();++i) delete clusters_xyz[i];
+ 	   for(int i=0;i<(int)trkpts_fullrange.size();++i) delete trkpts_fullrange[i];
  	   for(int i=0;i<(int)trkpts.size();++i) delete trkpts[i];
  	   for(int i=0;i<(int)trklin.size();++i) delete trklin[i];
       wgt.clear();
@@ -539,6 +556,7 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 		clusters_id.clear();
 		clusters_type.clear();
       clusters_xyz.clear();
+      trkpts_fullrange.clear();
       trkpts.clear();
       trklin.clear();
       acc.clear();
@@ -585,8 +603,17 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
          zvtx.push_back( vz->at(igen) );
          crg.push_back( q );
          trkp4.push_back( ptmp );
-			trklin.push_back( TrackLine3d(trutrk,361,1,trkcol(ptmp.E())) );
-			trkpts.push_back( TrackMarker3d(trutrk,0,361,1,trkcol(ptmp.E())) );
+			trkpts_fullrange.push_back( TrackMarker3d(trutrk,0,400,0.1,trkcol(ptmp.E()),false,true) );
+			trkpts.push_back( TrackMarker3d(trutrk,0,360,0.1,trkcol(ptmp.E())) );
+			trklin.push_back( TrackLine3d(trutrk,360,1,trkcol(ptmp.E())) );
+			
+			// for(Int_t n=0 ; n<trkpts_fullrange[slvidx]->GetN() ; ++n)
+			// {
+			// 	Double_t xp, yp, zp;
+			// 	trkpts_fullrange[slvidx]->GetPoint(n,xp,yp,zp);
+			// 	histos2["h2_z_vs_x"]->Fill(xp,zp);
+			// 	histos2["h2_z_vs_y"]->Fill(yp,zp);
+			// }
          
 			clusters_id.push_back( vtmp );
 			clusters_type.push_back( vtmp );

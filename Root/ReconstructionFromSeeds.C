@@ -604,7 +604,7 @@ void ReconstructionFromSeeds(TString process, int Seed=12345) //, const char* se
 
          // get the truth trajectory in the B-field
          KMCProbeFwd* seedtrk = det->GetProbe();
-         poll_seed.push_back( TrackLine3d(seedtrk,361,1,trkcol(p_seed[iseed].E())) );
+         poll_seed.push_back( TrackLine3d(seedtrk,361,0.1,trkcol(p_seed[iseed].E())) );
          polm_seed.push_back( TrackMarker3d(seedtrk,0,361,1,trkcol(p_seed[iseed].E())) );
 
 

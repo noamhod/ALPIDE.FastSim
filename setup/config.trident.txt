@@ -28,7 +28,6 @@ yAbsMargins = 0.100
 [Stave geometry cm]
 Hstave = 1.5
 Lstave = 50
-Rbeampipe = 4
 RoffsetBfield = 14
 
 [Layer geometry cm]

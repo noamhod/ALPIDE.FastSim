@@ -50,7 +50,7 @@ double cm2m = 0.01;
 
 //// staves geometry
 double Hstave = 1.5;  // cm
-double Lstave = 27;   // cm for BPPP or 50 for Trident
+double Lstave = 27.12;   // cm
 double Rbeampipe = 2.413; // cm
 double RoffsetBfield22BPPP = 7.0; // cm for BPPP in B=2.2T
 double RoffsetBfield20BPPP = 5.7; // cm for BPPP in B=2.0T
@@ -63,7 +63,7 @@ double x2R = +RoffsetBfield+Lstave;
 double yUp = +Hstave/2.;
 double yDn = -Hstave/2.;
 double zDipoleExit = 202.9;
-double B  = 2.0; // Tesla if(proc=="bppp") else 1.4 
+double B  = 1.4; // Tesla if(proc=="trident") else 2.0 
 double LB = 1;   // meters
 double EseedMin = 1.0; // GeV
 double EseedMaxBPPP = 16.0; // GeV
@@ -80,7 +80,6 @@ double z2dipole = 202.9;
 // double yAbsMargins = 0.025 if(proc=="bppp") else 0.1 # cm --> TODO: need tuning
 
 vector<TString> sides{"Eside","Pside"};
-// vector<TString> sides{"Eside"};
 vector<TString> coord{"x","y","z"};
 vector<TString> attri{"id","type"};
 TMapiTS         layers = { {300,"L1"}, {310,"L2"}, {320,"L3"}, {330,"L4"} };
@@ -93,6 +92,7 @@ TMapii          cached_clusters_all_ids; /// attributes (type and id)
 
 void resetToTridentGeometry()
 {
+	cout << "Resetting to Trident geometry!" << endl;
 	Lstave = 50;   // cm for BPPP or 50 for Trident
 	RoffsetBfield = 14; // cm for Trident in in B=1.4T
 	x1L = -RoffsetBfield-Lstave;
@@ -680,7 +680,7 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 	// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
 	det->SetMaxChi2Cl(10.);  // max track to cluster chi2
 	// det->SetMaxChi2NDF(3.5); // max total chi2/ndf
-	det->SetMaxChi2NDF(5.); // max total chi2/ndf
+	det->SetMaxChi2NDF((process=="trident")?15.:5.); // max total chi2/ndf
 	det->SetMaxChi2Vtx(20e9);  // fiducial cut on chi2 of convergence to vtx
 	// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
 	// IMPORTANT FOR NON-UNIFORM FIELDS
@@ -691,7 +691,7 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 	det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
 	// for reconstruction:
 	// det->SetErrorScale(500.);
-	det->SetErrorScale(200.);
+	det->SetErrorScale( (process=="trident")?500.:200. );
 	det->Print();
 	// det->BookControlHistos();
 	
@@ -706,7 +706,12 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 	int outN = (process=="trident") ? 10 : 10;
 	B = (process=="trident") ? B : 2.0;
 
-	if(process=="trident") resetToTridentGeometry();
+	if(process=="trident")
+	{
+		resetToTridentGeometry();
+		cout << "Doing only Pside!" << endl;
+		sides.clear(); sides.push_back("Pside"); /// do not reconstruct the Eside
+	}
 
 	/// get the signal clusters
 	cout << "Getting signal clusters from tree" << endl;
@@ -746,18 +751,10 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 	/// get the background clusters
 	cout << "Getting background clusters from tree" << endl;
 	TChain* tBkg = new TChain("dig");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00001.root");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00002.root");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00003.root");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00004.root");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00005.root");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00006.root");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00007.root");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00008.root");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00009.root");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_00010.root");
-	// TFile* fBkg = new TFile("../data/root/dig_"+process+"_bkg.root","READ");
-	// TTree* tBkg = (TTree*)fBkg->Get("dig");
+	tBkg->Add("../data/root/dig_"+process+"_bkg_0*.root");
+	cout << "---- TChain content ----" << endl;
+	tBkg->ls();
+	cout << "------------------------" << endl;
 	int                      bkg_ngen          = 0;
 	int                      bkg_nslv          = 0;
 	int                      bkg_nacc          = 0;
@@ -1241,7 +1238,7 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 				reco_x.push_back( xyz[0] );
 				reco_y.push_back( xyz[1] );
 				reco_z.push_back( xyz[2] );
-				reco_trckmar.push_back( TrackMarker3d(trw,0,361,1,trkcol(prec.E())) );
+				reco_trckmar.push_back( TrackMarker3d(trw,0,361,0.1,trkcol(prec.E())) );
 				reco_trcklin.push_back( TrackLine3d(trw,361,1,trkcol(prec.E())) );
 
 				/// TODO: this is a test

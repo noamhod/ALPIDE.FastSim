@@ -27,7 +27,7 @@ yAbsMargins = 0.025
 
 [Stave geometry cm]
 Hstave = 1.5
-Lstave = 27
+Lstave = 27.12
 RoffsetBfield22BPPP = 7.0
 RoffsetBfield20BPPP = 5.7
 RoffsetBfield14BPPP = 4.0

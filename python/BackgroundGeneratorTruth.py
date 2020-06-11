@@ -62,7 +62,7 @@ yAbsMargins = 0.025 if(proc=="bppp") else 0.1 # cm --> TODO: need tuning
 
 ### stave geometry
 Hstave    = 1.5  # cm
-Lstave    = 27 if(proc=="bppp") else 50 # cm
+Lstave    = 27.12 if(proc=="bppp") else 50 # cm
 Rbeampipe = 2.413 #4 # cm
 RoffsetBfield22BPPP = 7.0  # cm for BPPP in B=2.2T
 RoffsetBfield20BPPP = 5.7  # cm for BPPP in B=2.0T
