@@ -2,7 +2,7 @@
 #define:zinverted
 
 #                  ID	xminDipole  xmaxDipole  yminDipole  ymaxDipole  zminDipole  zmaxDipole  Bdipole(kGauss)   
-define:magfield    0	   -15.15      +15.15      -5.4        +5.4        100.0       202.9       14
+define:magfield    0	   -16.5       +16.5       -5.4        +5.4        100.0       202.9       14
 
 # dummy layer as a vertex	Zc	DZ		resX	resY
 vertex:		      			0.	25e-4	1e-5	1e-5

@@ -9,15 +9,19 @@ from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TPolyMarker3D, TPolyLine3D
 import argparse
 parser = argparse.ArgumentParser(description='analysis.py...')
 parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
-parser.add_argument('-b', metavar='Bfield', required=True,  help='Magnetic filed in kG [0-20]')
+parser.add_argument('-b', metavar='Bfield',  required=True,  help='Magnetic filed in kG [0-20]')
+parser.add_argument('-n', metavar='nevents', required=True,  help='maximum number of events')
 argus = parser.parse_args()
 proc  = argus.p
 bfield = argus.b+"kG"
 btitle = "%.1f [T]" % (float(argus.b)/10)
+ptitle = "BPPP" if(proc=="bppp") else "Trident"
+Nmax = int(argus.n)
+if(Nmax==0): Nmax = 1e10
 
 ROOT.gROOT.SetBatch(1)
-ROOT.gStyle.SetOptFit(0);
-ROOT.gStyle.SetOptStat(0);
+ROOT.gStyle.SetOptFit(0)
+ROOT.gStyle.SetOptStat(0)
 # ROOT.gStyle.SetPadBottomMargin(0.15)
 # ROOT.gStyle.SetPadLeftMargin(0.16)
    
@@ -28,7 +32,7 @@ process = proc
 ### stave geometry
 np=-1
 Hstave = 1.5  # cm
-Lstave = 27.12 if(process=="bppp") else 50 # cm
+Lstave = 27.12
 Rbeampipe = 2.413 # cm
 RoffsetBfield22BPPP = 7.0  # cm for BPPP in B=2.2T
 RoffsetBfield20BPPP = 5.7  # cm for BPPP in B=2.0T
@@ -74,7 +78,7 @@ for i in range(len(staveInnerLXZ)):
    staveYZ[i].SetLineColor(ROOT.kCyan)
 
 
-wDipoleInX = 303/10
+wDipoleInX = 330/10
 hDipoleInY = 108/10
 lDipoleInZ = 1029/10
 zDipoleInOffset = 100
@@ -89,15 +93,16 @@ dipoleInYZ.SetLineColor(ROOT.kRed)
 
 wDipoleOutX = 1196/10
 hDipoleOutY = 672/10
-lDipoleOutZ = 1520/10
+lDipoleOutZ = 1396/10
 lDipoleInZDummy = 1238/10
-delta = 81.4/10
+deltax = ((lDipoleOutZ-lDipoleInZDummy)/2)*math.tan(30*math.pi/180)
+deltaz = ((lDipoleOutZ-lDipoleInZDummy)/2)
 zDipoleOutOffset = zDipoleInOffset - (lDipoleOutZ-lDipoleInZ)/2
 zDipoleInDummyOffset = zDipoleOutOffset + (lDipoleOutZ-lDipoleInZDummy)/2
-xDipoleOutL = array.array('d', [-wDipoleOutX/2,   -wDipoleOutX/2,               -wDipoleInX/2-delta,          -wDipoleInX/2,                        -wDipoleInX/2,        -wDipoleInX/2-delta, -wDipoleOutX/2, ])
-zDipoleOutL = array.array('d', [zDipoleOutOffset, zDipoleOutOffset+lDipoleOutZ, zDipoleOutOffset+lDipoleOutZ, zDipoleInDummyOffset+lDipoleInZDummy, zDipoleInDummyOffset, zDipoleOutOffset,    zDipoleOutOffset])
-xDipoleOutR = array.array('d', [+wDipoleOutX/2,   +wDipoleOutX/2,               wDipoleInX/2+delta,           wDipoleInX/2,                         wDipoleInX/2,         wDipoleInX/2+delta, wDipoleOutX/2, ])
-zDipoleOutR = array.array('d', [zDipoleOutOffset, zDipoleOutOffset+lDipoleOutZ, zDipoleOutOffset+lDipoleOutZ, zDipoleInDummyOffset+lDipoleInZDummy, zDipoleInDummyOffset, zDipoleOutOffset,   zDipoleOutOffset])
+xDipoleOutL = array.array('d', [-wDipoleOutX/2,   -wDipoleOutX/2,               -wDipoleInX/2-deltax,         -wDipoleInX/2-deltax/2,                    -wDipoleInX/2-deltax/2,              -wDipoleInX/2,                        -wDipoleInX/2,        -wDipoleInX/2,        -wDipoleInX/2-deltax, -wDipoleOutX/2, ])
+zDipoleOutL = array.array('d', [zDipoleOutOffset, zDipoleOutOffset+lDipoleOutZ, zDipoleOutOffset+lDipoleOutZ, zDipoleOutOffset+lDipoleOutZ-deltaz*(2/3), zDipoleOutOffset+lDipoleOutZ-deltaz, zDipoleInDummyOffset+lDipoleInZDummy, zDipoleInDummyOffset, zDipoleInDummyOffset, zDipoleOutOffset,     zDipoleOutOffset])
+xDipoleOutR = array.array('d', [wDipoleOutX/2,    wDipoleOutX/2,                wDipoleInX/2+deltax,          wDipoleInX/2+deltax/2,                     wDipoleInX/2+deltax/2,               wDipoleInX/2,                         wDipoleInX/2,         wDipoleInX/2,         wDipoleInX/2+deltax,  wDipoleOutX/2, ])
+zDipoleOutR = array.array('d', [zDipoleOutOffset, zDipoleOutOffset+lDipoleOutZ, zDipoleOutOffset+lDipoleOutZ, zDipoleOutOffset+lDipoleOutZ-deltaz*(2/3), zDipoleOutOffset+lDipoleOutZ-deltaz, zDipoleInDummyOffset+lDipoleInZDummy, zDipoleInDummyOffset, zDipoleInDummyOffset, zDipoleOutOffset,     zDipoleOutOffset])
 
 yDipoleOut = array.array('d', [-hDipoleOutY/2,-hDipoleOutY/2,+hDipoleOutY/2,+hDipoleOutY/2,-hDipoleOutY/2])
 zDipoleOut = array.array('d', [zDipoleOutOffset,zDipoleOutOffset+lDipoleOutZ,zDipoleOutOffset+lDipoleOutZ,zDipoleOutOffset,zDipoleOutOffset])
@@ -131,7 +136,6 @@ ttree = tfile.Get("dig")
 Ntotal = ttree.GetEntries()
 Nprint = 2
 Nevents = 0
-Nmax = 10000
 for event in ttree:
    for i in range(event.trkpts_fullrange.size()):
       for n in range(event.trkpts_fullrange[i].GetN()):
@@ -165,7 +169,7 @@ pad1.SetTicks(1,1)
 pad1.SetLogz()
 pad1.SetGridy()
 pad1.SetGridx()
-hxz.SetTitle("BPPP for #it{B} = "+btitle)
+hxz.SetTitle(ptitle+" for #it{B} = "+btitle)
 hxz.Draw("col")
 dipoleExit.Draw("same")
 dipoleOutXZL.Draw("same")
@@ -209,7 +213,7 @@ ROOT.gPad.SetLogz()
 ROOT.gPad.SetGridy()
 ROOT.gPad.SetGridx()
 # hyz = tfile.Get("h2_z_vs_y")
-hyz.SetTitle("BPPP for #it{B} = "+btitle)
+hyz.SetTitle(ptitle+" for #it{B} = "+btitle)
 hyz.Draw("col")
 dipoleOutYZ.Draw("same")
 dipoleInYZ.Draw("same")
@@ -217,6 +221,7 @@ for i in range(len(staveYZ)):
    staveYZ[i].Draw("same")
 cnv.SaveAs(fn+"xyz.pdf(")
 cnv.SaveAs(fn+"xz_and_yz_and_xE.pdf")
+cnv.SaveAs(fn+"xz_and_yz_and_xE.png")
 cnv.Write()
 
 
@@ -227,7 +232,7 @@ ROOT.gPad.SetTicks(1,1)
 ROOT.gPad.SetLogz()
 ROOT.gPad.SetGridy()
 ROOT.gPad.SetGridx()
-hxz.SetTitle("BPPP for #it{B} = "+btitle)
+hxz.SetTitle(ptitle+" for #it{B} = "+btitle)
 hxz.Draw("col")
 dipoleOutXZL.Draw("same")
 dipoleOutXZR.Draw("same")
@@ -243,7 +248,7 @@ ROOT.gPad.SetLogz()
 ROOT.gPad.SetGridy()
 ROOT.gPad.SetGridx()
 # hyz = tfile.Get("h2_z_vs_y")
-hyz.SetTitle("BPPP for #it{B} = "+btitle)
+hyz.SetTitle(ptitle+" for #it{B} = "+btitle)
 hyz.Draw("col")
 dipoleOutYZ.Draw("same")
 dipoleInYZ.Draw("same")
@@ -251,6 +256,7 @@ for i in range(len(staveYZ)):
    staveYZ[i].Draw("same")
 cnv.SaveAs(fn+"xyz.pdf")
 cnv.SaveAs(fn+"xz_and_yz.pdf")
+cnv.SaveAs(fn+"xz_and_yz.png")
 cnv.Write()
 
 cnv = TCanvas("cnv_xE","",1000,1000)
@@ -258,6 +264,7 @@ hxE.SetMarkerColor(ROOT.kViolet)
 hxE.Draw("scat")
 cnv.SaveAs(fn+"xyz.pdf)")
 cnv.SaveAs(fn+"xE.pdf")
+cnv.SaveAs(fn+"xE.png")
 cnv.Write()
 
 hxz.Write()
