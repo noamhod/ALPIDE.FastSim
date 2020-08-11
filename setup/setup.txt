@@ -10,8 +10,8 @@ vertex:		      		0.	0.		500e-4	500e-4
 
 # the parameters eff,RMin,RMax are optional (default is 1,0,1e9), but if one of values is there, preciding ones also should be set
 # note: layer with tickness DZ is positioned such that it extends in Z from Zc-DZ/2 to Zc+DZ/2
-#		name		material	Zc	DZ		resX	resY	eff	RMin	RMax
-activelayer:vt	VT1		SILICON		50	100e-4 		4.e-4	4.e-4   0.99	1. 70.
+#					name		material		Zc	DZ			resX	resY		eff	RMin	RMax
+activelayer:vt	VT1		SILICON		50	100e-4	4.e-4	4.e-4		0.99	1. 	70.
 dummy:		VT1Plane	CARBON		50.02	300e-4		
 
 activelayer:vt	VT2		SILICON		55	100e-4		4.e-4	4.e-4	0.99	1. 70.
