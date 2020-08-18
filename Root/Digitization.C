@@ -493,7 +493,7 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 	int nFiles = 1;
 
    // TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
-	if(process=="trident") resetToTridentGeometry();
+	if(process.Contains("trident")) resetToTridentGeometry();
 	
 	int index_offset = (process.Contains("bkg")) ? 10000 : 100000;
 

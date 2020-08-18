@@ -197,10 +197,18 @@ fieldyz.SetMinimum(0)
 fieldyz.Draw("colz")
 yz.Draw("same")
 cnv.SaveAs("BfieldMap_2d.png")
+cnv.SaveAs("BfieldMap.pdf")
+
+
+cnv = TCanvas("cnv","",500,500)
+fieldxyz.SetClippingBoxOn(0,0,0)
+fieldxyz.SetFillColor(30)
+fieldxyz.SetLineColor(15)
+fieldxyz.Draw('GLS')
+cnv.SaveAs("BfieldMap_3d.png")
 cnv.SaveAs("BfieldMap.pdf)")
 
+print("field at r=(0.0,0.0,50.0): %.3f [T]" % fieldxyz.Eval(0,0,50))
+print("field at r=(0.5,8.0,60.0): %.3f [T]" % fieldxyz.Eval(0.5,8,60))
+print("field at r=(0.0,0.0,0.0) : %.3f [T]" % fieldxyz.Eval(0.0,0,0))
 
-# cnv = TCanvas("cnv","",500,500)
-# fieldxyz.Draw('surf1')
-# cnv.SaveAs("BfieldMap_3d.png")
-# cnv.SaveAs("BfieldMap.pdf)")
