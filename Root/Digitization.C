@@ -639,8 +639,8 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
 			
 			/// check acceptance
-			acc[slvidx] = (accepttrk(clusters_xyz[slvidx],false) && acceptpts(trkpts[slvidx],false));
-			// acc[slvidx] = (accepttrk(clusters_xyz[slvidx],false));
+			// acc[slvidx] = (accepttrk(clusters_xyz[slvidx],false) && acceptpts(trkpts[slvidx],false));
+			acc[slvidx] = (accepttrk(clusters_xyz[slvidx],false));
 			if(acc[slvidx]) nacc++;
       }
 		if(iev==0) WriteGeometry(trkpts,trklin,process,acc,clusters_xyz,"_truth");
