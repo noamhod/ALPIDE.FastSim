@@ -11,9 +11,9 @@ The reconstructed tracks are written for further analysis using python+ROOT.
   - setup environment for ROOT6 and python (`source setupROOT6.binaries.python2.sh` in my case)
   - make the data and output dirs:
       - `mkdir -p data/root`
-      - `mkdir -p data/stdhep/bppp`
+		- `mkdir -p data/stdhep/bppp`
 		- `mkdir -p data/stdhep/trident`
-	   - `mkdir -p output/root`
+		- `mkdir -p output/root`
 		- `mkdir -p output/pdf`
   - put Tony's signal stdhep files in data/stdhep/bppp or trident dirs
 
