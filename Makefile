@@ -4,8 +4,8 @@ CFLAGS = -g -O0 -Wall -fPIC -m64 -std=gnu++17
 LFLAGS = $(shell root-config --glibs) -lEG -lGeom
 INC =	-I$(ROOTSYS)/include -I/usr/include -I./
 TGT =	libKMCDetFwd.so
-DICT=	KMCDetFwdDict.cxx
-DICTO=	KMCDetFwdDict.o
+DICT = KMCDetFwdDict.cxx
+DICTO = KMCDetFwdDict.o
 
 SRC =  TTreeStream.cxx GenMUONLMR.cxx KMCClusterFwd.cxx  KMCDetectorFwd.cxx  KMCFlukaParser.cxx  KMCLayerFwd.cxx  KMCProbeFwd.cxx  KMCUtils.cxx NaMaterial.cxx AliLog.cxx TrackPar.cxx
 
