@@ -8,13 +8,14 @@ The reconstructed tracks are written for further analysis using python+ROOT.
 
 - Basic setup
   - have ROOT6 and python installed
-  - setup environment for ROOT6 and python (`source setupROOT6.binaries.python2.sh` in my case)
+  - setup environment for ROOT6 and python
+      - `source setupROOT6.binaries.python2.sh` in my case
   - make the data and output dirs:
       - `mkdir -p data/root`
-		- `mkdir -p data/stdhep/bppp`
-		- `mkdir -p data/stdhep/trident`
-		- `mkdir -p output/root`
-		- `mkdir -p output/pdf`
+      - `mkdir -p data/stdhep/bppp`
+      - `mkdir -p data/stdhep/trident`
+      - `mkdir -p output/root`
+      - `mkdir -p output/pdf`
   - put Tony's signal stdhep files in data/stdhep/bppp or trident dirs
 
 - Compilation
@@ -23,7 +24,8 @@ The reconstructed tracks are written for further analysis using python+ROOT.
 - Convert the "truth signal" STDHEP files into ROOT files
   - open a different shell than the previous one
   - go to the python dir
-  - setup python and ROOT (`source setupROOT6.brew.python3.sh` in my case)
+  - setup python and ROOT
+      - `source setupROOT6.brew.python3.sh` in my case
   - to convert the stdhep files to a ROOT TTree, run
       - `python stdhep2root.py -p bppp`
       - `python stdhep2root.py -p trident`
@@ -31,7 +33,8 @@ The reconstructed tracks are written for further analysis using python+ROOT.
 
 - Generate some toy "truth background" events directly in ROOT files
   - go to the python dir
-  - setup python and ROOT (`source setupROOT6.brew.python3.sh` in my case)
+  - setup python and ROOT
+      - `source setupROOT6.brew.python3.sh` in my case
   - run the background toy generation
       - `python BackgroundGeneratorTruth -p bppp -nevents 1000 -nbckgrtrk 15000`
       - `python BackgroundGeneratorTruth -p trident -nevents 100 -nbckgrtrk 20000`
@@ -54,7 +57,8 @@ The reconstructed tracks are written for further analysis using python+ROOT.
 
 - Run a basic analysis on the reconstruction step output
   - go to the python dir
-  - setup python and ROOT (`source setupROOT6.brew.python3.sh` in my case)
+  - setup python and ROOT
+      - `source setupROOT6.brew.python3.sh` in my case
   - run the reco analysis:
       - `python analysis_from_clusters_reco.py -p bppp`
       - `python analysis_from_clusters_reco.py -p trident`
