@@ -8,7 +8,7 @@ The reconstructed tracks are written for further analysis using python+ROOT.
 
 - Basic setup
   - have ROOT6 and python installed
-  - setup environment for ROOT6 and python
+  - setup environment for ROOT6 and python2
       - `source setupROOT6.binaries.python2.sh` in my case
   - make the data and output dirs:
       - `mkdir -p data/root`
@@ -19,23 +19,24 @@ The reconstructed tracks are written for further analysis using python+ROOT.
   - put Tony's signal stdhep files in data/stdhep/bppp or trident dirs
 
 - Compilation
-  - hit `make`
+  - `cd src/`
+  - `make`
 
 - Convert the "truth signal" STDHEP files into ROOT files
   - open a different shell than the previous one
-  - go to the python dir
-  - setup python and ROOT
+  - setup python3 and ROOT
       - `source setupROOT6.brew.python3.sh` in my case
   - to convert the stdhep files to a ROOT TTree, run
+      - `cd python/`
       - `python stdhep2root.py -p bppp`
       - `python stdhep2root.py -p trident`
   - you will see 2 files in the data/root/ directory
 
 - Generate some toy "truth background" events directly in ROOT files
-  - go to the python dir
-  - setup python and ROOT
+  - setup python3 and ROOT
       - `source setupROOT6.brew.python3.sh` in my case
   - run the background toy generation
+      - `cd python/`
       - `python BackgroundGeneratorTruth -p bppp -nevents 1000 -nbckgrtrk 15000`
       - `python BackgroundGeneratorTruth -p trident -nevents 100 -nbckgrtrk 20000`
 
@@ -43,22 +44,30 @@ The reconstructed tracks are written for further analysis using python+ROOT.
   - this will transform the truth tracks to a collection of clusters according to the realistic detector response
   - note that in this step (unlike in the next step) the code runs on a single track at a time!
   - look at the setup/setupLUXE_bppp.txt or setup/setupLUXE_trident.txt to understand and change the geometry and materials
-  - cd Root/
+  - setup environment for ROOT6 and python2
+      - `source setupROOT6.binaries.python2.sh` in my case
   - run the signal digitisation step:
+      - `cd Root/`
       - `root -b -q load.C 'Digitization.C+("bppp")'`
       - `root -b -q load.C 'Digitization.C+("trident")'`
   - this will produce a number of files in the data/root/ directory
 
 - Run reconstruction step starting from the digitised clusters output:
-  - cd Root/
+  - this will reconstruct tracks from the collection of clusters
+  - note that in this step (unlike in the previous step) the code runs on all clusters per event!
+  - look at the setup/setupLUXE_bppp.txt or setup/setupLUXE_trident.txt to understand and change the geometry and materials
+      - but note that this should be matching exactly what was used in the previous digitisation step
+  - setup environment for ROOT6 and python2
+      - `source setupROOT6.binaries.python2.sh` in my case
+  - `cd Root/`
   - run the recon step:
       - `root -b -q load.C 'runLUXEeeRecoFromClusters.C+("bppp")'`
       - `root -b -q load.C 'runLUXEeeRecoFromClusters.C+("trident")'`
 
 - Run a basic analysis on the reconstruction step output
-  - go to the python dir
-  - setup python and ROOT
+  - setup python3 and ROOT
       - `source setupROOT6.brew.python3.sh` in my case
+  - `cd python/`
   - run the reco analysis:
       - `python analysis_from_clusters_reco.py -p bppp`
       - `python analysis_from_clusters_reco.py -p trident`
@@ -70,6 +79,9 @@ The reconstructed tracks are written for further analysis using python+ROOT.
       - `python SelectionPlots.py -p trident`
   
 - Generate and visualise an event display from the reco output:
+  - setup python3 and ROOT
+      - `source setupROOT6.brew.python3.sh` in my case
+  - `cd python/`
   - generate the display:
      - `python EventDisplayGenerate.py -p bppp -i 0`
      - `python EventDisplayGenerate.py -p trident -i 0`
