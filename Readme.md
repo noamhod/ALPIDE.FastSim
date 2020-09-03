@@ -37,8 +37,8 @@ The reconstructed tracks are written for further analysis using python+ROOT.
       - `source setupROOT6.brew.python3.sh` in my case
   - run the background toy generation
       - `cd python/`
-      - `python BackgroundGeneratorTruth -p bppp -nevents 1000 -nbckgrtrk 15000`
-      - `python BackgroundGeneratorTruth -p trident -nevents 100 -nbckgrtrk 20000`
+      - `python BackgroundGeneratorTruth.py -p bppp -nevents 1000 -nbckgrtrk 15000`
+      - `python BackgroundGeneratorTruth.py -p trident -nevents 100 -nbckgrtrk 20000`
 
 - Run the "digitisation" step on the "truth signal+background" ROOT files
   - this will transform the truth tracks to a collection of clusters according to the realistic detector response
