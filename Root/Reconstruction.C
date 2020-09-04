@@ -50,7 +50,7 @@ double cm2m = 0.01;
 
 //// staves geometry
 double Hstave = 1.5;  // cm
-double Lstave = 27.12;   // cm
+double Lstave = 50; //27.12;   // cm
 double Rbeampipe = 2.413; // cm
 double RoffsetBfield22BPPP = 7.0; // cm for BPPP in B=2.2T
 double RoffsetBfield20BPPP = 5.7; // cm for BPPP in B=2.0T
@@ -63,15 +63,15 @@ double x2R = +RoffsetBfield+Lstave;
 double yUp = +Hstave/2.;
 double yDn = -Hstave/2.;
 double zDipoleExit = 202.9;
-double B  = 1.4; // Tesla if(proc=="trident") else 2.0 
-double LB = 1;   // meters
+double B  = 1.0; // Tesla if(proc=="trident") else 1.5 
+double LB = 1.029;   // meters
 double EseedMin = 1.0; // GeV
 double EseedMaxBPPP = 16.0; // GeV
 double EseedMaxTRIDENT = 5.0; // GeV
 //// dipole geometry
-double xWdipole = 120;
-double yHdipole = 67.2;
-double z1dipole = 102.9;
+double xWdipole = 33.0;
+double yHdipole = 10.8;
+double z1dipole = 100.0;
 double z2dipole = 202.9;
 
 // double yDipoleExitMin = -0.05; ## cm --> TODO: need tuning
@@ -659,7 +659,7 @@ int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* clusters_xyz, TString 
 	
 
 
-void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12345)
+void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 {
 	cout << "Settings" << endl;
 	TString setup = "../setup/setupLUXE_"+process+".txt";
@@ -704,7 +704,7 @@ void ReconstructionFromClusters(TString process, int nMaxBkgTrks=-1, int Seed=12
 	zlayer->push_back(330); //// NOAM --> GET FROM THE SETUP --> layer 4
 
 	int outN = (process=="trident") ? 10 : 10;
-	B = (process=="trident") ? B : 2.0;
+	B = (process=="trident") ? B : 1.5;
 
 	if(process=="trident")
 	{

@@ -7,8 +7,8 @@ cm2um = 1.e4
 um2cm = 1.e-4
 
 [Magnetic field Tesla, Meter] 
-B = 1.4
-LB = 1
+B = 1.0
+LB = 1.029
 
 [Possible energies GeV]
 Emax = 17.5
@@ -17,7 +17,7 @@ Emin = 1.00
 [General geometry cm]
 Rbeampipe   = 2.413
 Wbeampipe   = 0.2
-zDipoleExit = 200.0
+zDipoleExit = 202.9
 xDipoleExitMinAbs = 4.0
 xDipoleExitMaxAbs = 30
 yDipoleExitMin = -0.05

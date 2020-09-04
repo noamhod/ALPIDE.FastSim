@@ -36,12 +36,9 @@ double meGeV = meMeV/1000.;
 
 //// staves geometry
 double Hstave = 1.5;  // cm
-double Lstave = 27.12;   // cm
+double Lstave = 50; //27.12;   // cm
 double Rbeampipe = 2.413; // cm
-double RoffsetBfield22BPPP = 7.0; // cm for BPPP in B=2.2T
-double RoffsetBfield20BPPP = 5.7; // cm for BPPP in B=2.0T
-double RoffsetBfield14BPPP = 4.0; // cm for BPPP in B=1.4T
-double RoffsetBfield = RoffsetBfield20BPPP;
+double RoffsetBfield = 5.7; // cm
 double xPsideL = -RoffsetBfield-Lstave;
 double xPsideR = -RoffsetBfield;       
 double xEsideL = +RoffsetBfield;       
@@ -50,15 +47,15 @@ double yUp = +Hstave/2.;
 double yDn = -Hstave/2.;
 
 //// dipole geometry
-double xW = 120;
-double yH = 67.2;
+double xW = 33.0;
+double yH = 10.8;
 double z1 = 100;
-double z2 = 200;
+double z2 = 202.9;
 
 void resetToTridentGeometry()
 {
 	Lstave = 50;   // cm for BPPP or 50 for Trident
-	RoffsetBfield = 14; // cm for Trident in in B=1.4T
+	RoffsetBfield = 14; // cm for Trident in in B=1.0T
 	xPsideL = -RoffsetBfield-Lstave;
 	xPsideR = -RoffsetBfield;       
 	xEsideL = +RoffsetBfield;       

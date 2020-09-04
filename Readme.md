@@ -50,7 +50,11 @@ The reconstructed tracks are written for further analysis using python+ROOT.
       - `cd Root/`
       - `root -b -q load.C 'Digitization.C+("bppp")'`
       - `root -b -q load.C 'Digitization.C+("trident")'`
-  - this will produce a number of files in the data/root/ directory
+  - run the background digitisation step:
+      - `cd Root/`
+      - `root -b -q load.C 'Digitization.C+("bppp_bkg")'`
+      - `root -b -q load.C 'Digitization.C+("trident_bkg")'`
+  - the last 2 steps will produce a number of files in the data/root/ directory
 
 - Run reconstruction step starting from the digitised clusters output:
   - this will reconstruct tracks from the collection of clusters
@@ -61,8 +65,8 @@ The reconstructed tracks are written for further analysis using python+ROOT.
       - `source setupROOT6.binaries.python2.sh` in my case
   - `cd Root/`
   - run the recon step:
-      - `root -b -q load.C 'runLUXEeeRecoFromClusters.C+("bppp")'`
-      - `root -b -q load.C 'runLUXEeeRecoFromClusters.C+("trident")'`
+      - `root -b -q load.C 'Reconstruction.C+("bppp")'`
+      - `root -b -q load.C 'Reconstruction.C+("trident")'`
 
 - Run a basic analysis on the reconstruction step output
   - setup python3 and ROOT

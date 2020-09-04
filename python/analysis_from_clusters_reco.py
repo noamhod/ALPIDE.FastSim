@@ -25,12 +25,9 @@ process = proc
 ### stave geometry
 np=5
 Hstave = 1.5  # cm
-Lstave = 27.12 if(process=="bppp") else 50 # cm
+Lstave = 50 #27.12 if(process=="bppp") else 50 # cm
 Rbeampipe = 2.413 # cm
-RoffsetBfield22BPPP = 7.0  # cm for BPPP in B=2.2T
-RoffsetBfield20BPPP = 5.7  # cm for BPPP in B=2.0T
-RoffsetBfield14BPPP = 4.0  # cm for BPPP in B=1.4T
-RoffsetBfield = RoffsetBfield20BPPP if(process=="bppp") else 14 # cm
+RoffsetBfield = 5.7 if(process=="bppp") else 14 # cm
 x1L = -RoffsetBfield-Lstave 
 x1R = -RoffsetBfield        
 x2L = +RoffsetBfield        
