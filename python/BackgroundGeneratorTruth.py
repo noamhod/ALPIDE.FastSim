@@ -44,7 +44,7 @@ cm2um = 1.e4
 um2cm = 1.e-4
 
 ### magnetic field
-B  = 1.0 if(proc=="trident") else 1.5 # Tesla
+B  = 1.0 if(proc=="trident") else 1.7 # Tesla
 LB = 1.029   # meters
 
 ### possible energies 

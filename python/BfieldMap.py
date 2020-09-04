@@ -18,7 +18,7 @@ zActiveDipoleEntrance = 100 #cm
 zActiveDipoleExit = 202.9 #cm
 xActiveDipoleWidth = 33 #cm
 yActiveDipoleHeight = 10.8 #cm
-BfieldGamLaser = 1.6 #T
+BfieldGamLaser = 1.7 #T
 BfieldEleLaser = 1 #T
 
 strength = BfieldGamLaser

@@ -52,10 +52,7 @@ double cm2m = 0.01;
 double Hstave = 1.5;  // cm
 double Lstave = 50; //27.12;   // cm
 double Rbeampipe = 2.413; // cm
-double RoffsetBfield22BPPP = 7.0; // cm for BPPP in B=2.2T
-double RoffsetBfield20BPPP = 5.7; // cm for BPPP in B=2.0T
-double RoffsetBfield14BPPP = 4.0; // cm for BPPP in B=1.4T
-double RoffsetBfield = RoffsetBfield20BPPP;
+double RoffsetBfield = 5.7;
 double x1L = -RoffsetBfield-Lstave;
 double x1R = -RoffsetBfield;       
 double x2L = +RoffsetBfield;       
@@ -63,7 +60,7 @@ double x2R = +RoffsetBfield+Lstave;
 double yUp = +Hstave/2.;
 double yDn = -Hstave/2.;
 double zDipoleExit = 202.9;
-double B  = 1.0; // Tesla if(proc=="trident") else 1.5 
+double B  = 1.0; // Tesla if(proc=="trident") else 1.7 
 double LB = 1.029;   // meters
 double EseedMin = 1.0; // GeV
 double EseedMaxBPPP = 16.0; // GeV
@@ -704,7 +701,7 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 	zlayer->push_back(330); //// NOAM --> GET FROM THE SETUP --> layer 4
 
 	int outN = (process=="trident") ? 10 : 10;
-	B = (process=="trident") ? B : 1.5;
+	B = (process=="trident") ? 1.0 : 1.7;
 
 	if(process=="trident")
 	{
