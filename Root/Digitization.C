@@ -131,7 +131,6 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
 	 int nz = 0;
     for(int iz=1 ; iz<nZ ; iz++)
 	 {
-       // if(!det->PropagateToZBxByBz(&tmp, TMath::Min(round(tmp.GetZ())+step, zMax), step)) break;
        if(!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ()+step, zMax), step)) break;
        tmp.GetXYZ(xyz);
        xp[iz] = xyz[0];

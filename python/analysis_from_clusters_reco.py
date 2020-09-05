@@ -106,7 +106,7 @@ def accepttrkpts(points,fullacc=False,isbkg=False):
    for i in range(points.GetN()):
       points.GetPoint(i,x,y,z)
       if(abs(x)<x2L): continue
-      if(isbkg): z = round(z)
+      if(isbkg): z = ROOT.Double(ROOT.TMath.Nint(z))
       if(z!=300 and z!=310 and z!=320 and z!=330): continue
       acc += acceptcls(x,y,z)
       if(z>230): break
@@ -141,7 +141,7 @@ def GetSigTracks(event):
 def GetBkgTracks(event):
    print("Nbtrks=",event.bkgr_trcklin.size())
    for i in range(event.bkgr_trcklin.size()):
-      if(not accepttrkpts(event.bkgr_trckmar[i],True,False)): continue
+      if(not accepttrkpts(event.bkgr_trckmar[i],fullacc=False,isbkg=True)): continue
       bkgtracks.append( event.bkgr_trcklin[i].Clone() )
       bkgpoints.append( event.bkgr_trckmar[i].Clone() )
       
@@ -458,7 +458,7 @@ def FillHistos(event):
       histos["h_py_zoom_sig"].Fill(py,wgt)
       histos["h_pz_sig"].Fill(pz,wgt)
       histos["h_E_tru_sig"].Fill(E,wgt)
-      if(accepttrk(i,event.true_clusters_id,event.all_clusters_xyz,True)): histos["h_E_tru_sig_acc"].Fill(E,wgt)
+      if(accepttrk(i,event.true_clusters_id,event.all_clusters_xyz,fullacc=True)): histos["h_E_tru_sig_acc"].Fill(E,wgt)
       
       ### loop over points along track (generated)
       for jxy in range(event.true_trckmar[i].GetN()):
@@ -546,8 +546,8 @@ def FillHistos(event):
             
             
       ## only in acceptance
-      if(not accepttrk(i,event.bkgr_clusters_id,event.all_clusters_xyz,False)): continue
-      if(not accepttrkpts(event.bkgr_trckmar[i],True,False)):                   continue
+      if(not accepttrk(i,event.bkgr_clusters_id,event.all_clusters_xyz,fullacc=False)): continue
+      if(not accepttrkpts(event.bkgr_trckmar[i],fullacc=False,isbkg=True)):             continue
       wgt = 1 # event.bkgr_wgt[i]
       ntrk_bkg += wgt
       E = event.bkgr_p[i].E()
@@ -830,7 +830,7 @@ def FillHistos(event):
       histos["h_yVtxSig_rec_sig_mat"].Fill(yVtxSig,wgt)
       histos["h_E_tru_rec_mat"].Fill(Esig)
       if(selected): histos["h_E_tru_sel_mat"].Fill(Esig)
-      if(accepttrk(isig,event.true_clusters_id,event.all_clusters_xyz,True)):
+      if(accepttrk(isig,event.true_clusters_id,event.all_clusters_xyz,fullacc=True)):
          histos["h_E_tru_rec_mat_acc"].Fill(Esig)
          if(selected): histos["h_E_tru_sel_mat_acc"].Fill(Esig)
       histos["h_rat_E"].Fill(Erat,wgt)
