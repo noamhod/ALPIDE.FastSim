@@ -97,7 +97,7 @@ def accepttrk(itrk,clusters_id,clusters_xyz,fullacc=False):
       acc += acceptcls(x,y,z)
    return (acc==nlayers) if(fullacc) else (acc>0)
    
-def accepttrkpts(points,fullacc=False):
+def accepttrkpts(points,fullacc=False,isbkg=False):
    nlayers = 4;
    acc = 0;
    x = ROOT.Double()
@@ -106,9 +106,10 @@ def accepttrkpts(points,fullacc=False):
    for i in range(points.GetN()):
       points.GetPoint(i,x,y,z)
       if(abs(x)<x2L): continue
+      if(isbkg): z = round(z)
       if(z!=300 and z!=310 and z!=320 and z!=330): continue
       acc += acceptcls(x,y,z)
-      if(z>330): break
+      if(z>230): break
    return (acc==nlayers) if(fullacc) else (acc>0)
 
 def minmax(h1,h2,f=1.1):
@@ -138,8 +139,9 @@ def GetSigTracks(event):
       sigpoints.append( event.true_trckmar[i].Clone() )
 
 def GetBkgTracks(event):
+   print("Nbtrks=",event.bkgr_trcklin.size())
    for i in range(event.bkgr_trcklin.size()):
-      if(not accepttrkpts(event.bkgr_trckmar[i],False)): continue
+      if(not accepttrkpts(event.bkgr_trckmar[i],True,False)): continue
       bkgtracks.append( event.bkgr_trcklin[i].Clone() )
       bkgpoints.append( event.bkgr_trckmar[i].Clone() )
       
@@ -545,7 +547,7 @@ def FillHistos(event):
             
       ## only in acceptance
       if(not accepttrk(i,event.bkgr_clusters_id,event.all_clusters_xyz,False)): continue
-      if(not accepttrkpts(event.bkgr_trckmar[i],False)):                        continue
+      if(not accepttrkpts(event.bkgr_trckmar[i],True,False)):                   continue
       wgt = 1 # event.bkgr_wgt[i]
       ntrk_bkg += wgt
       E = event.bkgr_p[i].E()
@@ -855,9 +857,9 @@ def FillHistos(event):
 
 ## analysis
 def Analyze(n,event):
-   if(n==1): GetTracks(event)
-   if(n==1): GetSigTracks(event)
-   if(n==1): GetBkgTracks(event)
+   if(n==0): GetTracks(event)
+   if(n==0): GetSigTracks(event)
+   if(n==0): GetBkgTracks(event)
    FillHistos(event)
    
 ## event loop

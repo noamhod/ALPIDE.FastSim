@@ -127,7 +127,7 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
     double xp[nZ],yp[nZ],zp[nZ];
     xp[0] = xyz[0]; // x-vertex
     yp[0] = xyz[1]; // y-vertex
-    zp[0] = round(xyz[2]); // z-vertex
+    zp[0] = xyz[2]; // z-vertex
 	 int nz = 0;
     for(int iz=1 ; iz<nZ ; iz++)
 	 {
@@ -175,11 +175,10 @@ TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax
     tmp.GetXYZ(xyz);
     xp[0] = xyz[0];
     yp[0] = xyz[1];
-    zp[0] = round(xyz[2]);
+    zp[0] = xyz[2];
 	 int nz = 0;
     for(int iz=1;iz<nZ;iz++)
 	 {
-		 // if(!det->PropagateToZBxByBz(&tmp, round(tmp.GetZ())+zstep, zstep)) break;
 		 if(!det->PropagateToZBxByBz(&tmp, tmp.GetZ()+zstep, zstep)) break;
        tmp.GetXYZ(xyz);
        xp[iz] = xyz[0];

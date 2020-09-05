@@ -1094,7 +1094,13 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 			bkgr_z.push_back( bkg_zvtx->at(b) );
 			bkgr_q.push_back( bkg_crg->at(b) );
 			bkgr_p.push_back( bkg_trkp4->at(b) );
-		   bkgr_trckmar.push_back( bkg_trkpts->at(b) );
+		   bkgr_trckmar.push_back( bkg_trkpts->at(b) );			
+			// for(unsigned int xx=0 ; xx<bkg_trkpts->at(b)->GetN() ; xx++)
+			// {
+			// 	Double_t x,y,z;
+			// 	bkg_trkpts->at(b)->GetPoint(xx,x,y,z);
+			// 	cout << "background track: #" << b << " point #" << xx << ", xyz={"<<x<<","<<y<<","<<z<<"}" << endl;
+			// }
 		   bkgr_trcklin.push_back( bkg_trklin->at(b) );
 		}
 		
