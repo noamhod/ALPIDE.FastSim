@@ -484,7 +484,7 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
    zlayer->push_back(330); //// NOAM --> GET FROM THE SETUP
 
    int outN = 100;
-   int nMaxEventsPerFile = 100;
+   int nMaxEventsPerFile = 10;
 	int nFiles = 1;
 
    // TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
@@ -528,8 +528,8 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 	// hname = "h2_z_vs_y"; histos2.insert( make_pair(hname, new TH2D(hname,";y [cm];z [cm];Tracks",1000,-100,+100, 2000,0,+400)) );
 	
    /// loop on events
-   // for(int iev=0;iev<nev;iev++)
-   for(int iev=0;iev<nev and iev<10;iev++)
+   // for(int iev=0;iev<nev and iev<10;iev++)
+   for(int iev=0;iev<nev;iev++)
    {	
       //// clear
       ngen = 0;    
