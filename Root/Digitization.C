@@ -598,7 +598,7 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
          zvtx.push_back( vz->at(igen) );
          crg.push_back( q );
          trkp4.push_back( ptmp );
-			trkpts_fullrange.push_back( TrackMarker3d(trutrk,0,400,0.1,trkcol(ptmp.E()),false,true) );
+			if(!process.Contains("bkg")) trkpts_fullrange.push_back( TrackMarker3d(trutrk,0,400,0.1,trkcol(ptmp.E()),false,true) );
 			trkpts.push_back( TrackMarker3d(trutrk,0,360,0.1,trkcol(ptmp.E())) );
 			trklin.push_back( TrackLine3d(trutrk,360,1,trkcol(ptmp.E())) );
 			
