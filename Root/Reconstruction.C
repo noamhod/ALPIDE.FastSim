@@ -40,6 +40,8 @@ typedef map<TString, vector<float> > TMapTSvf;
 typedef map<int,TString>             TMapiTS;
 typedef map<TString, TH1D* >         TMapTSTH1D;
 
+TString storage =  gSystem->ExpandPathName("$STORAGEDIR");
+
 double vX=0,vY=0,vZ=0; // event vertex
 KMCDetectorFwd* det = 0;
 vector<double>* zlayer = new vector<double>;
@@ -712,7 +714,7 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 
 	/// get the signal clusters
 	cout << "Getting signal clusters from tree" << endl;
-	TFile* fSig = new TFile("../data/root/dig_"+process+".root","READ");
+	TFile* fSig = new TFile(storage+"/data/root/dig_"+process+".root","READ");
 	TTree* tSig = (TTree*)fSig->Get("dig");
 	int                      sig_ngen          = 0;
 	int                      sig_nslv          = 0;
@@ -748,7 +750,7 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 	/// get the background clusters
 	cout << "Getting background clusters from tree" << endl;
 	TChain* tBkg = new TChain("dig");
-	tBkg->Add("../data/root/dig_"+process+"_bkg_0*.root");
+	tBkg->Add(storage+"/data/root/dig_"+process+"_bkg_0*.root");
 	cout << "---- TChain content ----" << endl;
 	tBkg->ls();
 	cout << "------------------------" << endl;
@@ -790,7 +792,7 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 	gInterpreter->GenerateDictionary("vector<TPolyMarker3D*>", "vector");
 	gInterpreter->GenerateDictionary("vector<TPolyLine3D*>",   "vector");
 	gInterpreter->GenerateDictionary("vector<vector<int> >",   "vector");
-	TFile* fOut = new TFile("../data/root/rec_from_clusters_"+process+".root","RECREATE");
+	TFile* fOut = new TFile(storage+"/data/root/rec_from_clusters_"+process+".root","RECREATE");
 	TTree* tOut = new TTree("reco","reco");
 	/// all clusters output branches
 	vector<TPolyMarker3D*>  all_clusters_xyz;

@@ -29,6 +29,8 @@ typedef map<TString, TH2D* > TMapTSTH2D;
 TMapTSTH1D histos1;
 TMapTSTH2D histos2;
 
+TString storage =  gSystem->ExpandPathName("$STORAGEDIR");
+
 KMCDetectorFwd* det = 0;
 vector<double>* zlayer = new vector<double>;
 double meMeV = 0.5109989461; //MeV
@@ -328,13 +330,13 @@ void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TSt
    leg->Draw("same");
    cnv_pm3d->cd();
    leg->Draw("same");
+	
+   cnv_pl3d->SaveAs(storage+"/output/root/"+process+"_tracks_pl3d"+suff+".root");
+   cnv_pl3d->SaveAs(storage+"/output/pdf/"+process+"_tracks_pl3d"+suff+".pdf");
+   cnv_pm3d->SaveAs(storage+"/output/root/"+process+"_tracks_pm3d"+suff+".root");
+   cnv_pm3d->SaveAs(storage+"/output/pdf/"+process+"_tracks_pm3d"+suff+".pdf");
    
-   cnv_pl3d->SaveAs("../output/root/"+process+"_tracks_pl3d"+suff+".root");
-   cnv_pl3d->SaveAs("../output/pdf/"+process+"_tracks_pl3d"+suff+".pdf");
-   cnv_pm3d->SaveAs("../output/root/"+process+"_tracks_pm3d"+suff+".root");
-   cnv_pm3d->SaveAs("../output/pdf/"+process+"_tracks_pm3d"+suff+".pdf");
-   
-   TFile* flines = new TFile("../data/root/"+process+"_geometry"+suff+".root","RECREATE");
+   TFile* flines = new TFile(storage+"/data/root/"+process+"_geometry"+suff+".root","RECREATE");
    flines->cd();
    dipole->Write();
    stave1L->Write();
@@ -493,7 +495,7 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 	int index_offset = (process.Contains("bkg")) ? 10000 : 100000;
 
    /// get the particles from a ttree
-   TFile* fIn = new TFile("../data/root/raw_"+process+".root","READ");
+   TFile* fIn = new TFile(storage+"/data/root/raw_"+process+".root","READ");
    TTree* tIn = (TTree*)fIn->Get("tt");
    int nev = tIn->GetEntries();
    vector<double>* vx    = 0;
@@ -520,7 +522,7 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
    gInterpreter->GenerateDictionary("vector<TPolyMarker3D*>", "vector");
    gInterpreter->GenerateDictionary("vector<TPolyLine3D*>",   "vector");
 	gInterpreter->GenerateDictionary("vector<vector<int> >",   "vector");
-	TString fOutName = "../data/root/dig_"+process+".root";
+	TString fOutName = storage+"/data/root/dig_"+process+".root";
 	SetOutTree(fOutName);
 	
 	// TString hname = "";
