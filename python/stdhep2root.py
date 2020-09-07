@@ -22,6 +22,7 @@ ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 
 meMeV = 0.5109989461 ## MeV
 meGeV = meMeV/1000.
@@ -72,7 +73,7 @@ def readparticles(name):
 
 process = proc
 beamenergy = ebeam
-tf = TFile( '../data/root/raw_'+process+'.root', 'recreate' ) if(not photon) else TFile( '../data/root/raw_photons_'+process+'.root', 'recreate' )
+tf = TFile( storage+'/data/root/raw_'+process+'.root', 'recreate' ) if(not photon) else TFile( storage+'/data/root/raw_photons_'+process+'.root', 'recreate' )
 tt = TTree( 'tt','tt' )
 vx    = ROOT.std.vector( float )()
 vy    = ROOT.std.vector( float )()

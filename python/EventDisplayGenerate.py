@@ -33,11 +33,12 @@ ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 
 cfgmap = cfg.set(proc,sides,True)
 
 def gettracks():
-   tfilename = "../data/root/rec_from_clusters_"+proc+".root"
+   tfilename = storage+"/data/root/rec_from_clusters_"+proc+".root"
    tfile = TFile(tfilename,"READ")
    tree = tfile.Get("reco")
    stracks = []
@@ -64,7 +65,7 @@ geoluxe  = geo.GeoLUXE(proc,stracks,btracks)
 world    = geoluxe.createWorld()
 geoluxe.configureGeoManager(world)
 
-tfileout = TFile("../output/root/bkgtrk_"+proc+".root","RECREATE")
+tfileout = TFile(storage+"/output/root/bkgtrk_"+proc+".root","RECREATE")
 tfileout.cd()
 
 cnv1 = TCanvas("","",2000,2000)
@@ -75,7 +76,7 @@ view.SetPerspective()
 view.SetRange(-80,-50,0, +80,+50,350)
 geoluxe.draw(world)
 cnv1.Write()
-cnv1.SaveAs("../output/pdf/bkgtrk_"+proc+".pdf(")
+cnv1.SaveAs(storage+"/output/pdf/bkgtrk_"+proc+".pdf(")
 
 cnv2 = TCanvas("","",2000,2000)
 view = TView3D.CreateView(1)
@@ -85,7 +86,7 @@ view.SetPerspective()
 view.SetRange(cfgmap["xPsideL"],-10,190, cfgmap["xEsideR"],+10,340)
 geoluxe.draw(world)
 cnv2.Write()
-cnv2.SaveAs("../output/pdf/bkgtrk_"+proc+".pdf)")
+cnv2.SaveAs(storage+"/output/pdf/bkgtrk_"+proc+".pdf)")
 
 tfileout.mkdir("SigTracks/")
 tfileout.cd("SigTracks/")

@@ -12,6 +12,7 @@ ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.16)
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 
 zActiveDipoleLengh = 102.9 #cm
 zActiveDipoleEntrance = 100 #cm
@@ -171,8 +172,8 @@ fieldz.SetMinimum(0)
 fieldz.Draw()
 Rz.Draw("same")
 Lz.Draw("same")
-cnv.SaveAs("../output/pdf/BfieldMap_1d.png")
-cnv.SaveAs("../output/pdf/BfieldMap.pdf(")
+cnv.SaveAs(storage+"/output/pdf/BfieldMap_1d.png")
+cnv.SaveAs(storage+"/output/pdf/BfieldMap.pdf(")
 
 
 
@@ -196,8 +197,8 @@ fieldyz.SetMaximum(strength)
 fieldyz.SetMinimum(0)
 fieldyz.Draw("colz")
 yz.Draw("same")
-cnv.SaveAs("../output/pdf/BfieldMap_2d.png")
-cnv.SaveAs("../output/pdf/BfieldMap.pdf")
+cnv.SaveAs(storage+"/output/pdf/BfieldMap_2d.png")
+cnv.SaveAs(storage+"/output/pdf/BfieldMap.pdf")
 
 
 cnv = TCanvas("cnv","",500,500)
@@ -205,8 +206,8 @@ fieldxyz.SetClippingBoxOn(0,0,0)
 fieldxyz.SetFillColor(30)
 fieldxyz.SetLineColor(15)
 fieldxyz.Draw('GLS')
-cnv.SaveAs("../output/pdf/BfieldMap_3d.png")
-cnv.SaveAs("../output/pdf/fieldMap.pdf)")
+cnv.SaveAs(storage+"/output/pdf/BfieldMap_3d.png")
+cnv.SaveAs(storage+"/output/pdf/fieldMap.pdf)")
 
 print("field at r=(0.0,0.0,50.0): %.3f [T]" % fieldxyz.Eval(0,0,50))
 print("field at r=(0.5,8.0,60.0): %.3f [T]" % fieldxyz.Eval(0.5,8,60))

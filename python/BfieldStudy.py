@@ -24,6 +24,7 @@ ROOT.gStyle.SetOptFit(0)
 ROOT.gStyle.SetOptStat(0)
 # ROOT.gStyle.SetPadBottomMargin(0.15)
 # ROOT.gStyle.SetPadLeftMargin(0.16)
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
    
 #############################################
 
@@ -117,8 +118,8 @@ dipoleExit = TPolyLine(2,array.array('d',[-100,+100]),array.array('d',[zDipoleOu
 
 ##################################################################
 
-tfile = TFile("../data/root/Bfields/dig_"+process+"_"+bfield+".root","READ")
-fn = "../output/pdf/BfieldStudy_"+process+"_"+bfield+"_"
+tfile = TFile(storage+"/data/root/Bfields/dig_"+process+"_"+bfield+".root","READ")
+fn = storage+"/output/pdf/BfieldStudy_"+process+"_"+bfield+"_"
 fr = fn
 fr = fr.replace("pdf","root")
 

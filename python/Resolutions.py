@@ -17,6 +17,8 @@ ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+
 
 #############################################
 
@@ -66,8 +68,8 @@ def GetMeanSigma(fitf,name):
 #############################################
 
 process = proc
-tfile = TFile("../output/root/analysis_reco_"+process+".root","READ")
-fn = "../output/pdf/analysis_reco_"+process+"_"
+tfile = TFile(storage+"/output/root/analysis_reco_"+process+".root","READ")
+fn = storage+"/output/pdf/analysis_reco_"+process+"_"
 
 hx = tfile.Get("h_dx_vs_xtru_recvstru_logbins")
 hy = tfile.Get("h_dy_vs_ytru_recvstru_logbins")

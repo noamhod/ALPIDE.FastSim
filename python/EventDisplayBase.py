@@ -7,8 +7,10 @@ import numpy as np
 import ROOT
 from ROOT import TFile, TPolyLine3D, TGeoTube, TGeoManager, TGeoMaterial, TGeoMedium, TGeoVolume, TGeoTranslation, TVirtualGeoTrack, TView
 
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+
 # def staves(proc):
-#    tfile = TFile("../data/root/"+proc+"_geometry.root","READ")
+#    tfile = TFile(storage+"/data/root/"+proc+"_geometry.root","READ")
 #    stvs = [ tfile.Get("TPolyLine3D;9"), tfile.Get("TPolyLine3D;8"),
 #               tfile.Get("TPolyLine3D;7"), tfile.Get("TPolyLine3D;6"),
 #               tfile.Get("TPolyLine3D;5"), tfile.Get("TPolyLine3D;4"),
@@ -16,7 +18,7 @@ from ROOT import TFile, TPolyLine3D, TGeoTube, TGeoManager, TGeoMaterial, TGeoMe
 #    return stvs
 #
 # def dipole(proc):
-#    tfile = TFile("../data/root/"+proc+"_geometry.root","READ")
+#    tfile = TFile(storage+"/data/root/"+proc+"_geometry.root","READ")
 #    dipl = tfile.Get("TPolyLine3D;1")
 #    return dipl
    
@@ -226,7 +228,7 @@ class GeoLUXE():
         # self.geoManager.SetVisOption(0)
         # self.geoManager.SetTopVisible()
         # self.geoManager.CheckOverlaps()
-        self.geoManager.Export("../output/root/GeoLUXE_"+self.process+".root")
+        self.geoManager.Export(storage+"/output/root/GeoLUXE_"+self.process+".root")
         
 
     def draw(self,world):

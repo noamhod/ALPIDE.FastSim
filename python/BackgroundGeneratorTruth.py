@@ -28,6 +28,7 @@ ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
 # ROOT.gErrorIgnoreLevel = ROOT.kWarning
 ROOT.gErrorIgnoreLevel = ROOT.kError
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 
 #############################################
 ### read configuration from file
@@ -74,7 +75,7 @@ yDn = -Hstave/2.
 
 #############################################
 def getgeometry(dipole=False):
-   tfile = TFile("../data/root/"+proc+"_geometry.root","READ")
+   tfile = TFile(storage+"/data/root/"+proc+"_geometry.root","READ")
    geometry = [ tfile.Get("TPolyLine3D;9"), tfile.Get("TPolyLine3D;8"),
               tfile.Get("TPolyLine3D;7"), tfile.Get("TPolyLine3D;6"),
               tfile.Get("TPolyLine3D;5"), tfile.Get("TPolyLine3D;4"),
@@ -83,7 +84,7 @@ def getgeometry(dipole=False):
    return geometry
 #############################################
 
-tf = TFile( '../data/root/raw_'+proc+'_bkg.root', 'recreate' )
+tf = TFile( storage+'/data/root/raw_'+proc+'_bkg.root', 'recreate' )
 tt = TTree( 'tt','tt' )
 vx    = ROOT.std.vector( float )()
 vy    = ROOT.std.vector( float )()

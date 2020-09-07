@@ -21,6 +21,7 @@ ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 
 histos = {}
 R1 = 300 ## cm
@@ -122,14 +123,14 @@ def Run(tfilename,ttreename):
 ## actually run
 process = proc
 beamenergy = ebeam
-tfilename = "../data/root/raw_photons_"+process+".root"
+tfilename = storage+"/data/root/raw_photons_"+process+".root"
 Book(process)
 nevents = Run(tfilename,"tt")
 print("nevents=",nevents)
 
 ###############################################################
 
-allpdf = "../output/pdf/truthphotons_"+process+".pdf"
+allpdf = storage+"/output/pdf/truthphotons_"+process+".pdf"
 fn = allpdf.replace(".pdf","_")
 
 ## summarize

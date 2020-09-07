@@ -17,6 +17,7 @@ ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.16)
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 
 #############################################
 def minmax(h1,h2,islogy=False,f=1.1):
@@ -56,8 +57,8 @@ def chopped(h,xmin,xmax):
 #############################################
 
 process = proc
-tfile = TFile("../output/root/analysis_reco_"+process+".root","READ")
-fn = "../output/pdf/analysis_reco_"+process+"_"
+tfile = TFile(storage+"/output/root/analysis_reco_"+process+".root","READ")
+fn = storage+"/output/pdf/analysis_reco_"+process+"_"
 
 
 leg_kin = TLegend(0.60,0.73,0.87,0.87)

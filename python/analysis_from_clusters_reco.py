@@ -17,9 +17,9 @@ ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
+storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 
 #############################################
-
 process = proc
 
 ### stave geometry
@@ -885,18 +885,18 @@ def Run(tfilename,ttreename):
 #############################################
 
 ## actually run
-tfilename = "../data/root/rec_from_clusters_"+process+".root"
+tfilename = storage+"/data/root/rec_from_clusters_"+process+".root"
 BookHistos(process)
 nevents = Run(tfilename,"reco")
 
 #############################################
 
 ## summarise
-allpdf = "../output/pdf/analysis_reco_"+process+".pdf"
-fn = "../output/pdf/analysis_reco_"+process+"_"
+allpdf = storage+"/output/pdf/analysis_reco_"+process+".pdf"
+fn = storage+"/output/pdf/analysis_reco_"+process+"_"
 
 
-tfile = TFile("../data/root/"+process+"_geometry_truth.root","READ")
+tfile = TFile(storage+"/data/root/"+process+"_geometry_truth.root","READ")
 lines = [ tfile.Get("TPolyLine3D;9"), tfile.Get("TPolyLine3D;8"),
           tfile.Get("TPolyLine3D;7"), tfile.Get("TPolyLine3D;6"),
           tfile.Get("TPolyLine3D;5"), tfile.Get("TPolyLine3D;4"),
@@ -1803,7 +1803,7 @@ cnv_dx_vs_invp_log.SaveAs(allpdf+")")
 
 
 ########### write all histos to a root file
-allroot = "../output/root/analysis_reco_"+process+".root"
+allroot = storage+"/output/root/analysis_reco_"+process+".root"
 tfileout = TFile(allroot,"RECREATE")
 tfileout.cd()
 for hname,hist in histos.items(): hist.Write()
