@@ -213,6 +213,8 @@ def BookHistos(process):
    ntrkmax = 450  if(process=="bppp") else 1250
    ntrkmin = 0    if(process=="bppp") else 1000
    ntrkbins = 100 if(process=="bppp") else 50
+   histos.update( {"h_ntrks_rec_zoom":TH1D("h_ntrks_rec_zoom",";Track multiplicity;Events", 15,50,170)} )
+   histos.update( {"h_ntrks_sel_zoom":TH1D("h_ntrks_sel_zoom",";Track multiplicity;Events", 15,50,170)} )
    histos.update( {"h_ntrks_rec":TH1D("h_ntrks_rec",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
    histos.update( {"h_ntrks_sel":TH1D("h_ntrks_sel",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
    histos.update( {"h_ntrks_sed":TH1D("h_ntrks_sed",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
@@ -852,6 +854,8 @@ def FillHistos(event):
    histos["h_ntrks_sed"].Fill(ntrk_sed)
    histos["h_ntrks_rec"].Fill(ntrk_rec)
    histos["h_ntrks_sel"].Fill(ntrk_sel)
+   histos["h_ntrks_sel_zoom"].Fill(ntrk_sel)
+   histos["h_ntrks_rec_zoom"].Fill(ntrk_rec)
 
 #############################################
 
@@ -1405,6 +1409,7 @@ histos["h_ntrks_sed"].Draw("hist same")
 leg_rec_sig.Draw("same")
 cnv_ntrks.SaveAs(fn+"ntrks.pdf")
 cnv_ntrks.SaveAs(allpdf)
+
 
 cnv_ntrks_norec = TCanvas("cnv_ntrks_norec","",500,500)
 cnv_ntrks_norec.cd()

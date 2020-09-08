@@ -72,6 +72,17 @@ double xWdipole = 33.0;
 double yHdipole = 10.8;
 double z1dipole = 100.0;
 double z2dipole = 202.9;
+//// uncertainties
+float dxAlignmentXFEL = 0.005; // cm
+float dyAlignmentXFEL = 0.005; // cm
+float XvariationSign = -1.;
+float YvariationSign = -1.;
+float dxAlignmentInTray = 0.001; // cm
+float dyAlignmentInTray = 0.001; // cm
+bool doMisalignmentX = true;
+bool doMisalignmentY = false;
+
+
 
 // double yDipoleExitMin = -0.05; ## cm --> TODO: need tuning
 // double yDipoleExitMax = +0.05; ## cm --> TODO: need tuning
@@ -344,6 +355,10 @@ int cache_clusters(vector<TPolyMarker3D*>* clusters_xyz, vector<vector<int> >* c
 			if(x<0 and side=="Eside") continue;
 			TString sd = (x>0) ? "Eside" : "Pside";
 			TString lr = layers[z];
+			
+			x = (doMisalignmentX) ? x+XvariationSign*dxAlignmentXFEL : x;
+			y = (doMisalignmentY) ? y+YvariationSign*dxAlignmentXFEL : y;
+			
 			cached_clusters_xyz["x_"+lr+"_"+sd].push_back(x);
 			cached_clusters_xyz["y_"+lr+"_"+sd].push_back(y);
 			cached_clusters_xyz["z_"+lr+"_"+sd].push_back(z);
@@ -961,16 +976,18 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 	/// loop on events
 	Int_t nsigevents = tSig->GetEntries();
 	Int_t nbkgevents = (nMaxBkgTrks>0) ? nMaxBkgTrks : tBkg->GetEntries();
-	if(nbkgevents<nsigevents)
+	int nmaxtoread = 40;
+	if(nbkgevents<nsigevents and nmaxtoread<=0)
 	{
 		cout << "ERROR: nbkgevents<nsigevents" << endl;
 		cout << "       nsigevents=" << nsigevents << endl;
 		cout << "       nbkgevents=" << nbkgevents << endl;
 		exit(-1);
 	}
-	cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
-	// for(int iev=0 ; iev<tSig->GetEntries() and iev<10 ; iev++)
-	for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
+	if(nmaxtoread<=0) cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
+	else              cout << "Starting loop over signal events with nmaxtoread=" << nmaxtoread << endl;
+	for(int iev=0 ; iev<tSig->GetEntries() and (nmaxtoread>0 and iev<nmaxtoread) ; iev++)
+	// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	{
 		stopwatch.Start();
 		
