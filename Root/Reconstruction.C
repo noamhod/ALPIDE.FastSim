@@ -741,7 +741,7 @@ int main(int argc, char *argv[])
 	// TString proc = process;
 	TString eventid = (evnt<0) ? "" : FormatEventID(evnt);
 	TStopwatch stopwatch;
-	TString setup = "../../setup/setupLUXE_"+process+".txt";
+	TString setup = "../setup/setupLUXE_"+process+".txt";
 	det = new KMCDetectorFwd();
 	det->ReadSetup(setup,setup);
 	det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VertexTelescope
