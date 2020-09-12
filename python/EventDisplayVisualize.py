@@ -20,9 +20,8 @@ storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 
 
 
-
 ROOT.TEveManager.Create()
-ROOT.gEve.RegisterGeometryAlias("Default", "../output/root/GeoLUXE_"+proc+".root")
+ROOT.gEve.RegisterGeometryAlias("Default", storage+"/output/root/GeoLUXE_"+proc+".root")
 ROOT.gGeoManager = ROOT.gEve.GetDefaultGeometry()
 
 # node_beampipe = ROOT.gGeoManager.GetTopVolume().FindNode("beampipe_1")

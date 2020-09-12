@@ -2,7 +2,7 @@
 #include "TLorentzVector.h"
 #include "TPolyMarker3D.h"
 #include "TPolyLine3D.h"
-#ifdef __MAKECINT__
+#ifdef __CINT__
 #pragma link C++ class vector<vector<int> >+;
 #pragma link C++ class vector<vector<double> >+;
 #pragma link C++ class vector<vector<float> >+;
@@ -13,4 +13,3 @@
 #pragma link C++ class vector<TPolyLine3D* >+;
 #pragma link C++ class vector<vector<TLorentzVector> >+;
 #endif
-

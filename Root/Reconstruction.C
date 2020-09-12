@@ -29,7 +29,10 @@
 #include "TStopwatch.h"
 #include <iterator> 
 #include <map>
+#include <sstream>
 #endif
+
+using namespace std;
 
 typedef map<int, int>                TMapii;
 typedef map<TString, int >           TMapTSi;
@@ -73,13 +76,13 @@ double yHdipole = 10.8;
 double z1dipole = 100.0;
 double z2dipole = 202.9;
 //// uncertainties
-float dxAlignmentXFEL = 0.005; // cm
-float dyAlignmentXFEL = 0.005; // cm
-float XvariationSign = -1.;
-float YvariationSign = -1.;
-float dxAlignmentInTray = 0.001; // cm
-float dyAlignmentInTray = 0.001; // cm
-bool doMisalignmentX = true;
+float dxAlignmentXFEL = 0.025; //0.005; // cm
+float dyAlignmentXFEL = 0.025; //0.005; // cm
+float XvariationSign = +1.;
+float YvariationSign = +1.;
+float dxAlignmentInTray = 0.000; // cm
+float dyAlignmentInTray = 0.000; // cm
+bool doMisalignmentX = false;
 bool doMisalignmentY = false;
 
 
@@ -659,7 +662,7 @@ int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* clusters_xyz, TString 
 				}
 			}
 		}
-		distance = distance; // sum of sqrt{dx^2+dy^2} from all 4 rec clusters and the truth position of the truth digitised clusters
+		// distance = distance; // sum of sqrt{dx^2+dy^2} from all 4 rec clusters and the truth position of the truth digitised clusters
 		if(distance>0 and distance<mindistance and distance<maxdistance)
 		{
 			imindistance = i;
@@ -670,18 +673,75 @@ int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* clusters_xyz, TString 
 	// cout << "imindistance=" << imindistance << ", mindistance=" << mindistance << endl;
 	return imindistance;
 }
-	
 
-
-void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
+TString FormatEventID(int evnt)
 {
-	cout << "Settings" << endl;
-	TString setup = "../setup/setupLUXE_"+process+".txt";
-	gROOT->LoadMacro("Loader.C+");
-	gRandom->SetSeed(Seed);
+	TString sevnt = "";
+	if(evnt<10)                        sevnt = Form("000000%d", evnt);
+	if(evnt>=10 && evnt<100)           sevnt = Form("00000%d", evnt);
+	if(evnt>=100 && evnt<1000)         sevnt = Form("0000%d", evnt);
+	if(evnt>=1000 && evnt<10000)       sevnt = Form("000%d", evnt);
+	if(evnt>=10000 && evnt<100000)     sevnt = Form("00%d", evnt);
+	if(evnt>=100000 && evnt<1000000)   sevnt = Form("0%d", evnt);
+	if(evnt>=1000000 && evnt<10000000) sevnt = Form("%d", evnt); // assume no more than 9,999,999 events...
+	return sevnt;
+}	
+
+int toint(TString str)
+{
+	stringstream strm;
+	int x;
+	strm << str;
+	strm >> x;
+	return x;
+}
+
+
+// void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
+// {
+// 	cout << "Settings" << endl;
+// 	TString setup = "../setup/setupLUXE_"+process+".txt";
+// 	gROOT->LoadMacro("Loader.C+");
+// 	gRandom->SetSeed(Seed);
+
+int main(int argc, char *argv[])
+{	
+	int argcounter; 
+	printf("Program Name Is: %s",argv[0]);
+	printf("Run like: ./exec -proc=bppp -evnt=5 -ntrk=-1 -seed=12345");
+	if(argc>=2) 
+	{ 
+		printf("\nNumber Of Arguments Passed: %d",argc); 
+		printf("\n----Following Are The Command Line Arguments Passed----"); 
+		for(argcounter=0;argcounter<argc;argcounter++) printf("\nargv[%d]: %s",argcounter,argv[argcounter]);
+		printf("\n");
+	}
+	//// minimum requirements
+	if(argc<2) { printf("argc<2, exitting now\n"); exit(-1); }
+	//// validate inputs
+	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n",argv[1]); exit(-1); }
+	if(argc==3 and !((TString)argv[2]).Contains("-evnt=")) { printf("argc=3 but cannot parse %s\n",argv[2]); exit(-1); }
+	if(argc==4 and !((TString)argv[3]).Contains("-ntrk=")) { printf("argc=4 but cannot parse %s\n",argv[3]); exit(-1); }
+	if(argc==5 and !((TString)argv[5]).Contains("-seed=")) { printf("argc=5 but cannot parse %s\n",argv[4]); exit(-1); }
+	//// assign inputs
+	TString process = ((TString)argv[1]).ReplaceAll("-proc=",""); // mandatory
+	int     evnt    = (argc>2)     ? toint(((TString)argv[2]).ReplaceAll("-evnt=","")) : -1; // job id [optional]
+	int     nMaxBkgTrks = (argc>3) ? toint(((TString)argv[2]).ReplaceAll("-ntrk=","")) : -1; // job id [optional]
+	int     Seed    = (argc>4)     ? toint(((TString)argv[3]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
+	//// print assigned inputs
+	cout << "process=" << process << endl;
+	cout << "evnt=" << evnt << endl;
+	cout << "nMaxBkgTrks=" << nMaxBkgTrks << endl;
+	cout << "Seed=" << Seed << endl;
 	
+	
+	
+	
+	
+	// TString proc = process;
+	TString eventid = (evnt<0) ? "" : FormatEventID(evnt);
 	TStopwatch stopwatch;
-	
+	TString setup = "../../setup/setupLUXE_"+process+".txt";
 	det = new KMCDetectorFwd();
 	det->ReadSetup(setup,setup);
 	det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VertexTelescope
@@ -729,7 +789,7 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 
 	/// get the signal clusters
 	cout << "Getting signal clusters from tree" << endl;
-	TFile* fSig = new TFile(storage+"/data/root/dig_"+process+".root","READ");
+	TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"_"+eventid+".root","READ");
 	TTree* tSig = (TTree*)fSig->Get("dig");
 	int                      sig_ngen          = 0;
 	int                      sig_nslv          = 0;
@@ -764,11 +824,13 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 	
 	/// get the background clusters
 	cout << "Getting background clusters from tree" << endl;
-	TChain* tBkg = new TChain("dig");
-	tBkg->Add(storage+"/data/root/dig_"+process+"_bkg_0*.root");
-	cout << "---- TChain content ----" << endl;
-	tBkg->ls();
-	cout << "------------------------" << endl;
+	// TChain* tBkg = new TChain("dig");
+	// tBkg->Add(storage+"/data/root/dig_"+process+"_bkg_0*.root");
+	// cout << "---- TChain content ----" << endl;
+	// tBkg->ls();
+	// cout << "------------------------" << endl;
+	TFile* fBkg = new TFile(storage+"/data/root/dig/dig_"+process+"_bkg_"+eventid+".root","READ");
+	TTree* tBkg = (TTree*)fBkg->Get("dig");
 	int                      bkg_ngen          = 0;
 	int                      bkg_nslv          = 0;
 	int                      bkg_nacc          = 0;
@@ -807,7 +869,8 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 	gInterpreter->GenerateDictionary("vector<TPolyMarker3D*>", "vector");
 	gInterpreter->GenerateDictionary("vector<TPolyLine3D*>",   "vector");
 	gInterpreter->GenerateDictionary("vector<vector<int> >",   "vector");
-	TFile* fOut = new TFile(storage+"/data/root/rec_from_clusters_"+process+".root","RECREATE");
+	gSystem->Exec("mkdir -p "+storage+"/data/root/rec");
+	TFile* fOut = new TFile(storage+"/data/root/rec/rec_"+process+"_"+eventid+".root","RECREATE");
 	TTree* tOut = new TTree("reco","reco");
 	/// all clusters output branches
 	vector<TPolyMarker3D*>  all_clusters_xyz;
@@ -975,18 +1038,16 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
  
 	/// loop on events
 	Int_t nsigevents = tSig->GetEntries();
-	Int_t nbkgevents = (nMaxBkgTrks>0) ? nMaxBkgTrks : tBkg->GetEntries();
-	int nmaxtoread = 40;
-	if(nbkgevents<nsigevents and nmaxtoread<=0)
+	Int_t nbkgevents = tBkg->GetEntries();
+	if(nbkgevents<nsigevents)
 	{
 		cout << "ERROR: nbkgevents<nsigevents" << endl;
 		cout << "       nsigevents=" << nsigevents << endl;
 		cout << "       nbkgevents=" << nbkgevents << endl;
 		exit(-1);
 	}
-	if(nmaxtoread<=0) cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
-	else              cout << "Starting loop over signal events with nmaxtoread=" << nmaxtoread << endl;
-	for(int iev=0 ; iev<tSig->GetEntries() and (nmaxtoread>0 and iev<nmaxtoread) ; iev++)
+	cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
+	for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 	{
 		stopwatch.Start();
@@ -1398,4 +1459,6 @@ void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
 	for(TMapTSTH1D::iterator it=histos.begin() ; it!=histos.end() ; ++it) it->second->Write();
 	fOut->Write();
 	fOut->Close();
+	
+	return 0;
 }

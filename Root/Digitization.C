@@ -21,7 +21,12 @@
 #include "TStopwatch.h"
 #include "TTree.h"
 #include "TTreeStream.h"
+#include <iterator> 
+#include <map>
+#include <sstream>
 #endif
+
+using namespace std;
 
 typedef map<TString, TH1D* > TMapTSTH1D;
 typedef map<TString, TH2D* > TMapTSTH2D;
@@ -446,13 +451,66 @@ void RenameOutTree(TString fOutName, int nFiles)
 	gSystem->Exec("mv -f "+fOutName+" "+fOutNameNew);
 }
 
-
-void Digitization(TString process, int Seed=12345) //, const char* setup="setup/setupLUXE.txt")
+TString FormatEventID(int evnt)
 {
+	TString sevnt = "";
+	if(evnt<10)                        sevnt = Form("000000%d", evnt);
+	if(evnt>=10 && evnt<100)           sevnt = Form("00000%d", evnt);
+	if(evnt>=100 && evnt<1000)         sevnt = Form("0000%d", evnt);
+	if(evnt>=1000 && evnt<10000)       sevnt = Form("000%d", evnt);
+	if(evnt>=10000 && evnt<100000)     sevnt = Form("00%d", evnt);
+	if(evnt>=100000 && evnt<1000000)   sevnt = Form("0%d", evnt);
+	if(evnt>=1000000 && evnt<10000000) sevnt = Form("%d", evnt); // assume no more than 9,999,999 events...
+	return sevnt;
+}
+
+int toint(TString str)
+{
+	stringstream strm;
+	int x;
+	strm << str;
+	strm >> x;
+	return x;
+}
+
+
+
+int main(int argc, char *argv[])
+{	
+	int argcounter; 
+	printf("Program Name Is: %s",argv[0]); 
+	if(argc>=2) 
+	{ 
+		printf("\nNumber Of Arguments Passed: %d",argc); 
+		printf("\n----Following Are The Command Line Arguments Passed----"); 
+		for(argcounter=0;argcounter<argc;argcounter++) printf("\nargv[%d]: %s",argcounter,argv[argcounter]);
+		printf("\n");
+	}
+	//// minimum requirements
+	if(argc<2) { printf("argc<2, exitting now\n"); exit(-1); }
+	//// validate inputs
+	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n",argv[1]); exit(-1); }
+	if(argc==3 and !((TString)argv[2]).Contains("-evnt=")) { printf("argc=3 but cannot parse %s\n",argv[2]); exit(-1); }
+	if(argc==4 and !((TString)argv[3]).Contains("-seed=")) { printf("argc=4 but cannot parse %s\n",argv[3]); exit(-1); }
+	//// assign inputs
+	TString process = ((TString)argv[1]).ReplaceAll("-proc=",""); // mandatory
+	int     evnt    = (argc>2) ? toint(((TString)argv[2]).ReplaceAll("-evnt=","")) : -1; // job id [optional]
+	int     Seed    = (argc>3) ? toint(((TString)argv[3]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
+	//// print assigned inputs
+	cout << "process=" << process << endl;
+	cout << "evnt=" << evnt << endl;
+	cout << "Seed=" << Seed << endl;
+	
+	
+	
+	
+	
+	
+	
+	TString eventid = (evnt<0) ? "" : FormatEventID(evnt);
 	TString proc = process;
 	proc.ReplaceAll("_bkg","");
-	TString setup = "../setup/setupLUXE_"+proc+".txt";
-   gROOT->LoadMacro("Loader.C+");
+	TString setup = "../../setup/setupLUXE_"+proc+".txt";
    gRandom->SetSeed(Seed);  
    det = new KMCDetectorFwd();
    det->ReadSetup(setup,setup);
@@ -486,7 +544,7 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
    zlayer->push_back(330); //// NOAM --> GET FROM THE SETUP
 
    int outN = 100;
-   int nMaxEventsPerFile = 10;
+   int nMaxEventsPerFile = 100;
 	int nFiles = 1;
 
    // TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
@@ -522,7 +580,8 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
    gInterpreter->GenerateDictionary("vector<TPolyMarker3D*>", "vector");
    gInterpreter->GenerateDictionary("vector<TPolyLine3D*>",   "vector");
 	gInterpreter->GenerateDictionary("vector<vector<int> >",   "vector");
-	TString fOutName = storage+"/data/root/dig_"+process+".root";
+	gSystem->Exec("mkdir -p "+storage+"/data/root/dig");
+	TString fOutName = storage+"/data/root/dig/dig_"+process+"_"+eventid+".root";
 	SetOutTree(fOutName);
 	
 	// TString hname = "";
@@ -530,14 +589,14 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 	// hname = "h2_z_vs_y"; histos2.insert( make_pair(hname, new TH2D(hname,";y [cm];z [cm];Tracks",1000,-100,+100, 2000,0,+400)) );
 	
    /// loop on events
-   // for(int iev=0;iev<nev and iev<10;iev++)
-   for(int iev=0;iev<nev;iev++)
-   {	
+   // for(int iev=0;iev<nev;iev++)
+	bool fullloop = (evnt<0);
+   for(int iev=(fullloop)?0:evnt ; (fullloop)?iev<nev:iev<=evnt ; iev++)
+   {
       //// clear
       ngen = 0;    
       nslv = 0;
       nacc = 0;
-		
  	   for(int i=0;i<(int)clusters_id.size();++i) clusters_id[i].clear();
  	   for(int i=0;i<(int)clusters_type.size();++i) clusters_type[i].clear();
  	   for(int i=0;i<(int)clusters_xyz.size();++i) delete clusters_xyz[i];
@@ -561,10 +620,10 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
  	   //// get the next entry
  	   tIn->GetEntry(iev);
       if((iev%outN)==0) printf("Done %d out of %d\n",iev,nev);
-      int nfakeHits = 0;
+      // int nfakeHits = 0;
  	   TLorentzVector ptmp;
  	   int ngenall = pdgId->size();
-      int pair = 1;
+      // int pair = 1;
       /// loop on particles
       for(int igen=0 ; igen<ngenall ; igen++)
       {
@@ -665,8 +724,10 @@ void Digitization(TString process, int Seed=12345) //, const char* setup="setup/
 				SetOutTree(fOutName);
 			}
 		}
-		
+			
    }
    KillOutTree();
-	if(process.Contains("bkg")) RenameOutTree(fOutName,nFiles);
+	if(process.Contains("bkg") and eventid=="") RenameOutTree(fOutName,nFiles);
+	
+	return 0;
 }
