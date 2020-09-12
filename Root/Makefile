@@ -18,9 +18,11 @@ link:
 
 digi: Digitization.C
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(INCLUDE)
+	chmod 755 digi
 
 reco: Reconstruction.C
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(INCLUDE)
+	chmod 755 reco
 
 
 .PHONY: clean
