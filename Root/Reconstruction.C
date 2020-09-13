@@ -708,7 +708,6 @@ int main(int argc, char *argv[])
 {	
 	int argcounter; 
 	printf("Program Name Is: %s",argv[0]);
-	printf("Run like: ./exec -proc=bppp -evnt=5 -ntrk=-1 -seed=12345");
 	if(argc>=2) 
 	{ 
 		printf("\nNumber Of Arguments Passed: %d",argc); 
