@@ -15,6 +15,6 @@ echo "STORAGEDIR=: $STORAGEDIR"
 cd $BASEBPTH
 echo "Now you are here: $PWD"
 ls -lrth
-./digi -proc=bppp_bkg -evnt=$1
-./digi -proc=bppp     -evnt=$1
-./reco -proc=bppp     -evnt=$1
+./digi -proc=bppp_bkg -evnt=$1 -seed=$2
+./digi -proc=bppp     -evnt=$1 -seed=$2
+./reco -proc=bppp     -evnt=$1 -seed=$2

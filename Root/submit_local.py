@@ -6,6 +6,7 @@ import Queue
 import threading
 import multiprocessing
 import argparse
+from random import seed, randint
 parser = argparse.ArgumentParser(description='send_qsub.py...')
 parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
 parser.add_argument('-c', metavar='clean',   required=True,  help='y/n')
@@ -46,15 +47,19 @@ if(clean):
 
 
 ## send a pilot job to make all the dictionaries
-p = subprocess.Popen('./job_local.sh 0', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+p = subprocess.Popen('./job_local.sh 0 0', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 out, err = p.communicate()
 
+
+# seed random number generator
+seed(1)
 
 ## run!
 q = Queue.Queue()
 for ievnt in ievents:
    sievnt = str(ievnt)
-   command = './job_local.sh '+sievnt
+   randseed = str(randint(0,1000000))
+   command = './job_local.sh '+sievnt+' '+randseed
    print(command)
    q.put(command)
 

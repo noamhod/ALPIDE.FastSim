@@ -720,13 +720,13 @@ int main(int argc, char *argv[])
 	//// validate inputs
 	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n",argv[1]); exit(-1); }
 	if(argc==3 and !((TString)argv[2]).Contains("-evnt=")) { printf("argc=3 but cannot parse %s\n",argv[2]); exit(-1); }
-	if(argc==4 and !((TString)argv[3]).Contains("-ntrk=")) { printf("argc=4 but cannot parse %s\n",argv[3]); exit(-1); }
-	if(argc==5 and !((TString)argv[5]).Contains("-seed=")) { printf("argc=5 but cannot parse %s\n",argv[4]); exit(-1); }
+	if(argc==4 and !((TString)argv[3]).Contains("-seed=")) { printf("argc=4 but cannot parse %s\n",argv[3]); exit(-1); }
+	if(argc==5 and !((TString)argv[4]).Contains("-ntrk=")) { printf("argc=5 but cannot parse %s\n",argv[4]); exit(-1); }
 	//// assign inputs
 	TString process = ((TString)argv[1]).ReplaceAll("-proc=",""); // mandatory
 	int     evnt    = (argc>2)     ? toint(((TString)argv[2]).ReplaceAll("-evnt=","")) : -1; // job id [optional]
-	int     nMaxBkgTrks = (argc>3) ? toint(((TString)argv[2]).ReplaceAll("-ntrk=","")) : -1; // job id [optional]
-	int     Seed    = (argc>4)     ? toint(((TString)argv[3]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
+	int     Seed    = (argc>3)     ? toint(((TString)argv[3]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
+	int     nMaxBkgTrks = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-ntrk=","")) : -1; // job id [optional]
 	//// print assigned inputs
 	cout << "process=" << process << endl;
 	cout << "evnt=" << evnt << endl;

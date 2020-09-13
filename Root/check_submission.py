@@ -2,8 +2,13 @@
 import os, sys
 import subprocess
 from subprocess import call
-
-nevents = 980
+import argparse
+parser = argparse.ArgumentParser(description='send_qsub.py...')
+parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
+parser.add_argument('-n', metavar='nevents', required=True,  help='980')
+argus = parser.parse_args()
+proc  = argus.p
+nevents = int(argus.n)
 
 def FormatEventID(evnt):
    sevnt = ""

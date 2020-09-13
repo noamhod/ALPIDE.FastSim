@@ -591,7 +591,7 @@ int main(int argc, char *argv[])
    /// loop on events
    // for(int iev=0;iev<nev;iev++)
 	bool fullloop = (evnt<0);
-   for(int iev=(fullloop)?0:evnt ; (fullloop)?iev<nev:iev<=evnt ; iev++)
+   for(int iev=(fullloop)?0:evnt ; (fullloop)?iev<nev:iev==evnt ; iev++)
    {
       //// clear
       ngen = 0;    

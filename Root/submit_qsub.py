@@ -2,6 +2,7 @@
 import os, sys
 import subprocess
 from subprocess import call
+from random import seed, randint
 import argparse
 parser = argparse.ArgumentParser(description='send_qsub.py...')
 parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
@@ -46,14 +47,17 @@ if(clean):
 
 ## send a pilot job to make all the dictionaries
 if(not resubmit):
-   p = subprocess.Popen('./job_local.sh 0', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   p = subprocess.Popen('./job_local.sh 0 0', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    out, err = p.communicate()
-   
+
+# seed random number generator
+seed(1)   
    
 ## run!
 for ievnt in ievents:
    sievnt = str(ievnt)
-   command = 'qsub -F "'+sievnt+'" job_qsub.sh -q N  -o $STORAGEDIR/logs/log_'+sievnt+'.out -e $STORAGEDIR/logs/log_'+sievnt+'.err'
+   randseed = str(randint(0,1000000))
+   command = 'qsub -F "'+sievnt+' '+randseed+'" job_qsub.sh -q N  -o $STORAGEDIR/logs/log_'+sievnt+'.out -e $STORAGEDIR/logs/log_'+sievnt+'.err'
    print command
    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    out, err = p.communicate()
