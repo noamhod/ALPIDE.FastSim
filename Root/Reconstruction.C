@@ -76,8 +76,8 @@ double yHdipole = 10.8;
 double z1dipole = 100.0;
 double z2dipole = 202.9;
 //// uncertainties
-float dxAlignmentXFEL = 0.025; //0.005; // cm
-float dyAlignmentXFEL = 0.025; //0.005; // cm
+float dxAlignmentXFEL = 0.005; //0.005; // cm
+float dyAlignmentXFEL = 0.005; //0.005; // cm
 float XvariationSign = +1.;
 float YvariationSign = +1.;
 float dxAlignmentInTray = 0.000; // cm
@@ -360,7 +360,7 @@ int cache_clusters(vector<TPolyMarker3D*>* clusters_xyz, vector<vector<int> >* c
 			TString lr = layers[z];
 			
 			x = (doMisalignmentX) ? x+XvariationSign*dxAlignmentXFEL : x;
-			y = (doMisalignmentY) ? y+YvariationSign*dxAlignmentXFEL : y;
+			y = (doMisalignmentY) ? y+YvariationSign*dyAlignmentXFEL : y;
 			
 			cached_clusters_xyz["x_"+lr+"_"+sd].push_back(x);
 			cached_clusters_xyz["y_"+lr+"_"+sd].push_back(y);
