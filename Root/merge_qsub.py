@@ -16,7 +16,7 @@ for ievnt in range(nevents):
          print("ERROR in:",fname)
          quit()
 
-command = 'hadd $STORAGEDIR/rec/rec_bppp.root  $STORAGEDIR/rec/*.root'
+command = 'hadd -f $STORAGEDIR/rec/rec_bppp.root  $STORAGEDIR/rec/*.root'
 print(command)
 #p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 #out, err = p.communicate()

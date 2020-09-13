@@ -34,4 +34,5 @@ if(len(problems)>0):
    print(problems)
 else:
    print("No problems found!")
-   print("Can proceed to merge the output")
+   print("Can proceed to merge the output as:")
+   print('   hadd -f $STORAGEDIR/data/root/rec_bppp.root  $STORAGEDIR/data/root/rec/rec_bppp_*.root')
