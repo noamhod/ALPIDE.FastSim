@@ -39,7 +39,7 @@ if(clean):
 
 for ievnt in ievents:
    sievnt = str(ievnt)
-   command = 'qsub -F "'+sievnt+'" job.sh -q N  -o $STORAGEDIR/logs/log_'+sievnt+'.out -e $STORAGEDIR/logs/log_'+sievnt+'.err'
+   command = 'qsub -F "'+sievnt+'" job_qsub.sh -q N  -o $STORAGEDIR/logs/log_'+sievnt+'.out -e $STORAGEDIR/logs/log_'+sievnt+'.err'
    print command
    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    out, err = p.communicate()

@@ -1028,7 +1028,7 @@ def FillHistos(event):
       
       Erat   = Erec/Esig if(Esig>0) else -9999
       dE     = Erec-Esig
-      dErel  = dE/Esig
+      dErel  = dE/Esig if(Esig>0) else -9999
       dpxrel = (pxrec-pxsig)/pxsig
       dpyrel = (pyrec-pysig)/pysig
       dpzrel = (pzrec-pzsig)/pzsig
