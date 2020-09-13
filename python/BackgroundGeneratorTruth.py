@@ -131,6 +131,8 @@ for n in range(Nevt):
       vx0 = R*ROOT.TMath.Cos(phi)
       vy0 = R*ROOT.TMath.Sin(phi)
       vz0 = cfgmap["zDipoleExit"]+rnd.Gaus(0,SigmaZ)
+      vz0 = round(vz0,1) ## precision of stepsize in z for propagation in B-filed is 0.1
+
       
       ### draw the momentum
       # tau = -0.5
