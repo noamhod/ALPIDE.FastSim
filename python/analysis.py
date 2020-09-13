@@ -64,9 +64,9 @@ def Buildid2indexDict(all_clusters_id):
       id2index.update({all_clusters_id[i]:i})
 
 def acceptcls(x,y,z):
-   if(math.fabs(x)>x2R):                              return False
-   if(math.fabs(x)<x2L):                              return False
-   if(math.fabs(y)>yUp):                              return False
+   if(abs(x)>x2R):                              return False
+   if(abs(x)<x2L):                              return False
+   if(abs(y)>yUp):                              return False
    if(z!=300 and z!=310 and z!=320 and z!=330): return False
    return True
 
@@ -106,7 +106,7 @@ def accepttrkpts(points,fullacc=False,isbkg=False):
    z = ROOT.Double()
    for i in range(points.GetN()):
       points.GetPoint(i,x,y,z)
-      if(math.fabs(x)<x2L): continue
+      if(abs(x)<x2L): continue
       if(isbkg): z = ROOT.Double(ROOT.TMath.Nint(z))
       if(z!=300 and z!=310 and z!=320 and z!=330): continue
       acc += acceptcls(x,y,z)
@@ -781,10 +781,10 @@ def FillHistos(event):
       ### selection?
       selected = True
       if(chi2dof>6):         selected = False
-      if(math.fabs(xVtxSig)>0.01): selected = False
-      if(math.fabs(yVtxSig)>0.01): selected = False
-      if(math.fabs(SnpSig)>10):    selected = False
-      if(math.fabs(TglSig)>400):   selected = False
+      if(abs(xVtxSig)>0.01): selected = False
+      if(abs(yVtxSig)>0.01): selected = False
+      if(abs(SnpSig)>10):    selected = False
+      if(abs(TglSig)>400):   selected = False
       if(Erec<1.5):          selected = False
       if(Erec>15.5):         selected = False
       if(selected): ntrk_sel += 1
