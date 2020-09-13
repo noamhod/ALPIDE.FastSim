@@ -46,9 +46,11 @@ if(clean):
 
 
 ## send a pilot job to make all the dictionaries
-if(not resubmit):
-   p = subprocess.Popen('./job_local.sh 0 0', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   out, err = p.communicate()
+if(not os.path.exists('AutoDict_vector_vector_int____cxx.so')):
+   print('Dictionaries should be generated on the first call')
+   print('Please first manually execute: ./job_local.sh 0 0')
+   print('and then re-run this script as usual')
+   quit()
 
 # seed random number generator
 seed(1)   
