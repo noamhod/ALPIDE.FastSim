@@ -63,4 +63,4 @@ for ievnt in ievents:
 
 print("Check with:        qstat -u user")
 print("List logs with:    ls -lrth $STORAGEDIR/logs/")
-print("Check output with: python check_qsub.py")
+print("Check output with: python check_submission.py")

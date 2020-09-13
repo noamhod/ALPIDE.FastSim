@@ -89,4 +89,4 @@ q.join() # block until all tasks are done
 
 
 print("List logs with:    ls -lrth $STORAGEDIR/logs/")
-print("Check output with: python check_qsub.py")
+print("Check output with: python check_submission.py")
