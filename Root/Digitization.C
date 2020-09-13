@@ -545,7 +545,7 @@ int main(int argc, char *argv[])
 
    int outN = 100;
    int nMaxEventsPerFile = 100;
-	int nFiles = 1;
+   int nFiles = 1;
 
    // TString process = "bppp";  /// trident or bppp or bppp_bkg or trident_bkg
 	if(process.Contains("trident")) resetToTridentGeometry();
@@ -708,7 +708,7 @@ int main(int argc, char *argv[])
       tOut->Fill();
 		
 		int nevprocessed = iev+1; // iev starts from 0
-		if(process.Contains("bkg"))
+		if(process.Contains("bkg") and fullloop)
 		{
 			if(nevprocessed%nMaxEventsPerFile==0)
 			{
