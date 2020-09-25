@@ -255,3 +255,45 @@ leg_ntrks.AddEntry(hrec,"Reconstructed","l")
 leg_ntrks.AddEntry(hsel,"Selected","l")
 leg_ntrks.Draw("same")
 cnv.SaveAs(fn+"selection_ntrks.pdf")
+
+
+
+cnv = TCanvas("cnv","",500,500)
+cnv.cd()
+ROOT.gPad.SetTicks(1,1)
+tfile.Get("h_E_tru_eff").SetMinimum(0)
+tfile.Get("h_E_tru_eff").SetMaximum(1.05)
+tfile.Get("h_E_tru_eff").SetLineColor(ROOT.kBlack)
+tfile.Get("h_E_tru_eff").SetMarkerColor(ROOT.kBlack)
+tfile.Get("h_E_tru_eff").SetMarkerStyle(20)
+sfturnon = '[0]*((2-ROOT::Math::erfc(([1]/2+x)/[2]))/2) + [3]*((2-ROOT::Math::erfc(([4]/2+x)/[5]))/2)'
+
+fturnon_guess = TF1("turnon_guess", sfturnon,0,14)
+fturnon_guess.SetParameter(0,0.98/2)
+fturnon_guess.SetParameter(1,-4)
+fturnon_guess.SetParameter(2,0.7)
+fturnon_guess.SetParameter(3,0.98/2)
+fturnon_guess.SetParameter(4,-3)
+fturnon_guess.SetParameter(5,0.7)
+fturnon_guess.SetLineWidth(2)
+fturnon_guess.SetLineColor(ROOT.kBlue)
+
+fturnon = TF1("turnon", sfturnon, 0,14)
+fturnon.SetParameter(0,0.98/2)
+fturnon.SetParameter(1,-4)
+fturnon.SetParameter(2,0.7)
+fturnon.SetParameter(3,0.98/2)
+fturnon.SetParameter(4,-3)
+fturnon.SetParameter(5,0.7)
+fturnon.SetLineWidth(2)
+fturnon.SetLineColor(ROOT.kRed)
+
+res = tfile.Get("h_E_tru_eff").Fit(fturnon,"EMRS")
+chi2dof = fturnon.GetChisquare()/fturnon.GetNDF() if(fturnon.GetNDF()>0) else -1
+print("Turnon: chi2/Ndof=",chi2dof)
+tfile.Get("h_E_tru_eff").Draw("ep")
+fturnon.Draw("same")
+fturnon_guess.Draw("same")
+cnv.SaveAs(fn+"E_tru_eff_turnonfit.pdf")
+
+
