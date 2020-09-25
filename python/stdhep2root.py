@@ -7,13 +7,17 @@ import numpy as np
 import ROOT
 from ROOT import TFile, TTree, TLorentzVector
 import glob
+import subprocess
+from subprocess import call
 import argparse
 parser = argparse.ArgumentParser(description='stdhep2root.py...')
 parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
+parser.add_argument('-d', metavar='directory', required=True,  help='the path to the stdhep files')
 parser.add_argument('-e', metavar='energy', required=False,  help='beam energy')
 parser.add_argument('-g', metavar='photons?', required=False,help='photons only? [default=0/1]')
 argus  = parser.parse_args()
 proc   = argus.p
+path   = argus.d
 ebeam  = argus.e
 photon = (argus.g=="1")
 
@@ -72,18 +76,21 @@ def readparticles(name):
 
 
 process = proc
-beamenergy = ebeam
-tf = TFile( storage+'/data/root/raw_'+process+'.root', 'recreate' ) if(not photon) else TFile( storage+'/data/root/raw_photons_'+process+'.root', 'recreate' )
+targetdir = path.replace("stdhep","root/raw")
+p = subprocess.Popen("mkdir -p "+targetdir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+out, err = p.communicate()
+
+tf = TFile( targetdir+'/raw_'+process+'.root', 'recreate' ) if(not photon) else TFile( targetdir+'/raw_photons_'+process+'.root', 'recreate' )
 tt = TTree( 'tt','tt' )
-vx    = ROOT.std.vector( double )()
-vy    = ROOT.std.vector( double )()
-vz    = ROOT.std.vector( double )()
-px    = ROOT.std.vector( double )()
-py    = ROOT.std.vector( double )()
-pz    = ROOT.std.vector( double )()
-E     = ROOT.std.vector( double )()
+vx    = ROOT.std.vector( float )()
+vy    = ROOT.std.vector( float )()
+vz    = ROOT.std.vector( float )()
+px    = ROOT.std.vector( float )()
+py    = ROOT.std.vector( float )()
+pz    = ROOT.std.vector( float )()
+E     = ROOT.std.vector( float )()
 pdgId = ROOT.std.vector( int )()
-wgt   = ROOT.std.vector( double )()
+wgt   = ROOT.std.vector( float )()
 tt.Branch('vx', vx)
 tt.Branch('vy', vy)
 tt.Branch('vz', vz)
@@ -94,7 +101,7 @@ tt.Branch('E',  E)
 tt.Branch('pdgId',pdgId)
 tt.Branch('wgt',wgt)
 
-fIns = glob.glob("../data/stdhep/"+process+"/*.out")
+fIns = glob.glob(path+"/*.out")
 for name in fIns:
    ### clear
    pdgId.clear()
