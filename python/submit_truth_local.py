@@ -18,7 +18,7 @@ spotsizes = ["w0_3000nm","w0_3500nm","w0_4000nm","w0_4500nm","w0_5000nm","w0_800
 q = queue.Queue()
 for spotsize in spotsizes:
    relpath = prefix+"/"+spotsize
-   command = "/usr/local/bin/python3 truthtests.py -p trident -d "+relpath
+   command = "/usr/local/bin/python3 truthanalysis.py -p trident -d "+relpath
    print(command)
    q.put(command)
 
