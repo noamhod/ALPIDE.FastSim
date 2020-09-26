@@ -296,4 +296,12 @@ fturnon.Draw("same")
 fturnon_guess.Draw("same")
 cnv.SaveAs(fn+"E_tru_eff_turnonfit.pdf")
 
+tfileout = TFile(fn.replace("pdf","root")+"accxeff.root","RECREATE")
+tfileout.cd()
+fturnon.Write()
+tfileout.Write()
+tfileout.Close()
+
+
+
 

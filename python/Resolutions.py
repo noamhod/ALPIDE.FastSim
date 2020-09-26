@@ -412,6 +412,12 @@ s.DrawLatex(0.2,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
 s.DrawLatex(0.2,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
 cnv.SaveAs(fn+"res_E.pdf")
 
+tfileout = TFile(fn.replace("pdf","root")+"Eresolution.root","RECREATE")
+tfileout.cd()
+fite.Write()
+tfileout.Write()
+tfileout.Close()
+
 cnv = TCanvas("cnv_res_E_Eside","",500,500)
 cnv.SetGrid()
 cnv.SetTicks(1,1)
