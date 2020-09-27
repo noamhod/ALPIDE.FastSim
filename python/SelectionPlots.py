@@ -293,7 +293,7 @@ chi2dof = fturnon.GetChisquare()/fturnon.GetNDF() if(fturnon.GetNDF()>0) else -1
 print("Turnon: chi2/Ndof=",chi2dof)
 tfile.Get("h_E_tru_eff").Draw("ep")
 fturnon.Draw("same")
-fturnon_guess.Draw("same")
+# fturnon_guess.Draw("same")
 cnv.SaveAs(fn+"E_tru_eff_turnonfit.pdf")
 
 tfileout = TFile(fn.replace("pdf","root")+"accxeff.root","RECREATE")

@@ -12,13 +12,14 @@ parser.add_argument('-p', metavar='prefix', required=True,  help='e.g. trident/I
 argus = parser.parse_args()
 prefix  = argus.p
 
-spotsizes = ["w0_3000nm","w0_3500nm","w0_4000nm","w0_4500nm","w0_5000nm","w0_8000nm","w0_20000nm","w0_50000nm","w0_10000nm"]
+spotsizes = ["w0_3000nm","w0_3500nm","w0_4000nm","w0_4500nm","w0_5000nm","w0_8000nm","w0_20000nm","w0_50000nm","w0_100000nm"]
 
 ## run!
 q = queue.Queue()
 for spotsize in spotsizes:
    relpath = prefix+"/"+spotsize
-   command = "/usr/local/bin/python3 truthanalysis.py -p trident -d "+relpath
+   proc = "trident" if("trident" in relpath) else "bppp"
+   command = "/usr/local/bin/python3 truthanalysis.py -p "+proc+" -d "+relpath
    print(command)
    q.put(command)
 
