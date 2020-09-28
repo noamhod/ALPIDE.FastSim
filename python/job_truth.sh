@@ -5,9 +5,7 @@ fi
 echo you are here: $PWD
 export PYTHONPATH=$PYTHONPATH:/usr/local/anaconda3/lib/python3.7
 export PATH=/usr/local/anaconda3/bin:$PATH
-cd /usr/local/anaconda3/bin/
-source thisroot.sh
-cd -
+export ROOTSYS=/usr/local/anaconda3/bin
 alias python="python3.7"
 export STORAGEDIR=/storage/agrp/nhod/
 echo storage dir is set: $STORAGEDIR
