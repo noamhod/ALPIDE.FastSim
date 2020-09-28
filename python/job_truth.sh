@@ -1,3 +1,4 @@
+echo hostname is: $HOSTNAME
 if [[ $HOSTNAME == *"weizmann"* ]]; then
   cd ALPIDE.FastSim/python/
 fi
