@@ -1,3 +1,6 @@
+if [[ $HOSTNAME == *"weizmann"* ]]; then
+  cd ALPIDE.FastSim/python/
+fi
 echo you are here: $PWD
 export PYTHONPATH=$PYTHONPATH:/usr/local/anaconda3/lib/python3.7
 export PATH=/usr/local/anaconda3/bin:$PATH
