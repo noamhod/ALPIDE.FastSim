@@ -21,7 +21,7 @@ for signalpath,spotsizes in signals.items():
    for spotsize in spotsizes:
       relpath  = signalpath+"/"+spotsize
       fullpath = basepath_stdhep+relpath
-      logname = relpath.replace("/","_")
+      logname = relpath.replace("/","_").replace("__","_")
       proc = "trident" if("trident" in relpath) else "bppp"
       p = subprocess.Popen("mkdir -p "+basepath_root+relpath, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       out, err = p.communicate()
