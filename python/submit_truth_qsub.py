@@ -16,58 +16,23 @@ signals.update( {"bppp/IPstrong_V1.1.00/JETI40/g_laser/16.5GeV/"    :["w0_3000nm
 signals.update( {"trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/":["w0_8000nm","w0_9000nm","w0_10000nm","w0_11000nm","w0_12000nm"]} )
 signals.update( {"bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"   :["w0_8000nm","w0_9000nm","w0_10000nm","w0_11000nm","w0_12000nm"]} )
 
-
 ## run!
-q = queue.Queue()
 for signalpath,spotsizes in signals.items():
    for spotsize in spotsizes:
       relpath  = signalpath+"/"+spotsize
       fullpath = basepath_stdhep+relpath
+      logname = relpath.replace("/","_")
       proc = "trident" if("trident" in relpath) else "bppp"
-      command1 = "python3.7 stdhep2root.py   -p "+proc+" -d "+fullpath
-      command2 = "python3.7 truthanalysis.py -p "+proc+" -d "+relpath
-      # command = command1+"; "+command2
-      command = "echo "+command1+"; "+command2
-      print(command)
-      q.put(command)
-
-def worker():
-   while True:
-      item = q.get()
-      # execute a task: call a shell program and wait until it completes
-      command = str(item)
-      # print(command)
-      relpath = command.split(" ")[-1]
       p = subprocess.Popen("mkdir -p "+basepath_root+relpath, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       out, err = p.communicate()
-      echo1 = "echo you are here: $PWD; "
-      setup = 'export PYTHONPATH=$PYTHONPATH:/usr/local/anaconda3/lib/python3.7\
-               export PATH=/usr/local/anaconda3/bin:$PATH\
-               alias python="python3.7"\
-               export STORAGEDIR=/storage/agrp/nhod/'
-      echo2 = 'echo storage dir is set: $STORAGEDIR;\
-               echo ROOTSYS=$ROOTSYS;\
-               echo PYTHONPATH=$PYTHONPATH;\
-               which python; '
-      fullcommand = echo1+setup+echo2+command
-      p = subprocess.Popen(fullcommand, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      out, err = p.communicate()
       
-      f = open(basepath_root+relpath+"/log.out", 'w')
-      f.write(str(out))
-      f.close()
-      print("created log file in: "+basepath_root+relpath+"/log.out")
-      f = open(basepath_root+relpath+"/log.err", 'w')
-      f.write(str(err))
-      f.close()
-      print("created err file in: "+basepath_root+relpath+"/log.err")
-      q.task_done()
+      qsub = 'qsub -F "'+proc+' '+fullpath+' '+relpath+'" job_truth.sh -q N  -o $STORAGEDIR/logs/log_'+logname+'.out -e $STORAGEDIR/logs/log_'+logname+'.err'
+      print(qsub)
+      p = subprocess.Popen(qsub, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      out, err = p.communicate()
+      print("out=",out.replace("\n",""))
+      if(err!=""): print("err=",err.replace("\n",""))
 
-cpus=multiprocessing.cpu_count() #detect number of cores
-print("Creating %d threads" % cpus)
-for i in range(cpus):
-   t = threading.Thread(target=worker)
-   t.daemon = True
-   t.start()
-
-q.join() # block until all tasks are done
+print("Check with:        qstat -u user")
+print("List logs with:    ls -lrth $STORAGEDIR/logs/")
+print("Check output with: python check_submission.py")
