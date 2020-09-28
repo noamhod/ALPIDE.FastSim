@@ -12,13 +12,11 @@ from subprocess import call
 import argparse
 parser = argparse.ArgumentParser(description='stdhep2root.py...')
 parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
-parser.add_argument('-d', metavar='directory', required=True,  help='the path to the stdhep files')
-parser.add_argument('-e', metavar='energy', required=False,  help='beam energy')
-parser.add_argument('-g', metavar='photons?', required=False,help='photons only? [default=0/1]')
+parser.add_argument('-d', metavar='fullpath',required=True,  help='the full path to the stdhep files')
+parser.add_argument('-g', metavar='photons?',required=False,help='photons only? [default=0/1]')
 argus  = parser.parse_args()
 proc   = argus.p
 path   = argus.d
-ebeam  = argus.e
 photon = (argus.g=="1")
 
 ROOT.gROOT.SetBatch(1)
