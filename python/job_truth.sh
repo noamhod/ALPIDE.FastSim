@@ -1,5 +1,5 @@
 echo hostname is: $HOSTNAME
-if [[ $HOSTNAME == *"weizmann"* ]]; then
+if [[ $HOSTNAME == *"wipp"* ]]; then
   cd ALPIDE.FastSim/python/
 fi
 echo you are here: $PWD
