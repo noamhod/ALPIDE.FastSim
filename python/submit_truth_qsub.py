@@ -30,8 +30,8 @@ for signalpath,spotsizes in signals.items():
       print(qsub)
       p = subprocess.Popen(qsub, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       out, err = p.communicate()
-      print("out=",out.replace("\n",""))
-      if(err!=""): print("err=",err.replace("\n",""))
+      print("out=",str(out).replace("\n",""))
+      if(err!=""): print("err=",str(err).replace("\n",""))
 
 print("Check with:        qstat -u user")
 print("List logs with:    ls -lrth $STORAGEDIR/logs/")
