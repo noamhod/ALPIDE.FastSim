@@ -19,7 +19,7 @@ signals.update( {"bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"   :["w0_8000nm
 
 ## run!
 q = queue.Queue()
-for relpath,spotsizes in signals:
+for relpath,spotsizes in signals.items():
    for spotsize in spotsizes:
       relpath  = prefix+"/"+spotsize
       fullpath = basepath_stdhep+relpath
