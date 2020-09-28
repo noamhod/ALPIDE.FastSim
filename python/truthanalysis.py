@@ -161,9 +161,9 @@ def Analyze(n,event):
       
       ### only electrons
       if(event.pdgId[j]==11):
-         # nelectrons+=wgt
-         nelectrons+=1
-         nelectrons_rec_emul += prob
+         nelectrons+=wgt
+         # nelectrons+=1
+         nelectrons_rec_emul += prob*wgt
          histos["h_E_electrons"].Fill(Etru,wgt)
          histos["h_E_electrons_fine"].Fill(Etru,wgt)         
          histos["h_E_electrons_full"].Fill(Etru,wgt)         
@@ -180,9 +180,9 @@ def Analyze(n,event):
          
       ### only positrons
       if(event.pdgId[j]==-11):
-         # npositrons+=wgt
-         npositrons+=1
-         npositrons_rec_emul += prob
+         npositrons+=wgt
+         # npositrons+=1
+         npositrons_rec_emul += prob*wgt
          histos["h_E_positrons"].Fill(Etru,wgt)
          histos["h_E_positrons_fine"].Fill(Etru,wgt)
          histos["h_E_positrons_full"].Fill(Etru,wgt)
@@ -207,6 +207,14 @@ def Analyze(n,event):
    histos["h_ntrks_positrons_rec_emul"].Fill(npositrons_rec_emul)
    histos["h_ntrks_positrons_rec_emul_small"].Fill(npositrons_rec_emul)
    histos["h_ntrks_positrons_rec_emul_tiny"].Fill(npositrons_rec_emul)
+   
+   histos["h_ntrks_electrons"].Fill(nelectrons)
+   histos["h_ntrks_electrons_small"].Fill(nelectrons)
+   histos["h_ntrks_electrons_tiny"].Fill(nelectrons)
+   
+   histos["h_ntrks_electrons_rec_emul"].Fill(nelectrons_rec_emul)
+   histos["h_ntrks_electrons_rec_emul_small"].Fill(nelectrons_rec_emul)
+   histos["h_ntrks_electrons_rec_emul_tiny"].Fill(nelectrons_rec_emul)
 
 ###############################################################
 
