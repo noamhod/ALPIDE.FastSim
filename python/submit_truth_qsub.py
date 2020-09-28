@@ -19,14 +19,15 @@ signals.update( {"bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"   :["w0_8000nm
 
 ## run!
 q = queue.Queue()
-for relpath,spotsizes in signals.items():
+for signalpath,spotsizes in signals.items():
    for spotsize in spotsizes:
-      relpath  = prefix+"/"+spotsize
+      relpath  = signalpath+"/"+spotsize
       fullpath = basepath_stdhep+relpath
       proc = "trident" if("trident" in relpath) else "bppp"
       command1 = "python3.7 stdhep2root.py   -p "+proc+" -d "+fullpath
       command2 = "python3.7 truthanalysis.py -p "+proc+" -d "+relpath
-      command = command1+"; "+command2
+      # command = command1+"; "+command2
+      command = "echo "+command1+"; "+command2
       print(command)
       q.put(command)
 
