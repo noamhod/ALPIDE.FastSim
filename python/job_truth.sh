@@ -10,8 +10,9 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/anaconda3/lib
 alias python="python3.7"
 export STORAGEDIR=/storage/agrp/nhod/
 echo storage dir is set: $STORAGEDIR
-echo ROOTSYS=$ROOTSYS
-echo PYTHONPATH=$PYTHONPATH
+echo ROOTSYS is $ROOTSYS
+echo PYTHONPATH is $PYTHONPATH
+echo LD_LIBRARY_PATH is $LD_LIBRARY_PATH
 which python
 which root
 
