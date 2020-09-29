@@ -203,9 +203,9 @@ def Analyze(n,event):
          histos["h_pz_positrons"].Fill(event.pz[j],wgt)
          histos["h_pz_positrons_fine"].Fill(event.pz[j],wgt)
          histos["h_pz_positrons_full"].Fill(event.pz[j],wgt)
-         histos["h_{x}yVtx_positrons"].Fill(xVtx,yVtx)
-         histos["h_{z}xVtx_positrons"].Fill(zVtx,xVtx)
-         histos["h_{z}yVtx_positrons"].Fill(zVtx,yVtx)
+         histos["h_xyVtx_positrons"].Fill(xVtx,yVtx)
+         histos["h_zxVtx_positrons"].Fill(zVtx,xVtx)
+         histos["h_zyVtx_positrons"].Fill(zVtx,yVtx)
          histos["h_E_positrons_rec_emul"].Fill(Erec,wgt*prob)
          histos["h_E_positrons_rec_emul_fine"].Fill(Erec,wgt*prob)
          histos["h_E_positrons_rec_emul_full"].Fill(Erec,wgt*prob)
@@ -229,9 +229,10 @@ def Analyze(n,event):
    histos["h_ntot"].AddBinContent(1,npositrons)
    histos["h_ntot"].AddBinContent(2,npositrons_acc)
    histos["h_ntot"].AddBinContent(3,npositrons_rec_emul)
-   histos["h_ntot"].AddBinContent(4,nelectrons)
-   histos["h_ntot"].AddBinContent(5,nelectrons_acc)
-   histos["h_ntot"].AddBinContent(6,nelectrons_rec_emul)
+   if(process=="bppp"):
+      histos["h_ntot"].AddBinContent(4,nelectrons)
+      histos["h_ntot"].AddBinContent(5,nelectrons_acc)
+      histos["h_ntot"].AddBinContent(6,nelectrons_rec_emul)
 
 ###############################################################
 
