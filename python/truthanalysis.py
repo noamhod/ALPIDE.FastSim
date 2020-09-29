@@ -142,9 +142,9 @@ def Book(process):
    
    rmax = 0.05*um2cm if(process=="bppp") else 30.*um2cm
    zmax = 30*um2cm   if(process=="bppp") else 200.*um2cm
-   histos.update({"h_{x}yVtx_positrons": TH2D("h_{x}yVtx_positrons","Positrons vertex x:y;Vertex(x) [cm];Vertex(y) [cm];N_{e^{+}}/BX/Shot",200,-rmax,+rmax, 200,-rmax,+rmax)})
-   histos.update({"h_{z}xVtx_positrons": TH2D("h_{z}xVtx_positrons","Positrons vertex z:x;Vertex(z) [cm];Vertex(x) [cm];N_{e^{+}}/BX/Shot",200,-zmax,+zmax, 200,-rmax,+rmax)})
-   histos.update({"h_{z}yVtx_positrons": TH2D("h_{z}yVtx_positrons","Positrons vertex z:y;Vertex(z) [cm];Vertex(y) [cm];N_{e^{+}}/BX/Shot",200,-zmax,+zmax, 200,-rmax,+rmax)})
+   histos.update({"h_xyVtx_positrons": TH2D("h_xyVtx_positrons","Positrons vertex x:y;Vertex(x) [cm];Vertex(y) [cm];N_{e^{+}}/BX/Shot",200,-rmax,+rmax, 200,-rmax,+rmax)})
+   histos.update({"h_zxVtx_positrons": TH2D("h_zxVtx_positrons","Positrons vertex z:x;Vertex(z) [cm];Vertex(x) [cm];N_{e^{+}}/BX/Shot",200,-zmax,+zmax, 200,-rmax,+rmax)})
+   histos.update({"h_zyVtx_positrons": TH2D("h_zyVtx_positrons","Positrons vertex z:y;Vertex(z) [cm];Vertex(y) [cm];N_{e^{+}}/BX/Shot",200,-zmax,+zmax, 200,-rmax,+rmax)})
 
    ## sumw2
    for hname,hist in histos.items(): hist.Sumw2()
@@ -353,11 +353,11 @@ cnv.SaveAs(allpdf)
 cnv = TCanvas("cnv","",1500,500)
 cnv.Divide(3,1)
 cnv.cd(1)
-histos["h_{x}yVtx_positrons"].Draw("colz")
+histos["h_xyVtx_positrons"].Draw("colz")
 cnv.cd(2)
-histos["h_{z}xVtx_positrons"].Draw("colz")
+histos["h_zxVtx_positrons"].Draw("colz")
 cnv.cd(3)
-histos["h_{z}yVtx_positrons"].Draw("colz")
+histos["h_zyVtx_positrons"].Draw("colz")
 cnv.SaveAs(fn+"vtx.pdf")
 cnv.SaveAs(allpdf+")")
 
