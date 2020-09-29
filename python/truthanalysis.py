@@ -58,11 +58,13 @@ def minmax(h1,h2,f=1.1):
 
 ## book
 def Book(process):
-   histos.update( {"h_ntot":TH1D("h_ntot",";;N/BX/Shot", 4,0,4)} )
-   histos["h_ntot"].GetXaxis().SetBinLabel(1,"N_{e^{+}} tru")
-   histos["h_ntot"].GetXaxis().SetBinLabel(2,"N_{e^{+}} rec")
-   histos["h_ntot"].GetXaxis().SetBinLabel(3,"N_{e^{-}} tru")
-   histos["h_ntot"].GetXaxis().SetBinLabel(4,"N_{e^{-}} rec")
+   histos.update( {"h_ntot":TH1D("h_ntot",";;N/BX/Shot", 6,0,6)} )
+   histos["h_ntot"].GetXaxis().SetBinLabel(1,"N_{e^{+}} tru_all")
+   histos["h_ntot"].GetXaxis().SetBinLabel(2,"N_{e^{+}} tru_acc")
+   histos["h_ntot"].GetXaxis().SetBinLabel(3,"N_{e^{+}} rec_emu")
+   histos["h_ntot"].GetXaxis().SetBinLabel(4,"N_{e^{-}} tru_all")
+   histos["h_ntot"].GetXaxis().SetBinLabel(5,"N_{e^{-}} tru_acc")
+   histos["h_ntot"].GetXaxis().SetBinLabel(6,"N_{e^{-}} rec_emu")
 
    ntrkmin = 0
    ntrkmax = 200
@@ -151,6 +153,8 @@ def Book(process):
 def Analyze(n,event):
    npositrons = 0
    nelectrons = 0
+   npositrons_acc = 0
+   nelectrons_acc = 0
    npositrons_rec_emul = 0
    nelectrons_rec_emul = 0
    ### loop on all tracks
@@ -168,6 +172,7 @@ def Analyze(n,event):
       ### only electrons
       if(event.pdgId[j]==11):
          nelectrons+=wgt
+         if(Etru>1.5) nelectrons_acc+=wgt
          nelectrons_rec_emul += prob*wgt
          histos["h_E_electrons"].Fill(Etru,wgt)
          histos["h_E_electrons_fine"].Fill(Etru,wgt)         
@@ -186,6 +191,7 @@ def Analyze(n,event):
       ### only positrons
       if(event.pdgId[j]==-11):
          npositrons+=wgt
+         if(Etru>1.5) npositrons_acc+=wgt
          npositrons_rec_emul += prob*wgt
          histos["h_E_positrons"].Fill(Etru,wgt)
          histos["h_E_positrons_fine"].Fill(Etru,wgt)
@@ -220,10 +226,12 @@ def Analyze(n,event):
    histos["h_ntrks_electrons_rec_emul_small"].Fill(nelectrons_rec_emul)
    histos["h_ntrks_electrons_rec_emul_tiny"].Fill(nelectrons_rec_emul)
    
-   histos["h_ntot"].AddBinContent("N_{e^{+}} tru",npositrons)
-   histos["h_ntot"].AddBinContent("N_{e^{+}} rec",npositrons_rec_emul)
-   histos["h_ntot"].AddBinContent("N_{e^{-}} tru",nelectrons)
-   histos["h_ntot"].AddBinContent("N_{e^{-}} rec",nelectrons_rec_emul)
+   histos["h_ntot"].AddBinContent(1,npositrons)
+   histos["h_ntot"].AddBinContent(2,npositrons_acc)
+   histos["h_ntot"].AddBinContent(3,npositrons_rec_emul)
+   histos["h_ntot"].AddBinContent(4,nelectrons)
+   histos["h_ntot"].AddBinContent(5,nelectrons_acc)
+   histos["h_ntot"].AddBinContent(6,nelectrons_rec_emul)
 
 ###############################################################
 
