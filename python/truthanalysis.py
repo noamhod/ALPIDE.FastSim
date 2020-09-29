@@ -58,13 +58,15 @@ def minmax(h1,h2,f=1.1):
 
 ## book
 def Book(process):
-   histos.update( {"h_ntot":TH1D("h_ntot",";;N/BX/Shot", 6,0,6)} )
+   ntotmax = 6 if(process=="bppp") else 3
+   histos.update( {"h_ntot":TH1D("h_ntot",";;N/BX/Shot", ntotmax,0,ntotmax)} )
    histos["h_ntot"].GetXaxis().SetBinLabel(1,"N_{e^{+}} tru_all")
    histos["h_ntot"].GetXaxis().SetBinLabel(2,"N_{e^{+}} tru_acc")
    histos["h_ntot"].GetXaxis().SetBinLabel(3,"N_{e^{+}} rec_emu")
-   histos["h_ntot"].GetXaxis().SetBinLabel(4,"N_{e^{-}} tru_all")
-   histos["h_ntot"].GetXaxis().SetBinLabel(5,"N_{e^{-}} tru_acc")
-   histos["h_ntot"].GetXaxis().SetBinLabel(6,"N_{e^{-}} rec_emu")
+   if(process=="bppp"):
+      histos["h_ntot"].GetXaxis().SetBinLabel(4,"N_{e^{-}} tru_all")
+      histos["h_ntot"].GetXaxis().SetBinLabel(5,"N_{e^{-}} tru_acc")
+      histos["h_ntot"].GetXaxis().SetBinLabel(6,"N_{e^{-}} rec_emu")
 
    ntrkmin = 0
    ntrkmax = 200
