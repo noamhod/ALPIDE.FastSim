@@ -6,6 +6,11 @@ import queue
 import threading
 import multiprocessing
 from random import seed, randint
+import argparse
+parser = argparse.ArgumentParser(description='submit_trut_qsub.py...')
+parser.add_argument('-s', metavar='do stdhep2root step?', required=True,  help='do stdhep2root step? [y/n]')
+argus = parser.parse_args()
+dostdhep = argus.s
 
 basepath_stdhep = os.path.expandvars('$STORAGEDIR/data/stdhep/')
 basepath_root   = os.path.expandvars('$STORAGEDIR/output/root/raw/')
@@ -26,7 +31,7 @@ for signalpath,spotsizes in signals.items():
       p = subprocess.Popen("mkdir -p "+basepath_root+relpath, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       out, err = p.communicate()
       
-      qsub = 'qsub -F "'+proc+' '+fullpath+' '+relpath+'" job_truth.sh -q N  -o $STORAGEDIR/logs/log_'+logname+'.out -e $STORAGEDIR/logs/log_'+logname+'.err'
+      qsub = 'qsub -F "'+proc+' '+fullpath+' '+relpath+' '+dostdhep+'" job_truth.sh -q N  -o $STORAGEDIR/logs/log_'+logname+'.out -e $STORAGEDIR/logs/log_'+logname+'.err'
       print(qsub)
       p = subprocess.Popen(qsub, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       out, err = p.communicate()

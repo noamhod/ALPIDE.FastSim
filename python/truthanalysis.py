@@ -172,7 +172,7 @@ def Analyze(n,event):
       ### only electrons
       if(event.pdgId[j]==11):
          nelectrons+=wgt
-         if(Etru>1.5) nelectrons_acc+=wgt
+         if(Etru>1.5): nelectrons_acc+=wgt
          nelectrons_rec_emul += prob*wgt
          histos["h_E_electrons"].Fill(Etru,wgt)
          histos["h_E_electrons_fine"].Fill(Etru,wgt)         
@@ -191,7 +191,7 @@ def Analyze(n,event):
       ### only positrons
       if(event.pdgId[j]==-11):
          npositrons+=wgt
-         if(Etru>1.5) npositrons_acc+=wgt
+         if(Etru>1.5): npositrons_acc+=wgt
          npositrons_rec_emul += prob*wgt
          histos["h_E_positrons"].Fill(Etru,wgt)
          histos["h_E_positrons_fine"].Fill(Etru,wgt)
