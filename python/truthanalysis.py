@@ -59,10 +59,10 @@ def minmax(h1,h2,f=1.1):
 ## book
 def Book(process):
    histos.update( {"h_ntot":TH1D("h_ntot",";;N/BX/Shot", 4,0,4)} )
-   histos["h_ntot"].GeXaxis().SetBinLabel(1,"N_{e^{+}} tru")
-   histos["h_ntot"].GeXaxis().SetBinLabel(2,"N_{e^{+}} rec")
-   histos["h_ntot"].GeXaxis().SetBinLabel(3,"N_{e^{-}} tru")
-   histos["h_ntot"].GeXaxis().SetBinLabel(4,"N_{e^{-}} rec")
+   histos["h_ntot"].GetXaxis().SetBinLabel(1,"N_{e^{+}} tru")
+   histos["h_ntot"].GetXaxis().SetBinLabel(2,"N_{e^{+}} rec")
+   histos["h_ntot"].GetXaxis().SetBinLabel(3,"N_{e^{-}} tru")
+   histos["h_ntot"].GetXaxis().SetBinLabel(4,"N_{e^{-}} rec")
 
    ntrkmin = 0
    ntrkmax = 200
