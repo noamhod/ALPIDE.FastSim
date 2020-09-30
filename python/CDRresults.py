@@ -30,37 +30,37 @@ signals.update( {"trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/":{}} )
 signals.update( {"bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"   :{}} )
 
 signals["trident/IPstrong_V1.1.00/JETI40/e_laser/16.5GeV/"] = {
-   "w0_3000nm":   {"xi":5.12, "chi":0.900, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_3500nm":   {"xi":4.44, "chi":0.790, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_4000nm":   {"xi":3.88, "chi":0.690, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_4500nm":   {"xi":3.45, "chi":0.610, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_5000nm":   {"xi":3.10, "chi":0.550, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_8000nm":   {"xi":1.94, "chi":0.340, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_20000nm":  {"xi":0.78, "chi":0.138, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_50000nm":  {"xi":0.31, "chi":0.055, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_100000nm": {"xi":0.15, "chi":0.028, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
+   "w0_3000nm":   {"xi":5.12, "chi":0.900, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_3500nm":   {"xi":4.44, "chi":0.790, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_4000nm":   {"xi":3.88, "chi":0.690, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_4500nm":   {"xi":3.45, "chi":0.610, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_5000nm":   {"xi":3.10, "chi":0.550, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_8000nm":   {"xi":1.94, "chi":0.340, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_20000nm":  {"xi":0.78, "chi":0.138, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_50000nm":  {"xi":0.31, "chi":0.055, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_100000nm": {"xi":0.15, "chi":0.028, "Ntru":0, "Nacc":0, "Nrec":0},
 }
 signals["bppp/IPstrong_V1.1.00/JETI40/g_laser/16.5GeV/"] = {
-   "w0_3000nm":   {"xi":5.12, "chi":0.900, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_3500nm":   {"xi":4.44, "chi":0.790, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_4000nm":   {"xi":3.88, "chi":0.690, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_4500nm":   {"xi":3.45, "chi":0.610, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_5000nm":   {"xi":3.10, "chi":0.550, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_8000nm":   {"xi":1.94, "chi":0.340, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
+   "w0_3000nm":   {"xi":5.12, "chi":0.900, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_3500nm":   {"xi":4.44, "chi":0.790, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_4000nm":   {"xi":3.88, "chi":0.690, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_4500nm":   {"xi":3.45, "chi":0.610, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_5000nm":   {"xi":3.10, "chi":0.550, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_8000nm":   {"xi":1.94, "chi":0.340, "Ntru":0, "Nacc":0, "Nrec":0},
 }
 signals["trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/"] = {
-   "w0_8000nm":   {"xi":6.27, "chi":1.11, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_9000nm":   {"xi":5.57, "chi":0.99, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_10000nm":  {"xi":5.01, "chi":0.89, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_11000nm":  {"xi":4.56, "chi":0.81, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_12000nm":  {"xi":4.18, "chi":0.74, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
+   "w0_8000nm":   {"xi":6.27, "chi":1.11, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_9000nm":   {"xi":5.57, "chi":0.99, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_10000nm":  {"xi":5.01, "chi":0.89, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_11000nm":  {"xi":4.56, "chi":0.81, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_12000nm":  {"xi":4.18, "chi":0.74, "Ntru":0, "Nacc":0, "Nrec":0},
 }
 signals["bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"] = {
-   "w0_8000nm":   {"xi":6.27, "chi":1.11, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_9000nm":   {"xi":5.57, "chi":0.99, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_10000nm":  {"xi":5.01, "chi":0.89, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_11000nm":  {"xi":4.56, "chi":0.81, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
-   "w0_12000nm":  {"xi":4.18, "chi":0.74, "Ntru":0, "Nrec":0, "dNtru":0, "dNrec":0},
+   "w0_8000nm":   {"xi":6.27, "chi":1.11, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_9000nm":   {"xi":5.57, "chi":0.99, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_10000nm":  {"xi":5.01, "chi":0.89, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_11000nm":  {"xi":4.56, "chi":0.81, "Ntru":0, "Nacc":0, "Nrec":0},
+   "w0_12000nm":  {"xi":4.18, "chi":0.74, "Ntru":0, "Nacc":0, "Nrec":0},
 }
 
 process   = proc
@@ -142,23 +142,12 @@ for spotsize,properites in spotsizes.items():
    h_rec_ntrks.SetMarkerStyle(20)
    h_rec_ntrks.SetDirectory(0)
    
-   # dNtru = ROOT.Double()
-   # dNrec = ROOT.Double()
-   # properites["Ntru"] = h_tru_E.IntegralAndError(1,h_tru_E.GetNbinsX(),dNtru)
-   # properites["Nrec"] = h_rec_E.IntegralAndError(1,h_rec_E.GetNbinsX(),dNrec)
+   # properites["Ntru"] = sumentries(h_tru_E)
+   # properites["Nrec"] = sumentries(h_rec_E)
    
-   properites["Ntru"] = sumentries(h_tru_E)
-   properites["Nrec"] = sumentries(h_rec_E)
-   properites["dNtru"] = sumerrors(h_tru_E)
-   properites["dNrec"] = sumerrors(h_rec_E)
-   
-   # properites["Ntru"] = h_ntot.GetBinContent(2)
-   # properites["Nrec"] = h_ntot.GetBinContent(3)
-   # properites["dNtru"] = h_ntot.GetBinError(2)
-   # properites["dNrec"] = h_ntot.GetBinError(3)
-   
-   # print("NtruInt="+str(properites["Ntru"])+", NtruGet="+str(getN(h_tru_ntrks)))
-   # print("NrecInt="+str(properites["Nrec"])+", NrecGet="+str(getN(h_rec_ntrks)))
+   properites["Ntru"] = h_ntot.GetBinContent(1)
+   properites["Nacc"] = h_ntot.GetBinContent(2)
+   properites["Nrec"] = h_ntot.GetBinContent(3)
    
    histos.update({ spotsize+"_tru_E"     : h_tru_E })
    histos.update({ spotsize+"_rec_E"     : h_rec_E })
@@ -182,51 +171,67 @@ leg_kin.AddEntry(histos["w0_8000nm_rec_E"],"Emul. Recon.","lp") ### I assume thi
 xis    = []
 chis   = []
 Ntrus  = []
+Naccs  = []
 Nrecs  = []
-dNtrus = []
-dNrecs = []
 for spotsize,properties in spotsizes.items():
    xis.append( properties["xi"] )
    chis.append( properties["chi"] )
    Ntrus.append( properties["Ntru"] )
+   Naccs.append( properties["Nacc"] )
    Nrecs.append( properties["Nrec"] )
-   dNtrus.append( properties["dNtru"] )
-   dNrecs.append( properties["dNrec"] )
 h_xi_tru   = TH1D("h_xi_tru", ";Peak #xi;N_{e^{+}}/BX/Shot", len(spotsizes)*1000,0,max(xis)*1.2)
+h_xi_acc   = TH1D("h_xi_acc", ";Peak #xi;N_{e^{+}}/BX/Shot", len(spotsizes)*1000,0,max(xis)*1.2)
 h_xi_rec   = TH1D("h_xi_rec", ";Peak #xi;N_{e^{+}}/BX/Shot", len(spotsizes)*1000,0,max(xis)*1.2)
 h_chi_tru  = TH1D("h_chi_tru",";Peak #chi;N_{e^{+}}/BX/Shot",len(spotsizes)*1000,0,max(chis)*1.2)
+h_chi_acc  = TH1D("h_chi_acc",";Peak #chi;N_{e^{+}}/BX/Shot",len(spotsizes)*1000,0,max(chis)*1.2)
 h_chi_rec  = TH1D("h_chi_rec",";Peak #chi;N_{e^{+}}/BX/Shot",len(spotsizes)*1000,0,max(chis)*1.2)
 for i in range(len(spotsizes)):
    bx_xi  = h_xi_tru.FindBin(xis[i])
    bx_chi = h_chi_tru.FindBin(chis[i])
    h_xi_tru.SetBinContent(bx_xi,Ntrus[i])
+   h_xi_acc.SetBinContent(bx_xi,Naccs[i])
    h_xi_rec.SetBinContent(bx_xi,Nrecs[i])
    h_chi_tru.SetBinContent(bx_chi,Ntrus[i])
+   h_chi_acc.SetBinContent(bx_chi,Naccs[i])
    h_chi_rec.SetBinContent(bx_chi,Nrecs[i])
 h_xi_tru.SetMinimum(0)
+h_xi_acc.SetMinimum(0)
 h_xi_rec.SetMinimum(0)
 h_chi_tru.SetMinimum(0)
+h_chi_acc.SetMinimum(0)
 h_chi_rec.SetMinimum(0)
-hmin,hmax = minmax(h_xi_tru,h_xi_rec,1.75)
+# hmin,hmax = minmax(h_xi_tru,h_xi_rec,1.75)
+hmin,hmax = minmax(h_xi_acc,h_xi_rec,1.75)
 h_xi_tru.SetBinErrorOption(ROOT.TH1.kPoisson)# if(hmax>1) else ROOT.TH1.kNormal)
+h_xi_acc.SetBinErrorOption(ROOT.TH1.kPoisson)# if(hmax>1) else ROOT.TH1.kNormal)
 h_xi_rec.SetBinErrorOption(ROOT.TH1.kPoisson)# if(hmax>1) else ROOT.TH1.kNormal)
-hmin,hmax = minmax(h_chi_tru,h_chi_rec,1.75)
+# hmin,hmax = minmax(h_chi_tru,h_chi_rec,1.75)
+hmin,hmax = minmax(h_chi_acc,h_chi_rec,1.75)
 h_chi_tru.SetBinErrorOption(ROOT.TH1.kPoisson)# if(hmax>1) else ROOT.TH1.kNormal)
+h_chi_acc.SetBinErrorOption(ROOT.TH1.kPoisson)# if(hmax>1) else ROOT.TH1.kNormal)
 h_chi_rec.SetBinErrorOption(ROOT.TH1.kPoisson)# if(hmax>1) else ROOT.TH1.kNormal)
 for b in range(1,h_xi_tru.GetNbinsX()+1):
    if(h_xi_tru.GetBinContent(b)<=0): h_xi_tru.SetBinContent(b,+99999)
+   if(h_xi_acc.GetBinContent(b)<=0): h_xi_acc.SetBinContent(b,+99999)
    if(h_xi_rec.GetBinContent(b)<=0): h_xi_rec.SetBinContent(b,+99999)
    if(h_chi_tru.GetBinContent(b)<=0): h_chi_tru.SetBinContent(b,+99999)
+   if(h_chi_acc.GetBinContent(b)<=0): h_chi_acc.SetBinContent(b,+99999)
    if(h_chi_rec.GetBinContent(b)<=0): h_chi_rec.SetBinContent(b,+99999)
 h_xi_tru.SetLineColor(ROOT.kRed)
 h_xi_tru.SetMarkerColor(ROOT.kRed)
 h_xi_tru.SetMarkerStyle(24)
+h_xi_acc.SetLineColor(ROOT.kRed)
+h_xi_acc.SetMarkerColor(ROOT.kRed)
+h_xi_acc.SetMarkerStyle(24)
 h_xi_rec.SetLineColor(ROOT.kBlack)
 h_xi_rec.SetMarkerColor(ROOT.kBlack)
 h_xi_rec.SetMarkerStyle(20)
 h_chi_tru.SetLineColor(ROOT.kRed)
 h_chi_tru.SetMarkerColor(ROOT.kRed)
 h_chi_tru.SetMarkerStyle(24)
+h_chi_acc.SetLineColor(ROOT.kRed)
+h_chi_acc.SetMarkerColor(ROOT.kRed)
+h_chi_acc.SetMarkerStyle(24)
 h_chi_rec.SetLineColor(ROOT.kBlack)
 h_chi_rec.SetMarkerColor(ROOT.kBlack)
 h_chi_rec.SetMarkerStyle(20)
@@ -266,8 +271,9 @@ for spotsize,properties in spotsizes.items():
    s.SetTextAlign(13);
    s.SetTextColor(ROOT.kBlack)
    s.SetTextSize(0.035)
-   s.DrawLatex(0.47,0.65,ROOT.Form("Tru: #SigmaN_{e^{+}}/BX/Shot=%.2f" % (properties["Ntru"])))
-   s.DrawLatex(0.47,0.60,ROOT.Form("Rec: #SigmaN_{e^{+}}/BX/Shot=%.2f" % (properties["Nrec"])))
+   s.DrawLatex(0.52,0.65,ROOT.Form("Tru: #SigmaN_{e^{+}}/BX/Shot=%.2f" % (properties["Ntru"])))
+   s.DrawLatex(0.52,0.60,ROOT.Form("Acc: #SigmaN_{e^{+}}/BX/Shot=%.2f" % (properties["Nacc"])))
+   s.DrawLatex(0.52,0.55,ROOT.Form("Rec: #SigmaN_{e^{+}}/BX/Shot=%.2f" % (properties["Nrec"])))
    
    cnv.SaveAs(fn+"_"+spotsize+"_CDR.pdf")
    cnv.SaveAs(allpdf)
@@ -278,8 +284,8 @@ leg_xichi.SetFillStyle(4000) # will be transparent
 leg_xichi.SetFillColor(0)
 leg_xichi.SetTextFont(42)
 leg_xichi.SetBorderSize(0)
-leg_xichi.AddEntry(h_xi_tru,"Truth signal","lp")
-leg_xichi.AddEntry(h_xi_rec,"Emul. Recon.","lp")
+leg_xichi.AddEntry(h_xi_acc,"Tru in acc.","lp")
+leg_xichi.AddEntry(h_xi_rec,"Rec emulated","lp")
 
 s = TLatex()
 s.SetNDC(1);
@@ -291,14 +297,14 @@ cnv = TCanvas("cnv","",1000,500)
 cnv.Divide(2,1)
 cnv.cd(1)
 ROOT.gPad.SetTicks(1,1)
-h_xi_tru.Draw("e1p")
+h_xi_acc.Draw("e1p")
 h_xi_rec.Draw("e1p same")
 leg_xichi.Draw("same")
 s.DrawLatex(0.20,0.50,"Stat error only")
 s.DrawLatex(0.20,0.45,"set to Poisson")
 cnv.cd(2)
 ROOT.gPad.SetTicks(1,1)
-h_chi_tru.Draw("e1p")
+h_chi_acc.Draw("e1p")
 h_chi_rec.Draw("e1p same")
 leg_xichi.Draw("same")
 s.DrawLatex(0.20,0.50,"Stat error only")
