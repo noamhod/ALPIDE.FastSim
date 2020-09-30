@@ -273,8 +273,8 @@ print("nevents=",nevents)
 
 ## scale to BX/Shot
 for hname,hist in histos.items():
-   if(hname=="h_ntot"): hist.AddBinContent(nevents) ## keep track on number of events
-   else:                hist.Scale(1./nevents)      ## otherwise, normalise to number of events
+   if(hname=="h_ntot"): hist.AddBinContent(1,nevents) ## keep track on number of events
+   else:                hist.Scale(1./nevents)        ## otherwise, normalise to number of events
 
 ###############################################################
 
