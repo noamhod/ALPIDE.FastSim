@@ -108,14 +108,16 @@ for spotsize,properites in spotsizes.items():
    spotsizeum = str(int(spotsize.replace("w0_","").replace("nm",""))/1000)+" #mum"
    title = "JETI40, "+spotsizeum+" spot #Rightarrow #xi="+xi+", #chi="+chi
    
-   h_tru_E = tf.Get("h_E_positrons").Clone(spotsize+"_tru_E")
+   h_ntot = tf.Get("h_ntot").Clone(spotsize+"_ntot")
+   
+   h_tru_E = tf.Get("h_E_positrons_full").Clone(spotsize+"_tru_E")
    h_tru_E.SetTitle(title)
    h_tru_E.GetXaxis().SetTitle("#it{E}_{e^{+}} [GeV]")
    h_tru_E.GetYaxis().SetTitle("N{e^{+}} per BX per Shot")
    # h_tru_E.Scale(1./h_tru_E.GetXaxis().GetBinWidth(1))
    h_tru_E.SetLineColor(ROOT.kRed)
    h_tru_E.SetDirectory(0)
-   h_rec_E = tf.Get("h_E_positrons_rec_emul").Clone(spotsize+"_rec_E")
+   h_rec_E = tf.Get("h_E_positrons_rec_emul_full").Clone(spotsize+"_rec_E")
    h_rec_E.SetTitle(title)
    h_rec_E.GetXaxis().SetTitle("#it{E}_{e^{+}} [GeV]")
    h_rec_E.GetYaxis().SetTitle("N_{e^{+}} per BX per Shot")
@@ -140,15 +142,21 @@ for spotsize,properites in spotsizes.items():
    h_rec_ntrks.SetMarkerStyle(20)
    h_rec_ntrks.SetDirectory(0)
    
-   dNtru = ROOT.Double()
-   dNrec = ROOT.Double()
-   
+   # dNtru = ROOT.Double()
+   # dNrec = ROOT.Double()
    # properites["Ntru"] = h_tru_E.IntegralAndError(1,h_tru_E.GetNbinsX(),dNtru)
    # properites["Nrec"] = h_rec_E.IntegralAndError(1,h_rec_E.GetNbinsX(),dNrec)
+   
    properites["Ntru"] = sumentries(h_tru_E)
    properites["Nrec"] = sumentries(h_rec_E)
    properites["dNtru"] = sumerrors(h_tru_E)
    properites["dNrec"] = sumerrors(h_rec_E)
+   
+   # properites["Ntru"] = h_ntot.GetBinContent(2)
+   # properites["Nrec"] = h_ntot.GetBinContent(3)
+   # properites["dNtru"] = h_ntot.GetBinError(2)
+   # properites["dNrec"] = h_ntot.GetBinError(3)
+   
    # print("NtruInt="+str(properites["Ntru"])+", NtruGet="+str(getN(h_tru_ntrks)))
    # print("NrecInt="+str(properites["Nrec"])+", NrecGet="+str(getN(h_rec_ntrks)))
    
