@@ -58,38 +58,38 @@ def minmax(h1,h2,f=1.1):
 
 ## book
 def Book(process):
-   ntotmax = 6 if(process=="bppp") else 3
+   ntotmax = 6+1 if(process=="bppp") else 3+1
    histos.update( {"h_ntot":TH1D("h_ntot",";;N", ntotmax,0,ntotmax)} )
    histos["h_ntot"].GetXaxis().SetBinLabel(1,"N_{BXs}")
-   histos["h_ntot"].GetXaxis().SetBinLabel(2,"N_{e^{+}} tru_all")
-   histos["h_ntot"].GetXaxis().SetBinLabel(3,"N_{e^{+}} tru_acc")
-   histos["h_ntot"].GetXaxis().SetBinLabel(4,"N_{e^{+}} rec_emu")
+   histos["h_ntot"].GetXaxis().SetBinLabel(2,"N_{e+} tru_all")
+   histos["h_ntot"].GetXaxis().SetBinLabel(3,"N_{e+} tru_acc")
+   histos["h_ntot"].GetXaxis().SetBinLabel(4,"N_{e+} rec_emu")
    if(process=="bppp"):
-      histos["h_ntot"].GetXaxis().SetBinLabel(5,"N_{e^{-}} tru_all")
-      histos["h_ntot"].GetXaxis().SetBinLabel(6,"N_{e^{-}} tru_acc")
-      histos["h_ntot"].GetXaxis().SetBinLabel(7,"N_{e^{-}} rec_emu")
+      histos["h_ntot"].GetXaxis().SetBinLabel(5,"N_{e-} tru_all")
+      histos["h_ntot"].GetXaxis().SetBinLabel(6,"N_{e-} tru_acc")
+      histos["h_ntot"].GetXaxis().SetBinLabel(7,"N_{e-} rec_emu")
 
    ntrkmin = 0
    ntrkmax = 200
    ntrkbins = 200
-   histos.update( {"h_ntrks_positrons":TH1D("h_ntrks_positrons",";Positron multiplicity;N_{e^{+}}/BX/Shot", ntrkbins,ntrkmin,ntrkmax)} )
-   histos.update( {"h_ntrks_electrons":TH1D("h_ntrks_electrons",";Electron multiplicity;N_{e^{-}}/BX/Shot", ntrkbins,ntrkmin,ntrkmax)} )
-   histos.update( {"h_ntrks_positrons_rec_emul":TH1D("h_ntrks_positrons_rec_emul",";Positron multiplicity;N_{e^{+}}/BX/Shot", ntrkbins,ntrkmin,ntrkmax)} )
-   histos.update( {"h_ntrks_electrons_rec_emul":TH1D("h_ntrks_electrons_rec_emul",";Electron multiplicity;N_{e^{-}}/BX/Shot", ntrkbins,ntrkmin,ntrkmax)} )
+   histos.update( {"h_ntrks_positrons":TH1D("h_ntrks_positrons",";Positron multiplicity;N_{e+}/BX/Shot", ntrkbins,ntrkmin,ntrkmax)} )
+   histos.update( {"h_ntrks_electrons":TH1D("h_ntrks_electrons",";Electron multiplicity;N_{e-}/BX/Shot", ntrkbins,ntrkmin,ntrkmax)} )
+   histos.update( {"h_ntrks_positrons_rec_emul":TH1D("h_ntrks_positrons_rec_emul",";Positron multiplicity;N_{e+}/BX/Shot", ntrkbins,ntrkmin,ntrkmax)} )
+   histos.update( {"h_ntrks_electrons_rec_emul":TH1D("h_ntrks_electrons_rec_emul",";Electron multiplicity;N_{e-}/BX/Shot", ntrkbins,ntrkmin,ntrkmax)} )
 
    ntrkmax_small = 50
    ntrkbins_small = 50
-   histos.update( {"h_ntrks_positrons_small":TH1D("h_ntrks_positrons_small",";Positron multiplicity;N_{e^{+}}/BX/Shot", ntrkbins_small,ntrkmin,ntrkmax_small)} )
-   histos.update( {"h_ntrks_electrons_small":TH1D("h_ntrks_electrons_small",";Electron multiplicity;N_{e^{-}}/BX/Shot", ntrkbins_small,ntrkmin,ntrkmax_small)} )
-   histos.update( {"h_ntrks_positrons_rec_emul_small":TH1D("h_ntrks_positrons_rec_emul_small",";Positron multiplicity;N_{e^{+}}/BX/Shot", ntrkbins_small,ntrkmin,ntrkmax_small)} )
-   histos.update( {"h_ntrks_electrons_rec_emul_small":TH1D("h_ntrks_electrons_rec_emul_small",";Electron multiplicity;N_{e^{-}}/BX/Shot", ntrkbins_small,ntrkmin,ntrkmax_small)} )
+   histos.update( {"h_ntrks_positrons_small":TH1D("h_ntrks_positrons_small",";Positron multiplicity;N_{e+}/BX/Shot", ntrkbins_small,ntrkmin,ntrkmax_small)} )
+   histos.update( {"h_ntrks_electrons_small":TH1D("h_ntrks_electrons_small",";Electron multiplicity;N_{e-}/BX/Shot", ntrkbins_small,ntrkmin,ntrkmax_small)} )
+   histos.update( {"h_ntrks_positrons_rec_emul_small":TH1D("h_ntrks_positrons_rec_emul_small",";Positron multiplicity;N_{e+}/BX/Shot", ntrkbins_small,ntrkmin,ntrkmax_small)} )
+   histos.update( {"h_ntrks_electrons_rec_emul_small":TH1D("h_ntrks_electrons_rec_emul_small",";Electron multiplicity;N_{e-}/BX/Shot", ntrkbins_small,ntrkmin,ntrkmax_small)} )
 
    ntrkmax_tiny = 25
    ntrkbins_tiny = 25
-   histos.update( {"h_ntrks_positrons_tiny":TH1D("h_ntrks_positrons_tiny",";Positron multiplicity;N_{e^{+}}/BX/Shot", ntrkbins_tiny,ntrkmin,ntrkmax_tiny)} )
-   histos.update( {"h_ntrks_electrons_tiny":TH1D("h_ntrks_electrons_tiny",";Electron multiplicity;N_{e^{-}}/BX/Shot", ntrkbins_tiny,ntrkmin,ntrkmax_tiny)} )
-   histos.update( {"h_ntrks_positrons_rec_emul_tiny":TH1D("h_ntrks_positrons_rec_emul_tiny",";Positron multiplicity;N_{e^{+}}/BX/Shot", ntrkbins_tiny,ntrkmin,ntrkmax_tiny)} )
-   histos.update( {"h_ntrks_electrons_rec_emul_tiny":TH1D("h_ntrks_electrons_rec_emul_tiny",";Electron multiplicity;N_{e^{-}}/BX/Shot", ntrkbins_tiny,ntrkmin,ntrkmax_tiny)} )
+   histos.update( {"h_ntrks_positrons_tiny":TH1D("h_ntrks_positrons_tiny",";Positron multiplicity;N_{e+}/BX/Shot", ntrkbins_tiny,ntrkmin,ntrkmax_tiny)} )
+   histos.update( {"h_ntrks_electrons_tiny":TH1D("h_ntrks_electrons_tiny",";Electron multiplicity;N_{e-}/BX/Shot", ntrkbins_tiny,ntrkmin,ntrkmax_tiny)} )
+   histos.update( {"h_ntrks_positrons_rec_emul_tiny":TH1D("h_ntrks_positrons_rec_emul_tiny",";Positron multiplicity;N_{e+}/BX/Shot", ntrkbins_tiny,ntrkmin,ntrkmax_tiny)} )
+   histos.update( {"h_ntrks_electrons_rec_emul_tiny":TH1D("h_ntrks_electrons_rec_emul_tiny",";Electron multiplicity;N_{e-}/BX/Shot", ntrkbins_tiny,ntrkmin,ntrkmax_tiny)} )
    
    Emin = 0
    Emax = 20 if(proc=="bppp") else 10
@@ -97,18 +97,18 @@ def Book(process):
    Ebins = 80 if(proc=="bppp") else 40
    Ebins_fine = 200 if(proc=="bppp") else 100
    Ebins_full = 200
-   histos.update( {"h_E_positrons"     :TH1D("h_E_positrons",";#it{E} [GeV];N_{e^{+}}/BX/Shot",Ebins,Emin,Emax)} )
-   histos.update( {"h_E_positrons_fine":TH1D("h_E_positrons_fine",";#it{E} [GeV];N_{e^{+}}/BX/Shot",Ebins_fine,Emin,Emax)} )
-   histos.update( {"h_E_electrons"     :TH1D("h_E_electrons",";#it{E} [GeV];N_{e^{-}}/BX/Shot",Ebins,Emin,Emax)} )
-   histos.update( {"h_E_electrons_fine":TH1D("h_E_electrons_fine",";#it{E} [GeV];N_{e^{-}}/BX/Shot",Ebins_fine,Emin,Emax)} )
-   histos.update( {"h_E_positrons_rec_emul"     :TH1D("h_E_positrons_rec_emul",";#it{E} [GeV];N_{e^{+}}/BX/Shot",Ebins,Emin,Emax)} )
-   histos.update( {"h_E_positrons_rec_emul_fine":TH1D("h_E_positrons_rec_emul_fine",";#it{E} [GeV];N_{e^{+}}/BX/Shot",Ebins_fine,Emin,Emax)} )
-   histos.update( {"h_E_electrons_rec_emul"     :TH1D("h_E_electrons_rec_emul",";#it{E} [GeV];N_{e^{-}}/BX/Shot",Ebins,Emin,Emax)} )
-   histos.update( {"h_E_electrons_rec_emul_fine":TH1D("h_E_electrons_rec_emul_fine",";#it{E} [GeV];N_{e^{-}}/BX/Shot",Ebins_fine,Emin,Emax)} )
-   histos.update( {"h_E_positrons_full"     :TH1D("h_E_positrons_full",";#it{E} [GeV];N_{e^{+}}/BX/Shot",Ebins_full,Emin,Emax_full)} )
-   histos.update( {"h_E_electrons_full"     :TH1D("h_E_electrons_full",";#it{E} [GeV];N_{e^{-}}/BX/Shot",Ebins_full,Emin,Emax_full)} )
-   histos.update( {"h_E_positrons_rec_emul_full" :TH1D("h_E_positrons_rec_emul_full",";#it{E} [GeV];N_{e^{+}}/BX/Shot",Ebins_full,Emin,Emax_full)} )
-   histos.update( {"h_E_electrons_rec_emul_full" :TH1D("h_E_electrons_rec_emul_full",";#it{E} [GeV];N_{e^{-}}/BX/Shot",Ebins_full,Emin,Emax_full)} )
+   histos.update( {"h_E_positrons"     :TH1D("h_E_positrons",";#it{E} [GeV];N_{e+}/BX/Shot",Ebins,Emin,Emax)} )
+   histos.update( {"h_E_positrons_fine":TH1D("h_E_positrons_fine",";#it{E} [GeV];N_{e+}/BX/Shot",Ebins_fine,Emin,Emax)} )
+   histos.update( {"h_E_electrons"     :TH1D("h_E_electrons",";#it{E} [GeV];N_{e-}/BX/Shot",Ebins,Emin,Emax)} )
+   histos.update( {"h_E_electrons_fine":TH1D("h_E_electrons_fine",";#it{E} [GeV];N_{e-}/BX/Shot",Ebins_fine,Emin,Emax)} )
+   histos.update( {"h_E_positrons_rec_emul"     :TH1D("h_E_positrons_rec_emul",";#it{E} [GeV];N_{e+}/BX/Shot",Ebins,Emin,Emax)} )
+   histos.update( {"h_E_positrons_rec_emul_fine":TH1D("h_E_positrons_rec_emul_fine",";#it{E} [GeV];N_{e+}/BX/Shot",Ebins_fine,Emin,Emax)} )
+   histos.update( {"h_E_electrons_rec_emul"     :TH1D("h_E_electrons_rec_emul",";#it{E} [GeV];N_{e-}/BX/Shot",Ebins,Emin,Emax)} )
+   histos.update( {"h_E_electrons_rec_emul_fine":TH1D("h_E_electrons_rec_emul_fine",";#it{E} [GeV];N_{e-}/BX/Shot",Ebins_fine,Emin,Emax)} )
+   histos.update( {"h_E_positrons_full"     :TH1D("h_E_positrons_full",";#it{E} [GeV];N_{e+}/BX/Shot",Ebins_full,Emin,Emax_full)} )
+   histos.update( {"h_E_electrons_full"     :TH1D("h_E_electrons_full",";#it{E} [GeV];N_{e-}/BX/Shot",Ebins_full,Emin,Emax_full)} )
+   histos.update( {"h_E_positrons_rec_emul_full" :TH1D("h_E_positrons_rec_emul_full",";#it{E} [GeV];N_{e+}/BX/Shot",Ebins_full,Emin,Emax_full)} )
+   histos.update( {"h_E_electrons_rec_emul_full" :TH1D("h_E_electrons_rec_emul_full",";#it{E} [GeV];N_{e-}/BX/Shot",Ebins_full,Emin,Emax_full)} )
 
    pzmin = 0
    pzmax = 20 if(proc=="bppp") else 10
@@ -116,36 +116,36 @@ def Book(process):
    pzbins = 80 if(proc=="bppp") else 40
    pzbins_fine = 200 if(proc=="bppp") else 100
    pzbins_full = 200
-   histos.update( {"h_pz_positrons"     :TH1D("h_pz_positrons",";#it{p}_{z} [GeV];N_{e^{+}}/BX/Shot",pzbins,pzmin,pzmax)} )
-   histos.update( {"h_pz_positrons_fine":TH1D("h_pz_positrons_fine",";#it{p}_{z} [GeV];N_{e^{+}}/BX/Shot",pzbins_fine,pzmin,pzmax)} )
-   histos.update( {"h_pz_positrons_full":TH1D("h_pz_positrons_full",";#it{p}_{z} [GeV];N_{e^{+}}/BX/Shot",pzbins_full,pzmin,pzmax_full)} )
-   histos.update( {"h_pz_electrons"     :TH1D("h_pz_electrons",";#it{p}_{z} [GeV];N_{e^{-}}/BX/Shot",pzbins,pzmin,pzmax)} )
-   histos.update( {"h_pz_electrons_fine":TH1D("h_pz_electrons_fine",";#it{p}_{z} [GeV];N_{e^{-}}/BX/Shot",pzbins_fine,pzmin,pzmax)} )
-   histos.update( {"h_pz_electrons_full":TH1D("h_pz_electrons_full",";#it{p}_{z} [GeV];N_{e^{-}}/BX/Shot",pzbins_full,pzmin,pzmax_full)} )
+   histos.update( {"h_pz_positrons"     :TH1D("h_pz_positrons",";#it{p}_{z} [GeV];N_{e+}/BX/Shot",pzbins,pzmin,pzmax)} )
+   histos.update( {"h_pz_positrons_fine":TH1D("h_pz_positrons_fine",";#it{p}_{z} [GeV];N_{e+}/BX/Shot",pzbins_fine,pzmin,pzmax)} )
+   histos.update( {"h_pz_positrons_full":TH1D("h_pz_positrons_full",";#it{p}_{z} [GeV];N_{e+}/BX/Shot",pzbins_full,pzmin,pzmax_full)} )
+   histos.update( {"h_pz_electrons"     :TH1D("h_pz_electrons",";#it{p}_{z} [GeV];N_{e-}/BX/Shot",pzbins,pzmin,pzmax)} )
+   histos.update( {"h_pz_electrons_fine":TH1D("h_pz_electrons_fine",";#it{p}_{z} [GeV];N_{e-}/BX/Shot",pzbins_fine,pzmin,pzmax)} )
+   histos.update( {"h_pz_electrons_full":TH1D("h_pz_electrons_full",";#it{p}_{z} [GeV];N_{e-}/BX/Shot",pzbins_full,pzmin,pzmax_full)} )
 
    pymin = -0.005
    pymax = +0.005
    pybins = 100
    pybins_fine = 200
-   histos.update( {"h_py_positrons"     :TH1D("h_py_positrons",";#it{p}_{y} [GeV];N_{e^{+}}/BX/Shot",pybins,pymin,pymax)} )
-   histos.update( {"h_py_positrons_fine":TH1D("h_py_positrons_fine",";#it{p}_{y} [GeV];N_{e^{+}}/BX/Shot",pybins_fine,pymin,pymax)} )
-   histos.update( {"h_py_electrons"     :TH1D("h_py_electrons",";#it{p}_{y} [GeV];N_{e^{-}}/BX/Shot",pybins,pymin,pymax)} )
-   histos.update( {"h_py_electrons_fine":TH1D("h_py_electrons_fine",";#it{p}_{y} [GeV];N_{e^{-}}/BX/Shot",pybins_fine,pymin,pymax)} )
+   histos.update( {"h_py_positrons"     :TH1D("h_py_positrons",";#it{p}_{y} [GeV];N_{e+}/BX/Shot",pybins,pymin,pymax)} )
+   histos.update( {"h_py_positrons_fine":TH1D("h_py_positrons_fine",";#it{p}_{y} [GeV];N_{e+}/BX/Shot",pybins_fine,pymin,pymax)} )
+   histos.update( {"h_py_electrons"     :TH1D("h_py_electrons",";#it{p}_{y} [GeV];N_{e-}/BX/Shot",pybins,pymin,pymax)} )
+   histos.update( {"h_py_electrons_fine":TH1D("h_py_electrons_fine",";#it{p}_{y} [GeV];N_{e-}/BX/Shot",pybins_fine,pymin,pymax)} )
 
    pxmin = -0.005
    pxmax = +0.005
    pxbins = 100
    pxbins_fine = 200
-   histos.update( {"h_px_positrons"     :TH1D("h_px_positrons",";#it{p}_{x} [GeV];N_{e^{+}}/BX/Shot",pxbins,pxmin,pxmax)} )
-   histos.update( {"h_px_positrons_fine":TH1D("h_px_positrons_fine",";#it{p}_{x} [GeV];N_{e^{+}}/BX/Shot",pxbins_fine,pxmin,pxmax)} )
-   histos.update( {"h_px_electrons"     :TH1D("h_px_electrons",";#it{p}_{x} [GeV];N_{e^{-}}/BX/Shot",pxbins,pxmin,pxmax)} )
-   histos.update( {"h_px_electrons_fine":TH1D("h_px_electrons_fine",";#it{p}_{x} [GeV];N_{e^{-}}/BX/Shot",pxbins_fine,pxmin,pxmax)} )
+   histos.update( {"h_px_positrons"     :TH1D("h_px_positrons",";#it{p}_{x} [GeV];N_{e+}/BX/Shot",pxbins,pxmin,pxmax)} )
+   histos.update( {"h_px_positrons_fine":TH1D("h_px_positrons_fine",";#it{p}_{x} [GeV];N_{e+}/BX/Shot",pxbins_fine,pxmin,pxmax)} )
+   histos.update( {"h_px_electrons"     :TH1D("h_px_electrons",";#it{p}_{x} [GeV];N_{e-}/BX/Shot",pxbins,pxmin,pxmax)} )
+   histos.update( {"h_px_electrons_fine":TH1D("h_px_electrons_fine",";#it{p}_{x} [GeV];N_{e-}/BX/Shot",pxbins_fine,pxmin,pxmax)} )
    
    rmax = 0.05*um2cm if(process=="bppp") else 30.*um2cm
    zmax = 30*um2cm   if(process=="bppp") else 200.*um2cm
-   histos.update({"h_xyVtx_positrons": TH2D("h_xyVtx_positrons","Positrons vertex x:y;Vertex(x) [cm];Vertex(y) [cm];N_{e^{+}}/BX/Shot",200,-rmax,+rmax, 200,-rmax,+rmax)})
-   histos.update({"h_zxVtx_positrons": TH2D("h_zxVtx_positrons","Positrons vertex z:x;Vertex(z) [cm];Vertex(x) [cm];N_{e^{+}}/BX/Shot",200,-zmax,+zmax, 200,-rmax,+rmax)})
-   histos.update({"h_zyVtx_positrons": TH2D("h_zyVtx_positrons","Positrons vertex z:y;Vertex(z) [cm];Vertex(y) [cm];N_{e^{+}}/BX/Shot",200,-zmax,+zmax, 200,-rmax,+rmax)})
+   histos.update({"h_xyVtx_positrons": TH2D("h_xyVtx_positrons","Positrons vertex x:y;Vertex(x) [cm];Vertex(y) [cm];N_{e+}/BX/Shot",200,-rmax,+rmax, 200,-rmax,+rmax)})
+   histos.update({"h_zxVtx_positrons": TH2D("h_zxVtx_positrons","Positrons vertex z:x;Vertex(z) [cm];Vertex(x) [cm];N_{e+}/BX/Shot",200,-zmax,+zmax, 200,-rmax,+rmax)})
+   histos.update({"h_zyVtx_positrons": TH2D("h_zyVtx_positrons","Positrons vertex z:y;Vertex(z) [cm];Vertex(y) [cm];N_{e+}/BX/Shot",200,-zmax,+zmax, 200,-rmax,+rmax)})
 
    ## sumw2
    for hname,hist in histos.items(): hist.Sumw2()
