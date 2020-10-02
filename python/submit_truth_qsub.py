@@ -16,10 +16,11 @@ basepath_stdhep = os.path.expandvars('$STORAGEDIR/data/stdhep/')
 basepath_root   = os.path.expandvars('$STORAGEDIR/output/root/raw/')
 
 signals = {}
-signals.update( {"trident/IPstrong_V1.1.00/JETI40/e_laser/16.5GeV/" :["w0_3000nm","w0_3500nm","w0_4000nm","w0_4500nm","w0_5000nm","w0_8000nm","w0_20000nm","w0_50000nm","w0_100000nm"]} )
-signals.update( {"bppp/IPstrong_V1.1.00/JETI40/g_laser/16.5GeV/"    :["w0_3000nm","w0_3500nm","w0_4000nm","w0_4500nm","w0_5000nm","w0_8000nm"]} )
-signals.update( {"trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/":["w0_8000nm","w0_9000nm","w0_10000nm","w0_11000nm","w0_12000nm"]} )
-signals.update( {"bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"   :["w0_8000nm","w0_9000nm","w0_10000nm","w0_11000nm","w0_12000nm"]} )
+# signals.update( {"trident/IPstrong_V1.1.00/JETI40/e_laser/16.5GeV/" :["w0_3000nm","w0_3500nm","w0_4000nm","w0_4500nm","w0_5000nm","w0_8000nm","w0_20000nm","w0_50000nm","w0_100000nm"]} )
+# signals.update( {"bppp/IPstrong_V1.1.00/JETI40/g_laser/16.5GeV/"    :["w0_3000nm","w0_3500nm","w0_4000nm","w0_4500nm","w0_5000nm","w0_8000nm"]} )
+# signals.update( {"trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/":["w0_8000nm","w0_9000nm","w0_10000nm","w0_11000nm","w0_12000nm"]} )
+signals.update( {"trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/":["w0_11000nm"]} )
+# signals.update( {"bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"   :["w0_8000nm","w0_9000nm","w0_10000nm","w0_11000nm","w0_12000nm"]} )
 
 ## run!
 for signalpath,spotsizes in signals.items():
