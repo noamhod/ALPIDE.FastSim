@@ -30,37 +30,37 @@ signals.update( {"trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/":{}} )
 signals.update( {"bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"   :{}} )
 
 signals["trident/IPstrong_V1.1.00/JETI40/e_laser/16.5GeV/"] = {
-   "w0_3000nm":   {"xi":5.12, "chi":0.900, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_3500nm":   {"xi":4.44, "chi":0.790, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_4000nm":   {"xi":3.88, "chi":0.690, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_4500nm":   {"xi":3.45, "chi":0.610, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_5000nm":   {"xi":3.10, "chi":0.550, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_8000nm":   {"xi":1.94, "chi":0.340, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_20000nm":  {"xi":0.78, "chi":0.138, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_50000nm":  {"xi":0.31, "chi":0.055, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_100000nm": {"xi":0.15, "chi":0.028, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
+   "w0_3000nm":   {"xi":5.12, "chi":0.900, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
+   "w0_3500nm":   {"xi":4.44, "chi":0.790, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":2},
+   "w0_4000nm":   {"xi":3.88, "chi":0.690, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":3},
+   "w0_4500nm":   {"xi":3.45, "chi":0.610, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":4},
+   "w0_5000nm":   {"xi":3.10, "chi":0.550, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
+   "w0_8000nm":   {"xi":1.94, "chi":0.340, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":6},
+   "w0_20000nm":  {"xi":0.78, "chi":0.138, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":7},
+   "w0_50000nm":  {"xi":0.31, "chi":0.055, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":8},
+   "w0_100000nm": {"xi":0.15, "chi":0.028, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":9},
 }
 signals["bppp/IPstrong_V1.1.00/JETI40/g_laser/16.5GeV/"] = {
-   "w0_3000nm":   {"xi":5.12, "chi":0.900, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_3500nm":   {"xi":4.44, "chi":0.790, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_4000nm":   {"xi":3.88, "chi":0.690, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_4500nm":   {"xi":3.45, "chi":0.610, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_5000nm":   {"xi":3.10, "chi":0.550, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_8000nm":   {"xi":1.94, "chi":0.340, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
+   "w0_3000nm":   {"xi":5.12, "chi":0.900, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
+   "w0_3500nm":   {"xi":4.44, "chi":0.790, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":2},
+   "w0_4000nm":   {"xi":3.88, "chi":0.690, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":3},
+   "w0_4500nm":   {"xi":3.45, "chi":0.610, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":4},
+   "w0_5000nm":   {"xi":3.10, "chi":0.550, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
+   "w0_8000nm":   {"xi":1.94, "chi":0.340, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":6},
 }
 signals["trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/"] = {
-   "w0_8000nm":   {"xi":6.27, "chi":1.11, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_9000nm":   {"xi":5.57, "chi":0.99, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_10000nm":  {"xi":5.01, "chi":0.89, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_11000nm":  {"xi":4.56, "chi":0.81, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_12000nm":  {"xi":4.18, "chi":0.74, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
+   "w0_8000nm":   {"xi":6.27, "chi":1.11, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
+   "w0_9000nm":   {"xi":5.57, "chi":0.99, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":2},
+   "w0_10000nm":  {"xi":5.01, "chi":0.89, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":3},
+   "w0_11000nm":  {"xi":4.56, "chi":0.81, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":4},
+   "w0_12000nm":  {"xi":4.18, "chi":0.74, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
 }
 signals["bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"] = {
-   "w0_8000nm":   {"xi":6.27, "chi":1.11, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_9000nm":   {"xi":5.57, "chi":0.99, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_10000nm":  {"xi":5.01, "chi":0.89, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_11000nm":  {"xi":4.56, "chi":0.81, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
-   "w0_12000nm":  {"xi":4.18, "chi":0.74, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0},
+   "w0_8000nm":   {"xi":6.27, "chi":1.11, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
+   "w0_9000nm":   {"xi":5.57, "chi":0.99, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":2},
+   "w0_10000nm":  {"xi":5.01, "chi":0.89, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":3},
+   "w0_11000nm":  {"xi":4.56, "chi":0.81, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":4},
+   "w0_12000nm":  {"xi":4.18, "chi":0.74, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
 }
 
 process   = proc
@@ -109,6 +109,7 @@ for spotsize,properites in spotsizes.items():
    title = phase+", "+spotsizeum+" spot #Rightarrow #xi="+xi+", #chi="+chi
    
    h_ntot = tf.Get("h_ntot").Clone(spotsize+"_ntot")
+   h_ntot.SetDirectory(0)
    
    h_tru_E = tf.Get("h_E_positrons_full").Clone(spotsize+"_tru_E")
    h_tru_E.SetTitle(title)
@@ -153,6 +154,7 @@ for spotsize,properites in spotsizes.items():
       properites["NaccE"] = h_ntot.GetBinContent(6)/h_ntot.GetBinContent(1)
       properites["NrecE"] = h_ntot.GetBinContent(7)/h_ntot.GetBinContent(1)
    
+   histos.update({ spotsize+"_ntot"      : h_ntot })
    histos.update({ spotsize+"_tru_E"     : h_tru_E })
    histos.update({ spotsize+"_rec_E"     : h_rec_E })
    histos.update({ spotsize+"_tru_ntrks" : h_tru_ntrks })
@@ -283,6 +285,38 @@ for spotsize,properties in spotsizes.items():
    cnv.SaveAs(allpdf)
 
 
+
+leg_ntot = TLegend(0.15,0.70,0.50,0.87)
+leg_ntot.SetFillStyle(4000) # will be transparent
+leg_ntot.SetFillColor(0)
+leg_ntot.SetTextFont(42)
+leg_ntot.SetBorderSize(0)
+cnv = TCanvas("cnv","",500,500)
+cnv.SetTicks(1,1)
+cnv.SetLogy()
+hmin = +1e11
+hmax = -1e11
+for spotsize,properties in spotsizes.items():
+   hmaxtmp = histos[spotsize+"_ntot"].GetMaximum()
+   hmintmp = histos[spotsize+"_ntot"].GetMinimum()
+   if(hmaxtmp>hmax):          hmax = hmaxtmp
+   if(hmintmp and hmintmp>0): hmin = hmintmp
+   spotsizeum = str(int(spotsize.replace("w0_","").replace("nm",""))/1000)+" #mum"
+   leg_ntot.AddEntry(histos[spotsize+"_ntot"],spotsizeum,"l")
+isFirst = True
+for spotsize,properties in spotsizes.items():
+   histos[spotsize+"_ntot"].SetMaximum(hmax*2)
+   histos[spotsize+"_ntot"].SetMinimum(hmin*0.5)
+   histos[spotsize+"_ntot"].SetLineColor(properties["col"])
+   if(isFirst):
+      histos[spotsize+"_ntot"].Draw("hist text0")
+      isFirst = False
+   else:
+      histos[spotsize+"_ntot"].Draw("hist text0 same")
+leg_ntot.Draw("same")
+cnv.SaveAs(fn+"_ntot.pdf")
+cnv.SaveAs(allpdf)
+
 leg_xichi = TLegend(0.15,0.70,0.50,0.87)
 leg_xichi.SetFillStyle(4000) # will be transparent
 leg_xichi.SetFillColor(0)
@@ -290,13 +324,11 @@ leg_xichi.SetTextFont(42)
 leg_xichi.SetBorderSize(0)
 leg_xichi.AddEntry(h_xi_acc,"Tru in acc.","lp")
 leg_xichi.AddEntry(h_xi_rec,"Rec emulated","lp")
-
 s = TLatex()
 s.SetNDC(1);
 s.SetTextAlign(13);
 s.SetTextColor(ROOT.kBlack)
 s.SetTextSize(0.035)
-
 cnv = TCanvas("cnv","",1000,500)
 cnv.Divide(2,1)
 cnv.cd(1)

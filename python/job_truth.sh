@@ -19,7 +19,7 @@ which root
 
 if [[ $4 == *"y"* ]]; then
 	echo submitting stdhep2root:
-	python3.7 stdhep2root.py   -p $1 -d $2
+	python3.7 stdhep2root.py -p $1 -d $2 -g 1
 else 
 	echo "NOT submitting stdhep2root !!"
 fi 
