@@ -751,10 +751,11 @@ int main(int argc, char *argv[])
 	det->SetMaxSeedToPropagate(3000); // relevant only if backgrount is considered
 	// set chi2 cuts
 	// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
-	det->SetMaxChi2Cl(10.);  // max track to cluster chi2
+	// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
+	det->SetMaxChi2Cl(15.);  // max track to cluster chi2
 	// det->SetMaxChi2NDF(3.5); // max total chi2/ndf
 	// det->SetMaxChi2NDF((process=="trident")?15.:5.); // max total chi2/ndf
-	det->SetMaxChi2NDF((process=="trident")?15.:10.); // max total chi2/ndf
+	det->SetMaxChi2NDF((process=="trident")?15.:5.); // max total chi2/ndf
 	det->SetMaxChi2Vtx(20e9);  // fiducial cut on chi2 of convergence to vtx
 	// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
 	// IMPORTANT FOR NON-UNIFORM FIELDS
