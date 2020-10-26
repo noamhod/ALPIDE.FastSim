@@ -24,7 +24,8 @@ ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
-storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+# storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+storage =  os.path.expandvars("$STORAGEDIR")
 
 meMeV = 0.5109989461 ## MeV
 meGeV = meMeV/1000.

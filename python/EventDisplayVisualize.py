@@ -16,7 +16,8 @@ shwtrks = argus.t
 
 ROOT.gErrorIgnoreLevel = ROOT.kWarning
 # ROOT.gErrorIgnoreLevel = ROOT.kError
-storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+# storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+storage = os.path.expandvars("$STORAGEDIR")
 
 
 

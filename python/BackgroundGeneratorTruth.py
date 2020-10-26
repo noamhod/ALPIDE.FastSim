@@ -28,7 +28,8 @@ ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
 # ROOT.gErrorIgnoreLevel = ROOT.kWarning
 ROOT.gErrorIgnoreLevel = ROOT.kError
-storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+# storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+storage = os.path.expandvars("$STORAGEDIR")
 
 #############################################
 ### read configuration from file

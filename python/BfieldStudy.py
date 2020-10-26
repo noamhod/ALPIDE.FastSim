@@ -24,7 +24,8 @@ ROOT.gStyle.SetOptFit(0)
 ROOT.gStyle.SetOptStat(0)
 # ROOT.gStyle.SetPadBottomMargin(0.15)
 # ROOT.gStyle.SetPadLeftMargin(0.16)
-storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+# storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+storage = os.path.expandvars("$STORAGEDIR")
    
 #############################################
 

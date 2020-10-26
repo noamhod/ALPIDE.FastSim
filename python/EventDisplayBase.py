@@ -7,7 +7,8 @@ import numpy as np
 import ROOT
 from ROOT import TFile, TPolyLine3D, TGeoTube, TGeoManager, TGeoMaterial, TGeoMedium, TGeoVolume, TGeoTranslation, TVirtualGeoTrack, TView
 
-storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+# storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+storage = os.path.expandvars("$STORAGEDIR")
 
 # def staves(proc):
 #    tfile = TFile(storage+"/data/root/"+proc+"_geometry.root","READ")

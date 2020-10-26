@@ -17,7 +17,8 @@ ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.16)
-storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+# storage = ROOT.gSystem.ExpandPathName("$STORAGEDIR")
+storage = os.path.expandvars("$STORAGEDIR")
 
 #############################################
 def minmax(h1,h2,islogy=False,f=1.1):
@@ -57,6 +58,8 @@ def chopped(h,xmin,xmax):
 #############################################
 
 process = proc
+print("process=",process)
+print("storage=",storage)
 tfile = TFile(storage+"/output/root/analysis_reco_"+process+".root","READ")
 fn = storage+"/output/pdf/analysis_reco_"+process+"_"
 
@@ -162,6 +165,42 @@ cnv.SaveAs(fn+"selection_kinematics.pdf")
 # tfile.Get("h_E_tru_eff_acc_sel").Draw("ep same")
 # leg_eff.Draw("same")
 # cnv.SaveAs(fn+"selection_eff.pdf")
+
+cnv = TCanvas("cnv","",500,500)
+cnv.cd()
+cnv.SetTicks(1,1)
+tfile.Get("h_E_tru_eff").SetMinimum(0)
+tfile.Get("h_E_tru_eff").SetMaximum(1.05)
+tfile.Get("h_E_tru_eff").SetLineColor(ROOT.kBlack)
+tfile.Get("h_E_tru_eff").SetMarkerColor(ROOT.kBlack)
+tfile.Get("h_E_tru_eff").SetMarkerStyle(20)
+# tfile.Get("h_E_tru_eff").Draw("ep")
+tfile.Get("h_E_tru_eff_sel").SetMinimum(0)
+tfile.Get("h_E_tru_eff_sel").SetMaximum(1.05)
+tfile.Get("h_E_tru_eff_sel").SetLineColor(ROOT.kGray+1)
+tfile.Get("h_E_tru_eff_sel").SetMarkerColor(ROOT.kGray+1)
+tfile.Get("h_E_tru_eff_sel").SetMarkerStyle(24)
+# tfile.Get("h_E_tru_eff_sel").Draw("ep same")
+rp = ROOT.TRatioPlot(tfile.Get("h_E_tru_eff_sel"),tfile.Get("h_E_tru_eff"))
+rp.SetH1DrawOpt("ep")
+rp.SetH2DrawOpt("ep")
+rp.SetGraphDrawOpt("ALX")
+ratioMax = 1.07 #maximum value on ratio plot Y axis
+ratioMin = 0.55 #minimum value on ratio plot Y axis
+rp.Draw("ep0 nohide")
+rp.GetLowerRefGraph().SetMaximum(ratioMax)
+rp.GetLowerRefGraph().SetMinimum(ratioMin)
+# rp.SetLeftMargin(0.13)
+rp.GetLowerRefGraph().GetYaxis().SetTitleOffset(1.5)
+# rp.GetLowerRefGraph().GetYaxis().SetLabelSize(0.025)
+rp.GetLowYaxis().SetNdivisions(506)
+rp.SetSeparationMargin(0.0)
+rp.GetLowerRefYaxis().SetTitle("Sel/Rec")
+leg_eff.AddEntry(tfile.Get("h_E_tru_eff"),"Reconstruction","epl")
+leg_eff.AddEntry(tfile.Get("h_E_tru_eff_sel"),"Selected","epl")
+leg_eff.Draw("same")
+leg_eff.Draw("same")
+cnv.SaveAs(fn+"selection_eff_only.pdf")
 
 
 cnv = TCanvas("cnv","",1000,500)
