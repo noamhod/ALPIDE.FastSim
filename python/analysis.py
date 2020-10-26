@@ -82,33 +82,49 @@ def accepttrk(itrk,clusters_id,clusters_xyz,fullacc=False):
    ix4 = id2index[id4] if(id4>0) else -1
    nlayers = 4;
    acc = 0;
-   x = ROOT.Double()
-   y = ROOT.Double()
-   z = ROOT.Double()
+   xctype = ctypes.c_double() #ROOT.Double()
+   yctype = ctypes.c_double() #ROOT.Double()
+   zctype = ctypes.c_double() #ROOT.Double()
    if(ix1>=0 and ix1<clusters_xyz.size()):
-      clusters_xyz[ix1].GetPoint(0,x,y,z)
+      clusters_xyz[ix1].GetPoint(0,xctype,yctype,zctype)
+      x = xctype.value
+      y = yctype.value
+      z = zctype.value
       acc += acceptcls(x,y,z)
    if(ix2>=0 and ix2<clusters_xyz.size()):
-      clusters_xyz[ix2].GetPoint(0,x,y,z)
+      clusters_xyz[ix2].GetPoint(0,xctype,yctype,zctype)
+      x = xctype.value
+      y = yctype.value
+      z = zctype.value
       acc += acceptcls(x,y,z)
    if(ix3>=0 and ix3<clusters_xyz.size()):
-      clusters_xyz[ix3].GetPoint(0,x,y,z)
+      clusters_xyz[ix3].GetPoint(0,xctype,yctype,zctype)
+      x = xctype.value
+      y = yctype.value
+      z = zctype.value
       acc += acceptcls(x,y,z)
    if(ix4>=0 and ix4<clusters_xyz.size()):
-      clusters_xyz[ix4].GetPoint(0,x,y,z)
+      clusters_xyz[ix4].GetPoint(0,xctype,yctype,zctype)
+      x = xctype.value
+      y = yctype.value
+      z = zctype.value
       acc += acceptcls(x,y,z)
    return (acc==nlayers) if(fullacc) else (acc>0)
    
 def accepttrkpts(points,fullacc=False,isbkg=False):
    nlayers = 4;
    acc = 0;
-   x = ROOT.Double()
-   y = ROOT.Double()
-   z = ROOT.Double()
+   xctype = ctypes.c_double() #ROOT.Double()
+   yctype = ctypes.c_double() #ROOT.Double()
+   zctype = ctypes.c_double() #ROOT.Double()
    for i in range(points.GetN()):
-      points.GetPoint(i,x,y,z)
+      points.GetPoint(i,xctype,yctype,zctype)
+      x = xctype.value
+      y = yctype.value
+      z = zctype.value
       if(abs(x)<x2L): continue
-      if(isbkg): z = ROOT.Double(ROOT.TMath.Nint(z))
+      # if(isbkg): z = ROOT.Double(ROOT.TMath.Nint(z))
+      if(isbkg): z = ROOT.TMath.Nint(z)
       if(z!=300 and z!=310 and z!=320 and z!=330): continue
       acc += acceptcls(x,y,z)
       if(z>230): break
@@ -483,17 +499,29 @@ def FillHistos(event):
       cls_tru_ix2 = id2index[cls_tru_id2] if(cls_tru_id2>=0) else -1
       cls_tru_ix3 = id2index[cls_tru_id3] if(cls_tru_id3>=0) else -1
       cls_tru_ix4 = id2index[cls_tru_id4] if(cls_tru_id4>=0) else -1
-      cls_tru_r1  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
-      cls_tru_r2  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
-      cls_tru_r3  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
-      cls_tru_r4  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
-      if(cls_tru_ix1>=0 and cls_tru_ix1<event.all_clusters_xyz.size()): event.all_clusters_xyz[cls_tru_ix1].GetPoint(0,cls_tru_r1[0],cls_tru_r1[1],cls_tru_r1[2])
-      else:               cls_tru_r1 = [-999,-999,-999]
-      if(cls_tru_ix2>=0 and cls_tru_ix2<event.all_clusters_xyz.size()): event.all_clusters_xyz[cls_tru_ix2].GetPoint(0,cls_tru_r2[0],cls_tru_r2[1],cls_tru_r2[2])
-      else:               cls_tru_r2 = [-999,-999,-999] 
-      if(cls_tru_ix3>=0 and cls_tru_ix3<event.all_clusters_xyz.size()): event.all_clusters_xyz[cls_tru_ix3].GetPoint(0,cls_tru_r3[0],cls_tru_r3[1],cls_tru_r3[2])
-      else:               cls_tru_r3 = [-999,-999,-999] 
-      if(cls_tru_ix4>=0 and cls_tru_ix4<event.all_clusters_xyz.size()): event.all_clusters_xyz[cls_tru_ix4].GetPoint(0,cls_tru_r4[0],cls_tru_r4[1],cls_tru_r4[2])
+      cls_tru_r1  = []
+      cls_tru_r2  = []
+      cls_tru_r3  = []
+      cls_tru_r4  = []
+      if(cls_tru_ix1>=0 and cls_tru_ix1<event.all_clusters_xyz.size()):
+         rctype = [ ctypes.c_double(), ctypes.c_double(), ctypes.c_double() ]
+         event.all_clusters_xyz[cls_tru_ix1].GetPoint(0,rctype[0],rctype[1],rctype[2])
+         cls_tru_r1 = [ rctype[0].value, rctype[1].value, rctype[2].value ]
+      else: cls_tru_r1 = [-999,-999,-999]
+      if(cls_tru_ix2>=0 and cls_tru_ix2<event.all_clusters_xyz.size()):
+         rctype = [ ctypes.c_double(), ctypes.c_double(), ctypes.c_double() ]
+         event.all_clusters_xyz[cls_tru_ix2].GetPoint(0,rctype[0],rctype[1],rctype[2])
+         cls_tru_r2 = [ rctype[0].value, rctype[1].value, rctype[2].value ]
+      else: cls_tru_r2 = [-999,-999,-999] 
+      if(cls_tru_ix3>=0 and cls_tru_ix3<event.all_clusters_xyz.size()):
+         rctype = [ ctypes.c_double(), ctypes.c_double(), ctypes.c_double() ]
+         event.all_clusters_xyz[cls_tru_ix3].GetPoint(0,rctype[0],rctype[1],rctype[2])
+         cls_tru_r3 = [ rctype[0].value, rctype[1].value, rctype[2].value ]
+      else: cls_tru_r3 = [-999,-999,-999] 
+      if(cls_tru_ix4>=0 and cls_tru_ix4<event.all_clusters_xyz.size()):
+         rctype = [ ctypes.c_double(), ctypes.c_double(), ctypes.c_double() ]
+         event.all_clusters_xyz[cls_tru_ix4].GetPoint(0,rctype[0],rctype[1],rctype[2])
+         cls_tru_r4 = [ rctype[0].value, rctype[1].value, rctype[2].value ]
       else:               cls_tru_r4 = [-999,-999,-999]
       
       histos["h_E_sig"].Fill(E,wgt)
@@ -517,10 +545,13 @@ def FillHistos(event):
       
       ### loop over points along track (generated)
       for jxy in range(event.true_trckmar[i].GetN()):
-         x = ROOT.Double()
-         y = ROOT.Double()
-         z = ROOT.Double()
-         event.true_trckmar[i].GetPoint(jxy,x,y,z)
+         xctype = ctypes.c_double() #ROOT.Double()
+         yctype = ctypes.c_double() #ROOT.Double()
+         zctype = ctypes.c_double() #ROOT.Double()
+         event.true_trckmar[i].GetPoint(jxy,xctype,yctype,zctype)
+         x = xctype.value
+         y = yctype.value
+         z = zctype.value
          
          if(z==200):
             histos["h_xy_layer0_sig"].Fill(x,y,wgt)
@@ -645,10 +676,13 @@ def FillHistos(event):
          ### loop over points along track (generated) ad check if in Eside (charge test is not good here!)
          inEside = False
          for jxy in range(event.bkgr_trckmar[i].GetN()):
-            x = ROOT.Double()
-            y = ROOT.Double()
-            z = ROOT.Double()
-            event.bkgr_trckmar[i].GetPoint(jxy,x,y,z)
+            xctype = ctypes.c_double() #ROOT.Double()
+            yctype = ctypes.c_double() #ROOT.Double()
+            zctype = ctypes.c_double() #ROOT.Double()
+            event.bkgr_trckmar[i].GetPoint(jxy,xctype,yctype,zctype)
+            x = xctype.value
+            y = yctype.value
+            z = zctype.value
             if(z==300 and x>0):
                inEside = True
                break
@@ -685,10 +719,13 @@ def FillHistos(event):
       
       ### loop over points along track (generated)
       for jxy in range(event.bkgr_trckmar[i].GetN()):
-         x = ROOT.Double()
-         y = ROOT.Double()
-         z = ROOT.Double()
-         event.bkgr_trckmar[i].GetPoint(jxy,x,y,z)
+         xctype = ctypes.c_double() #ROOT.Double()
+         yctype = ctypes.c_double() #ROOT.Double()
+         zctype = ctypes.c_double() #ROOT.Double()
+         event.bkgr_trckmar[i].GetPoint(jxy,xctype,yctype,zctype)
+         x = xctype.value
+         y = yctype.value
+         z = zctype.value
          
          if(z==200):
             histos["h_xy_layer0_bkg"].Fill(x,y,wgt)
@@ -799,26 +836,41 @@ def FillHistos(event):
       cls_rec_ix2 = id2index[cls_rec_id2] if(cls_rec_id2>=0) else -1
       cls_rec_ix3 = id2index[cls_rec_id3] if(cls_rec_id3>=0) else -1
       cls_rec_ix4 = id2index[cls_rec_id4] if(cls_rec_id4>=0) else -1
-      cls_rec_r1  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
-      cls_rec_r2  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
-      cls_rec_r3  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
-      cls_rec_r4  = [ ROOT.Double(),ROOT.Double(),ROOT.Double() ]
-      if(cls_rec_ix1>=0): event.all_clusters_xyz[cls_rec_ix1].GetPoint(0,cls_rec_r1[0],cls_rec_r1[1],cls_rec_r1[2])
-      else:               cls_rec_r1 = [-999,-999,-999]
-      if(cls_rec_ix2>=0): event.all_clusters_xyz[cls_rec_ix2].GetPoint(0,cls_rec_r2[0],cls_rec_r2[1],cls_rec_r2[2])
-      else:               cls_rec_r2 = [-999,-999,-999] 
-      if(cls_rec_ix3>=0): event.all_clusters_xyz[cls_rec_ix3].GetPoint(0,cls_rec_r3[0],cls_rec_r3[1],cls_rec_r3[2])
-      else:               cls_rec_r3 = [-999,-999,-999] 
-      if(cls_rec_ix4>=0): event.all_clusters_xyz[cls_rec_ix4].GetPoint(0,cls_rec_r4[0],cls_rec_r4[1],cls_rec_r4[2])
-      else:               cls_rec_r4 = [-999,-999,-999]
+      cls_rec_r1  = []
+      cls_rec_r2  = []
+      cls_rec_r3  = []
+      cls_rec_r4  = []
+      if(cls_rec_ix1>=0):
+         rctype = [ ctypes.c_double(), ctypes.c_double(), ctypes.c_double() ]
+         event.all_clusters_xyz[cls_rec_ix1].GetPoint(0,rctype[0],rctype[1],rctype[2])
+         cls_rec_r1 = [ rctype[0].value, rctype[1].value, rctype[2].value ]
+      else: cls_rec_r1 = [-999,-999,-999]
+      if(cls_rec_ix2>=0):
+         rctype = [ ctypes.c_double(), ctypes.c_double(), ctypes.c_double() ]
+         event.all_clusters_xyz[cls_rec_ix2].GetPoint(0,rctype[0],rctype[1],rctype[2])
+         cls_rec_r2 = [ rctype[0].value, rctype[1].value, rctype[2].value ]
+      else: cls_rec_r2 = [-999,-999,-999] 
+      if(cls_rec_ix3>=0):
+         rctype = [ ctypes.c_double(), ctypes.c_double(), ctypes.c_double() ]
+         event.all_clusters_xyz[cls_rec_ix3].GetPoint(0,rctype[0],rctype[1],rctype[2])
+         cls_rec_r3 = [ rctype[0].value, rctype[1].value, rctype[2].value ]
+      else: cls_rec_r3 = [-999,-999,-999] 
+      if(cls_rec_ix4>=0):
+         rctype = [ ctypes.c_double(), ctypes.c_double(), ctypes.c_double() ]
+         event.all_clusters_xyz[cls_rec_ix4].GetPoint(0,rctype[0],rctype[1],rctype[2])
+         cls_rec_r4 = [ rctype[0].value, rctype[1].value, rctype[2].value ]
+      else: cls_rec_r4 = [-999,-999,-999]
       
       
       ### loop over points along the reco track
       for jxy in range(event.reco_trckmar[i].GetN()):
-         x = ROOT.Double()
-         y = ROOT.Double()
-         z = ROOT.Double()
-         event.reco_trckmar[i].GetPoint(jxy,x,y,z)
+         xctype = ctypes.c_double() #ROOT.Double()
+         yctype = ctypes.c_double() #ROOT.Double()
+         zctype = ctypes.c_double() #ROOT.Double()
+         event.reco_trckmar[i].GetPoint(jxy,xctype,yctype,zctype)
+         x = xctype.value
+         y = yctype.value
+         z = zctype.value
          
          if(z==200):
             histos["h_xy_layer0_rec"].Fill(x,y,wgt)
@@ -982,16 +1034,23 @@ def FillHistos(event):
       
       ### loop over points along the reco track
       for jxy_rec in range(event.reco_trckmar[i].GetN()):
-         xrec = ROOT.Double()
-         yrec = ROOT.Double()
-         zrec = ROOT.Double()
-         event.reco_trckmar[i].GetPoint(jxy_rec,xrec,yrec,zrec)
+         
+         xctyperec = ctypes.c_double() #ROOT.Double()
+         yctyperec = ctypes.c_double() #ROOT.Double()
+         zctyperec = ctypes.c_double() #ROOT.Double()
+         event.reco_trckmar[i].GetPoint(jxy_rec,xctyperec,yctyperec,zctyperec)
+         xrec = xctyperec.value
+         yrec = yctyperec.value
+         zrec = zctyperec.value
          if(zrec!=300 and zrec!=310 and zrec!=320 and zrec!=330): continue
          for jxy_tru in range(event.true_trckmar[isig].GetN()):
-            xtru = ROOT.Double()
-            ytru = ROOT.Double()
-            ztru = ROOT.Double()
-            event.true_trckmar[isig].GetPoint(jxy_tru,xtru,ytru,ztru)
+            xctypetru = ctypes.c_double() #ROOT.Double()
+            yctypetru = ctypes.c_double() #ROOT.Double()
+            zctypetru = ctypes.c_double() #ROOT.Double()
+            event.true_trckmar[isig].GetPoint(jxy_tru,xctypetru,yctypetru,zctypetru)
+            xtru = xctype.value
+            ytru = yctype.value
+            ztru = zctype.value
             if(ztru!=zrec): continue
             invptru = 1./event.true_p[isig].P()*(-1) if(xtru>0) else 1./event.true_p[isig].P()*(+1)
             dx = (xrec-xtru)
