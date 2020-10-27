@@ -53,6 +53,15 @@ double meGeV = meMeV/1000.;
 double meGeV2 = meGeV*meGeV;
 double cm2m = 0.01;
 
+//// temp stuff:
+double bestdistance = -1;
+int bestmatchtrui = -1;
+int bestmatchreci = -1;
+
+//// for matching:
+int index_offset_sig = 100000;
+int index_offset_bkg = 10000;
+
 //// staves geometry
 double Hstave = 1.5;  // cm
 double Lstave = 50; //27.12;   // cm
@@ -311,6 +320,26 @@ int getvecindex(int x, vector<int>& v)
 {
 	vector<int>::iterator it = find(v.begin(),v.end(),x);
 	return (it!=v.end()) ? distance(v.begin(),it) : -1;
+}
+
+int CheckMatchingByID(int id1, int id2, int id3, int id4)
+{	
+	if(id1<index_offset_sig) return -1;
+	int nNeg = (id1<0)+(id2<0)+(id3<0)+(id4<0);
+ 	if(nNeg>1) {cout << "too many negative clusters: " << id1 << "," << id2 << "," << id3 << "," << id4 << endl; return -1;}
+	int i1 = id1-1*index_offset_sig;
+	int i2 = id2-2*index_offset_sig;
+	int i3 = id3-3*index_offset_sig;
+	int i4 = id4-4*index_offset_sig;
+	vector<int> posids;
+	vector<int> posixs;
+	if(id1>=0) { posids.push_back(id1); posixs.push_back(i1); }
+	if(id2>=0) { posids.push_back(id2); posixs.push_back(i2); }
+	if(id3>=0) { posids.push_back(id3); posixs.push_back(i3); }
+	if(id4>=0) { posids.push_back(id4); posixs.push_back(i4); }
+	if(posids.size()==3 and (posixs[0]!=posixs[1] or posixs[0]!=posixs[2] or posixs[1]!=posixs[2])) {cout << "from 3, idi!=idj: " << id1 << "," << id2 << "," << id3 << "," << id4 << endl; return -1;}
+	if(posids.size()==4 and (posixs[0]!=posixs[1] or posixs[0]!=posixs[2] or posixs[0]!=posixs[3] or posixs[1]!=posixs[2] or posixs[1]!=posixs[3] or posixs[2]!=posixs[3])) {cout << "from 4, idi!=idj: " << id1 << "," << id2 << "," << id3 << "," << id4 << endl; return -1;}
+	return posixs[0];
 }
 
 void prepare_cahced_clusters()
@@ -640,6 +669,9 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 
 int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* clusters_xyz, TString side, double maxdistance=0.5)
 {
+	bestdistance = -1;
+	bestmatchtrui = -1;
+	bestmatchreci = -1;
 	int imindistance = -1;
 	double mindistance = 1e10;
 	for(unsigned int i=0 ; i<clusters_xyz->size() ; i++)
@@ -662,11 +694,12 @@ int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* clusters_xyz, TString 
 				}
 			}
 		}
-		// distance = distance; // sum of sqrt{dx^2+dy^2} from all 4 rec clusters and the truth position of the truth digitised clusters
+		// distance is the sum of sqrt{dx^2+dy^2} from all 4 rec clusters and the truth position of the truth digitised clusters
 		if(distance>0 and distance<mindistance and distance<maxdistance)
 		{
 			imindistance = i;
-			mindistance  = distance; 
+			mindistance  = distance;
+			bestdistance = distance;
 		}
 		// if(distance>0) cout << "i=" << i << ", distance=" << distance << " --> {mindistance=" << mindistance << ", imindistance=" << imindistance << "}"<< endl;
 	}
@@ -748,25 +781,27 @@ int main(int argc, char *argv[])
 	det->SetMinMSHits(0); // we don't have muon spectrometer
 	det->SetMinTRHits(0); // we don't have muon trigger stations
 	// max number of seeds on each layer to propagate (per muon track)
-	det->SetMaxSeedToPropagate(3000); // relevant only if backgrount is considered
+	det->SetMaxSeedToPropagate(3000); // relevant only if background is considered
 	// set chi2 cuts
 	// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
 	// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
-	det->SetMaxChi2Cl(15.);  // max track to cluster chi2
+	det->SetMaxChi2Cl(10.);  // max track to cluster chi2
 	// det->SetMaxChi2NDF(3.5); // max total chi2/ndf
+	// det->SetMaxChi2NDF((process=="trident")?15.:5.); // max total chi2/ndf
 	// det->SetMaxChi2NDF((process=="trident")?15.:5.); // max total chi2/ndf
 	det->SetMaxChi2NDF((process=="trident")?15.:5.); // max total chi2/ndf
 	det->SetMaxChi2Vtx(20e9);  // fiducial cut on chi2 of convergence to vtx
+	// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
 	// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
-	// IMPORTANT FOR NON-UNIFORM FIELDS
-	det->SetDefStepAir(1);
+	det->SetDefStepAir(1); // IMPORTANT FOR NON-UNIFORM FIELDS
 	det->SetMinP2Propagate(0.3); //NA60+
 	det->SetIncludeVertex(kTRUE); // count vertex as an extra measured point
 	det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
 	det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
 	// for reconstruction:
 	// det->SetErrorScale(500.);
-	det->SetErrorScale( (process=="trident")?500.:200. );
+	// det->SetErrorScale( (process=="trident")?500.:200. );
+	det->SetErrorScale( (process=="trident")?500.:1000. );
 	det->Print();
 	// det->BookControlHistos();
 	
@@ -1327,7 +1362,30 @@ int main(int argc, char *argv[])
 
 				/// TODO: this is a test
 				unsigned int irec = reco_trckmar.size()-1;
-				Int_t imatch = imatched(reco_trckmar[irec],sig_clusters_xyz,side);
+
+				// Int_t imatch = imatched(reco_trckmar[irec],sig_clusters_xyz,side);
+				// bestmatchtrui = imatch;
+				// bestmatchreci = irec;
+				// if(imatch>=0)
+				// {
+				// 	ismatched = 1;
+				// 	ixmatched = imatch;
+				// 	idmatched = true_clusters_id[imatch][0];
+				// 	true_rec_imatch[imatch].push_back( irec );
+				// 	n_match++;
+				// 	// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << sig_trkp4->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+				// }
+				// else
+				// {
+				// 	ismatched =  0;
+				// 	ixmatched = -1;
+				// 	idmatched = -1;
+				// 	// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+				// }
+				
+				Int_t imatch = CheckMatchingByID(win_cls_id1,win_cls_id2,win_cls_id3,win_cls_id4);
+				bestmatchtrui = imatch;
+				bestmatchreci = irec;
 				if(imatch>=0)
 				{
 					ismatched = 1;
@@ -1344,6 +1402,8 @@ int main(int argc, char *argv[])
 					idmatched = -1;
 					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
+
+				
 				reco_ismtchd.push_back( ismatched );
 				reco_ixmtchd.push_back( ixmatched );
 				reco_idmtchd.push_back( idmatched );
@@ -1381,7 +1441,11 @@ int main(int argc, char *argv[])
 				if(side=="Eside" and true_q[t]>0) continue;
 				if(side=="Pside" and true_q[t]<0) continue;
 				if(true_rec_imatch[t].size()>0) n_trumt++;
-				// else cout << "This track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV" << endl;
+				else
+				{
+					cout << "This truth track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV with bestdistance=" << bestdistance << ", bestmatchtrui=" << bestmatchtrui << ", bestmatchreci=" << bestmatchreci << endl;
+				}
+				
 				histos["h_E_tru_all_"+side]->Fill( true_p[t].E() );
 				int truid1 = true_clusters_id[t][0];
 				int truid4 = true_clusters_id[t][3];
