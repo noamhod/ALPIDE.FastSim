@@ -62,6 +62,7 @@ if(not os.path.exists('AutoDict_vector_vector_int____cxx.so')):
 seed(1)   
    
 ## run!
+failed = []
 for ievnt in ievents:
    sievnt = str(ievnt)
    randseed = str(randint(0,1000000))
@@ -70,8 +71,9 @@ for ievnt in ievents:
    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    out, err = p.communicate()
    print("out=",out.replace("\n",""))
+   if(out==""): failed.append(ievnt)
    if(err!=""): print("err=",err.replace("\n",""))
-
+print("failed:",failed)
 
 print("Check with:        qstat -u user")
 print("List logs with:    ls -lrth $STORAGEDIR/logs/")
