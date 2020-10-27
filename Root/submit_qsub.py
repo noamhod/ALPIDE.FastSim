@@ -37,12 +37,18 @@ out, err = p.communicate()
 
 ## clean all dirs?
 if(clean):
-   p = subprocess.Popen("rm -f $STORAGEDIR/logs/*", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   out, err = p.communicate()
-   p = subprocess.Popen("rm -f $STORAGEDIR/data/root/dig/*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   out, err = p.communicate()
-   p = subprocess.Popen("rm -f $STORAGEDIR/data/root/rec/*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   out, err = p.communicate()
+   reallyclean = raw_input("Are you sure you really want to clean ??? [yes/no]")
+   print("OK, your choice is: "+reallyclean)
+   if(reallyclean!="yes" and reallyclean!="no"):
+      print("cannot understand your choice: "+reallyclean)
+      quit()
+   if(reallyclean=="yes"):
+      p = subprocess.Popen("rm -f $STORAGEDIR/logs/*", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      out, err = p.communicate()
+      p = subprocess.Popen("rm -f $STORAGEDIR/data/root/dig/*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      out, err = p.communicate()
+      p = subprocess.Popen("rm -f $STORAGEDIR/data/root/rec/*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      out, err = p.communicate()
 
 
 ## send a pilot job to make all the dictionaries
