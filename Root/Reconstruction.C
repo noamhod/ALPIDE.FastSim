@@ -801,7 +801,7 @@ int main(int argc, char *argv[])
 	// for reconstruction:
 	// det->SetErrorScale(500.);
 	// det->SetErrorScale( (process=="trident")?500.:200. );
-	det->SetErrorScale( (process=="trident")?500.:400. );
+	det->SetErrorScale( (process=="trident")?500.:300. ); // was 400 earlier, can be also anywhere up to 1000
 	det->Print();
 	// det->BookControlHistos();
 	

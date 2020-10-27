@@ -818,12 +818,13 @@ def FillHistos(event):
       
       ### selection?
       selected = True
-      if(chi2dof>6):         selected = False
+      if(chi2dof>8):         selected = False
       if(abs(xVtxSig)>0.01): selected = False
-      if(abs(yVtxSig)>0.01): selected = False
-      if(abs(SnpSig)>10):    selected = False
-      if(abs(TglSig)>400):   selected = False
-      if(Erec<1.5):          selected = False
+      if(abs(yVtxSig)>0.03): selected = False
+      if(abs(SnpSig)>100):   selected = False
+      if(TglSig<-400):       selected = False
+      if(TglSig>+600):       selected = False
+      if(Erec<1.2):          selected = False
       if(Erec>15.5):         selected = False
       if(selected): ntrk_sel += 1
       
