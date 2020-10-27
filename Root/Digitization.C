@@ -531,7 +531,7 @@ int main(int argc, char *argv[])
    det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
    det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
 	// for reconstruction:
-	det->SetErrorScale(200.);
+	det->SetErrorScale(1000.);
    det->Print();
    // det->BookControlHistos();
    
