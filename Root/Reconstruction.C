@@ -801,7 +801,7 @@ int main(int argc, char *argv[])
 	// for reconstruction:
 	// det->SetErrorScale(500.);
 	// det->SetErrorScale( (process=="trident")?500.:200. );
-	det->SetErrorScale( (process=="trident")?500.:700. );
+	det->SetErrorScale( (process=="trident")?500.:500. );
 	det->Print();
 	// det->BookControlHistos();
 	
@@ -1363,27 +1363,7 @@ int main(int argc, char *argv[])
 				/// TODO: this is a test
 				unsigned int irec = reco_trckmar.size()-1;
 
-				// Int_t imatch = imatched(reco_trckmar[irec],sig_clusters_xyz,side);
-				// bestmatchtrui = imatch;
-				// bestmatchreci = irec;
-				// if(imatch>=0)
-				// {
-				// 	ismatched = 1;
-				// 	ixmatched = imatch;
-				// 	idmatched = true_clusters_id[imatch][0];
-				// 	true_rec_imatch[imatch].push_back( irec );
-				// 	n_match++;
-				// 	// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << sig_trkp4->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
-				// }
-				// else
-				// {
-				// 	ismatched =  0;
-				// 	ixmatched = -1;
-				// 	idmatched = -1;
-				// 	// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
-				// }
-				
-				Int_t imatch = CheckMatchingByID(win_cls_id1,win_cls_id2,win_cls_id3,win_cls_id4);
+				Int_t imatch = imatched(reco_trckmar[irec],sig_clusters_xyz,side);
 				bestmatchtrui = imatch;
 				bestmatchreci = irec;
 				if(imatch>=0)
@@ -1402,6 +1382,26 @@ int main(int argc, char *argv[])
 					idmatched = -1;
 					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
+				
+				// Int_t imatch = CheckMatchingByID(win_cls_id1,win_cls_id2,win_cls_id3,win_cls_id4);
+				// bestmatchtrui = imatch;
+				// bestmatchreci = irec;
+				// if(imatch>=0)
+				// {
+				// 	ismatched = 1;
+				// 	ixmatched = imatch;
+				// 	idmatched = true_clusters_id[imatch][0];
+				// 	true_rec_imatch[imatch].push_back( irec );
+				// 	n_match++;
+				// 	// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << sig_trkp4->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+				// }
+				// else
+				// {
+				// 	ismatched =  0;
+				// 	ixmatched = -1;
+				// 	idmatched = -1;
+				// 	// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
+				// }
 
 				
 				reco_ismtchd.push_back( ismatched );
