@@ -46,33 +46,57 @@ cm2um = 1.e4
 um2cm = 1.e-4
 
 ### magnetic field
-B  = 1.0 if(proc=="trident") else 1.7 # Tesla
-LB = 1.029   # meters
+# B  = 1.0 if(proc=="trident") else 1.7 # Tesla
+B  = cfgmap["B"]
+# LB = 1.029   # meters
+LB = cfgmap["LB"]
 
 ### possible energies 
-Emax = 17.5 if(proc=="trident") else 16 # GeV
-Emin = 1.00 if(proc=="trident") else 2 # GeV
+# Emax = 17.5 if(proc=="trident") else 16 # GeV
+# Emin = 1.00 if(proc=="trident") else 2 # GeV
+Emax = cfgmap["Emax"]
+Emin = cfgmap["Emin"]
 
 ### geometry:
-zDipoleExit = 202.9
-xDipoleExitMinAbs = 1.5 if(proc=="bppp") else 4   ## cm --> TODO: need tuning
-xDipoleExitMaxAbs = 25  if(proc=="bppp") else 30  ## cm --> TODO: need tuning
-yDipoleExitMin = -0.05 ## cm --> TODO: need tuning
-yDipoleExitMax = +0.05 ## cm --> TODO: need tuning
-xAbsMargins = 0.025 # cm --> TODO: need tuning
-yAbsMargins = 0.025 if(proc=="bppp") else 0.1 # cm --> TODO: need tuning
+zDipoleEntrance   = cfgmap["zDipoleEntrance"]
+zDipoleExit       = cfgmap["zDipoleExit"]
+xDipoleWidth      = cfgmap["xDipoleWidth"]
+yDipoleHeight     = cfgmap["yDipoleHeight"]
+xDipoleExitMinAbs = cfgmap["xDipoleExitMinAbs"]
+xDipoleExitMaxAbs = cfgmap["xDipoleExitMaxAbs"]
+yDipoleExitMin    = cfgmap["yDipoleExitMin"]
+yDipoleExitMax    = cfgmap["yDipoleExitMax"]
+xAbsMargins       = cfgmap["xAbsMargins"]
+yAbsMargins       = cfgmap["yAbsMargins"]
+# zDipoleExit = 202.9
+# xDipoleExitMinAbs = 1.5 if(proc=="bppp") else 4   ## cm --> TODO: need tuning
+# xDipoleExitMaxAbs = 25  if(proc=="bppp") else 30  ## cm --> TODO: need tuning
+# yDipoleExitMin = -0.05 ## cm --> TODO: need tuning
+# yDipoleExitMax = +0.05 ## cm --> TODO: need tuning
+# xAbsMargins = 0.025 # cm --> TODO: need tuning
+# yAbsMargins = 0.025 if(proc=="bppp") else 0.1 # cm --> TODO: need tuning
 
 ### stave geometry
-Hstave    = 1.5  # cm
-Lstave    = 50 #27.12 if(proc=="bppp") else 50 # cm
-Rbeampipe = 2.413 #4 # cm
-RoffsetBfield = 5.7 if(proc=="bppp") else 14 # cm
-xPsideL = -RoffsetBfield-Lstave
-xPsideR = -RoffsetBfield       
-xEsideL = +RoffsetBfield       
-xEsideR = +RoffsetBfield+Lstave
-yUp = +Hstave/2.
-yDn = -Hstave/2.
+Hstave        = cfgmap["Hstave"]
+Lstave        = cfgmap["Lstave"]
+RoffsetBfield = cfgmap["RoffsetBfield"]
+Rbeampipe     = cfgmap["Rbeampipe"]
+Wbeampipe     = cfgmap["Wbeampipe"]
+# Hstave    = 1.5  # cm
+# Lstave    = 50 #27.12 if(proc=="bppp") else 50 # cm
+# Rbeampipe = 2.413 #4 # cm
+# RoffsetBfield = 5.7 if(proc=="bppp") else 14 # cm
+xPsideL = cfgmap["xPsideL"]#-RoffsetBfield-Lstave
+xPsideR = cfgmap["xPsideR"]#-RoffsetBfield       
+xEsideL = cfgmap["xEsideL"]#+RoffsetBfield       
+xEsideR = cfgmap["xEsideR"]#+RoffsetBfield+Lstave
+yUp = cfgmap["yUp"]#+Hstave/2.
+yDn = cfgmap["yDn"]#-Hstave/2.
+
+zLayer1 = cfgmap["zLayer1"]
+zLayer2 = cfgmap["zLayer2"]
+zLayer3 = cfgmap["zLayer3"]
+zLayer4 = cfgmap["zLayer4"]
 
 #############################################
 def getgeometry(dipole=False):
@@ -126,12 +150,12 @@ for n in range(Nevt):
    nbkgtrks = 0
    while(nbkgtrks<NbkgTracks):
       ### draw vertex position
-      R = cfgmap["Rbeampipe"]-cfgmap["Wbeampipe"] ## for now assume vetex can be only on the beampipe
+      R = Rbeampipe-Wbeampipe ## for now assume vetex can be only on the beampipe
       SigmaZ = 25 ## cm, around the dipole exit
       phi = rnd.Uniform(0,2*ROOT.TMath.Pi())
       vx0 = R*ROOT.TMath.Cos(phi)
       vy0 = R*ROOT.TMath.Sin(phi)
-      vz0 = cfgmap["zDipoleExit"]+rnd.Gaus(0,SigmaZ)
+      vz0 = zDipoleExit+rnd.Gaus(0,SigmaZ)
       vz0 = round(vz0,1) ## precision of stepsize in z for propagation in B-filed is 0.1
 
       
@@ -143,7 +167,7 @@ for n in range(Nevt):
       # rp.SetXYZ( rnd.Gaus(0,0.01), rnd.Gaus(0,0.01), rnd.Exp(tau) ) ### for now, cannot go backards in z...
       rp.SetXYZ( rnd.Gaus(0,0.01), rnd.Gaus(0,0.01), rnd.Exp(tau) ) ### for now, cannot go backards in z...
       
-      r4 = cfgmap["zLayer1"]*rp.Unit()
+      r4 = zLayer1*rp.Unit()
       # print("x4=%g, y4=%g" % (r4.X(),r4.Y()))
       # if(abs(r4.X())<=cfgmap["Rbeampipe"]):                       continue ## |x| must be >Rbeampipe
       # if(abs(r4.X())>cfgmap["RoffsetBfield"]+2*cfgmap["Lstave"]): continue ## |x| must be <=Rbeampipe+2*Lstave

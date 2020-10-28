@@ -17,7 +17,14 @@ Emin = 1.00
 [General geometry cm]
 Rbeampipe   = 2.413
 Wbeampipe   = 0.2
+zDipoleEntrance = 100
 zDipoleExit = 202.9
+xDipoleWidth = 33
+yDipoleHeight = 10.8
+xDipoleOutWidth = 119.6
+yDipoleOutHeight = 67.2
+zDipoleOutLength = 139.6
+zDipoleInDummy = 123.8
 xDipoleExitMinAbs = 4.0
 xDipoleExitMaxAbs = 30
 yDipoleExitMin = -0.05
@@ -28,6 +35,8 @@ yAbsMargins = 0.100
 [Stave geometry cm]
 Hstave = 1.5
 Lstave = 50
+xStavesOverlap = 4
+zStavesOffset = 1.2
 RoffsetBfield = 14
 
 [Layer geometry cm]

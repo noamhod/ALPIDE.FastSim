@@ -4,6 +4,7 @@ import math
 import subprocess
 import array
 import numpy as np
+import config as cfg
 import ROOT
 from ROOT import TF1, TF2, TF3, TCanvas, TPolyLine
 
@@ -15,13 +16,20 @@ ROOT.gStyle.SetPadLeftMargin(0.16)
 # storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 storage =  os.path.expandvars("$STORAGEDIR")
 
-zActiveDipoleLengh = 102.9 #cm
-zActiveDipoleEntrance = 100 #cm
-zActiveDipoleExit = 202.9 #cm
-xActiveDipoleWidth = 33 #cm
-yActiveDipoleHeight = 10.8 #cm
-BfieldGamLaser = 1.7 #T
-BfieldEleLaser = 1 #T
+#############################################
+### read configuration from file
+cfgmap_bppp    = cfg.set("bppp","e+e-",True)
+cfgmap_trident = cfg.set("trident","e+",True)
+#############################################
+
+### geometry:
+zActiveDipoleLengh    = cfgmap_bppp["B"]
+zActiveDipoleEntrance = cfgmap_bppp["zDipoleEntrance"]
+zActiveDipoleExit     = cfgmap_bppp["zDipoleExit"]
+xActiveDipoleWidth    = cfgmap_bppp["xDipoleWidth"]
+yActiveDipoleHeight   = cfgmap_bppp["yDipoleHeight"]
+BfieldGamLaser        = cfgmap_bppp["B"]
+BfieldEleLaser        = cfgmap_trident["B"]
 
 strength = BfieldGamLaser
 

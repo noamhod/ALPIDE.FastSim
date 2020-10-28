@@ -36,7 +36,14 @@ def set(process,sides,doprint=False):
 
    map.update( {'Rbeampipe':get('General geometry cm','Rbeampipe')} )
    map.update( {'Wbeampipe':get('General geometry cm','Wbeampipe')} )
+   map.update( {'zDipoleEntrance':get('General geometry cm','zDipoleEntrance')} )
    map.update( {'zDipoleExit':get('General geometry cm','zDipoleExit')} )
+   map.update( {'xDipoleWidth':get('General geometry cm','xDipoleWidth')} )
+   map.update( {'yDipoleHeight':get('General geometry cm','yDipoleHeight')} )
+   map.update( {'xDipoleOutWidth':get('General geometry cm','xDipoleOutWidth')} )
+   map.update( {'yDipoleOutHeight':get('General geometry cm','yDipoleOutHeight')} )
+   map.update( {'zDipoleOutLength':get('General geometry cm','zDipoleOutLength')} )
+   map.update( {'zDipoleInDummy':get('General geometry cm','zDipoleInDummy')} )
    map.update( {'xDipoleExitMinAbs':get('General geometry cm','xDipoleExitMinAbs')} )
    map.update( {'xDipoleExitMaxAbs':get('General geometry cm','xDipoleExitMaxAbs')} )
    map.update( {'yDipoleExitMin':get('General geometry cm','yDipoleExitMin')} )
@@ -46,6 +53,8 @@ def set(process,sides,doprint=False):
    
    map.update( {'Hstave':get('Stave geometry cm','Hstave')} )
    map.update( {'Lstave':get('Stave geometry cm','Lstave')} )
+   map.update( {'xStavesOverlap':get('Stave geometry cm','xStavesOverlap')} )
+   map.update( {'zStavesOffset':get('Stave geometry cm','zStavesOffset')} )
    map.update( {'RoffsetBfield':get('Stave geometry cm','RoffsetBfield')} )
    
    map.update( {'zLayer1':get('Layer geometry cm','zLayer1')} )
@@ -53,6 +62,7 @@ def set(process,sides,doprint=False):
    map.update( {'zLayer3':get('Layer geometry cm','zLayer3')} )
    map.update( {'zLayer4':get('Layer geometry cm','zLayer4')} )
    
+   ### calculated variables
    map.update( {'xPsideL':-map['RoffsetBfield']-map['Lstave']} )
    map.update( {'xPsideR':-map['RoffsetBfield']} )
    map.update( {'xEsideL':+map['RoffsetBfield']} )

@@ -4,6 +4,7 @@ import math
 import subprocess
 import array
 import numpy as np
+import config as cfg
 import ROOT
 from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TPad, TView, TLatex, TLegend, TGaxis
 import argparse
@@ -24,27 +25,50 @@ ROOT.gStyle.SetOptFit(0)
 ROOT.gStyle.SetOptStat(0)
 # ROOT.gStyle.SetPadBottomMargin(0.15)
 # ROOT.gStyle.SetPadLeftMargin(0.16)
-# storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 storage = os.path.expandvars("$STORAGEDIR")
    
 #############################################
 
 process = proc
+sides = "e+" if(proc=="trident") else "e+e-" ## jsut the default
+
+#############################################
+### read configuration from file
+cfgmap = cfg.set(proc,sides,True)
 
 ### stave geometry
 np=-1
-Hstave = 1.5  # cm
-Lstave = 50 #27.12
-Rbeampipe = 2.413 # cm
-RoffsetBfield = 5.7 if(process=="bppp") else 14 # cm
-x1L = -RoffsetBfield-Lstave 
-x1R = -RoffsetBfield        
-x2L = +RoffsetBfield        
-x2R = +RoffsetBfield+Lstave 
-yUp = +Hstave/2.        
-yDn = -Hstave/2.     
-xStavesOverlap = 4
-zStavesOffset = 1.2
+# Hstave = 1.5  # cm
+# Lstave = 50 #27.12
+# Rbeampipe = 2.413 # cm
+# RoffsetBfield = 5.7 if(process=="bppp") else 14 # cm
+Hstave          = cfgmap["Hstave"]
+Lstave          = cfgmap["Lstave"]
+RoffsetBfield   = cfgmap["RoffsetBfield"]
+Rbeampipe       = cfgmap["Rbeampipe"]
+Wbeampipe       = cfgmap["Wbeampipe"]
+wDipoleInX      = cfgmap["xDipoleWidth"]
+hDipoleInY      = cfgmap["yDipoleHeight"]
+lDipoleInZ      = cfgmap["LB"]
+zDipoleInOffset = cfgmap["zDipoleEntrance"]
+wDipoleOutX     = cfgmap["xDipoleOutWidth"]
+hDipoleOutY     = cfgmap["yDipoleOutHeight"]
+lDipoleOutZ     = cfgmap["zDipoleOutLength"]
+lDipoleInZDummy = cfgmap["zDipoleInDummy"]
+
+xPsideL = cfgmap["xPsideL"]
+xPsideR = cfgmap["xPsideR"]
+xEsideL = cfgmap["xEsideL"]
+xEsideR = cfgmap["xEsideR"]
+yUp = cfgmap["yUp"]
+yDn = cfgmap["yDn"]
+xStavesOverlap = cfgmap["xStavesOverlap"]
+zStavesOffset = cfgmap["zStavesOffset"]
+
+x1L = xPsideL
+x1R = xPsideR
+x2L = xEsideL
+x2R = xEsideR
 xInnerLlist = [x1L,x1R]
 xInnerRlist = [x2R,x2L]
 xOuterLlist = [x1L+xStavesOverlap-Lstave,x1R+xStavesOverlap-Lstave]
@@ -77,10 +101,10 @@ for i in range(len(staveInnerLXZ)):
    staveYZ[i].SetLineColor(ROOT.kCyan)
 
 
-wDipoleInX = 330/10
-hDipoleInY = 108/10
-lDipoleInZ = 1029/10
-zDipoleInOffset = 100
+# wDipoleInX = 330/10
+# hDipoleInY = 108/10
+# lDipoleInZ = 1029/10
+# zDipoleInOffset = 100
 xDipoleIn = array.array('d', [-wDipoleInX/2,-wDipoleInX/2,+wDipoleInX/2,+wDipoleInX/2,-wDipoleInX/2])
 yDipoleIn = array.array('d', [-hDipoleInY/2,-hDipoleInY/2,+hDipoleInY/2,+hDipoleInY/2,-hDipoleInY/2])
 zDipoleIn = array.array('d', [zDipoleInOffset,zDipoleInOffset+lDipoleInZ,zDipoleInOffset+lDipoleInZ,zDipoleInOffset,zDipoleInOffset])
@@ -90,10 +114,10 @@ dipoleInYZ = TPolyLine(np,yDipoleIn,zDipoleIn)
 dipoleInXZ.SetLineColor(ROOT.kRed)
 dipoleInYZ.SetLineColor(ROOT.kRed)
 
-wDipoleOutX = 1196/10
-hDipoleOutY = 672/10
-lDipoleOutZ = 1396/10
-lDipoleInZDummy = 1238/10
+# wDipoleOutX = 1196/10
+# hDipoleOutY = 672/10
+# lDipoleOutZ = 1396/10
+# lDipoleInZDummy = 1238/10
 deltax = ((lDipoleOutZ-lDipoleInZDummy)/2)*math.tan(30*math.pi/180)
 deltaz = ((lDipoleOutZ-lDipoleInZDummy)/2)
 zDipoleOutOffset = zDipoleInOffset - (lDipoleOutZ-lDipoleInZ)/2

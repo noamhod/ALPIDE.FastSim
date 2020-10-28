@@ -814,7 +814,15 @@ int main(int argc, char *argv[])
 	zlayer->push_back(330); //// NOAM --> GET FROM THE SETUP --> layer 4
 
 	int outN = (process=="trident") ? 10 : 10;
-	B = (process=="trident") ? 1.0 : 1.7;
+	
+	//// get the Bfield from the setup
+	TVirtualMagField* fld = TGeoGlobalMagField::Instance()->GetField();
+	MagField* fldm = (MagField*) fld;
+	const double* BfieldObj = fldm->GetBVals(0);
+	double BfieldValTesla = BfieldObj[1]/10; /// the B dield is only in the y direction (0,B,0), hence the index 1
+	cout << "BfieldValTesla=" << BfieldValTesla << " [T]" << endl;
+	B = BfieldValTesla;
+	// B = (process=="trident") ? 1.0 : 1.75;
 
 	if(process=="trident")
 	{
