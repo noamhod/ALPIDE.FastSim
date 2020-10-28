@@ -207,8 +207,8 @@ rp = ROOT.TRatioPlot(tfile.Get("h_E_tru_eff_sel"),tfile.Get("h_E_tru_eff"))
 rp.SetH1DrawOpt("ep")
 rp.SetH2DrawOpt("ep")
 rp.SetGraphDrawOpt("ALX")
-ratioMax = 1.07 #maximum value on ratio plot Y axis
-ratioMin = 0.55 #minimum value on ratio plot Y axis
+ratioMax = 1.008 #maximum value on ratio plot Y axis
+ratioMin = 0.965 #minimum value on ratio plot Y axis
 rp.Draw("ep0 nohide")
 rp.GetLowerRefGraph().SetMaximum(ratioMax)
 rp.GetLowerRefGraph().SetMinimum(ratioMin)
@@ -245,8 +245,8 @@ rp = ROOT.TRatioPlot(tfile.Get("h_E_tru_eff_sel"),tfile.Get("h_E_tru_eff"))
 rp.SetH1DrawOpt("ep")
 rp.SetH2DrawOpt("ep")
 rp.SetGraphDrawOpt("ALX")
-ratioMax = 1.07 #maximum value on ratio plot Y axis
-ratioMin = 0.55 #minimum value on ratio plot Y axis
+ratioMax = 1.008 #maximum value on ratio plot Y axis
+ratioMin = 0.965 #minimum value on ratio plot Y axis
 rp.Draw("ep0 nohide")
 rp.GetLowerRefGraph().SetMaximum(ratioMax)
 rp.GetLowerRefGraph().SetMinimum(ratioMin)
@@ -256,8 +256,8 @@ rp.GetLowerRefGraph().GetYaxis().SetTitleOffset(1.5)
 rp.GetLowYaxis().SetNdivisions(506)
 rp.SetSeparationMargin(0.0)
 rp.GetLowerRefYaxis().SetTitle("Sel/Rec")
-leg_eff.AddEntry(tfile.Get("h_E_tru_eff"),"Reconstruction","epl")
-leg_eff.AddEntry(tfile.Get("h_E_tru_eff_sel"),"Selected","epl")
+# leg_eff.AddEntry(tfile.Get("h_E_tru_eff"),"Reconstruction","epl")
+# leg_eff.AddEntry(tfile.Get("h_E_tru_eff_sel"),"Selected","epl")
 leg_eff.Draw("same")
 
 cnv.cd(2)
@@ -279,7 +279,7 @@ rp_acc.SetH1DrawOpt("ep")
 rp_acc.SetH2DrawOpt("ep")
 rp_acc.SetGraphDrawOpt("ALX")
 ratioMax = 1.008 #maximum value on ratio plot Y axis
-ratioMin = 0.96 #minimum value on ratio plot Y axis
+ratioMin = 0.965 #minimum value on ratio plot Y axis
 rp_acc.Draw("ep0 nohide")
 rp_acc.GetLowerRefGraph().SetMaximum(ratioMax)
 rp_acc.GetLowerRefGraph().SetMinimum(ratioMin)

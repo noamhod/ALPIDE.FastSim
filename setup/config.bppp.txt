@@ -7,7 +7,7 @@ cm2um = 1.e4
 um2cm = 1.e-4
 
 [Magnetic field Tesla, Meter]
-B = 1.8
+B = 1.85
 LB = 1.029
 
 [Possible energies GeV]
