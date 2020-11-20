@@ -178,6 +178,7 @@ tt_in.Branch('pdgId',pdgId_in)
 tt_in.Branch('mpid',mpid_in)
 tt_in.Branch('wgt',wgt_in)
 
+'''
 tt_stdhep = TTree( 'stdhep','stdhep' )
 t_stdhep        = ROOT.std.vector( float )()
 vx_stdhep       = ROOT.std.vector( float )()
@@ -209,7 +210,7 @@ tt_stdhep.Branch('mpid',mpid_stdhep)
 tt_stdhep.Branch('wgt',wgt_stdhep)
 tt_stdhep.Branch('parents',parents_stdhep)
 tt_stdhep.Branch('children',children_stdhep)
-
+'''
 
 
 fIns = glob.glob(path+"/*.out")
@@ -226,6 +227,7 @@ for name in fIns:
    pz_out.clear()
    E_out.clear()
    
+   '''
    ### clear input tree branches
    mpid_in.clear()
    pdgId_in.clear()
@@ -256,12 +258,15 @@ for name in fIns:
    parents_stdhep.clear()
    for n in range(children_stdhep.size()): children_stdhep[n].clear()
    children_stdhep.clear()
+   '''
 
    ### read files
    particles    = readparticles(name)
+   '''
    stdhep,mpids = readstdhep(name.replace("particles.out","events.stdhep"))
    inparticles  = readparticles(name.replace(".out",".in"),mpids)
    # print(stdhep)
+   '''
 
    ### loop over all output particles
    for MP_ID,particle in particles.items():
@@ -287,6 +292,7 @@ for name in fIns:
       E_out.push_back(E0)
    tt_out.Fill()
    
+   '''
    ### loop over all input particles
    for MP_ID,particle in inparticles.items():
       betax  = particle["betax"]
@@ -310,7 +316,9 @@ for name in fIns:
       pz_in.push_back(pz0)
       E_in.push_back(E0)
    tt_in.Fill()
+   '''
    
+   '''
    ### loop over all output particles
    for stdhep in stdhep:
       status0 = stdhep["status"]
@@ -345,10 +353,13 @@ for name in fIns:
       for parent in stdhep["parents"]:  parents_stdhep[nparticles].push_back(parent)
       for child  in stdhep["children"]: children_stdhep[nparticles].push_back(child)
    tt_stdhep.Fill()
+   '''
 
 tt_out.Write()
+'''
 tt_in.Write()
 tt_stdhep.Write()
+'''
 tf.Write()
 tf.Write()
 tf.Close()

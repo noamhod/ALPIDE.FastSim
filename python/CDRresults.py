@@ -26,7 +26,7 @@ storage = os.path.expandvars("$STORAGEDIR")
 
 signals = {}
 signals.update( {"trident/IPstrong_V1.1.00/JETI40/e_laser/16.5GeV/" :{}} )
-signals.update( {"bppp/IPstrong_V1.1.00/JETI40/g_laser/16.5GeV/"    :{}} )
+#signals.update( {"bppp/IPstrong_V1.1.00/JETI40/g_laser/16.5GeV/"    :{}} )
 signals.update( {"trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/":{}} )
 signals.update( {"bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"   :{}} )
 
@@ -36,11 +36,13 @@ signals["trident/IPstrong_V1.1.00/JETI40/e_laser/16.5GeV/"] = {
    "w0_4000nm":   {"xi":3.88, "chi":0.690, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":3},
    "w0_4500nm":   {"xi":3.45, "chi":0.610, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":4},
    "w0_5000nm":   {"xi":3.10, "chi":0.550, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
-   "w0_8000nm":   {"xi":1.94, "chi":0.340, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":6},
-   "w0_20000nm":  {"xi":0.78, "chi":0.138, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":7},
-   "w0_50000nm":  {"xi":0.31, "chi":0.055, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":8},
-   "w0_100000nm": {"xi":0.15, "chi":0.028, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":9},
+   "w0_6500nm":   {"xi":2.39, "chi":0.420, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":6},
+   "w0_8000nm":   {"xi":1.94, "chi":0.340, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":7},
+   #"w0_20000nm":  {"xi":0.78, "chi":0.138, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":8},
+   #"w0_50000nm":  {"xi":0.31, "chi":0.055, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":9},
+   #"w0_100000nm": {"xi":0.15, "chi":0.028, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":10},
 }
+'''
 signals["bppp/IPstrong_V1.1.00/JETI40/g_laser/16.5GeV/"] = {
    "w0_3000nm":   {"xi":5.12, "chi":0.900, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
    "w0_3500nm":   {"xi":4.44, "chi":0.790, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":2},
@@ -49,19 +51,28 @@ signals["bppp/IPstrong_V1.1.00/JETI40/g_laser/16.5GeV/"] = {
    "w0_5000nm":   {"xi":3.10, "chi":0.550, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
    "w0_8000nm":   {"xi":1.94, "chi":0.340, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":6},
 }
+'''
 signals["trident/IPstrong_V1.1.00/phaseII/e_laser/16.5GeV/"] = {
-   "w0_8000nm":   {"xi":6.27, "chi":1.11, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
-   "w0_9000nm":   {"xi":5.57, "chi":0.99, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":2},
-   "w0_10000nm":  {"xi":5.01, "chi":0.89, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":3},
-   "w0_11000nm":  {"xi":4.56, "chi":0.81, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":4},
-   "w0_12000nm":  {"xi":4.18, "chi":0.74, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
+   "w0_3000nm":   {"xi":16.70, "chi":2.96, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
+   "w0_4000nm":   {"xi":12.53, "chi":2.22, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":2},
+   "w0_5000nm":   {"xi":10.03, "chi":1.78, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":3},
+   "w0_6000nm":   {"xi":8.35,  "chi":1.48, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":4},
+   "w0_7000nm":   {"xi":7.16,  "chi":1.27, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
+   "w0_8000nm":   {"xi":6.27,  "chi":1.11, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":6},
+   "w0_9000nm":   {"xi":5.57,  "chi":0.99, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":7},
+   "w0_10000nm":  {"xi":5.01,  "chi":0.89, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":8},
+   "w0_11000nm":  {"xi":4.56,  "chi":0.81, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":9},
+   "w0_12000nm":  {"xi":4.18,  "chi":0.74, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":10},
 }
 signals["bppp/IPstrong_V1.1.00/phaseII/g_laser/16.5GeV/"] = {
-   "w0_8000nm":   {"xi":6.27, "chi":1.11, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
-   "w0_9000nm":   {"xi":5.57, "chi":0.99, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":2},
-   "w0_10000nm":  {"xi":5.01, "chi":0.89, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":3},
-   "w0_11000nm":  {"xi":4.56, "chi":0.81, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":4},
-   "w0_12000nm":  {"xi":4.18, "chi":0.74, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
+   "w0_5000nm":   {"xi":10.03, "chi":1.78, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
+   "w0_6000nm":   {"xi":8.35,  "chi":1.48, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
+   "w0_7000nm":   {"xi":7.16,  "chi":1.27, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
+   "w0_8000nm":   {"xi":6.27,  "chi":1.11, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":1},
+   "w0_9000nm":   {"xi":5.57,  "chi":0.99, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":2},
+   "w0_10000nm":  {"xi":5.01,  "chi":0.89, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":3},
+   "w0_11000nm":  {"xi":4.56,  "chi":0.81, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":4},
+   "w0_12000nm":  {"xi":4.18,  "chi":0.74, "NtruP":0, "NaccP":0, "NrecP":0, "NtruE":0, "NaccE":0, "NrecE":0, "col":5},
 }
 
 process   = proc
