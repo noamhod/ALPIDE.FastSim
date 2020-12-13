@@ -502,11 +502,6 @@ int main(int argc, char *argv[])
 	cout << "Seed=" << Seed << endl;
 	
 	
-	
-	
-	
-	
-	
 	TString eventid = (evnt<0) ? "" : FormatEventID(evnt);
 	TString proc = process;
 	proc.ReplaceAll("_bkg","");

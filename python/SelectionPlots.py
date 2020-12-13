@@ -319,6 +319,9 @@ cnv.SaveAs(fn+"selection_ntrks.pdf")
 
 
 
+xmineff = 1.5
+xmaxeff = 15.5
+
 cnv = TCanvas("cnv","",500,500)
 cnv.cd()
 ROOT.gPad.SetTicks(1,1)
@@ -327,34 +330,36 @@ tfile.Get("h_E_tru_eff").SetMaximum(1.05)
 tfile.Get("h_E_tru_eff").SetLineColor(ROOT.kBlack)
 tfile.Get("h_E_tru_eff").SetMarkerColor(ROOT.kBlack)
 tfile.Get("h_E_tru_eff").SetMarkerStyle(20)
-sfturnon = '[0]*((2-ROOT::Math::erfc(([1]/2+x)/[2]))/2) + [3]*((2-ROOT::Math::erfc(([4]/2+x)/[5]))/2)'
 
-fturnon_guess = TF1("turnon_guess", sfturnon,0,14)
-fturnon_guess.SetParameter(0,0.98/2)
-fturnon_guess.SetParameter(1,-4)
-fturnon_guess.SetParameter(2,0.7)
-fturnon_guess.SetParameter(3,0.98/2)
-fturnon_guess.SetParameter(4,-3)
-fturnon_guess.SetParameter(5,0.7)
-fturnon_guess.SetLineWidth(2)
+# sfturnon = '[0]*ROOT::Math::erfc([1]*x-[2]) + [3]/([4]+ROOT::Math::exp(-[4]*(x-1)))'
+sfturnon = '[0]*(1+ROOT::Math::erfc([1]*(x-1))) + [2]/([2]+ROOT::Math::exp(-[2]*(x-1)))'
+positive = []
+
+fturnon_guess = TF1("turnon_guess", sfturnon,xmineff,xmaxeff)
 fturnon_guess.SetLineColor(ROOT.kBlue)
+fturnon_guess.SetLineWidth(2)
+fturnon_guess.SetParameter(0, 1)
+fturnon_guess.SetParameter(1, 1)
+fturnon_guess.SetParameter(2, 1)
+# fturnon_guess.SetParameter(3, 1)
+# fturnon_guess.SetParameter(4, 1)
+# fturnon_guess.SetParameter(5, 1)
+# fturnon_guess.SetParameter(6, 1)
 
-fturnon = TF1("turnon", sfturnon, 0,14)
-fturnon.SetParameter(0,0.98/2)
-fturnon.SetParameter(1,-4)
-fturnon.SetParameter(2,0.7)
-fturnon.SetParameter(3,0.98/2)
-fturnon.SetParameter(4,-3)
-fturnon.SetParameter(5,0.7)
+
+fturnon = TF1("turnon", sfturnon, xmineff,xmaxeff)
+for pos in positive: fturnon.SetParLimits(pos,0,1000)
 fturnon.SetLineWidth(2)
 fturnon.SetLineColor(ROOT.kRed)
 
-res = tfile.Get("h_E_tru_eff").Fit(fturnon,"EMRS")
+for n in range(fturnon.GetNpar()): fturnon.SetParameter(n,fturnon_guess.GetParameter(n))
+
+res = tfile.Get("h_E_tru_eff").Fit(fturnon,"MERS")
 chi2dof = fturnon.GetChisquare()/fturnon.GetNDF() if(fturnon.GetNDF()>0) else -1
 print("Turnon: chi2/Ndof=",chi2dof)
 tfile.Get("h_E_tru_eff").Draw("ep")
 fturnon.Draw("same")
-# fturnon_guess.Draw("same")
+fturnon_guess.Draw("same")
 cnv.SaveAs(fn+"E_tru_eff_turnonfit.pdf")
 
 tfileout = TFile(fn.replace("pdf","root")+"accxeff.root","RECREATE")
