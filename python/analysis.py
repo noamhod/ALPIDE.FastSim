@@ -250,7 +250,10 @@ def BookHistos(process):
    histos.update( {"h_ntrks_sig":TH1D("h_ntrks_sig",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
    histos.update( {"h_ntrks_bkg":TH1D("h_ntrks_bkg",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
    histos.update( {"h_ntrks_acc":TH1D("h_ntrks_acc",";Track multiplicity;Events", ntrkbins,ntrkmin,ntrkmax)} )
-
+   histos.update( {"h_res_E_00_to_04" :TH1D("h_res_E_00_to_04", ";(E_{rec}-E_{tru})/E_{tru};Tracks", 200,-0.015,+0.015)} )
+   histos.update( {"h_res_E_04_to_07" :TH1D("h_res_E_04_to_07", ";(E_{rec}-E_{tru})/E_{tru};Tracks", 200,-0.015,+0.015)} )
+   histos.update( {"h_res_E_07_to_10" :TH1D("h_res_E_07_to_10", ";(E_{rec}-E_{tru})/E_{tru};Tracks", 200,-0.015,+0.015)} )
+   histos.update( {"h_res_E_10_to_17" :TH1D("h_res_E_10_to_17", ";(E_{rec}-E_{tru})/E_{tru};Tracks", 200,-0.015,+0.015)} )
    histos.update( {"h_rat_E"     :TH1D("h_rat_E", ";E_{rec}/E_{tru};Tracks",                       200,0.98,1.02)} )
    histos.update( {"h_res_E"     :TH1D("h_res_E", ";(E_{rec}-E_{tru})/E_{tru};Tracks",             200,-0.015,+0.015)} )
    histos.update( {"h_rat_sed_E" :TH1D("h_rat_sed_E", ";E_{rec}/E_{tru};Tracks",                   200,0.98,1.02)} )
@@ -1049,9 +1052,9 @@ def FillHistos(event):
             yctypetru = ctypes.c_double() #ROOT.Double()
             zctypetru = ctypes.c_double() #ROOT.Double()
             event.true_trckmar[isig].GetPoint(jxy_tru,xctypetru,yctypetru,zctypetru)
-            xtru = xctype.value
-            ytru = yctype.value
-            ztru = zctype.value
+            xtru = xctypetru.value
+            ytru = yctypetru.value
+            ztru = zctypetru.value
             if(ztru!=zrec): continue
             invptru = 1./event.true_p[isig].P()*(-1) if(xtru>0) else 1./event.true_p[isig].P()*(+1)
             dx = (xrec-xtru)
@@ -1121,6 +1124,10 @@ def FillHistos(event):
          if(selected): histos["h_E_tru_sel_mat_acc_"+side].Fill(Esig)
       histos["h_rat_E"].Fill(Erat,wgt)
       histos["h_res_E"].Fill(dErel,wgt)
+      if(Esig<=4):              histos["h_res_E_00_to_04"].Fill(dErel,wgt)
+      if(Esig>4 and Esig<=7):   histos["h_res_E_04_to_07"].Fill(dErel,wgt)
+      if(Esig>7 and Esig<=10):  histos["h_res_E_07_to_10"].Fill(dErel,wgt)
+      if(Esig>10 and Esig<=17): histos["h_res_E_10_to_17"].Fill(dErel,wgt)
       histos["h_rat_E_vs_Etru_recvstru"].Fill(Esig,Erat,wgt)
       histos["h_res_E_vs_Etru_recvstru"].Fill(Esig,dErel,wgt)
       histos["h_dE_vs_Etru_recvstru"].Fill(Esig,dE,wgt)

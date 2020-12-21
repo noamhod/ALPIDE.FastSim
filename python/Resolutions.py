@@ -73,7 +73,9 @@ tfile = TFile(storage+"/output/root/analysis_reco_"+process+".root","READ")
 fn = storage+"/output/pdf/analysis_reco_"+process+"_"
 
 hx = tfile.Get("h_dx_vs_xtru_recvstru_logbins")
+hxres = tfile.Get("h_res_x_vs_xtru_recvstru_logbins")
 hy = tfile.Get("h_dy_vs_ytru_recvstru_logbins")
+hyres = tfile.Get("h_res_y_vs_ytru_recvstru_logbins")
 hE = tfile.Get("h_res_E_vs_Etru_recvstru")
 h1p = tfile.Get("h_dx_vs_invptru_recvstru_logbins")
 
@@ -146,14 +148,20 @@ xbins = []
 for n in reversed(range(len(xbinstmp))): xbins.append(-xbinstmp[n])
 for n in range(len(xbinstmp)):           xbins.append(+xbinstmp[n])
 hxRMS = TH1D("hxRMS","",len(xbins)-1,array.array("d",xbins))
+hxresRMS = TH1D("hxresRMS","",len(xbins)-1,array.array("d",xbins))
 for bx in range(hx.GetNbinsX()+1):
    cnv = TCanvas("cnv_"+str(bx),"",500,500)
    htmp = TH1D("htmp_"+str(bx),"",hx.GetNbinsY(),hx.GetYaxis().GetXmin(),hx.GetYaxis().GetXmax())
+   htmpres = TH1D("htmpres_"+str(bx),"",hxres.GetNbinsY(),hxres.GetYaxis().GetXmin(),hxres.GetYaxis().GetXmax())
    for by in range(hx.GetNbinsY()+1): htmp.SetBinContent(by,hx.GetBinContent(bx,by))
+   for by in range(hxres.GetNbinsY()+1): htmpres.SetBinContent(by,hxres.GetBinContent(bx,by))
    x    = hx.GetXaxis().GetBinCenter(bx)
    mean = htmp.GetMean()
    rms  = htmp.GetRMS()
+   meanres = htmpres.GetMean()
+   rmsres  = htmpres.GetRMS()
    rmserr = htmp.GetRMSError()
+   rmserrres = htmpres.GetRMSError()
    htmp.Draw()
    rmstmp,meantmp = GetRMSy(hx,bx)
    s = ROOT.TLatex()
@@ -166,7 +174,9 @@ for bx in range(hx.GetNbinsX()+1):
    s.DrawLatex(0.15,0.75,ROOT.Form("TMP: mean=%.6f, rms=%.4f" % (meantmp,rmstmp)))
    cnv.SaveAs(fn+"x_tests.pdf")
    hxRMS.SetBinContent(bx,rms)
+   hxresRMS.SetBinContent(bx,rmsres)
    hxRMS.SetBinError(bx,rmserr)
+   hxresRMS.SetBinError(bx,rmserrres)
    # print("x=%g, mean=%g, rms=%g" % (x,mean,rms))
 cnv = TCanvas("cnv_b","",500,500)
 cnv.SaveAs(fn+"x_tests.pdf)")
@@ -179,16 +189,24 @@ ybins = []
 for n in reversed(range(len(ybinstmp))): ybins.append(-ybinstmp[n])
 for n in range(len(ybinstmp)):           ybins.append(+ybinstmp[n])  
 hyRMS = TH1D("hyRMS","",len(xbins)-1,array.array("d",ybins))
+hyresRMS = TH1D("hyresRMS","",len(xbins)-1,array.array("d",ybins))
 for bx in range(hy.GetNbinsX()+1):
    cnv = TCanvas("cnv_"+str(bx),"",500,500)
    htmp = TH1D("htmp_"+str(bx),"",hy.GetNbinsY(),hy.GetYaxis().GetXmin(),hy.GetYaxis().GetXmax())
+   htmpres = TH1D("htmpres_"+str(bx),"",hyres.GetNbinsY(),hyres.GetYaxis().GetXmin(),hyres.GetYaxis().GetXmax())
    for by in range(hy.GetNbinsY()+1): htmp.SetBinContent(by,hy.GetBinContent(bx,by))
+   for by in range(hyres.GetNbinsY()+1): htmpres.SetBinContent(by,hyres.GetBinContent(bx,by))
    y    = hy.GetXaxis().GetBinCenter(bx)
    mean = htmp.GetMean()
+   meanres = htmpres.GetMean()
    rms  = htmp.GetRMS()
+   rmsres  = htmpres.GetRMS()
    rmserr = htmp.GetRMSError()
+   rmserrres = htmpres.GetRMSError()
    hyRMS.SetBinContent(bx,rms)
+   hyresRMS.SetBinContent(bx,rmsres)
    hyRMS.SetBinError(bx,rmserr)
+   hyresRMS.SetBinError(bx,rmserrres)
    htmp.Draw()
    rmstmp,meantmp = GetRMSy(hy,bx)
    s = ROOT.TLatex()
@@ -231,7 +249,7 @@ hERMS.SetMarkerSize(0.6)
 hERMS.Draw("hist ep same")
 cnv.SaveAs(fn+"res_E_vs_E_log_profile.pdf")
 
-cnv = TCanvas("cnv_res_xy_vs_xy_log_log","",1000,500)
+cnv = TCanvas("cnv_dxy_vs_xy_log_log","",1000,500)
 cnv.Divide(2,1)
 cnv.cd(1)
 ROOT.gPad.SetTicks(1,1)
@@ -253,7 +271,34 @@ hyRMS.SetMarkerColor(ROOT.kRed)
 hyRMS.SetMarkerStyle(24)
 hyRMS.SetMarkerSize(0.6)
 hyRMS.Draw("hist ep same")
-cnv.SaveAs(fn+"res_xy_vs_xy_log_profile.pdf")
+cnv.SaveAs(fn+"dxy_vs_xy_log_profile.pdf")
+
+cnv = TCanvas("cnv_resxy_vs_xy_log_log","",1000,500)
+cnv.Divide(2,1)
+cnv.cd(1)
+ROOT.gPad.SetTicks(1,1)
+ROOT.gPad.SetLeftMargin(0.16)
+ROOT.gPad.SetRightMargin(0.05)
+hxres.Draw("col")
+hxresRMS.SetLineColor(ROOT.kRed)
+hxresRMS.SetMarkerColor(ROOT.kRed)
+hxresRMS.SetMarkerStyle(24)
+hxresRMS.SetMarkerSize(0.6)
+hxresRMS.Draw("hist ep same")
+cnv.cd(2)
+ROOT.gPad.SetTicks(1,1)
+ROOT.gPad.SetLeftMargin(0.16)
+ROOT.gPad.SetRightMargin(0.05)
+hyres.Draw("col")
+hyresRMS.SetLineColor(ROOT.kRed)
+hyresRMS.SetMarkerColor(ROOT.kRed)
+hyresRMS.SetMarkerStyle(24)
+hyresRMS.SetMarkerSize(0.6)
+hyresRMS.Draw("hist ep same")
+cnv.SaveAs(fn+"resxy_vs_xy_log_profile.pdf")
+
+
+
 
 
 peak0 = "(0.5*[0]*[1]/TMath::Pi()) / TMath::Max(1.e-10, (x[0]-[2])*(x[0]-[2])+ .25*[1]*[1])"
@@ -372,6 +417,68 @@ s.DrawLatex(0.2,0.85,ROOT.Form("Pside Mean=%.6f" % (mean)))
 s.DrawLatex(0.2,0.78,ROOT.Form("Pside Sigma=%.4f" % (sigma)))
 s.DrawLatex(0.2,0.71,ROOT.Form("Pside #chi^{2}/N_{DOF}=%.3f" % (chi2dof)))
 cnv.SaveAs(fn+"rat_E_Pside.pdf")
+
+
+
+
+
+
+#######################################
+
+cnv = TCanvas("cnv_res_E_binned","",1500,1000)
+cnv.Divide(3,2)
+binnames = ["h_res_E_00_to_04",
+            "h_res_E_04_to_07",
+            "h_res_E_07_to_10",
+            "h_res_E_10_to_17"]
+for i in range(len(binnames)):
+   cnv.cd(i+1)
+   ROOT.gPad.SetGrid()
+   ROOT.gPad.SetTicks(1,1)
+   hrese = tfile.Get(binnames[i])
+   print(binnames[i]," --> RMS=",hrese.GetRMS())
+   g1 = TF1("g1", "gaus", -0.015,+0.015);    g1.SetLineColor(ROOT.kViolet)
+   g2 = TF1("g2", "gaus", -0.015,+0.015);    g2.SetLineColor(ROOT.kGreen+2)
+   l0 = TF1("l0", peakfunc0, -0.015,+0.015); l0.SetLineColor(ROOT.kYellow+2)
+   hrese.Fit(g1,"EMRS")
+   hrese.Fit(g2,"EMRS")
+   hrese.Fit(l0,"EMRS")
+   fite = TF1("fite", "gaus(0)+gaus(3)+"+peakfunc6, -0.015,+0.015)
+   # fite = TF1("fite", "gaus(0)+gaus(3)", -0.01,+0.01)
+   fite.SetLineWidth(1)
+   fite.SetParameter(0,g1.GetParameter(0))
+   fite.SetParameter(1,g1.GetParameter(1))
+   fite.SetParameter(2,g1.GetParameter(2))
+   fite.SetParameter(3,g2.GetParameter(0))
+   fite.SetParameter(4,g2.GetParameter(1))
+   fite.SetParameter(5,g2.GetParameter(2))
+   fite.SetParameter(6,l0.GetParameter(0))
+   fite.SetParameter(7,l0.GetParameter(1))
+   fite.SetParameter(8,l0.GetParameter(2))
+   res = hrese.Fit(fite,"EMRS")
+   chi2dof = fite.GetChisquare()/fite.GetNDF() if(fite.GetNDF()>0) else -1
+   print(binnames[i],"--> Res(E rec:tru) chi2/Ndof=",chi2dof)
+   hrese.Draw("hist")
+   fite.Draw("same")
+   mean,sigma = GetMeanSigma(fite,"E")
+   s = ROOT.TLatex()
+   s.SetNDC(1);
+   s.SetTextAlign(13);
+   s.SetTextColor(ROOT.kBlack)
+   s.SetTextSize(0.03)
+   s.DrawLatex(0.2,0.85,binnames[i].replace("h_res_E_","").replace("_"," ")+" GeV")
+   s.DrawLatex(0.2,0.78,ROOT.Form("Mean=%.6f" % (mean)))
+   s.DrawLatex(0.2,0.71,ROOT.Form("#sigma=%.4f" % (sigma)))
+   s.DrawLatex(0.2,0.64,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
+   ROOT.gPad.RedrawAxis()
+   ROOT.gPad.Update()
+cnv.SaveAs(fn+"res_E_binned.pdf")
+#######################################
+
+
+
+
+
 
 
 
