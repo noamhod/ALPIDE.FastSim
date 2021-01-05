@@ -23,8 +23,8 @@ storage =  os.path.expandvars("$STORAGEDIR")
 
 
 ### chip geometry:
-# x_translation = 67.73
-# y_translation = 0.61872
+x_translation = {1000:67.73}
+y_translation = {1000:0.61872}
 x_chip_sensitive = 29.94176
 y_chip_sensitive = 13.76256
 nx_pixels_sensitive = 1024 #30 #1024
@@ -102,7 +102,7 @@ def FillRandom(layerid,detid,nhits):
    for n in range(nhits):
       xtrk = rnd.Uniform(0,x_chip_sensitive)
       ytrk = rnd.Uniform(-y_chip_sensitive/2,+y_chip_sensitive/2)
-      histos["h_hits"].Fill(xtrk,ytrk)
+      histos["h_hits"+suf].Fill(xtrk,ytrk)
 
 
 def RejectPixelDueToVertex(trks_vtx):
@@ -174,7 +174,7 @@ def FillFromHitsFile(layerid,detid,filename,isigBX=0):
 #          line = line.strip()
 #          words = line.split()
 #          ### bxNumber << pdg << track_id << det_id << xx << yy << eneg << ev_weight << vtx_x << vtx_y << vtx_z
-#          if(abs(int(words[1]))==11 and int(words[3])==1000 and float(words[4])<(x_chip_sensitive+x_translation) and float(words[5])<(y_chip_sensitive+y_translation)):
+#          if(abs(int(words[1]))==11 and int(words[3])==chipid and float(words[4])<(x_chip_sensitive+x_translation) and float(words[5])<(y_chip_sensitive+y_translation)):
 #             xtrk = float(words[4])-x_translation ## x in chip's coordinate system
 #             ytrk = float(words[5])-y_translation ## y in chip's coordinate system
 #             histos["h_hits"+suf].Fill(xtrk,ytrk)
@@ -237,6 +237,30 @@ def PrintClusters(clusters,positions,threshold=0):
          if(len(positions)>0): print("cluster with ",npixels,"pixels: ",clusters[i],"--> position =",positions[i])
          else:                 print("cluster with ",npixels,"pixels: ",clusters[i])
    
+
+def GetOuterCorners(cluster,h):
+   uniquecorners = {}
+   for pixel in cluster:
+      xdn = h.GetXaxis().GetBinLowEdge(pixel["x"])
+      xup = h.GetXaxis().GetBinUpEdge(pixel["x"])
+      ydn = h.GetYaxis().GetBinLowEdge(pixel["y"])
+      yup = h.GetYaxis().GetBinUpEdge(pixel["y"])
+      sdd = str(xdn)+"_"+str(ydn)
+      sdu = str(xdn)+"_"+str(yup)
+      suu = str(xup)+"_"+str(yup)
+      sud = str(xup)+"_"+str(ydn)
+      if(sdd not in uniquecorners): uniquecorners.update( {sdd:[xdn,ydn]} )
+      else:                        del uniquecorners[sdd]
+      if(sdu not in uniquecorners): uniquecorners.update( {sdd:[xdn,yup]} )
+      else:                        del uniquecorners[sdu]
+      if(suu not in uniquecorners): uniquecorners.update( {sdd:[xup,yup]} )
+      else:                        del uniquecorners[suu]
+      if(sud not in uniquecorners): uniquecorners.update( {sdd:[xup,ydn]} )
+      else:                        del uniquecorners[sud]
+   outercorners = []
+   for s,corner in uniquecorners: outercorners.append(corner)
+   return outercorners
+
 
 ### get clusters contours
 def GetClusterContour(cluster,h,col=ROOT.kRed):
