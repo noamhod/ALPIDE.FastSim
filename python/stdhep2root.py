@@ -18,6 +18,7 @@ argus  = parser.parse_args()
 proc   = argus.p
 path   = argus.d
 photon = (argus.g=="1")
+isTom  = ("ptarmigan" in path)
 
 ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptFit(0);
@@ -64,6 +65,7 @@ def readparticles(name,mpids=[]):
       words = [word for word in words if(len(word.split())!=0)]
       if( not photon and abs(int(words[7]))!=11 ): continue
       # if(     photon and abs(int(words[7]))!=22 ): continue
+      ## Tom: E (GeV) | x (micron) | y (micron) | z (micron) | beta_x | beta_y | beta_z | PDG_NUM | MP_Wgt | MP_ID | t (um/c) | xi
       E     = float(words[0])
       vx    = float(words[1])
       vy    = float(words[2])
@@ -71,57 +73,59 @@ def readparticles(name,mpids=[]):
       bx    = float(words[4])
       by    = float(words[5])
       bz    = float(words[6])
+      pdgId = int(  words[7])
       wgt   = float(words[8])
-      pdgId = int(words[7])
-      mpid  = int(words[9])
+      mpid  = int(  words[9])
+      time  = float(words[10]) if(isTom) else -1
+      xi    = float(words[11]) if(isTom) else -1
       if(bx*bx+by*by+bz*bz>1.): continue
       ### filter out mpids which are not in the stdhep array
       if(filtermpids and mpid not in mpids): continue
-      particles.update( {mpid:{"E":E, "vx":vx, "vy":vy, "vz":vz, "betax":bx, "betay":by, "betaz":bz, "pdgId":pdgId, "wgt":wgt}} ) 
+      particles.update( {mpid:{"E":E, "vx":vx, "vy":vy, "vz":vz, "betax":bx, "betay":by, "betaz":bz, "pdgId":pdgId, "wgt":wgt, "time":time, "xi":xi}} )
    fIn.close()
    # print(particles)
    print("got %g particles" % len(particles))
    return particles
 
-def readstdhep(name):
-   print("reading: ",name)
-   stdhep = []
-   mpids = []
-   index = 0
-   nblock = 0
-   fIn = open(name,'r')
-   for line in fIn:
-      if(line.startswith("#")): continue
-      words = line.split()
-      words = [word for word in words if(len(word.split())!=0)]
-      if(len(words)==2):
-         nblock = 0
-         continue
-      #status  pdgid mom1 mom2 child1 child2 px py pz E m vx vy vz t xi mp_weight, mp_id
-      status = int(words[0])
-      pdgid = int(words[1])
-      px = float(words[6])
-      py = float(words[7])
-      pz = float(words[8])
-      E = float(words[9])
-      m = float(words[10])
-      vx = float(words[11])
-      vy = float(words[12])
-      vz = float(words[13])
-      t = float(words[14])
-      xi = float(words[15])
-      wgt = float(words[16])
-      mpid = int(words[17])
-      mpids.append(mpid)
-      parents  = [index-nblock,index-nblock]
-      children = [index+1,index+2] if(nblock==0) else [index,index]
-      stdhep.append( {"index":index, "status":status, "pdgId":pdgid, "parents":parents, "children":children,
-                      "px":px, "py":py, "pz":pz, "E":E, "m":m, "vx":vx, "vy":vy, "vz":vz, "t":t, "xi":xi, "wgt":wgt, "mpid":mpid} )
-      nblock  += 1
-      index += 1
-   fIn.close()
-   print("got %g stdhep" % len(stdhep))
-   return stdhep,mpids
+# def readstdhep(name):
+#    print("reading: ",name)
+#    stdhep = []
+#    mpids = []
+#    index = 0
+#    nblock = 0
+#    fIn = open(name,'r')
+#    for line in fIn:
+#       if(line.startswith("#")): continue
+#       words = line.split()
+#       words = [word for word in words if(len(word.split())!=0)]
+#       if(len(words)==2):
+#          nblock = 0
+#          continue
+#       #status  pdgid mom1 mom2 child1 child2 px py pz E m vx vy vz t xi mp_weight, mp_id
+#       status = int(words[0])
+#       pdgid = int(words[1])
+#       px = float(words[6])
+#       py = float(words[7])
+#       pz = float(words[8])
+#       E = float(words[9])
+#       m = float(words[10])
+#       vx = float(words[11])
+#       vy = float(words[12])
+#       vz = float(words[13])
+#       t = float(words[14])
+#       xi = float(words[15])
+#       wgt = float(words[16])
+#       mpid = int(words[17])
+#       mpids.append(mpid)
+#       parents  = [index-nblock,index-nblock]
+#       children = [index+1,index+2] if(nblock==0) else [index,index]
+#       stdhep.append( {"index":index, "status":status, "pdgId":pdgid, "parents":parents, "children":children,
+#                       "px":px, "py":py, "pz":pz, "E":E, "m":m, "vx":vx, "vy":vy, "vz":vz, "t":t, "xi":xi, "wgt":wgt, "mpid":mpid} )
+#       nblock  += 1
+#       index += 1
+#    fIn.close()
+#    print("got %g stdhep" % len(stdhep))
+#    return stdhep,mpids
    
 ##############################
 
@@ -145,6 +149,8 @@ E_out     = ROOT.std.vector( float )()
 pdgId_out = ROOT.std.vector( int )()
 mpid_out  = ROOT.std.vector( int )()
 wgt_out   = ROOT.std.vector( float )()
+time_out  = ROOT.std.vector( float )()
+xi_out    = ROOT.std.vector( float )()
 tt_out.Branch('vx', vx_out)
 tt_out.Branch('vy', vy_out)
 tt_out.Branch('vz', vz_out)
@@ -154,29 +160,30 @@ tt_out.Branch('pz', pz_out)
 tt_out.Branch('E',  E_out)
 tt_out.Branch('pdgId',pdgId_out)
 tt_out.Branch('mpid',mpid_out)
-tt_out.Branch('wgt',wgt_out)
+tt_out.Branch('time',time_out)
+tt_out.Branch('xi',xi_out)
 
-tt_in = TTree( 'tt_in','tt_in' )
-vx_in    = ROOT.std.vector( float )()
-vy_in    = ROOT.std.vector( float )()
-vz_in    = ROOT.std.vector( float )()
-px_in    = ROOT.std.vector( float )()
-py_in    = ROOT.std.vector( float )()
-pz_in    = ROOT.std.vector( float )()
-E_in     = ROOT.std.vector( float )()
-pdgId_in = ROOT.std.vector( int )()
-mpid_in  = ROOT.std.vector( int )()
-wgt_in   = ROOT.std.vector( float )()
-tt_in.Branch('vx', vx_in)
-tt_in.Branch('vy', vy_in)
-tt_in.Branch('vz', vz_in)
-tt_in.Branch('px', px_in)
-tt_in.Branch('py', py_in)
-tt_in.Branch('pz', pz_in)
-tt_in.Branch('E',  E_in)
-tt_in.Branch('pdgId',pdgId_in)
-tt_in.Branch('mpid',mpid_in)
-tt_in.Branch('wgt',wgt_in)
+# tt_in = TTree( 'tt_in','tt_in' )
+# vx_in    = ROOT.std.vector( float )()
+# vy_in    = ROOT.std.vector( float )()
+# vz_in    = ROOT.std.vector( float )()
+# px_in    = ROOT.std.vector( float )()
+# py_in    = ROOT.std.vector( float )()
+# pz_in    = ROOT.std.vector( float )()
+# E_in     = ROOT.std.vector( float )()
+# pdgId_in = ROOT.std.vector( int )()
+# mpid_in  = ROOT.std.vector( int )()
+# wgt_in   = ROOT.std.vector( float )()
+# tt_in.Branch('vx', vx_in)
+# tt_in.Branch('vy', vy_in)
+# tt_in.Branch('vz', vz_in)
+# tt_in.Branch('px', px_in)
+# tt_in.Branch('py', py_in)
+# tt_in.Branch('pz', pz_in)
+# tt_in.Branch('E',  E_in)
+# tt_in.Branch('pdgId',pdgId_in)
+# tt_in.Branch('mpid',mpid_in)
+# tt_in.Branch('wgt',wgt_in)
 
 '''
 tt_stdhep = TTree( 'stdhep','stdhep' )
@@ -226,6 +233,8 @@ for name in fIns:
    py_out.clear()
    pz_out.clear()
    E_out.clear()
+   xi_out.clear()
+   time_out.clear()
    
    '''
    ### clear input tree branches
@@ -280,6 +289,8 @@ for name in fIns:
       vx0 = particle["vx"]*1.e-4 ## um to cm
       vy0 = particle["vy"]*1.e-4 ## um to cm
       vz0 = particle["vz"]*1.e-4 ## um to cm
+      xi0 = particle["xi"]
+      t0  = particle["time"]
       mpid_out.push_back(MP_ID)
       wgt_out.push_back(wgt0)  
       pdgId_out.push_back(pdgId0)  
@@ -290,6 +301,8 @@ for name in fIns:
       py_out.push_back(py0)
       pz_out.push_back(pz0)
       E_out.push_back(E0)
+      time_out.push_back(t0)
+      xi_out.push_back(xi0)
    tt_out.Fill()
    
    '''

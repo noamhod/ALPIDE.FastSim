@@ -3,7 +3,8 @@ import numpy as np
 
 class Contour:
    '''
-   see http://opencvpython.blogspot.com/2012/04/contour-features.html
+   See http://www.cyto.purdue.edu/cdroms/micro2/content/education/wirth10.pdf
+   and moreover, see http://opencvpython.blogspot.com/2012/04/contour-features.html
    Provides detailed parameter informations about a contour
    Create a Contour instant as follows: c = Contour(pts,True)
    where pts is a simple list of 2D points (i.e. list of lists).
@@ -32,15 +33,19 @@ class Contour:
    c.bottommost -- bottommost point of the contour
    '''
    
-   def __init__(self,lpts,doprint=False):
+   def __init__(self,lpts,pixsizex,pixsizey,nlivepix,doprint=False):
       self.lpts = lpts
       self.n    = len(lpts)
+      self.livepixarea = nlivepix*(pixsizex*pixsizey)
       if(self.n<5): self.Insert() ## fix lpts if len<4
       self.pts = np.array(self.lpts, np.float32)
       
       ## area
       self.area = cv2.contourArea(self.pts)
       if(doprint): print("area:",self.area)
+
+      ## area over live pix area
+      self.pixarea_over_contarea = self.livepixarea/self.area
 
       ## perimeter
       self.perimeter = cv2.arcLength(self.pts,True)
@@ -112,6 +117,7 @@ class Contour:
       ### CONTOUR APPROXIMATION ###
       self.contour_approx = cv2.approxPolyDP(self.pts,0.02*self.perimeter,True)
       if(doprint): print("contour_approx:",self.contour_approx)
+
       
       # ### EXTREME POINTS ###
       # # Finds the leftmost, rightmost, topmost and bottommost points

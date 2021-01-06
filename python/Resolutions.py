@@ -23,6 +23,16 @@ storage =  os.path.expandvars("$STORAGEDIR")
 
 #############################################
 
+def LUXE(x,y,col=ROOT.kBlack,boldit=False):
+   s = TLatex()
+   s.SetNDC(1)
+   s.SetTextAlign(42)
+   s.SetTextFont(52)
+   s.SetTextColor(col)
+   s.SetTextSize(0.044)
+   s.DrawLatex(x,y,"LUXE #it{CDR}")
+
+
 def GetLogBinning(nbins,xmin,xmax):
    logmin  = math.log10(xmin)
    logmax  = math.log10(xmax)
@@ -247,6 +257,7 @@ hERMS.SetMarkerColor(ROOT.kRed)
 hERMS.SetMarkerStyle(24)
 hERMS.SetMarkerSize(0.6)
 hERMS.Draw("hist ep same")
+LUXE(0.18,0.85,ROOT.kBlack)
 cnv.SaveAs(fn+"res_E_vs_E_log_profile.pdf")
 
 cnv = TCanvas("cnv_dxy_vs_xy_log_log","",1000,500)
@@ -483,7 +494,7 @@ cnv.SaveAs(fn+"res_E_binned.pdf")
 
 
 cnv = TCanvas("cnv_res_E","",500,500)
-cnv.SetGrid()
+# cnv.SetGrid()
 cnv.SetTicks(1,1)
 hrese = tfile.Get("h_res_E")
 g1 = TF1("g1", "gaus", -0.015,+0.015);    g1.SetLineColor(ROOT.kViolet)
@@ -515,9 +526,10 @@ s.SetNDC(1);
 s.SetTextAlign(13);
 s.SetTextColor(ROOT.kBlack)
 s.SetTextSize(0.03)
-s.DrawLatex(0.2,0.85,ROOT.Form("Mean=%.6f" % (mean)))
-s.DrawLatex(0.2,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
-s.DrawLatex(0.2,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
+s.DrawLatex(0.6,0.85,ROOT.Form("Mean=%.6f" % (mean)))
+s.DrawLatex(0.6,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
+s.DrawLatex(0.6,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
+LUXE(0.18,0.85,ROOT.kBlack)
 cnv.SaveAs(fn+"res_E.pdf")
 
 tfileout = TFile(fn.replace("pdf","root")+"Eresolution.root","RECREATE")

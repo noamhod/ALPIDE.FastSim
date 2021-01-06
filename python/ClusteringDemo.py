@@ -6,8 +6,9 @@ import array
 import numpy as np
 import ast
 import config as cfg
+import Contour as cnt
 import ROOT
-from ROOT import TH1D, TH2D, TCanvas, TPolyLine, TPolyMarker, TRandom, TPad
+from ROOT import TH1D, TH2D, TCanvas, TPolyLine, TPolyMarker, TRandom, TPad, TFile
 
 ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptFit(0);
@@ -29,7 +30,7 @@ x_chip_sensitive = 29.94176
 y_chip_sensitive = 13.76256
 nx_pixels_sensitive = 1024 #30 #1024
 ny_pixels_sensitive = 512 #15 #512
-nhits = 40
+
 
 nlayers=8
 nchips=9
@@ -55,54 +56,104 @@ ipads = { "0_1000":136,"0_1001":135,"0_1002":134,"0_1003":133,"0_1004":132,"0_10
           #        17           16           15           14           13           12           11           10            9
           "7_1000":9,  "7_1001":8,  "7_1002":7,  "7_1003":6,  "7_1004":5,  "7_1005":4,  "7_1006":3,  "7_1007":2,  "7_1008":1}
 
+
+### very important for the conventions
+### that is, assuming the pixels are counted from 0 or from 1
+### while anyway the assumption is that they are counted from the bottom left corner of the chip
+countcellsfromzero = False ## in this simple study
+
+xpixsize = x_chip_sensitive/nx_pixels_sensitive
+ypixsize = y_chip_sensitive/ny_pixels_sensitive
+pixelarea = xpixsize*ypixsize
+pixelperimeter = 2*xpixsize + 2*ypixsize
+
+pi = ROOT.TMath.Pi()
+
 colors = [1,2,4,6,9,28,15,46,38]
 
 ### histograms datastructure
 histos = {}
 
+#############################################################################
+#############################################################################
+#############################################################################
 
-def suffix(layerid,detid):
-   suf = "_L"+str(layerid)+"_C"+str(detid)
+def suffix(layerid,detid,bxid):
+   suf = "_BX"+str(bxid)+"_L"+str(layerid)+"_C"+str(detid)
    return suf
 
 
-### book histos
-def Book(layerid,detid):
-   suf = suffix(layerid,detid)
-   histos.update( { "h_hit_flags"+suf                   : TH2D("h_hit_flags"+suf,";x [mm];y [mm];Is signal pixel",nx_pixels_sensitive,0,x_chip_sensitive, ny_pixels_sensitive,-y_chip_sensitive/2.,+y_chip_sensitive/2.) } )
-   histos.update( { "h_hits"+suf                        : TH2D("h_hits"+suf,";x [mm];y [mm];Number of pixels",nx_pixels_sensitive,0,x_chip_sensitive, ny_pixels_sensitive,-y_chip_sensitive/2.,+y_chip_sensitive/2.) } )
-   histos.update( { "h_performance"+suf                 : TH1D("h_performance"+suf,";;Multiplicity",12,0,12) } )
-   histos.update( { "h_edep"+suf                        : TH1D("h_edep"+suf,";Energy deposition [keV];Number of pixels",100,0,100) } )
-   histos.update( { "h_ntrksperpix"+suf                 : TH1D("h_ntrksperpix"+suf,";Particles per pixel;Number of pixels",7,0,7) } )
-   histos.update( { "h_ntrksperpix_gam"+suf             : TH1D("h_ntrksperpix_gam"+suf,";Particles per pixel;Number of pixels",7,0,7) } )
-   histos.update( { "h_etrksedepdiff"+suf               : TH1D("h_etrksedepdiff"+suf,";#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,5000) } )
-   histos.update( { "h_etrks_vs_etrksedepdiff"+suf      : TH2D("h_etrks_vs_etrksedepdiff"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,5000 ,100,0,5000) } )
-   histos.update( { "h_etrks_vs_etrksedepdiff_zoom"+suf : TH2D("h_etrks_vs_etrksedepdiff_zoom"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,500 ,100,0,500) } )
-   histos.update( { "h_etrks_vs_etrksedepdiff_wide"+suf : TH2D("h_etrks_vs_etrksedepdiff_wide"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,16000000 ,100,0,16000000) } )
-   
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(1, "All hits")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(2, "All clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(3, "1hit-clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(4, "2hit-clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(5, "3hit-clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(6, "4hit-clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(7, "5hit-clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(8, "6hit-clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(9, "7hit-clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(10,"8hit-clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(11,"9hit-clusters")
-   histos["h_performance"+suf].GetXaxis().SetBinLabel(12,"#geq10hit-clusters")
+def GetGlobalCornerID(pixel,ncornerx,ncornery):
+   ixpix = pixel["x"] if(countcellsfromzero) else pixel["x"]-1
+   iypix = pixel["y"] if(countcellsfromzero) else pixel["y"]-1
+   cornerid = ixpix + iypix*(nx_pixels_sensitive+1) + ncornerx + ncornery*(nx_pixels_sensitive+1)
+   return cornerid
+
+def SetPerformanceHistBinLabels(h):
+   h.GetXaxis().SetBinLabel(1, "All hits")
+   h.GetXaxis().SetBinLabel(2, "All clusters")
+   h.GetXaxis().SetBinLabel(3, "1hit-clusters")
+   h.GetXaxis().SetBinLabel(4, "2hit-clusters")
+   h.GetXaxis().SetBinLabel(5, "3hit-clusters")
+   h.GetXaxis().SetBinLabel(6, "4hit-clusters")
+   h.GetXaxis().SetBinLabel(7, "5hit-clusters")
+   h.GetXaxis().SetBinLabel(8, "6hit-clusters")
+   h.GetXaxis().SetBinLabel(9, "7hit-clusters")
+   h.GetXaxis().SetBinLabel(10,"8hit-clusters")
+   h.GetXaxis().SetBinLabel(11,"9hit-clusters")
+   h.GetXaxis().SetBinLabel(12,"#geq10hit-clusters")
    
 
-### fill histos
-def FillRandom(layerid,detid,nhits):
-   rnd = TRandom()
-   rnd.SetSeed()
-   suf = suffix(layerid,detid)
-   for n in range(nhits):
-      xtrk = rnd.Uniform(0,x_chip_sensitive)
-      ytrk = rnd.Uniform(-y_chip_sensitive/2,+y_chip_sensitive/2)
-      histos["h_hits"+suf].Fill(xtrk,ytrk)
+### book histos
+def Book(layerid,detid,bxid):
+   for sb in ["","_sig","_bkg"]:
+      suf = suffix(layerid,detid,bxid)+sb
+      
+      histos.update( { "h_hit_flags"+suf                   : TH2D("h_hit_flags"+suf,";x [mm];y [mm];Is signal pixel",nx_pixels_sensitive,0,x_chip_sensitive, ny_pixels_sensitive,-y_chip_sensitive/2.,+y_chip_sensitive/2.) } )
+      histos.update( { "h_hits"+suf                        : TH2D("h_hits"+suf,";x [mm];y [mm];Number of pixels",nx_pixels_sensitive,0,x_chip_sensitive, ny_pixels_sensitive,-y_chip_sensitive/2.,+y_chip_sensitive/2.) } )
+      histos.update( { "h_edep"+suf                        : TH1D("h_edep"+suf,";Energy deposition [keV];Number of pixels",100,0,100) } )
+      histos.update( { "h_ntrksperpix"+suf                 : TH1D("h_ntrksperpix"+suf,";Particles per pixel;Number of pixels",7,0,7) } )
+      histos.update( { "h_ntrksperpix_gam"+suf             : TH1D("h_ntrksperpix_gam"+suf,";Particles per pixel;Number of pixels",7,0,7) } )
+      histos.update( { "h_etrksedepdiff"+suf               : TH1D("h_etrksedepdiff"+suf,";#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,5000) } )
+      histos.update( { "h_etrks_vs_etrksedepdiff"+suf      : TH2D("h_etrks_vs_etrksedepdiff"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,5000 ,100,0,5000) } )
+      histos.update( { "h_etrks_vs_etrksedepdiff_zoom"+suf : TH2D("h_etrks_vs_etrksedepdiff_zoom"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,500 ,100,0,500) } )
+      histos.update( { "h_etrks_vs_etrksedepdiff_wide"+suf : TH2D("h_etrks_vs_etrksedepdiff_wide"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,16000000 ,100,0,16000000) } )
+      
+      histos.update( { "h_pixelsovercontour_area"+suf : TH1D("h_pixelsovercontour_area"+suf,";All Pixels Area / Contour Area;Number of clusters",100,0,1) } )
+      histos.update( { "h_contour_area"+suf           : TH1D("h_contour_area"+suf,";Contour Area / Single Pixel Area;Number of clusters",100,0,20) } )
+      histos.update( { "h_contour_perimeter"+suf      : TH1D("h_contour_perimeter"+suf,";Contour Perimeter / Single Pixel Perimeter;Number of clusters",100,0,10) } )
+      histos.update( { "h_contour_eccentricity"+suf   : TH1D("h_contour_eccentricity"+suf,";Contour Eccentricity;Number of clusters",100,0,1) } )
+      histos.update( { "h_contour_aspectratio"+suf    : TH1D("h_contour_aspectratio"+suf,";Contour Aspect Ratio;Number of clusters",100,0,3) } )
+      histos.update( { "h_contour_extent"+suf         : TH1D("h_contour_extent"+suf,";Contour Extent;Number of clusters",100,0,0.1) } )
+      histos.update( { "h_contour_solidity"+suf       : TH1D("h_contour_solidity"+suf,";Contour Solidity;Number of clusters",100,0.7,1.00001) } )
+      
+      histos.update( { "h_performance"+suf : TH1D("h_performance"+suf,";;Multiplicity",12,0,12) } )
+      SetPerformanceHistBinLabels(histos["h_performance"+suf])
+      
+   for hname,hist in histos.items():
+      if  ("_sig" in hname): hist.SetLineColor(ROOT.kRed)
+      elif("_bkg" in hname): hist.SetLineColor(ROOT.kBlue)
+      else:                  hist.SetLineColor(ROOT.kBlack)
+
+
+def BookSummary():
+   for sb in ["","_sig","_bkg"]:
+      
+      histos.update( { "h_performance"+sb : TH1D("h_performance"+sb,";;Multiplicity",12,0,12) } )
+      SetPerformanceHistBinLabels(histos["h_performance"+sb])
+      
+      histos.update( { "h_pixelsovercontour_area"+sb : TH1D("h_pixelsovercontour_area"+sb,";All Pixels Area / Contour Area;Number of clusters",100,0,1) } )
+      histos.update( { "h_contour_area"+sb           : TH1D("h_contour_area"+sb,";Contour Area / Single Pixel Area;Number of clusters",100,0,20) } )
+      histos.update( { "h_contour_perimeter"+sb      : TH1D("h_contour_perimeter"+sb,";Contour Perimeter / Single Pixel Perimeter;Number of clusters",100,0,10) } )
+      histos.update( { "h_contour_eccentricity"+sb   : TH1D("h_contour_eccentricity"+sb,";Contour Eccentricity;Number of clusters",100,0,1) } )
+      histos.update( { "h_contour_aspectratio"+sb    : TH1D("h_contour_aspectratio"+sb,";Contour Aspect Ratio;Number of clusters",100,0,3) } )
+      histos.update( { "h_contour_extent"+sb         : TH1D("h_contour_extent"+sb,";Contour Extent;Number of clusters",100,0,0.1) } )
+      histos.update( { "h_contour_solidity"+sb       : TH1D("h_contour_solidity"+sb,";Contour Solidity;Number of clusters",100,0.7,1.00001) } )
+
+   for hname,hist in histos.items():
+      if  ("_sig" in hname): hist.SetLineColor(ROOT.kRed)
+      elif("_bkg" in hname): hist.SetLineColor(ROOT.kBlue)
+      else:                  hist.SetLineColor(ROOT.kBlack)
 
 
 def RejectPixelDueToVertex(trks_vtx):
@@ -115,8 +166,8 @@ def RejectPixelDueToVertex(trks_vtx):
    
 
 ### get data to histo
-def FillFromHitsFile(layerid,detid,filename,isigBX=0):
-   suf = suffix(layerid,detid)
+def FillFromHitsFile(layerid,detid,bxid,filename,isigBX=0):
+   suf = suffix(layerid,detid,bxid)
    with open(filename) as fp:
       Lines = fp.readlines() 
       for line in Lines:
@@ -138,20 +189,30 @@ def FillFromHitsFile(layerid,detid,filename,isigBX=0):
             trks_ids = list(map(int,   trks_ids))
             trks_vtx = ast.literal_eval(trks_vtx)
             ################################################################
+            ## reject the hotspots manually:
             if(isigBX==0 and RejectPixelDueToVertex(trks_vtx)): continue ###
+            ################################################################
+            ## exclude pixels which have only photons:
+            # if(11 not in trks_pdg and -11 not in trks_pdg): continue #######
             ################################################################
             if(isigBX>0 and bx!=isigBX):          continue ### in a signal run, take only one BX data
             if(isigBX>0 and (1 not in trks_ids)): continue ### in a signal run, ignore pixels w/o signal tracks
-            if(isigBX>0 and (1 in trks_ids)): histos["h_hit_flags"+suf].Fill(xtrk,ytrk)
+            if(isigBX>0 and (1 in trks_ids)):
+               histos["h_hit_flags"+suf].Fill(xtrk,ytrk)
+               histos["h_hit_flags"+suf+"_sig"].Fill(xtrk,ytrk)
             ################################################################
             ngam=0
             for i in range(len(trks_pdg)): ngam += 1 if(trks_pdg[i]==22) else 0
             trkEsum_keV=0
             for E in trks_eng: trkEsum_keV+=E*1e6
+
+            ## sanity check
             # if(trkEsum_keV<edep_keV):
             #    print("Warning: trks energy sum < edep!")
             #    print("trks energy sum=",trkEsum_keV," edep=",edep_keV)
             diff_keV = trkEsum_keV-edep_keV
+                        
+            histos["h_hits"+suf].Fill(xtrk,ytrk)
             histos["h_edep"+suf].Fill(edep_keV)
             histos["h_ntrksperpix"+suf].Fill(len(trks_pdg))
             histos["h_ntrksperpix_gam"+suf].Fill(ngam)
@@ -159,14 +220,31 @@ def FillFromHitsFile(layerid,detid,filename,isigBX=0):
             histos["h_etrks_vs_etrksedepdiff"+suf].Fill( trkEsum_keV, diff_keV )
             histos["h_etrks_vs_etrksedepdiff_zoom"+suf].Fill( trkEsum_keV, diff_keV )
             histos["h_etrks_vs_etrksedepdiff_wide"+suf].Fill( trkEsum_keV, diff_keV )
-            ## exclude pixels which have only photons:
-            # if(11 not in trks_pdg and -11 not in trks_pdg): continue
-            histos["h_hits"+suf].Fill(xtrk,ytrk)
+            
+            if(isigBX>0 and (1 in trks_ids)):
+               histos["h_hits"+suf+"_sig"].Fill(xtrk,ytrk)
+               histos["h_edep"+suf+"_sig"].Fill(edep_keV)
+               histos["h_ntrksperpix"+suf+"_sig"].Fill(len(trks_pdg))
+               histos["h_ntrksperpix_gam"+suf+"_sig"].Fill(ngam)
+               histos["h_etrksedepdiff"+suf+"_sig"].Fill( diff_keV )
+               histos["h_etrks_vs_etrksedepdiff"+suf+"_sig"].Fill( trkEsum_keV, diff_keV )
+               histos["h_etrks_vs_etrksedepdiff_zoom"+suf+"_sig"].Fill( trkEsum_keV, diff_keV )
+               histos["h_etrks_vs_etrksedepdiff_wide"+suf+"_sig"].Fill( trkEsum_keV, diff_keV )
+            else:
+               histos["h_hits"+suf+"_bkg"].Fill(xtrk,ytrk)
+               histos["h_edep"+suf+"_bkg"].Fill(edep_keV)
+               histos["h_ntrksperpix"+suf+"_bkg"].Fill(len(trks_pdg))
+               histos["h_ntrksperpix_gam"+suf+"_bkg"].Fill(ngam)
+               histos["h_etrksedepdiff"+suf+"_bkg"].Fill( diff_keV )
+               histos["h_etrks_vs_etrksedepdiff"+suf+"_bkg"].Fill( trkEsum_keV, diff_keV )
+               histos["h_etrks_vs_etrksedepdiff_zoom"+suf+"_bkg"].Fill( trkEsum_keV, diff_keV )
+               histos["h_etrks_vs_etrksedepdiff_wide"+suf+"_bkg"].Fill( trkEsum_keV, diff_keV )
+            
 
 
 # ### get data to histo
-# def FillFromTracksFile(filename,layerid,detid):
-#    suf = suffix(layerid,detid)
+# def FillFromTracksFile(filename,layerid,detid,bxid):
+#    suf = suffix(layerid,detid,bxid)
 #    with open(filename) as fp:
 #       Lines = fp.readlines()
 #       for line in Lines:
@@ -181,17 +259,29 @@ def FillFromHitsFile(layerid,detid,filename,isigBX=0):
 
 
 ### get live pixels
-def LivePixels(h):
+def LivePixels(h,hsigflags):
    pixels = []
    for bx in range(1,h.GetNbinsX()+1):
       for by in range(1,h.GetNbinsY()+1):
-         hits = h.GetBinContent(bx,by)
-         if(hits>0): pixels.append( {"x":bx,"y":by,"hits":hits} )
+         hits  = h.GetBinContent(bx,by)
+         issig = (hsigflags.GetBinContent(bx,by)>0)
+         if(hits>0): pixels.append( {"x":bx,"y":by,"hits":hits,"sig?":issig} )
    return len(pixels),pixels
 
 
-### get cluster position
+### get the geometrical center position of the cluster
 def GeoPosition(cluster,h):
+   x = 0
+   y = 0
+   n = len(cluster)
+   for pixel in cluster:
+      x += h.GetXaxis().GetBinCenter( pixel["x"] )
+      y += h.GetYaxis().GetBinCenter( pixel["y"] )
+   return x/n, y/n
+
+
+### get the center of gravity position of the cluster
+def GrvPosition(cluster,h):
    x = 0
    y = 0
    n = 0
@@ -224,10 +314,17 @@ def GetAllClusters(pixels,h):
       cluster = []
       RecursiveClustering(cluster,pixel,pixels)
       clusters.append( cluster )
-      posx,posy = GeoPosition(cluster,h)
+      posx,posy = GrvPosition(cluster,h)
       positions.append( [posx,posy] )
    return len(clusters),clusters,positions
-   
+
+
+def IsSigCluster(cluster):
+   for pixel in cluster:
+      if(pixel["sig?"]):
+         return True
+   return False
+
 
 ### print cluster properties
 def PrintClusters(clusters,positions,threshold=0):
@@ -238,43 +335,73 @@ def PrintClusters(clusters,positions,threshold=0):
          else:                 print("cluster with ",npixels,"pixels: ",clusters[i])
    
 
+def GetPixCorners(pixel,h):
+   corners = {}
+   xdn = h.GetXaxis().GetBinLowEdge(pixel["x"])
+   xup = h.GetXaxis().GetBinUpEdge(pixel["x"])
+   ydn = h.GetYaxis().GetBinLowEdge(pixel["y"])
+   yup = h.GetYaxis().GetBinUpEdge(pixel["y"])
+   corners.update({"dd":[xdn,ydn]})
+   corners.update({"du":[xdn,yup]})
+   corners.update({"uu":[xup,yup]})
+   corners.update({"ud":[xup,ydn]})
+   return corners
+
+
 def GetOuterCorners(cluster,h):
-   uniquecorners = {}
+   allcorners = []
+   cornerids = {}
+   cnames = {"dd":[0,0],"du":[0,1],"uu":[1,1],"ud":[1,0]}
+   removedcornerids = []
    for pixel in cluster:
-      xdn = h.GetXaxis().GetBinLowEdge(pixel["x"])
-      xup = h.GetXaxis().GetBinUpEdge(pixel["x"])
-      ydn = h.GetYaxis().GetBinLowEdge(pixel["y"])
-      yup = h.GetYaxis().GetBinUpEdge(pixel["y"])
-      sdd = str(xdn)+"_"+str(ydn)
-      sdu = str(xdn)+"_"+str(yup)
-      suu = str(xup)+"_"+str(yup)
-      sud = str(xup)+"_"+str(ydn)
-      if(sdd not in uniquecorners): uniquecorners.update( {sdd:[xdn,ydn]} )
-      else:                        del uniquecorners[sdd]
-      if(sdu not in uniquecorners): uniquecorners.update( {sdd:[xdn,yup]} )
-      else:                        del uniquecorners[sdu]
-      if(suu not in uniquecorners): uniquecorners.update( {sdd:[xup,yup]} )
-      else:                        del uniquecorners[suu]
-      if(sud not in uniquecorners): uniquecorners.update( {sdd:[xup,ydn]} )
-      else:                        del uniquecorners[sud]
-   outercorners = []
-   for s,corner in uniquecorners: outercorners.append(corner)
-   return outercorners
+      pixcorners = GetPixCorners(pixel,h)
+      for cname,corner in cnames.items():
+         cornerid = GetGlobalCornerID(pixel,corner[0],corner[1])
+         if(cornerid in cornerids):
+            del cornerids[cornerid]           ## this is enoough if only 2 pixels share one corner. otherwise:
+            removedcornerids.append(cornerid) ## need to recall this cornerid since 3 or 4 mixels share one corner
+         else:
+            if(cornerid not in removedcornerids):
+               cornerids.update({cornerid:pixcorners[cname]})
+   xycorners = cornerids.values()
+   return xycorners
+
+
+def GetOuterContour(cluster,h):
+   xpix,ypix  = GeoPosition(cluster,h)
+   outcorners = GetOuterCorners(cluster,h)
+   corners  = {}
+   ## go clockwise
+   for corner in outcorners:
+      dx = corner[0]-xpix
+      dy = corner[1]-ypix
+      angle = -999
+      if(dx!=0):
+         absang = abs(math.atan(dy/dx))
+         if(dx<0):
+            if(dy>=0): angle = absang
+            else:      angle = 2*pi-absang
+         if(dx>0):
+            if(dy>=0): angle = pi-absang
+            else:      angle = pi+absang
+      else:
+         if(dy<0): angle = 3*pi/2
+         else:     angle = +pi/2
+      corners.update({angle:corner})
+   cwcorners = dict(sorted(corners.items()))
+   scwcorners = "["
+   for txt,corner in cwcorners.items(): scwcorners += str(corner)+", "
+   scwcorners += "]"
+   # print("Sorted corners (for cluster size=",len(cluster),"): ",len(outcorners),scwcorners)
+   srtcorners = []
+   for angl,corner in cwcorners.items(): srtcorners.append(corner)
+   contour = cnt.Contour(srtcorners,xpixsize,ypixsize,len(cluster),False)
+   return srtcorners,contour
 
 
 ### get clusters contours
 def GetClusterContour(cluster,h,col=ROOT.kRed):
-   corners  = []
-   for pixel in cluster:
-      xdn = h.GetXaxis().GetBinLowEdge(pixel["x"])
-      xup = h.GetXaxis().GetBinUpEdge(pixel["x"])
-      ydn = h.GetYaxis().GetBinLowEdge(pixel["y"])
-      yup = h.GetYaxis().GetBinUpEdge(pixel["y"])
-      corners.append( [xdn,ydn] )
-      corners.append( [xdn,yup] )
-      corners.append( [xup,yup] )
-      corners.append( [xup,ydn] )
-      corners.append( [xdn,ydn] )
+   corners,contour = GetOuterContour(cluster,h)
    xlist = []
    ylist = []
    # for name,corner in corners.items():
@@ -286,11 +413,11 @@ def GetClusterContour(cluster,h,col=ROOT.kRed):
    x = array.array('d', xlist)
    y = array.array('d', ylist)
    n = len(x)
-   contour = TPolyLine(n,x,y)
-   contour.SetLineColor(col)
-   contour.SetLineWidth(1)
-   return contour
-   
+   contourline = TPolyLine(n,x,y)
+   contourline.SetLineColor(col)
+   contourline.SetLineWidth(1)
+   return contourline,{"xcont":x,"ycont":y},contour
+
    
 ### get clusters contours
 def GetClusterMarker(position,h,col=ROOT.kRed,hsig=None):
@@ -312,9 +439,10 @@ def GetClusterMarker(position,h,col=ROOT.kRed,hsig=None):
 
 ### get all clusters contours
 def GetContours(clusters,positions,h,hsig=None):
-   contours = []
-   bkgmarkers = []
-   sigmarkers = []
+   contourspts = []
+   contours    = []
+   bkgmarkers  = []
+   sigmarkers  = []
    rnd = TRandom()
    rnd.SetSeed()
    for i in range(len(clusters)):
@@ -322,31 +450,67 @@ def GetContours(clusters,positions,h,hsig=None):
       position = positions[i]
       icol     = int(rnd.Uniform(0,len(colors)))
       col      = colors[icol]
-      contour = GetClusterContour(cluster,h,col)
+      contourpts,contdata,contour = GetClusterContour(cluster,h,col)
       # marker,issig = GetClusterMarker(position,h,col,hsig)
       marker,issig = GetClusterMarker(position,h,ROOT.kGray+1,hsig)
+      contourspts.append(contourpts)
       contours.append(contour)
       if(issig): sigmarkers.append(marker)
       else:      bkgmarkers.append(marker)
-   return contours,bkgmarkers,sigmarkers
+   return contourspts,bkgmarkers,sigmarkers,contours
 
 
-def FillNclustersHist(layerid,detid,npix,ncls):
-   suf = suffix(layerid,detid)
-   histos["h_performance"+suf].Fill(0,npix)
-   histos["h_performance"+suf].Fill(1,ncls)
+def FillNclustersHist(layerid,detid,bxid,npix,ncls,clusters):
+   suf = suffix(layerid,detid,bxid)
+   
+   histos["h_performance"+suf].Fill(0,npix) ## only relevant for the inclusive s+b category
+   histos["h_performance"+suf].Fill(1,ncls) ## only relevant for the inclusive s+b category
+   
    for cluster in clusters:
-      npix = len(cluster)
-      if(npix==1): histos["h_performance"+suf].Fill(2)
-      if(npix==2): histos["h_performance"+suf].Fill(3)
-      if(npix==3): histos["h_performance"+suf].Fill(4)
-      if(npix==4): histos["h_performance"+suf].Fill(5)
-      if(npix==5): histos["h_performance"+suf].Fill(6)
-      if(npix==6): histos["h_performance"+suf].Fill(7)
-      if(npix==7): histos["h_performance"+suf].Fill(8)
-      if(npix==8): histos["h_performance"+suf].Fill(9)
-      if(npix==9): histos["h_performance"+suf].Fill(10)
-      if(npix>9):  histos["h_performance"+suf].Fill(11)
+      sigbkg = "_sig" if(IsSigCluster(cluster)) else "_bkg"
+      names  = ["",sigbkg]
+      for name in names:
+         npix = len(cluster)
+         if(npix==1): histos["h_performance"+suf+name].Fill(2)
+         if(npix==2): histos["h_performance"+suf+name].Fill(3)
+         if(npix==3): histos["h_performance"+suf+name].Fill(4)
+         if(npix==4): histos["h_performance"+suf+name].Fill(5)
+         if(npix==5): histos["h_performance"+suf+name].Fill(6)
+         if(npix==6): histos["h_performance"+suf+name].Fill(7)
+         if(npix==7): histos["h_performance"+suf+name].Fill(8)
+         if(npix==8): histos["h_performance"+suf+name].Fill(9)
+         if(npix==9): histos["h_performance"+suf+name].Fill(10)
+         if(npix>9):  histos["h_performance"+suf+name].Fill(11)
+
+
+def FillContourHists(layerid,detid,bxid,contours,clusters):
+   suf = suffix(layerid,detid,bxid)
+   for i in range(len(contours)):
+      contour = contours[i]
+      cluster = clusters[i]
+      sigbkg  = "_sig" if(IsSigCluster(cluster)) else "_bkg"
+      names    = ["",sigbkg]
+      for name in names:
+         histos["h_pixelsovercontour_area"+suf+name].Fill(contour.pixarea_over_contarea)
+         histos["h_contour_area"+suf+name].Fill(contour.area/pixelarea)
+         histos["h_contour_perimeter"+suf+name].Fill(contour.perimeter/pixelperimeter)
+         histos["h_contour_eccentricity"+suf+name].Fill(contour.eccentricity)
+         histos["h_contour_aspectratio"+suf+name].Fill(contour.aspect_ratio)
+         histos["h_contour_extent"+suf+name].Fill(contour.extent)
+         histos["h_contour_solidity"+suf+name].Fill(contour.solidity)
+
+
+def FillSummaryHists(layerid,detid,bxid):
+   suf = suffix(layerid,detid,bxid)
+   for sb in ["","_sig","_bkg"]:
+      histos["h_performance"+sb].Add(histos["h_performance"+suf+sb])
+      histos["h_pixelsovercontour_area"+sb].Add(histos["h_pixelsovercontour_area"+suf+sb])
+      histos["h_contour_area"+sb].Add(histos["h_contour_area"+suf+sb])
+      histos["h_contour_perimeter"+sb].Add(histos["h_contour_perimeter"+suf+sb])
+      histos["h_contour_eccentricity"+sb].Add(histos["h_contour_eccentricity"+suf+sb])
+      histos["h_contour_aspectratio"+sb].Add(histos["h_contour_aspectratio"+suf+sb])
+      histos["h_contour_extent"+sb].Add(histos["h_contour_extent"+suf+sb])
+      histos["h_contour_solidity"+sb].Add(histos["h_contour_solidity"+suf+sb])
 
 
 def getcnvs(BXname):
@@ -363,7 +527,6 @@ def getcnvs(BXname):
       "etrks_vs_etrksedepdiff_zoom": TCanvas("cnv_etrks_vs_etrksedepdiff_zoom_"+BXname,"",cnvx,cnvy),
       "etrks_vs_etrksedepdiff":      TCanvas("cnv_etrks_vs_etrksedepdiff_"+BXname,"",cnvx,cnvy),
       "etrks_vs_etrksedepdiff_wide": TCanvas("cnv_etrks_vs_etrksedepdiff_wide_"+BXname,"",cnvx,cnvy),
-      
    }
    for cname,cnv in cnvs.items(): cnv.Divide(ntotalchips,nreallayers,gapx,gapy)
    return cnvs
@@ -375,8 +538,8 @@ def getipad(layerid,detid):
    return ipad
 
 
-def draw(layerid,detid,contours,bmarkers,smarkers,cnvs):
-   suf = suffix(layerid,detid)
+def draw(layerid,detid,bxid,contourspts,bmarkers,smarkers,cnvs):
+   suf = suffix(layerid,detid,bxid)
    ipad = getipad(layerid,detid)
    
    cnvs["hits"].cd(ipad)
@@ -385,7 +548,7 @@ def draw(layerid,detid,contours,bmarkers,smarkers,cnvs):
    htmp = histos["h_hits"+suf].Clone("h_hits"+suf+"_tmp")
    htmp.Reset()
    htmp.DrawClone("col")
-   # for contour in contours: contour.DrawClone("same")
+   # for contour in contourspts: contourpts.DrawClone("same")
    for bmarker in bmarkers: bmarker.DrawClone("same")
    for smarker in smarkers: smarker.DrawClone("same")
    print("ipad:",ipad,"nsigvls:",len(smarkers),"nbkgcls:",len(bmarkers))
@@ -439,13 +602,72 @@ def savecnvs(BXname):
       cnv.SaveAs(storage+"/output/pdf/"+cname+"_"+BXname+".pdf")
 
 
+def DrawSummary():   
+   cnv = TCanvas("performance","",1000,500)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_performance"].Draw("hist text0")
+   histos["h_performance_bkg"].Draw("hist same")
+   histos["h_performance_sig"].Draw("hist text0 same")
+   ROOT.gPad.RedrawAxis()
+   cnv.SaveAs(storage+"/output/pdf/ClusteringSummary.pdf(")
+   
+   cnv = TCanvas("performance","",1500,1000)
+   cnv.Divide(3,2)
+   cnv.cd(1)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_contour_area"].Draw("hist")
+   histos["h_contour_area_bkg"].Draw("hist same")
+   histos["h_contour_area_sig"].Draw("hist same")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(2)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_contour_perimeter"].Draw("hist")
+   histos["h_contour_perimeter_bkg"].Draw("hist same")
+   histos["h_contour_perimeter_sig"].Draw("hist same")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(3)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_contour_eccentricity"].Draw("hist")
+   histos["h_contour_eccentricity_bkg"].Draw("hist same")
+   histos["h_contour_eccentricity_sig"].Draw("hist same")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(4)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   # histos["h_contour_aspectratio"].Draw("hist")
+   histos["h_pixelsovercontour_area"].Draw("hist")
+   histos["h_pixelsovercontour_area_bkg"].Draw("hist same")
+   histos["h_pixelsovercontour_area_sig"].Draw("hist same")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(5)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_contour_extent"].Draw("hist")
+   histos["h_contour_extent_bkg"].Draw("hist same")
+   histos["h_contour_extent_sig"].Draw("hist same")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(6)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_contour_solidity"].Draw("hist")
+   histos["h_contour_solidity_bkg"].Draw("hist same")
+   histos["h_contour_solidity_sig"].Draw("hist same")
+   ROOT.gPad.RedrawAxis()
+   cnv.SaveAs(storage+"/output/pdf/ClusteringSummary.pdf)")
+
 ##################################################################
 ##################################################################
 ##################################################################
 
+BookSummary()
 for BX in [1,2,3,4]:
    ### define the canvases
    sBX = str(BX)
+   bxid = sBX
    BXname = "BX"+sBX
    cnvs = getcnvs(BXname)
    
@@ -454,18 +676,25 @@ for BX in [1,2,3,4]:
       for baredetid in range(nchips):
          detid = baredetid+1000
          print("------------- Starting BX #",BX," layer #",layerid,"and chip #",detid,"-------------")
-         suf = suffix(layerid,detid)
-         Book(layerid,detid)
-         # FillRandom(layerid,detid,nhits)
-         FillFromHitsFile(layerid,detid,"list_root_hics_signal_165gev_5000nm_WIS_HitsProperInfo.txt",BX) # --> SIG
-         FillFromHitsFile(layerid,detid,"EBeamOnlyWIS_DividedByBX"+sBX+"_HitsProperInfo.txt") # --> BKG
+         suf = suffix(layerid,detid,bxid)
+         Book(layerid,detid,bxid)
+         FillFromHitsFile(layerid,detid,bxid,"list_root_hics_signal_165gev_5000nm_WIS_HitsProperInfo.txt",BX) # --> SIG
+         FillFromHitsFile(layerid,detid,bxid,"EBeamOnlyWIS_DividedByBX"+sBX+"_HitsProperInfo.txt") # --> BKG
          # FillFromTracksFile("BkgEBeam_SignalHics5000nmProvisional_BX1_trackInfoClean.txt")
-         npix,pixels = LivePixels(histos["h_hits"+suf])
-         ncls,clusters,positions = GetAllClusters(pixels,histos["h_hits"+suf])
+         npix,pixels = LivePixels(histos["h_hits"+suf],histos["h_hit_flags"+suf])
+         ncls,clusters,positions = GetAllClusters(pixels,histos["h_hits"+suf]) ## must be done from the sig+bkg histo
          # PrintClusters(clusters,positions)
-         FillNclustersHist(layerid,detid,npix,ncls)
-         contours,bmarkers,smarkers = GetContours(clusters,positions,histos["h_hits"+suf],histos["h_hit_flags"+suf])
-         draw(layerid,detid,contours,bmarkers,smarkers,cnvs)
-   
-   ### save the canvases
-   savecnvs(BXname)
+         FillNclustersHist(layerid,detid,bxid,npix,ncls,clusters)
+         contourspts,bmarkers,smarkers,contours = GetContours(clusters,positions,histos["h_hits"+suf],histos["h_hit_flags"+suf])
+         FillContourHists(layerid,detid,bxid,contours,clusters)
+         FillSummaryHists(layerid,detid,bxid)
+         draw(layerid,detid,bxid,contourspts,bmarkers,smarkers,cnvs)
+   savecnvs(BXname) ### save the canvases
+DrawSummary()
+
+
+tf = TFile(storage+"/output/root/ClusteringSummary.root","RECREATE")
+tf.cd()
+for hname,hist in histos.items(): hist.Write()
+tf.Write()
+tf.Close()

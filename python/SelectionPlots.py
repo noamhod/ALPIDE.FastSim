@@ -20,7 +20,21 @@ ROOT.gStyle.SetPadLeftMargin(0.16)
 # storage = ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 storage = os.path.expandvars("$STORAGEDIR")
 
+
+
 #############################################
+
+def LUXE(x,y,col=ROOT.kBlack,boldit=False):
+   s = TLatex()
+   s.SetNDC(1)
+   s.SetTextAlign(42)
+   s.SetTextFont(52)
+   s.SetTextColor(col)
+   s.SetTextSize(0.044)
+   s.DrawLatex(x,y,"LUXE #it{CDR}")
+
+
+
 def minmax(h1,h2,islogy=False,f=1.1):
    if(islogy): f=2.
    h1min = +1e10
@@ -191,37 +205,17 @@ cnv.SaveAs(fn+"selection_kinematics.pdf")
 cnv = TCanvas("cnv","",500,500)
 cnv.cd()
 cnv.SetTicks(1,1)
-tfile.Get("h_E_tru_eff").SetMinimum(0)
-tfile.Get("h_E_tru_eff").SetMaximum(1.05)
-tfile.Get("h_E_tru_eff").SetLineColor(ROOT.kBlack)
-tfile.Get("h_E_tru_eff").SetMarkerColor(ROOT.kBlack)
-tfile.Get("h_E_tru_eff").SetMarkerStyle(20)
-# tfile.Get("h_E_tru_eff").Draw("ep")
 tfile.Get("h_E_tru_eff_sel").SetMinimum(0)
 tfile.Get("h_E_tru_eff_sel").SetMaximum(1.05)
-tfile.Get("h_E_tru_eff_sel").SetLineColor(ROOT.kGray+1)
-tfile.Get("h_E_tru_eff_sel").SetMarkerColor(ROOT.kGray+1)
-tfile.Get("h_E_tru_eff_sel").SetMarkerStyle(24)
-# tfile.Get("h_E_tru_eff_sel").Draw("ep same")
-rp = ROOT.TRatioPlot(tfile.Get("h_E_tru_eff_sel"),tfile.Get("h_E_tru_eff"))
-rp.SetH1DrawOpt("ep")
-rp.SetH2DrawOpt("ep")
-rp.SetGraphDrawOpt("ALX")
-ratioMax = 1.008 #maximum value on ratio plot Y axis
-ratioMin = 0.965 #minimum value on ratio plot Y axis
-rp.Draw("ep0 nohide")
-rp.GetLowerRefGraph().SetMaximum(ratioMax)
-rp.GetLowerRefGraph().SetMinimum(ratioMin)
-# rp.SetLeftMargin(0.13)
-rp.GetLowerRefGraph().GetYaxis().SetTitleOffset(1.5)
-# rp.GetLowerRefGraph().GetYaxis().SetLabelSize(0.025)
-rp.GetLowYaxis().SetNdivisions(506)
-rp.SetSeparationMargin(0.0)
-rp.GetLowerRefYaxis().SetTitle("Sel/Rec")
-leg_eff.AddEntry(tfile.Get("h_E_tru_eff"),"Reconstruction","epl")
-leg_eff.AddEntry(tfile.Get("h_E_tru_eff_sel"),"Selected","epl")
-leg_eff.Draw("same")
-leg_eff.Draw("same")
+tfile.Get("h_E_tru_eff_sel").SetLineColor(ROOT.kBlack)
+tfile.Get("h_E_tru_eff_sel").SetMarkerColor(ROOT.kBlack)
+tfile.Get("h_E_tru_eff_sel").SetMarkerStyle(20)
+tfile.Get("h_E_tru_eff_sel").SetTitle("")
+tfile.Get("h_E_tru_eff_sel").GetXaxis().SetTitle("#it{E}_{true} [Gev]")
+tfile.Get("h_E_tru_eff_sel").GetYaxis().SetTitle("Tracking Efficiency")
+for b in range(1,tfile.Get("h_E_tru_eff_sel").GetNbinsX()+1): tfile.Get("h_E_tru_eff_sel").SetBinError(b,0)
+tfile.Get("h_E_tru_eff_sel").Draw("p")
+LUXE(0.45,0.65,ROOT.kBlack)
 cnv.SaveAs(fn+"selection_eff_only.pdf")
 
 
@@ -259,6 +253,7 @@ rp.GetLowerRefYaxis().SetTitle("Sel/Rec")
 # leg_eff.AddEntry(tfile.Get("h_E_tru_eff"),"Reconstruction","epl")
 # leg_eff.AddEntry(tfile.Get("h_E_tru_eff_sel"),"Selected","epl")
 leg_eff.Draw("same")
+LUXE(0.35,0.7,ROOT.kBlack)
 
 cnv.cd(2)
 ROOT.gPad.SetTicks(1,1)
@@ -289,6 +284,7 @@ rp_acc.GetLowYaxis().SetNdivisions(506)
 rp_acc.SetSeparationMargin(0.0)
 rp_acc.GetLowerRefYaxis().SetTitle("Sel/Rec")
 leg_eff.Draw("same")
+LUXE(0.35,0.7,ROOT.kBlack)
 cnv.SaveAs(fn+"selection_eff.pdf")
 
 

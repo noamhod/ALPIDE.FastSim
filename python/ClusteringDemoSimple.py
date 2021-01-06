@@ -28,11 +28,10 @@ x_translation = {1000:67.73}
 y_translation = {1000:0.61872}
 x_chip_sensitive = 29.94176
 y_chip_sensitive = 13.76256
-nx_pixels_sensitive = 300 #9 #30 #1024
-ny_pixels_sensitive = 150 #4 #15 #512
-nhits = 4000 #5
+nx_pixels_sensitive = 50 #9 #30 #1024
+ny_pixels_sensitive = 25 #4 #15 #512
+nhits = 200 #5
 
-pixelsize = (x_chip_sensitive/nx_pixels_sensitive)*(y_chip_sensitive/ny_pixels_sensitive)
 
 ### very important for the conventions
 ### that is, assuming the pixels are counted from 0 or from 1
@@ -41,6 +40,10 @@ countcellsfromzero = False ## in this simple study
 
 xpixsize = x_chip_sensitive/nx_pixels_sensitive
 ypixsize = y_chip_sensitive/ny_pixels_sensitive
+pixelarea = xpixsize*ypixsize
+pixelperimeter = 2*xpixsize + 2*ypixsize
+
+
 pi = ROOT.TMath.Pi()
 
 colors = [1,2,4,6,9,28,15,46,38]
@@ -100,7 +103,13 @@ def Book(layerid,detid):
    histos.update( { "h_etrks_vs_etrksedepdiff_zoom"+suf : TH2D("h_etrks_vs_etrksedepdiff_zoom"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,500 ,100,0,500) } )
    histos.update( { "h_etrks_vs_etrksedepdiff_wide"+suf : TH2D("h_etrks_vs_etrksedepdiff_wide"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,16000000 ,100,0,16000000) } )
 
-   histos.update( { "h_contour_area"+suf                : TH1D("h_contour_area"+suf,";Cluster area/Pixel area;Number of clusters",100,0,10) } )
+   histos.update( { "h_pixelsovercontour_area"+suf      : TH1D("h_pixelsovercontour_area"+suf,";All Pixels Area / Contour Area;Number of clusters",100,0,1) } )
+   histos.update( { "h_contour_area"+suf                : TH1D("h_contour_area"+suf,";Cluster Area / Pixel Area;Number of clusters",100,0,20) } )
+   histos.update( { "h_contour_perimeter"+suf           : TH1D("h_contour_perimeter"+suf,";Cluster Perimeter / Pixel Perimeter;Number of clusters",100,0,10) } )
+   histos.update( { "h_contour_eccentricity"+suf        : TH1D("h_contour_eccentricity"+suf,";Cluster Eccentricity;Number of clusters",100,0,1) } )
+   histos.update( { "h_contour_aspectratio"+suf         : TH1D("h_contour_aspectratio"+suf,";Cluster Aspect Ratio;Number of clusters",100,0,3) } )
+   histos.update( { "h_contour_extent"+suf              : TH1D("h_contour_extent"+suf,";Cluster Extent;Number of clusters",100,0,2) } )
+   histos.update( { "h_contour_solidity"+suf            : TH1D("h_contour_solidity"+suf,";Cluster Solidity;Number of clusters",100,0,1.00001) } )
    
    histos["h_performance"+suf].GetXaxis().SetBinLabel(1, "All hits")
    histos["h_performance"+suf].GetXaxis().SetBinLabel(2, "All clusters")
@@ -211,7 +220,6 @@ def GetPixCorners(pixel,h):
 
 def GetOuterCorners(cluster,h):
    allcorners = []
-   # if(len(cluster)>2): print("CLuster size:",len(cluster))
    cornerids = {}
    cnames = {"dd":[0,0],"du":[0,1],"uu":[1,1],"ud":[1,0]}
    removedcornerids = []
@@ -225,10 +233,7 @@ def GetOuterCorners(cluster,h):
          else:
             if(cornerid not in removedcornerids):
                cornerids.update({cornerid:pixcorners[cname]})
-   # print(GrvPosition(cluster,h),"--> cornerids keys:",cornerids.keys())
-   # print(cornerids)
    xycorners = cornerids.values()
-   # if(len(cluster)>2): print("Corners:",len(cluster),len(xycorners))
    return xycorners
 
 
@@ -260,7 +265,7 @@ def GetOuterContour(cluster,h):
    # print("Sorted corners (for cluster size=",len(cluster),"): ",len(outcorners),scwcorners)
    srtcorners = []
    for angl,corner in cwcorners.items(): srtcorners.append(corner)
-   contour = cnt.Contour(srtcorners,False)
+   contour = cnt.Contour(srtcorners,xpixsize,ypixsize,len(cluster),False)
    return srtcorners,contour
 
 
@@ -282,71 +287,6 @@ def GetClusterContour(cluster,h,col=ROOT.kRed):
    contourline.SetLineColor(col)
    contourline.SetLineWidth(1)
    return contourline,{"xcont":x,"ycont":y},contour
-
-
-def GetClusterBareArea(cluster):
-   barearea = 0
-   for pix in cluster: barearea += xpixsize*ypixsize
-   return barearea
-
-
-def GetClusterShapeArea(contourdata):
-   ## area = |Sum(x[i]*y[i+1]) - (y[i]*x[i+1])|/2
-   ## with x[n+1] being x(1) and y[n+1] being y[1]
-   shapearea = 0
-   for i in range(len(contourdata["xcont"])):
-      xi = contourdata["xcont"][i]
-      yi = contourdata["ycont"][i]
-      if(i<ncorners-1):
-         xi1 = contourdata["xcont"][i+1]
-         yi1 = contourdata["ycont"][i+1]
-         shapearea += abs(xi*yi1-yi*xi1)/2
-      else: 
-         xi1 = contourdata["xcont"][0]
-         yi1 = contourdata["ycont"][0]
-         shapearea += abs(xi*yi1-yi*xi1)/2
-   return shapearea
-
-
-def GetClusterAxes(center,contourdata):
-   elongation = 0
-   dmaxp = -1e10
-   dmaxn = -1e10
-   imaxp = -1
-   imaxn = -1
-   for i in range(len(contourdata["xcont"])):
-      x = contourdata["xcont"][i]
-      y = contourdata["ycont"][i]
-      dx = x-center[0]
-      dy = y-center[1]
-      d = math.sqrt(dx*dx + dy*dy)
-      if(d>dmaxp and dx>0):
-         dmaxp = d
-         imaxp = i
-      if(d>dmaxn and dx<0):
-         dmaxn = d
-         imaxn = i
-   x = array.array('d', [ contourdata["xcont"][imin],contourdata["xcont"][imax] ])
-   y = array.array('d', [ contourdata["ycont"][imin],contourdata["ycont"][imax] ])
-   n = len(x)
-   axis = TPolyLine(n,x,y)
-   axis.SetLineColor(col)
-   axis.SetLineWidth(1)
-   return axis
-
-
-def GetClusterProperties(cluster,center,contourdata):
-   npix = len(cluster)
-   barearea = GetClusterBareArea(cluster)
-   
-   ncorners = len(contourdata["xcont"])
-   shapearea = GetClusterShapeArea(contourdata)
-   
-   elongation = 0
-   
-   prop = {"npix":npix, "barearea":barearea, "ncorners":ncorners, "shapearea":shapearea, }
-   
-   return npix,area,
    
    
 ### get clusters contours
@@ -412,7 +352,13 @@ def FillNclustersHist(layerid,detid,npix,ncls):
 def FillContourHist(layerid,detid,contours):
    suf = suffix(layerid,detid)
    for contour in contours:
-      histos["h_contour_area"+suf].Fill(contour.area/pixelsize)
+      histos["h_pixelsovercontour_area"+suf].Fill(contour.pixarea_over_contarea)
+      histos["h_contour_area"+suf].Fill(contour.area/pixelarea)
+      histos["h_contour_perimeter"+suf].Fill(contour.perimeter/pixelperimeter)
+      histos["h_contour_eccentricity"+suf].Fill(contour.eccentricity)
+      histos["h_contour_aspectratio"+suf].Fill(contour.aspect_ratio)
+      histos["h_contour_extent"+suf].Fill(contour.extent)
+      histos["h_contour_solidity"+suf].Fill(contour.solidity)
 
 
 def draw(layerid,detid,contourspts,bmarkers,smarkers,contours):
@@ -421,9 +367,9 @@ def draw(layerid,detid,contourspts,bmarkers,smarkers,contours):
    cnv = TCanvas("hits","",1000,500)
    ROOT.gPad.SetTicks(1,1)
    histos["h_hits"+suf].Draw("col")
-   if(nx_pixels_sensitive*ny_pixels_sensitive<400):
+   if(nx_pixels_sensitive*ny_pixels_sensitive<2000):
       for contourpts in contourspts: contourpts.DrawClone("same")
-      for bmarker    in bmarkers:    bmarker.DrawClone("same")
+   for bmarker    in bmarkers:    bmarker.DrawClone("same")
    for smarker    in smarkers:     smarker.DrawClone("same")
    DrawCornerIds(histos["h_hits"+suf])
          
@@ -437,10 +383,38 @@ def draw(layerid,detid,contourspts,bmarkers,smarkers,contours):
    ROOT.gPad.RedrawAxis()
    cnv.SaveAs(storage+"/output/pdf/simpleclustering.pdf")
    
-   cnv = TCanvas("performance","",1000,500)
+   cnv = TCanvas("performance","",1500,1000)
+   cnv.Divide(3,2)
+   cnv.cd(1)
    ROOT.gPad.SetTicks(1,1)
    ROOT.gPad.SetLogy()
-   histos["h_contour_area"+suf].Draw("hist text0")
+   histos["h_contour_area"+suf].Draw("hist")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(2)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_contour_perimeter"+suf].Draw("hist")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(3)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_contour_eccentricity"+suf].Draw("hist")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(4)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   # histos["h_contour_aspectratio"+suf].Draw("hist")
+   histos["h_pixelsovercontour_area"+suf].Draw("hist")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(5)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_contour_extent"+suf].Draw("hist")
+   ROOT.gPad.RedrawAxis()
+   cnv.cd(6)
+   ROOT.gPad.SetTicks(1,1)
+   ROOT.gPad.SetLogy()
+   histos["h_contour_solidity"+suf].Draw("hist")
    ROOT.gPad.RedrawAxis()
    cnv.SaveAs(storage+"/output/pdf/simpleclustering.pdf)")
 
