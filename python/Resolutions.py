@@ -525,7 +525,7 @@ s = ROOT.TLatex()
 s.SetNDC(1);
 s.SetTextAlign(13);
 s.SetTextColor(ROOT.kBlack)
-s.SetTextSize(0.03)
+s.SetTextSize(0.04)
 s.DrawLatex(0.6,0.85,ROOT.Form("Mean=%.6f" % (mean)))
 s.DrawLatex(0.6,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
 s.DrawLatex(0.6,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))

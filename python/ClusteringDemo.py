@@ -13,11 +13,10 @@ from ROOT import TH1D, TH2D, TCanvas, TPolyLine, TPolyMarker, TRandom, TPad, TFi
 ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptFit(0);
 ROOT.gStyle.SetOptStat(0);
-# ROOT.gStyle.SetPadBottomMargin(0.15)
-# ROOT.gStyle.SetPadLeftMargin(0.16)
-
-ROOT.gStyle.SetPadLeftMargin(0.02)
-ROOT.gStyle.SetPadRightMargin(0.02)
+# # ROOT.gStyle.SetPadBottomMargin(0.15)
+# # ROOT.gStyle.SetPadLeftMargin(0.16)
+# ROOT.gStyle.SetPadLeftMargin(0.02)
+# ROOT.gStyle.SetPadRightMargin(0.02)
 ROOT.gStyle.SetLineWidth(1)
 # storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
 storage =  os.path.expandvars("$STORAGEDIR")
@@ -119,13 +118,13 @@ def Book(layerid,detid,bxid):
       histos.update( { "h_etrks_vs_etrksedepdiff_zoom"+suf : TH2D("h_etrks_vs_etrksedepdiff_zoom"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,500 ,100,0,500) } )
       histos.update( { "h_etrks_vs_etrksedepdiff_wide"+suf : TH2D("h_etrks_vs_etrksedepdiff_wide"+suf,";#SigmaE_{trks} [keV];#SigmaE_{trks}-E_{dep} [keV];Number of pixels",100,0,16000000 ,100,0,16000000) } )
       
-      histos.update( { "h_pixelsovercontour_area"+suf : TH1D("h_pixelsovercontour_area"+suf,";All Pixels Area / Contour Area;Number of clusters",100,0,1) } )
+      histos.update( { "h_pixelsovercontour_area"+suf : TH1D("h_pixelsovercontour_area"+suf,";All Pixels Area / Contour Area;Number of clusters",100,0.4,1) } )
       histos.update( { "h_contour_area"+suf           : TH1D("h_contour_area"+suf,";Contour Area / Single Pixel Area;Number of clusters",100,0,20) } )
-      histos.update( { "h_contour_perimeter"+suf      : TH1D("h_contour_perimeter"+suf,";Contour Perimeter / Single Pixel Perimeter;Number of clusters",100,0,10) } )
+      histos.update( { "h_contour_perimeter"+suf      : TH1D("h_contour_perimeter"+suf,";Contour Perimeter / Single Pixel Perimeter;Number of clusters",100,0,8) } )
       histos.update( { "h_contour_eccentricity"+suf   : TH1D("h_contour_eccentricity"+suf,";Contour Eccentricity;Number of clusters",100,0,1) } )
       histos.update( { "h_contour_aspectratio"+suf    : TH1D("h_contour_aspectratio"+suf,";Contour Aspect Ratio;Number of clusters",100,0,3) } )
-      histos.update( { "h_contour_extent"+suf         : TH1D("h_contour_extent"+suf,";Contour Extent;Number of clusters",100,0,0.1) } )
-      histos.update( { "h_contour_solidity"+suf       : TH1D("h_contour_solidity"+suf,";Contour Solidity;Number of clusters",100,0.7,1.00001) } )
+      histos.update( { "h_contour_extent"+suf         : TH1D("h_contour_extent"+suf,";Contour Extent;Number of clusters",100,0,0.025) } )
+      histos.update( { "h_contour_solidity"+suf       : TH1D("h_contour_solidity"+suf,";Contour Solidity;Number of clusters",100,0.75,1.00001) } )
       
       histos.update( { "h_performance"+suf : TH1D("h_performance"+suf,";;Multiplicity",12,0,12) } )
       SetPerformanceHistBinLabels(histos["h_performance"+suf])
@@ -142,13 +141,13 @@ def BookSummary():
       histos.update( { "h_performance"+sb : TH1D("h_performance"+sb,";;Multiplicity",12,0,12) } )
       SetPerformanceHistBinLabels(histos["h_performance"+sb])
       
-      histos.update( { "h_pixelsovercontour_area"+sb : TH1D("h_pixelsovercontour_area"+sb,";All Pixels Area / Contour Area;Number of clusters",100,0,1) } )
+      histos.update( { "h_pixelsovercontour_area"+sb : TH1D("h_pixelsovercontour_area"+sb,";All Pixels Area / Contour Area;Number of clusters",100,0.4,1) } )
       histos.update( { "h_contour_area"+sb           : TH1D("h_contour_area"+sb,";Contour Area / Single Pixel Area;Number of clusters",100,0,20) } )
-      histos.update( { "h_contour_perimeter"+sb      : TH1D("h_contour_perimeter"+sb,";Contour Perimeter / Single Pixel Perimeter;Number of clusters",100,0,10) } )
+      histos.update( { "h_contour_perimeter"+sb      : TH1D("h_contour_perimeter"+sb,";Contour Perimeter / Single Pixel Perimeter;Number of clusters",100,0,8) } )
       histos.update( { "h_contour_eccentricity"+sb   : TH1D("h_contour_eccentricity"+sb,";Contour Eccentricity;Number of clusters",100,0,1) } )
       histos.update( { "h_contour_aspectratio"+sb    : TH1D("h_contour_aspectratio"+sb,";Contour Aspect Ratio;Number of clusters",100,0,3) } )
-      histos.update( { "h_contour_extent"+sb         : TH1D("h_contour_extent"+sb,";Contour Extent;Number of clusters",100,0,0.1) } )
-      histos.update( { "h_contour_solidity"+sb       : TH1D("h_contour_solidity"+sb,";Contour Solidity;Number of clusters",100,0.7,1.00001) } )
+      histos.update( { "h_contour_extent"+sb         : TH1D("h_contour_extent"+sb,";Contour Extent;Number of clusters",100,0,0.025) } )
+      histos.update( { "h_contour_solidity"+sb       : TH1D("h_contour_solidity"+sb,";Contour Solidity;Number of clusters",100,0.75,1.00001) } )
 
    for hname,hist in histos.items():
       if  ("_sig" in hname): hist.SetLineColor(ROOT.kRed)
@@ -164,6 +163,9 @@ def RejectPixelDueToVertex(trks_vtx):
       if(x<0 and (z>3600 and z<4600)): nbad +=  1
    return (nbad==len(trks_vtx))
    
+def RejectDueToNoElePos(trks_pdg):
+   if(11 not in trks_pdg and -11 not in trks_pdg): return True
+   return False
 
 ### get data to histo
 def FillFromHitsFile(layerid,detid,bxid,filename,isigBX=0):
@@ -193,7 +195,7 @@ def FillFromHitsFile(layerid,detid,bxid,filename,isigBX=0):
             if(isigBX==0 and RejectPixelDueToVertex(trks_vtx)): continue ###
             ################################################################
             ## exclude pixels which have only photons:
-            # if(11 not in trks_pdg and -11 not in trks_pdg): continue #######
+            # if(RejectDueToNoElePos(trks_pdg)):                continue ###
             ################################################################
             if(isigBX>0 and bx!=isigBX):          continue ### in a signal run, take only one BX data
             if(isigBX>0 and (1 not in trks_ids)): continue ### in a signal run, ignore pixels w/o signal tracks
@@ -201,17 +203,16 @@ def FillFromHitsFile(layerid,detid,bxid,filename,isigBX=0):
                histos["h_hit_flags"+suf].Fill(xtrk,ytrk)
                histos["h_hit_flags"+suf+"_sig"].Fill(xtrk,ytrk)
             ################################################################
-            ngam=0
-            for i in range(len(trks_pdg)): ngam += 1 if(trks_pdg[i]==22) else 0
-            trkEsum_keV=0
-            for E in trks_eng: trkEsum_keV+=E*1e6
-
+            ngam        = 0
+            trkEsum_keV = 0
+            for i in range(len(trks_pdg)): ngam        += 1 if(trks_pdg[i]==22) else 0
+            for i in range(len(trks_eng)): trkEsum_keV += trks_eng[i]*1e6
+            diff_keV = trkEsum_keV-edep_keV
             ## sanity check
             # if(trkEsum_keV<edep_keV):
             #    print("Warning: trks energy sum < edep!")
             #    print("trks energy sum=",trkEsum_keV," edep=",edep_keV)
-            diff_keV = trkEsum_keV-edep_keV
-                        
+
             histos["h_hits"+suf].Fill(xtrk,ytrk)
             histos["h_edep"+suf].Fill(edep_keV)
             histos["h_ntrksperpix"+suf].Fill(len(trks_pdg))
@@ -603,9 +604,10 @@ def savecnvs(BXname):
 
 
 def DrawSummary():   
-   cnv = TCanvas("performance","",1000,500)
+   cnv = TCanvas("Summary","",1000,500)
    ROOT.gPad.SetTicks(1,1)
    ROOT.gPad.SetLogy()
+   histos["h_performance"].SetMinimum(0.9)
    histos["h_performance"].Draw("hist text0")
    histos["h_performance_bkg"].Draw("hist same")
    histos["h_performance_sig"].Draw("hist text0 same")
@@ -617,6 +619,7 @@ def DrawSummary():
    cnv.cd(1)
    ROOT.gPad.SetTicks(1,1)
    ROOT.gPad.SetLogy()
+   histos["h_contour_area"].SetMinimum(0.9)
    histos["h_contour_area"].Draw("hist")
    histos["h_contour_area_bkg"].Draw("hist same")
    histos["h_contour_area_sig"].Draw("hist same")
@@ -624,6 +627,7 @@ def DrawSummary():
    cnv.cd(2)
    ROOT.gPad.SetTicks(1,1)
    ROOT.gPad.SetLogy()
+   histos["h_contour_perimeter"].SetMinimum(0.9)
    histos["h_contour_perimeter"].Draw("hist")
    histos["h_contour_perimeter_bkg"].Draw("hist same")
    histos["h_contour_perimeter_sig"].Draw("hist same")
@@ -631,6 +635,7 @@ def DrawSummary():
    cnv.cd(3)
    ROOT.gPad.SetTicks(1,1)
    ROOT.gPad.SetLogy()
+   histos["h_contour_eccentricity"].SetMinimum(0.9)
    histos["h_contour_eccentricity"].Draw("hist")
    histos["h_contour_eccentricity_bkg"].Draw("hist same")
    histos["h_contour_eccentricity_sig"].Draw("hist same")
@@ -639,6 +644,7 @@ def DrawSummary():
    ROOT.gPad.SetTicks(1,1)
    ROOT.gPad.SetLogy()
    # histos["h_contour_aspectratio"].Draw("hist")
+   histos["h_pixelsovercontour_area"].SetMinimum(0.9)
    histos["h_pixelsovercontour_area"].Draw("hist")
    histos["h_pixelsovercontour_area_bkg"].Draw("hist same")
    histos["h_pixelsovercontour_area_sig"].Draw("hist same")
@@ -646,6 +652,7 @@ def DrawSummary():
    cnv.cd(5)
    ROOT.gPad.SetTicks(1,1)
    ROOT.gPad.SetLogy()
+   histos["h_contour_extent"].SetMinimum(0.9)
    histos["h_contour_extent"].Draw("hist")
    histos["h_contour_extent_bkg"].Draw("hist same")
    histos["h_contour_extent_sig"].Draw("hist same")
@@ -653,6 +660,7 @@ def DrawSummary():
    cnv.cd(6)
    ROOT.gPad.SetTicks(1,1)
    ROOT.gPad.SetLogy()
+   histos["h_contour_solidity"].SetMinimum(0.9)
    histos["h_contour_solidity"].Draw("hist")
    histos["h_contour_solidity_bkg"].Draw("hist same")
    histos["h_contour_solidity_sig"].Draw("hist same")
@@ -664,6 +672,10 @@ def DrawSummary():
 ##################################################################
 
 BookSummary()
+
+ROOT.gStyle.SetPadLeftMargin(0.02)
+ROOT.gStyle.SetPadRightMargin(0.02)
+
 for BX in [1,2,3,4]:
    ### define the canvases
    sBX = str(BX)
@@ -690,6 +702,9 @@ for BX in [1,2,3,4]:
          FillSummaryHists(layerid,detid,bxid)
          draw(layerid,detid,bxid,contourspts,bmarkers,smarkers,cnvs)
    savecnvs(BXname) ### save the canvases
+   
+ROOT.gStyle.SetPadBottomMargin(0.15)
+ROOT.gStyle.SetPadLeftMargin(0.16)
 DrawSummary()
 
 
