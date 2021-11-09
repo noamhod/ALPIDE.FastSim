@@ -2,6 +2,7 @@
 #define KMCUTILS_H
 
 #include <TGeoGlobalMagField.h>
+#include <TF3.h>
 
 //==========================================================================
 class MagField: public TVirtualMagField
@@ -38,6 +39,7 @@ class MagField: public TVirtualMagField
   double fXMin[kMaxReg]; // min x of each field region
   double fXMax[kMaxReg]; // max x of each field region
   double fBVal[kMaxReg][3]; // field values
+  TF3* fBValNonUniform[kMaxReg][3]; // non uniform field values
   //
   ClassDef(MagField, 1) // custom magfield
 };
