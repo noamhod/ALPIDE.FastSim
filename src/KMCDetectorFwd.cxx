@@ -539,8 +539,16 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
     if (!(resp=PropagateToLayer(probe,lrP,lr,1))) return 0;
     KMCClusterFwd* cl = lr->GetCorCluster();
     double r = probe->GetR();
+    double probeX = probe->GetX();
+    double probeY = probe->GetY();
     //    printf("L%2d %f %f %f\n",j,r, lr->GetRMin(),lr->GetRMax());
-    if (r<lr->GetRMax() && r>lr->GetRMin()) {
+    /// this is for acceptance in a circular disk, commented out by Arka
+//     if (r<lr->GetRMax() && r>lr->GetRMin()) {
+//       if (resp>0) cl->Set(probe->GetXLoc(),probe->GetYLoc(), probe->GetZLoc(),probe->GetTrID());
+//       else cl->Kill();
+//     }
+    /// this is for acceptance in a rectangular disk
+    if ((probeX<lr->GetXMax() && probeX>lr->GetXMin()) && (probeY<lr->GetYMax() && probeY>lr->GetYMin())) {
       if (resp>0) cl->Set(probe->GetXLoc(),probe->GetYLoc(), probe->GetZLoc(),probe->GetTrID());
       else cl->Kill();
     }
