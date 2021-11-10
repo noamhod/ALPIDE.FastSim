@@ -90,6 +90,11 @@ double xMaxEO = -999;
 double xMaxPI = -999;
 double xMaxPO = -999;
 
+vector<TString> layernames = {"EL1I","EL1O","PL1I","PL1O",
+										"EL2I","EL2O","PL2I","PL2O",
+										"EL3I","EL3O","PL3I","PL3O",
+										"EL4I","EL4O","PL4I","PL4O"};
+
 void setParametersFromDet()
 {
 	cout << "====================================" << endl;
@@ -539,16 +544,12 @@ bool accepttrk(TPolyMarker3D* clusters, bool fullacc, double step=0.1)
 	int nlayers = 4;
    Double_t x,y,z;
    clusters->GetPoint(0,x,y,z);
-	// cout << "c0=("<< x << "," << y << "," << z << ")" << endl;
    acc += acceptcls(x,y,z,step);
    clusters->GetPoint(1,x,y,z);
-	// cout << "c1=("<< x << "," << y << "," << z << ")" << endl;
    acc += acceptcls(x,y,z,step);
    clusters->GetPoint(2,x,y,z);
-	// cout << "c2=("<< x << "," << y << "," << z << ")" << endl;
    acc += acceptcls(x,y,z,step);
    clusters->GetPoint(3,x,y,z);
-	// cout << "c3=("<< x << "," << y << "," << z << ")" << endl;
    acc += acceptcls(x,y,z,step);
    return (fullacc) ? (acc==nlayers) : (acc>0);
 }
@@ -581,6 +582,7 @@ vector<float>           zvtx;
 vector<TLorentzVector>  trkp4;
 vector<int>             crg;
 vector<vector<int> >    clusters_id;
+vector<vector<int> >    clusters_layerid;
 vector<vector<int> >    clusters_type;
 vector<TPolyMarker3D*>  clusters_xyz;
 vector<TPolyMarker3D*>  trkpts_fullrange;
@@ -604,6 +606,7 @@ void SetOutTree(TString fOutName)
    tOut->Branch("trkp4",        &trkp4);
    tOut->Branch("acc",          &acc);
    tOut->Branch("clusters_id",  &clusters_id);
+   tOut->Branch("clusters_layerid", &clusters_layerid);
    tOut->Branch("clusters_type",&clusters_type);
    tOut->Branch("clusters_xyz", &clusters_xyz);
    tOut->Branch("trkpts_fullrange", &trkpts_fullrange);
@@ -655,17 +658,38 @@ int toint(TString str)
 }
 
 
-void addCluster(int slvidx, int index_offset, TString process, TString LYR)
+void AddCluster(int slvidx, int index_offset, TString process, TString LYR)
 {
 	// get the reconstructed propagated to the vertex
    KMCClusterFwd* cluster = det->GetLayer(LYR)->GetMCCluster();
+	if(!cluster || cluster->GetZLab()==0) return;
+	int layerid = det->GetLayer(LYR)->GetID();
+	if(layerid<=0 || layerid>100) return;
    clusters_xyz[slvidx]->SetNextPoint(cluster->GetXLab(),cluster->GetYLab(),cluster->GetZLab());
-	int ccounter = clusters_id[slvidx].size();
-	clusters_id[slvidx].push_back( (ccounter+1)*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
+	clusters_id[slvidx].push_back( layerid*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
+	clusters_layerid[slvidx].push_back( layerid );
 	clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
+	// cout << "LYR=" << LYR << ", layerid=" << layerid << endl;
 }
 
+void reset_layers_all()
+{
+	for(Int_t l=0 ; l<det->GetLayers()->GetEntries() ; l++)
+	{
+		det->GetLayer(l)->ResetBgClusters();
+		det->GetLayer(l)->ResetMCTracks();
+		det->GetLayer(l)->Reset();
+	}
+}
 
+void reset_layers_tracks(Int_t skip=-1)
+{
+	Int_t l0 = (skip>=0) ? skip : 0;
+	for(Int_t l=l0 ; l<det->GetLayers()->GetEntries() ; l++)
+	{
+		det->GetLayer(l)->ResetMCTracks();
+	}
+}
 
 int main(int argc, char *argv[])
 {	
@@ -797,6 +821,7 @@ int main(int argc, char *argv[])
       nslv = 0;
       nacc = 0;
  	   for(int i=0;i<(int)clusters_id.size();++i) clusters_id[i].clear();
+ 	   for(int i=0;i<(int)clusters_layerid.size();++i) clusters_layerid[i].clear();
  	   for(int i=0;i<(int)clusters_type.size();++i) clusters_type[i].clear();
  	   for(int i=0;i<(int)clusters_xyz.size();++i) delete clusters_xyz[i];
  	   for(int i=0;i<(int)trkpts_fullrange.size();++i) delete trkpts_fullrange[i];
@@ -809,6 +834,7 @@ int main(int argc, char *argv[])
       trkp4.clear();
       crg.clear();
 		clusters_id.clear();
+		clusters_layerid.clear();
 		clusters_type.clear();
       clusters_xyz.clear();
       trkpts_fullrange.clear();
@@ -837,6 +863,16 @@ int main(int argc, char *argv[])
 			vector<int> vtmp;
          int q = (pdgId->at(igen)==11) ? -1 : +1;
 			ptmp.SetXYZM(px->at(igen), py->at(igen), pz->at(igen), meGeV);
+			
+			///////////////////////////////////
+			/// look just on positrons for now
+			// if(q<0) continue; /////////////////
+			///////////////////////////////////
+			
+			/// reset the layers
+			reset_layers_all();
+			reset_layers_tracks();
+			
 			
          // prepare the probe
 			double vX = (process.Contains("bkg")) ? vx->at(igen) : 0.;
@@ -871,32 +907,34 @@ int main(int argc, char *argv[])
 			// }
          
 			clusters_id.push_back( vtmp );
+			clusters_layerid.push_back( vtmp );
 			clusters_type.push_back( vtmp );
 			clusters_xyz.push_back( new TPolyMarker3D() );
 			acc.push_back( 0 );
 			
 			// get the reconstructed propagated to the vertex
-         KMCClusterFwd* cluster1 = det->GetLayer(1)->GetMCCluster();
-         KMCClusterFwd* cluster2 = det->GetLayer(3)->GetMCCluster();
-         KMCClusterFwd* cluster3 = det->GetLayer(5)->GetMCCluster();
-         KMCClusterFwd* cluster4 = det->GetLayer(7)->GetMCCluster();
-	  	   clusters_xyz[slvidx]->SetNextPoint(cluster1->GetXLab(),cluster1->GetYLab(),cluster1->GetZLab());
-	  	   clusters_xyz[slvidx]->SetNextPoint(cluster2->GetXLab(),cluster2->GetYLab(),cluster2->GetZLab());
-	  	   clusters_xyz[slvidx]->SetNextPoint(cluster3->GetXLab(),cluster3->GetYLab(),cluster3->GetZLab());
-	  	   clusters_xyz[slvidx]->SetNextPoint(cluster4->GetXLab(),cluster4->GetYLab(),cluster4->GetZLab());
-			clusters_id[slvidx].push_back( 1*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
-			clusters_id[slvidx].push_back( 2*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
-			clusters_id[slvidx].push_back( 3*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
-			clusters_id[slvidx].push_back( 4*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
-			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
-			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
-			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
-			clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
+			for(unsigned int k=0 ; k<layernames.size() ; k++)
+			{
+				TString LYR = layernames[k];
+				AddCluster(slvidx,index_offset,process,LYR);
+			}
+			int nclusters = clusters_layerid[slvidx].size(); // same as layers hit by the track
+			cout << "slvidx=" << slvidx << ", E=" << trkp4[slvidx].E() << ", Q=" << crg[slvidx] << " --> Nclusters=" << nclusters << endl;
+			for(int j=0 ; j<nclusters ; ++j)
+			{
+			   Double_t x,y,z;
+			   clusters_xyz[slvidx]->GetPoint(j,x,y,z);
+				int layerid = clusters_layerid[slvidx][j];
+				cout << "point " << j << ", layerid=" << layerid << ", layername=" << det->GetLayer(layerid)->GetName() << ", xyz=(" << x << "," << y << "," << z << ")" << endl;
+			}
 			
 			/// check acceptance
 			// acc[slvidx] = (accepttrk(clusters_xyz[slvidx],false) && acceptpts(trkpts[slvidx],false));
 			acc[slvidx] = (accepttrk(clusters_xyz[slvidx],false));
 			if(acc[slvidx]) nacc++;
+			
+			
+			
       }
 		if(iev==0) WriteGeometry(trkpts,trklin,process,acc,clusters_xyz,"_truth");
 		if(iev%1==0) cout << "iev=" << iev << " --> ngen=" << ngen << ", nslv=" << nslv << ", nacc=" << nacc << endl;
