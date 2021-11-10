@@ -61,8 +61,8 @@ void MagField::Field(const Double_t *xyz, Double_t *bxyz)
       for (int i=3;i--;){
         if(fBValNonUniform[ireg][i]==NULL) bxyz[i] = 0;
         else bxyz[i] = fBValNonUniform[ireg][i]->Eval(xyz[0],xyz[1],xyz[2]);
-        if(xyz[2]>(2050/10.0 - 1440/20.0) && xyz[2]<(2050.0/10.0+1440.0/20.0))
-            std::cout << "field " << i << " at xyz=(" << xyz[0] << ", " << xyz[1] << ", " << xyz[2] << ") is " << bxyz[i] << std::endl;
+//         if(xyz[2]>(2050/10.0 - 1440/20.0) && xyz[2]<(2050.0/10.0+1440.0/20.0))
+//             std::cout << "field " << i << " at xyz=(" << xyz[0] << ", " << xyz[1] << ", " << xyz[2] << ") is " << bxyz[i] << std::endl;
       }
       return;
     }

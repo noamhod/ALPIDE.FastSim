@@ -73,6 +73,10 @@ public:
   void    SetZ(Float_t v)         {fZ = v;}
   void    SetRMin(Float_t v, int i=0)      {fRMin[i] = v;}
   void    SetRMax(Float_t v, int i=0)      {fRMax[i] = v;}
+  void    SetXMin(Float_t v, int i=0)      {fXMin[i] = v;}
+  void    SetXMax(Float_t v, int i=0)      {fXMax[i] = v;}
+  void    SetYMin(Float_t v, int i=0)      {fYMin[i] = v;}
+  void    SetYMax(Float_t v, int i=0)      {fYMax[i] = v;}
   void    SetXRes(Float_t v, int i=0)      {fXRes[i] = v;}
   void    SetYRes(Float_t v, int i=0)      {fYRes[i] = v;}
   void    SetLayerEff(Float_t v)  {fEff = v;}
