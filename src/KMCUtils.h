@@ -12,6 +12,9 @@ class MagField: public TVirtualMagField
   MagField(UInt_t id);
   virtual ~MagField() {}
   virtual void Field(const Double_t *xyz, Double_t *bxyz);
+  
+  // double fField(const Double_t *xyz);
+ 
   //
   void SetNReg(int n) {fNReg = n;}
   int GetNReg() const {return fNReg;}
