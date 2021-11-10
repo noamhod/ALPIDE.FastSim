@@ -263,7 +263,6 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   // dummy material (not the official absorber
   inp->Rewind();
   TString fmtdummy = "aaff|";
-  
   while ( (narg=inp->FindEntry("dummy","",fmtdummy.Data(),0,1))>0 ) {
     mat = GetMaterial(inp->GetArg(1,"U"));
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
@@ -271,32 +270,13 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     lr->SetMaterial(mat);
     lr->SetDead(kTRUE);
   }
-  
-  /// window
-  TString fmtwindow = "aaffff*fff";
-  
-  while ( (narg=inp->FindEntry("window",0,fmtwindow.Data(),1,1))>0 ) {
+  TString fmtwindow = "aafffffff";
+  while ( (narg=inp->FindEntry("window","",fmtwindow.Data(),0,1))>0 ) {
     mat = GetMaterial(inp->GetArg(1,"U"));
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
-    
-    double eff = narg > 6 ? inp->GetArgF(6) : 1.0;
-    double xmn = narg > 7 ? inp->GetArgF(7) : 0.0;
-    double xmx = narg > 8 ? inp->GetArgF(8) : 1e9;  
-    double ymn = narg > 9 ? inp->GetArgF(9) : 0.0;
-    double ymx = narg > 10 ? inp->GetArgF(10) : 1e9; 
-    
-    KMCLayerFwd* lr = AddLayer("window", inp->GetArg(0,"U"),  inp->GetArgF(2),  
-			       mat->GetRadLength(), mat->GetDensity(), 
-			       inp->GetArgF(3), inp->GetArgF(4), inp->GetArgF(5), eff);
+    KMCLayerFwd* lr = AddLayer("window", inp->GetArg(0,"U"),  inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), inp->GetArgF(3));
     lr->SetMaterial(mat);
     lr->SetDead(kTRUE);
-    lr->SetXMin(xmn);
-    lr->SetXMax(xmx);
-    lr->SetYMin(ymn);
-    lr->SetYMax(ymx);
-    lr->SetMaterial(mat);
-    /// if I don't break, this becomes an infinite loop. Why is not an infinite loop for other entries? (Arka)
-    break;
   }
   //
   // Absorber
@@ -443,8 +423,7 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
       }      
     }
     //
-  } 
-  else printf("Layer with the name %s does already exist\n",name);
+  } else printf("Layer with the name %s does already exist\n",name);
   newLayer->SetMaterial(mat);
   //
   return newLayer;
