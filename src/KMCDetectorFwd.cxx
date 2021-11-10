@@ -286,21 +286,27 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   TString fmtAct = "aaffff*fff";
   for (int i=0;i<KMCLayerFwd::kMaxAccReg-1;i++) fmtAct += "fff";
   while ( (narg=inp->FindEntry("activelayer",0,fmtAct.Data(),0,1))>0 ) {
-    // expect format "activelayer:type	NAME MATERIAL Z	DZ sigmaX sigmaZ [eff RMin RMax] [sigmaX1 sigmaY1 RMax1] ...  [sigmaX4 sigmaYN RMaxN]
+    // expect format "activelayer:type	NAME MATERIAL Z	DZ sigmaX sigmaZ [eff XMin XMax YMin YMax] [sigmaX1 sigmaY1 RMax1] ...  [sigmaX4 sigmaYN RMaxN]
     // the optional triplets [sigmaXk sigmaYk RMaxk] allow to define regions with different resolutions and eff, max possible N is 
     // KMCLayerFwd::kMaxAccReg-1
     mat = GetMaterial(inp->GetArg(1,"U"));
     double eff = narg > 6 ? inp->GetArgF(6) : 1.0;
-    double rmn = narg > 7 ? inp->GetArgF(7) : 0.0;
-    double rmx = narg > 8 ? inp->GetArgF(8) : 1e9;    
+    double xmn = narg > 7 ? inp->GetArgF(7) : 0.0;
+    double xmx = narg > 8 ? inp->GetArgF(8) : 1e9;  
+    double ymn = narg > 9 ? inp->GetArgF(9) : 0.0;
+    double ymx = narg > 10 ? inp->GetArgF(10) : 1e9;  
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
     KMCLayerFwd* lr = AddLayer(inp->GetModifier(), inp->GetArg(0,"U"),  inp->GetArgF(2),  
 			       mat->GetRadLength(), mat->GetDensity(), 
 			       inp->GetArgF(3), inp->GetArgF(4), inp->GetArgF(5), eff);    
-    lr->SetRMin(rmn);
-    lr->SetRMax(rmx);
+//     lr->SetRMin(rmn);
+//     lr->SetRMax(rmx);
+    lr->SetXMin(xmn);
+    lr->SetXMax(xmx);
+    lr->SetYMin(ymn);
+    lr->SetYMax(ymx);
     lr->SetMaterial(mat);
-    int nExtra = narg - 9; // are there extra settings
+    int nExtra = narg - 11; // are there extra settings
     if (nExtra>0) {
       if ( (nExtra%3) ) {
 	printf("ReadSetup: %d extra values provided for activelayer are not multiple of 3\n",nExtra);
@@ -538,9 +544,18 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
     //
     if (!(resp=PropagateToLayer(probe,lrP,lr,1))) return 0;
     KMCClusterFwd* cl = lr->GetCorCluster();
-    double r = probe->GetR();
+//     double r = probe->GetR();
+    
     //    printf("L%2d %f %f %f\n",j,r, lr->GetRMin(),lr->GetRMax());
-    if (r<lr->GetRMax() && r>lr->GetRMin()) {
+    /// this is for acceptance in a circular disk, commented out by Arka
+//     if (r<lr->GetRMax() && r>lr->GetRMin()) {
+//       if (resp>0) cl->Set(probe->GetXLoc(),probe->GetYLoc(), probe->GetZLoc(),probe->GetTrID());
+//       else cl->Kill();
+//     }
+    /// this is for acceptance in a rectangular disk
+    double probeX = probe->GetX();
+    double probeY = probe->GetY();
+    if ((probeX<lr->GetXMax() && probeX>lr->GetXMin()) && (probeY<lr->GetYMax() && probeY>lr->GetYMin())) {
       if (resp>0) cl->Set(probe->GetXLoc(),probe->GetYLoc(), probe->GetZLoc(),probe->GetTrID());
       else cl->Kill();
     }
@@ -1497,8 +1512,14 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
     if (!(resP=PropagateToLayer(probTr,lr0,lr, 1, kTRUE))) return kFALSE;
     if (lr->IsDead()) continue;
     if (resP<0) {lr->GetMCCluster()->Kill(); continue;}
-    double r = probTr->GetR();
-    if (r>lr->GetRMax() || r<lr->GetRMin()) {
+//     double r = probTr->GetR();
+//     if (r>lr->GetRMax() || r<lr->GetRMin()) {
+//       /*if (!bg)*/ lr->GetMCCluster()->Kill(); 
+//       continue;
+//     }
+    double x = probTr->GetX();
+    double y = probTr->GetY();
+    if ((x>lr->GetXMax() || x<lr->GetXMin()) || (y>lr->GetYMax() || y<lr->GetYMin())) {
       /*if (!bg)*/ lr->GetMCCluster()->Kill(); 
       continue;
     }
@@ -1514,11 +1535,18 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
     lr->GetMCCluster()->Set(clxyzL[0],clxyzL[1],clxyzL[2]);
     */
     // cluster is stored in local frame	 
-	 
+    
+    /// commented out by Arka
+//     if (bg) {
+//       lr->AddBgCluster(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()-rx*lr->GetXRes(r),probTr->GetTrID());
+//     }
+//     else lr->GetMCCluster()->Set(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()+rx*lr->GetXRes(r),probTr->GetTrID());
+    
     if (bg) {
-      lr->AddBgCluster(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()-rx*lr->GetXRes(r),probTr->GetTrID());
+      lr->AddBgCluster(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(y), probTr->GetZLoc()-rx*lr->GetXRes(x),probTr->GetTrID());
     }
-    else lr->GetMCCluster()->Set(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()+rx*lr->GetXRes(r),probTr->GetTrID());
+    else lr->GetMCCluster()->Set(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(y), probTr->GetZLoc()+rx*lr->GetXRes(x),probTr->GetTrID());
+    //
     //
   }
   //

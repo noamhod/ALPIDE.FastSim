@@ -18,6 +18,12 @@ public:
   Float_t GetRMax()      const {return fRMax[fNAccReg-1];}
   Float_t GetRMin(int i)      const {return fRMin[i];}
   Float_t GetRMax(int i)      const {return fRMax[i];}
+  
+  Float_t GetXMin()      const {return fXMin[0];}
+  Float_t GetXMax()      const {return fXMax[fNAccReg-1];}
+  Float_t GetYMin()      const {return fYMin[0];}
+  Float_t GetYMax()      const {return fYMax[fNAccReg-1];}
+  
   int GetNAccRegions() const {return fNAccReg;}
   void SetNAccRegions(int n=1) {
     if (n<1) n=1;
@@ -27,11 +33,22 @@ public:
   
   Float_t GetX2X0()      const {return fx2X0;}
   Float_t GetXTimesRho() const {return fXRho;}
+  
+  
   int GetAccRegion(float r) const {
     for (int rid=0;rid<fNAccReg;rid++) if (r>=fRMin[rid] && r<fRMax[rid]) return rid;
     return -1;
   }
-
+  
+  int GetAccRegionX(float x) const {
+    for (int rid=0;rid<fNAccReg;rid++) if (x>=fXMin[rid] && x<fXMax[rid]) return rid;
+    return -1;
+  }
+  int GetAccRegionY(float y) const {
+    for (int rid=0;rid<fNAccReg;rid++) if (y>=fYMin[rid] && y<fXMax[rid]) return rid;
+    return -1;
+  }
+  
   Float_t GetXResId(int i)  const {return fXRes[i];}
   Float_t GetXRes(float r=-1)  const {
     int id = r<0 ? 0 : GetAccRegion(r);
@@ -56,6 +73,10 @@ public:
   void    SetZ(Float_t v)         {fZ = v;}
   void    SetRMin(Float_t v, int i=0)      {fRMin[i] = v;}
   void    SetRMax(Float_t v, int i=0)      {fRMax[i] = v;}
+  void    SetXMin(Float_t v, int i=0)      {fXMin[i] = v;}
+  void    SetXMax(Float_t v, int i=0)      {fXMax[i] = v;}
+  void    SetYMin(Float_t v, int i=0)      {fYMin[i] = v;}
+  void    SetYMax(Float_t v, int i=0)      {fYMax[i] = v;}
   void    SetXRes(Float_t v, int i=0)      {fXRes[i] = v;}
   void    SetYRes(Float_t v, int i=0)      {fYRes[i] = v;}
   void    SetLayerEff(Float_t v)  {fEff = v;}
@@ -117,6 +138,10 @@ public:
   Float_t fZ; 
   Float_t fRMin[kMaxAccReg];
   Float_t fRMax[kMaxAccReg];
+  Float_t fXMin[kMaxAccReg];
+  Float_t fXMax[kMaxAccReg];
+  Float_t fYMin[kMaxAccReg];
+  Float_t fYMax[kMaxAccReg];
   Float_t fThickness;
   Float_t fx2X0;
   Float_t fXRho;    // x*density
