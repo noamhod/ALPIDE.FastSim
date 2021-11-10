@@ -262,10 +262,19 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   //
   // dummy material (not the official absorber
   inp->Rewind();
-  while ( (narg=inp->FindEntry("dummy","","aaff|",0,1))>0 ) {
+  TString fmtdummy = "aaff|";
+  while ( (narg=inp->FindEntry("dummy","",fmtdummy.Data(),0,1))>0 ) {
     mat = GetMaterial(inp->GetArg(1,"U"));
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
     KMCLayerFwd* lr = AddLayer("dummy", inp->GetArg(0,"U"),  inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), inp->GetArgF(3));
+    lr->SetMaterial(mat);
+    lr->SetDead(kTRUE);
+  }
+  TString fmtwindow = "aafffffff";
+  while ( (narg=inp->FindEntry("window","",fmtwindow.Data(),0,1))>0 ) {
+    mat = GetMaterial(inp->GetArg(1,"U"));
+    if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
+    KMCLayerFwd* lr = AddLayer("window", inp->GetArg(0,"U"),  inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), inp->GetArgF(3));
     lr->SetMaterial(mat);
     lr->SetDead(kTRUE);
   }
@@ -401,6 +410,7 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
     else if (types=="vtx")  {newLayer->SetType(KMCLayerFwd::kVTX); }
     else if (types=="abs")  {newLayer->SetType(KMCLayerFwd::kABS); newLayer->SetDead(kTRUE); }
     else if (types=="dummy")  {newLayer->SetType(KMCLayerFwd::kDUMMY); newLayer->SetDead(kTRUE); }
+    else if (types=="window")  {newLayer->SetType(KMCLayerFwd::kWINDOW); newLayer->SetDead(kTRUE); }
     //
     if (!newLayer->IsDead()) newLayer->SetDead( xRes==kVeryLarge && yRes==kVeryLarge);
     //
