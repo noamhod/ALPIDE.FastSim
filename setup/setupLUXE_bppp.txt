@@ -1,8 +1,15 @@
 # keep this if slices are to be ordered in decreasing z
 #define:zinverted
 
+### flash magnet!
+#Ly  = 59.92 mm
+#Lz  = 1440 mm
+#Lx  = 980-2*(202+70) mm
+# Bfied is -0.95 T for trident and 1.2 T for bppp
+
 #                  ID	xminDipole  xmaxDipole  yminDipole  ymaxDipole  zminDipole  zmaxDipole  Bdipole(kGauss)   
-define:magfield    0	   -49.0       +49.0       -35.0        +35.0        133.0       277.0       10
+#define:magfield    0	   -49.0       +49.0       -35.0        +35.0        133.0       277.0       10
+define:magfield    0	   -21.8       +21.8       -2.996       +2.996       133.0       277.0       -12
 # define:magfield    0		-60.0      +60.0        -33.6        +33.6        100.0       200.0       20
 
 # dummy layer as a vertex	Zc	DZ	resX	resY
