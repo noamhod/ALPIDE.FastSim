@@ -10,7 +10,7 @@
 
 class KMCLayerFwd : public TNamed {
 public:
-  enum {kTypeNA=-1,kVTX,kITS,kMS,kTRIG,kABS,kDUMMY,kBitVertex=BIT(15)};
+  enum {kTypeNA=-1,kVTX,kITS,kMS,kTRIG,kABS,kDUMMY,kWINDOW,kBitVertex=BIT(15)};
   enum {kMaxAccReg = 5};
   KMCLayerFwd(const char *name);
   Float_t GetZ()         const {return fZ;}
@@ -95,6 +95,7 @@ public:
   Bool_t  IsTrig()       const {return fType==kTRIG;}
   Bool_t  IsAbs()        const {return fType==kABS;}
   Bool_t  IsDummy()      const {return fType==kDUMMY;}
+  Bool_t  IsWindow()     const {return fType==kWINDOW;}
   Int_t   GetType()      const {return fType;}
   Bool_t  IsVertex()     const {return TestBit(kBitVertex);}
   //
