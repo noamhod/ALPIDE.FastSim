@@ -665,7 +665,8 @@ void AddCluster(int slvidx, int index_offset, TString process, TString LYR)
 	if(!cluster || cluster->GetZLab()==0) return;
 	int layerid = det->GetLayer(LYR)->GetID();
 	if(layerid<=0 || layerid>100) return;
-   clusters_xyz[slvidx]->SetNextPoint(cluster->GetXLab(),cluster->GetYLab(),cluster->GetZLab());
+   std::cout << "AddCluster: (x, y, z) : (" <<  cluster->GetXLab() << ", " << cluster->GetYLab() << ", " << cluster->GetZLab() << ")" << std::endl;
+    clusters_xyz[slvidx]->SetNextPoint(cluster->GetXLab(),cluster->GetYLab(),cluster->GetZLab());
 	clusters_id[slvidx].push_back( layerid*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
 	clusters_layerid[slvidx].push_back( layerid );
 	clusters_type[slvidx].push_back( (process.Contains("bkg")) ? 0 : 1 );
@@ -763,6 +764,8 @@ int main(int argc, char *argv[])
    zlayer->push_back(zEL3O); // L3 outer
    zlayer->push_back(zEL4I); // L4 inner
    zlayer->push_back(zEL4O); // L4 outer
+   
+
 
 
 
@@ -861,7 +864,7 @@ int main(int argc, char *argv[])
          //// all the rest
          ngen++;
 			vector<int> vtmp;
-         int q = (pdgId->at(igen)==11) ? -1 : +1;
+         int q = (pdgId->at(igen)==11) ? -1 : +1; // select electrons or positrons
 			ptmp.SetXYZM(px->at(igen), py->at(igen), pz->at(igen), meGeV);
 			
 			///////////////////////////////////
