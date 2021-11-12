@@ -554,6 +554,7 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
     //
     if (!(resp=PropagateToLayer(probe,lrP,lr,1))) return 0;
     KMCClusterFwd* cl = lr->GetCorCluster();
+	 
 //     double r = probe->GetR();
     
     //    printf("L%2d %f %f %f\n",j,r, lr->GetRMin(),lr->GetRMax());
@@ -562,7 +563,7 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
 //       if (resp>0) cl->Set(probe->GetXLoc(),probe->GetYLoc(), probe->GetZLoc(),probe->GetTrID());
 //       else cl->Kill();
 //     }
-    /// this is for acceptance in a rectangular disk
+    /// this is for acceptance in a rectangular shape
     double probeX = probe->GetX();
     double probeY = probe->GetY();
     if ((probeX<lr->GetXMax() && probeX>lr->GetXMin()) && (probeY<lr->GetYMax() && probeY>lr->GetYMin())) {
@@ -740,10 +741,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalman(double pt, double yrap, double 
       //      printf("Before update on %d : ",j); currTr->Print("etp");
       KMCClusterFwd* cl = lrP->GetCorCluster();
       if (!cl->IsKilled()) {
-	if (!UpdateTrack(currTr,lrP,cl))  return kFALSE;
-	nupd++;
+			if (!UpdateTrack(currTr,lrP,cl))  return kFALSE;
+			nupd++;
       }
-      //      printf("After update on %d (%+e %+e) : ",j, lrP->GetXRes(),lrP->GetYRes()); currTr->Print("etp");
+      // printf("After update on %d (%+e %+e) : ",j, lrP->GetXRes(),lrP->GetYRes()); currTr->Print("etp");
 
     }
 
@@ -753,16 +754,17 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalman(double pt, double yrap, double 
   // is MS reco ok?
   // check trigger
   int nhMS=0,nhTR=0,nhITS=0;
-  for (int ilr=fNLayers;ilr--;) {
+  int noam_nhITS_isITS = 0;
+  for(int ilr=fNLayers;ilr--;) {
     KMCLayerFwd *lrt = GetLayer(ilr);
     if (lrt->IsTrig()) if (!lrt->GetCorCluster()->IsKilled()) nhTR++;
     if (lrt->IsMS())   if (!lrt->GetCorCluster()->IsKilled()) nhMS++;
     if (lrt->IsITS())  if (!lrt->GetCorCluster()->IsKilled()) nhITS++;
+	 if (lrt->IsITS()) noam_nhITS_isITS++;
   }
-  //  printf("ITS: %d MS: %d TR: %d\n",nhITS,nhMS,nhTR);
+  // printf("ITS: %d MS: %d TR: %d  Noam: %d\n",nhITS,nhMS,nhTR,noam_nhITS_isITS);
   if (nhTR<fMinTRHits) return kFALSE;
   if (nhMS<fMinMSHits) return kFALSE;
-  //
   return kTRUE;
 }
 

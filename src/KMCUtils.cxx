@@ -25,7 +25,7 @@ MagField::MagField(UInt_t id) {
     double Lz  = 1440/10; // cm
     double Lx  = (980-2*(202+70))/10; // cm
     double zDipoleCenter = 2050/10; // cm
-    double B0y = -1.2*10; // kG -0.95*10 for trident or -1.2*10 for bppp
+    double B0y = -0.95*10; // kG -0.95*10 for trident or -1.2*10 for bppp
     
     double xmin = -Lx/2.;
     double xmax = +Lx/2.;

@@ -123,6 +123,7 @@ public:
   void   Reset();
   void   ResetMC() { fTrMC.Clear();}
   void   ResetBgClusters() { fClBg.Clear(); }
+  void   ResetMCClusters() { fClMC.Reset(); }
   void   ResetMCTracks()   { fTrMC.Clear(); }
   virtual void  Print(Option_t* option = "") const;
   //
