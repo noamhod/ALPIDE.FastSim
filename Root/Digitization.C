@@ -163,7 +163,7 @@ void setParametersFromDet()
 int acceptcls(double x, double y, double z, double step=0.1)
 {
 	if( (abs(z-zL1I)>step && abs(z-zL1O)>step) && (abs(z-zL2I)>step && abs(z-zL2O)>step) && (abs(z-zL3I)>step && abs(z-zL3O)>step) && (abs(z-zL4I)>step && abs(z-zL4O)>step) ) return 0;
-	if(x<xMinEO || x>xMinPO) return 0;
+	if(x<xMinEO || x>xMaxPO) return 0;
 	if(x>xMaxEI && x<xMinPI) return 0;
    if(y>yUp    || y<yDn)    return 0;
    return 1;
@@ -489,28 +489,11 @@ void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TSt
    flines->Close();
 }
 
-// bool accepttrk(TPolyMarker3D* clusters, bool fullacc, double step=0.1)
-// {
-// 	/// in acceptance?
-//    int acc = 0;
-// 	int nlayers = 4;
-//    Double_t x,y,z;
-//    clusters->GetPoint(0,x,y,z);
-//    acc += acceptcls(x,y,z,step);
-//    clusters->GetPoint(1,x,y,z);
-//    acc += acceptcls(x,y,z,step);
-//    clusters->GetPoint(2,x,y,z);
-//    acc += acceptcls(x,y,z,step);
-//    clusters->GetPoint(3,x,y,z);
-//    acc += acceptcls(x,y,z,step);
-//    return (fullacc) ? (acc==nlayers) : (acc>0);
-// }
 
-bool accepttrk(vector<TVector3>& clusters, bool fullacc, double step=0.1)
+bool accepttrk(vector<TVector3>& clusters, bool fullacc, double step=0.1, int nMinLayers=3)
 {
 	/// in acceptance?
    int acc = 0;
-	int nreqlayers = 4;
    Double_t x,y,z;
 	for(unsigned int j=0 ; j<clusters.size() ; ++j)
 	{
@@ -519,7 +502,7 @@ bool accepttrk(vector<TVector3>& clusters, bool fullacc, double step=0.1)
 		z = clusters[j].Z();
 		acc += acceptcls(x,y,z,step);
 	}
-   return (fullacc) ? (acc>=nreqlayers) : (acc>0);
+   return (fullacc) ? (acc>=nMinLayers) : (acc>0);
 }
 
 
@@ -630,6 +613,14 @@ void AddCluster(int slvidx, int index_offset, TString process, TString LYR)
 	// if(x<0) cout << "AddCluster: xyz=("<<x<<","<<y<<","<<z<<")" << endl;
 	TVector3 v( x,y,z );
 	
+	/////////////////////////
+	/// !!! dirty fix !!! ///
+	/////////////////////////
+	unsigned int ncls = clusters_r[slvidx].size();
+	double xprev = (ncls>0) ? clusters_r[slvidx][ncls-1].X() : x;
+	if(abs(x-xprev)>2) return;
+	if(x*xprev<0) return;
+	
    clusters_xyz[slvidx]->SetNextPoint(x,y,z);
    clusters_r[slvidx].push_back( v );
 	clusters_id[slvidx].push_back( layerid*index_offset+slvidx ); // assuming no chance to have >index_offset tracks
@@ -638,8 +629,6 @@ void AddCluster(int slvidx, int index_offset, TString process, TString LYR)
 	
 	cluster->Reset();
 	// det->GetLayer(LYR)->GetMCCluster()->Kill();
-	
-	// cout << "LYR=" << LYR << ", layerid=" << layerid << endl;
 }
 
 void reset_layers_all()
@@ -899,9 +888,7 @@ int main(int argc, char *argv[])
 			for(unsigned int k=0 ; k<layernames.size() ; k++)
 			{
 				TString LYR = layernames[k];
-				if(!det->GetLayer(LYR)->IsITS())       continue;
-				// if(crg[slvidx]<0 && LYR.Contains("P")) continue;
-				// if(crg[slvidx]>0 && LYR.Contains("E")) continue;
+				if(!det->GetLayer(LYR)->IsITS()) continue;
 				AddCluster(slvidx,index_offset,process,LYR);
 			}
 			int nclusters = clusters_layerid[slvidx].size(); // same as layers hit by the track
