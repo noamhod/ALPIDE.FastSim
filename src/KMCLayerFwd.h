@@ -45,7 +45,7 @@ public:
     return -1;
   }
   int GetAccRegionY(float y) const {
-    for (int rid=0;rid<fNAccReg;rid++) if (y>=fYMin[rid] && y<fXMax[rid]) return rid;
+    for (int rid=0;rid<fNAccReg;rid++) if (y>=fYMin[rid] && y<fYMax[rid]) return rid;
     return -1;
   }
   
@@ -70,7 +70,7 @@ public:
   Int_t   GetID()        const {return GetUniqueID();}
   void    SetID(int id)        {SetUniqueID(id);}
   //
-  void    SetZ(Float_t v)         {fZ = v;}
+  void    SetZ(Float_t v)                  {fZ = v;}
   void    SetRMin(Float_t v, int i=0)      {fRMin[i] = v;}
   void    SetRMax(Float_t v, int i=0)      {fRMax[i] = v;}
   void    SetXMin(Float_t v, int i=0)      {fXMin[i] = v;}
@@ -123,6 +123,7 @@ public:
   void   Reset();
   void   ResetMC() { fTrMC.Clear();}
   void   ResetBgClusters() { fClBg.Clear(); }
+  void   ResetMCClusters() { fClMC.Reset(); }
   void   ResetMCTracks()   { fTrMC.Clear(); }
   virtual void  Print(Option_t* option = "") const;
   //

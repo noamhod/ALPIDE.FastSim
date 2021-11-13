@@ -25,7 +25,7 @@ hxz = TH2D("h2_z_vs_x",";x [cm];z [cm];Tracks",  1000,-20,+20, 2000,zDipoleExit-
 hyz = TH2D("h2_z_vs_y",";y [cm];z [cm];Tracks",  1000,-0.5,+0.5, 2000,zDipoleExit-2,zDipoleExit+2)
 hyx = TH2D("h2_y_vs_x",";x [cm];y [cm];Tracks",  1000,-20,+20, 2000,-0.5,+0.5)
 
-#tfile = TFile("../data/root/dig/dig_bppp_0000001.root","READ")
+# tfile = TFile("../data/root/dig/dig_bppp_0000001.root","READ")
 tfile = TFile("../data/root/dig/dig_bppp_.root","READ")
 ttree = tfile.Get("dig")
 Ntotal = ttree.GetEntries()

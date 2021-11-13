@@ -7,10 +7,8 @@
 #Lx  = 980-2*(202+70) mm
 # Bfied is -0.95 T for trident and 1.2 T for bppp
 
-#                  ID	xminDipole  xmaxDipole  yminDipole  ymaxDipole  zminDipole  zmaxDipole  Bdipole(kGauss)   
-#define:magfield    0	   -49.0       +49.0       -35.0        +35.0        133.0       277.0       10
-define:magfield    0	   -21.8       +21.8       -2.996       +2.996       133.0       277.0       -12
-# define:magfield    0		-60.0      +60.0        -33.6        +33.6        100.0       200.0       20
+# type				ID	xminDipole	xmaxDipole	yminDipole	ymaxDipole	zminDipole	zmaxDipole	Bdipole(kGauss)   
+define:magfield	0	-21.8			+21.8			-2.996		+2.996		133.0			277.0			-12
 
 # dummy layer as a vertex	Zc	DZ	resX	resY
 vertex:		      		0.	25e-4	1e-5	1e-5
@@ -18,40 +16,41 @@ vertex:		      		0.	25e-4	1e-5	1e-5
 # The parameters eff, RMin, RMax are optional (default is 1,0,1e9).
 # If one of values is specified, the others should also be set
 # note: layer with thickness DZ is positioned such that it extends in Z from Zc-DZ/2 to Zc+DZ/2
-#		name					material		Zc			DZ			resX	resY	eff	XMin	XMax    YMin       YMax
-activelayer:vt	PL1I		SILICON		396.21		100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75   0.75
-dummy:		PL1IPlane		CARBON		396.23	300e-4
-activelayer:vt	PL1O		SILICON		395.01		100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75   0.75
-dummy:		PL1OPlane		CARBON		395.03	300e-4
-activelayer:vt	PL2I		SILICON		406.21		100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75   0.75
-dummy:		PL2IPlane		CARBON		406.23	300e-4
-activelayer:vt	PL2O		SILICON		405.01		100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75   0.75
-dummy:		PL2OPlane		CARBON		405.03	300e-4
-activelayer:vt	PL3I		SILICON		416.21		100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75   0.75
-dummy:		PL3IPlane		CARBON		416.23	300e-4
-activelayer:vt	PL3O		SILICON		415.01		100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75   0.75
-dummy:		PL3OPlane		CARBON		415.03	300e-4
-activelayer:vt	PL4I		SILICON		426.21		100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75   0.75
-dummy:		PL4IPlane		CARBON		426.23	300e-4
-activelayer:vt	PL4O		SILICON		425.01		100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75   0.75
-dummy:		PL4OPlane		CARBON		425.03	300e-4
-activelayer:vt	EL1I		SILICON		396.21		100e-4	4.e-4	4.e-4	0.99	-5.273 	-32.353   -0.75   0.75
-dummy:		EL1IPlane		CARBON		396.23	300e-4
-activelayer:vt	EL1O		SILICON		395.01		100e-4	4.e-4	4.e-4	0.99	-28.353 -55.433   -0.75   0.75
-dummy:		EL1OPlane		CARBON		395.03	300e-4
-activelayer:vt	EL2I		SILICON		406.21		100e-4	4.e-4	4.e-4	0.99	-5.273 	-32.353   -0.75   0.75
-dummy:		EL2IPlane		CARBON		406.23	300e-4
-activelayer:vt	EL2O		SILICON		405.01		100e-4	4.e-4	4.e-4	0.99	-28.353 -55.433   -0.75   0.75
-dummy:		EL2OPlane		CARBON		405.03	300e-4
-activelayer:vt	EL3I		SILICON		416.21		100e-4	4.e-4	4.e-4	0.99	-5.273 	-32.353   -0.75   0.75
-dummy:		EL3IPlane		CARBON		416.23	300e-4
-activelayer:vt	EL3O		SILICON		415.01		100e-4	4.e-4	4.e-4	0.99	-28.353 -55.433   -0.75   0.75
-dummy:		EL3OPlane		CARBON		415.03	300e-4
-activelayer:vt	EL4I		SILICON		426.21		100e-4	4.e-4	4.e-4	0.99	-5.273 	-32.353   -0.75   0.75
-dummy:		EL4IPlane		CARBON		426.23	300e-4
-activelayer:vt	EL4O		SILICON		425.01		100e-4	4.e-4	4.e-4	0.99	-28.353 -55.433   -0.75   0.75
-dummy:		EL4OPlane		CARBON		425.03	300e-4
-window:		VACWIN		AL2O3		393.0	300e-4  0.0    0.0     0.0     -200    200  -2    2
+# type			name			material	Zc			DZ			resX	resY	eff	XMin		XMax    YMin	YMax
+dummy:			VACWIN		AL2O3		393.0		300e-4
+dummy:			Air			AIR		410.015	34
+activelayer:vt	PL1I			SILICON	396.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75	0.75
+dummy:			PL1IPlane	CARBON	396.23	300e-4
+activelayer:vt	PL1O			SILICON	395.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75	0.75
+dummy:			PL1OPlane	CARBON	395.03	300e-4
+activelayer:vt	PL2I			SILICON	406.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75	0.75
+dummy:			PL2IPlane	CARBON	406.23	300e-4
+activelayer:vt	PL2O			SILICON	405.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75	0.75
+dummy:			PL2OPlane	CARBON	405.03	300e-4
+activelayer:vt	PL3I			SILICON	416.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75	0.75
+dummy:			PL3IPlane	CARBON	416.23	300e-4
+activelayer:vt	PL3O			SILICON	415.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75	0.75
+dummy:			PL3OPlane	CARBON	415.03	300e-4
+activelayer:vt	PL4I			SILICON	426.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75	0.75
+dummy:			PL4IPlane	CARBON	426.23	300e-4
+activelayer:vt	PL4O			SILICON	425.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75	0.75
+dummy:			PL4OPlane	CARBON	425.03	300e-4
+activelayer:vt	EL1I			SILICON	396.215	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.75	0.75
+dummy:			EL1IPlane	CARBON	396.235	300e-4
+activelayer:vt	EL1O			SILICON	395.015	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.75	0.75
+dummy:			EL1OPlane	CARBON	395.035	300e-4
+activelayer:vt	EL2I			SILICON	406.215	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.75	0.75
+dummy:			EL2IPlane	CARBON	406.235	300e-4
+activelayer:vt	EL2O			SILICON	405.015	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.75	0.75
+dummy:			EL2OPlane	CARBON	405.035	300e-4
+activelayer:vt	EL3I			SILICON	416.215	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.75	0.75
+dummy:			EL3IPlane	CARBON	416.235	300e-4
+activelayer:vt	EL3O			SILICON	415.015	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.75	0.75
+dummy:			EL3OPlane	CARBON	415.035	300e-4
+activelayer:vt	EL4I			SILICON	426.215	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.75	0.75
+dummy:			EL4IPlane	CARBON	426.235	300e-4
+activelayer:vt	EL4O			SILICON	425.015	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.75	0.75
+dummy:			EL4OPlane	CARBON	425.035	300e-4
 
 ############################################################
 ######                                                ######
