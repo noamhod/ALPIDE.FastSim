@@ -19,10 +19,8 @@ public:
   Float_t GetRMin(int i)      const {return fRMin[i];}
   Float_t GetRMax(int i)      const {return fRMax[i];}
   
-  Float_t GetXMinP()     const {return fXMinP[0];}
-  Float_t GetXMaxP()     const {return fXMaxP[fNAccReg-1];}
-  Float_t GetXMinE()     const {return fXMinE[0];}
-  Float_t GetXMaxE()     const {return fXMaxE[fNAccReg-1];}
+  Float_t GetXMin()      const {return fXMin[0];}
+  Float_t GetXMax()      const {return fXMax[fNAccReg-1];}
   Float_t GetYMin()      const {return fYMin[0];}
   Float_t GetYMax()      const {return fYMax[fNAccReg-1];}
   
@@ -43,11 +41,11 @@ public:
   }
   
   int GetAccRegionX(float x) const {
-    for (int rid=0;rid<fNAccReg;rid++) if ((x>=fXMinP[rid] && x<fXMaxP[rid]) || (x>=fXMinE[rid] && x<fXMaxE[rid])) return rid;
+    for (int rid=0;rid<fNAccReg;rid++) if (x>=fXMin[rid] && x<fXMax[rid]) return rid;
     return -1;
   }
   int GetAccRegionY(float y) const {
-    for (int rid=0;rid<fNAccReg;rid++) if (y>=fYMin[rid] && y<fYMax[rid]) return rid;
+    for (int rid=0;rid<fNAccReg;rid++) if (y>=fYMin[rid] && y<fXMax[rid]) return rid;
     return -1;
   }
   
@@ -75,10 +73,8 @@ public:
   void    SetZ(Float_t v)         {fZ = v;}
   void    SetRMin(Float_t v, int i=0)      {fRMin[i] = v;}
   void    SetRMax(Float_t v, int i=0)      {fRMax[i] = v;}
-  void    SetXMinP(Float_t v, int i=0)     {fXMinP[i] = v;}
-  void    SetXMaxP(Float_t v, int i=0)     {fXMaxP[i] = v;}
-  void    SetXMinE(Float_t v, int i=0)     {fXMinE[i] = v;}
-  void    SetXMaxE(Float_t v, int i=0)     {fXMaxE[i] = v;}
+  void    SetXMin(Float_t v, int i=0)      {fXMin[i] = v;}
+  void    SetXMax(Float_t v, int i=0)      {fXMax[i] = v;}
   void    SetYMin(Float_t v, int i=0)      {fYMin[i] = v;}
   void    SetYMax(Float_t v, int i=0)      {fYMax[i] = v;}
   void    SetXRes(Float_t v, int i=0)      {fXRes[i] = v;}
@@ -144,10 +140,8 @@ public:
   Float_t fZ; 
   Float_t fRMin[kMaxAccReg];
   Float_t fRMax[kMaxAccReg];
-  Float_t fXMinP[kMaxAccReg];
-  Float_t fXMaxP[kMaxAccReg];
-  Float_t fXMinE[kMaxAccReg];
-  Float_t fXMaxE[kMaxAccReg];
+  Float_t fXMin[kMaxAccReg];
+  Float_t fXMax[kMaxAccReg];
   Float_t fYMin[kMaxAccReg];
   Float_t fYMax[kMaxAccReg];
   Float_t fThickness;
