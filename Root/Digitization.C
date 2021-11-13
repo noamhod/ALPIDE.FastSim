@@ -693,15 +693,14 @@ void AddCluster(int slvidx, int index_offset, TString process, TString LYR)
 	int            layerid = det->GetLayer(LYR)->GetID();
    KMCClusterFwd* cluster = det->GetLayer(LYR)->GetMCCluster();
 
-	// if(!cluster || cluster->GetZLab()==0) return;
-	// if(layerid<=0 || layerid>100)         return;
-	if(!cluster) return;
+	if(!cluster)              return;
+	if(cluster->GetZLab()==0) return;
 	
 	Double_t x,y,z;
 	x = cluster->GetXLab();
 	y = cluster->GetYLab();
 	z = cluster->GetZLab();
-	if(x<0) cout << "AddCluster: xyz=("<<x<<","<<y<<","<<z<<")" << endl;
+	// if(x<0) cout << "AddCluster: xyz=("<<x<<","<<y<<","<<z<<")" << endl;
 	TVector3 v( x,y,z );
 	
    clusters_xyz[slvidx]->SetNextPoint(x,y,z);
@@ -973,11 +972,13 @@ int main(int argc, char *argv[])
 			for(unsigned int k=0 ; k<layernames.size() ; k++)
 			{
 				TString LYR = layernames[k];
-				if(!det->GetLayer(LYR)->IsITS()) continue;
+				if(!det->GetLayer(LYR)->IsITS())       continue;
+				if(crg[slvidx]<0 && LYR.Contains("P")) continue;
+				if(crg[slvidx]>0 && LYR.Contains("E")) continue;
 				AddCluster(slvidx,index_offset,process,LYR);
 			}
 			int nclusters = clusters_layerid[slvidx].size(); // same as layers hit by the track
-			// cout << "slvidx=" << slvidx << ", E=" << trkp4[slvidx].E() << ", Q=" << crg[slvidx] << " --> Nclusters=" << nclusters << endl;
+			cout << "slvidx=" << slvidx << ", E=" << trkp4[slvidx].E() << ", Q=" << crg[slvidx] << " --> Nclusters=" << nclusters << endl;
 			for(int j=0 ; j<nclusters ; ++j)
 			{
 			   Double_t x,y,z;
@@ -986,7 +987,7 @@ int main(int argc, char *argv[])
 			   y = clusters_r[slvidx][j].Y();
 			   z = clusters_r[slvidx][j].Z();
 				int layerid = clusters_layerid[slvidx][j];
-				// cout << "point " << j << ", layerid=" << layerid << ", layername=" << det->GetLayer(layerid)->GetName() << ", xyz=(" << x << "," << y << "," << z << ")" << endl;
+				cout << "point " << j << ", layerid=" << layerid << ", layername=" << det->GetLayer(layerid)->GetName() << ", xyz=(" << x << "," << y << "," << z << ")" << endl;
 				// det->GetLayer(layerid)->Print();
 			}
 			
