@@ -7,7 +7,10 @@ INCLUDE = -I$(ROOTSYS)/include -I/usr/include -I./../src/ -I./
 src = $(wildcard *.C)
 obj = $(src:.c=.o)
 
-all: load link digi reco
+all: src load link digi reco
+
+src:
+	cd ../src; make; cd -
 
 load:
 	root -l -b -q load.C

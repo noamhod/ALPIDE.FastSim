@@ -28,10 +28,19 @@ KMCLayerFwd::KMCLayerFwd(const char *name)
 {
   for (int i=0;i<kMaxAccReg;i++) {
     fRMin[i] = fRMax[i] = -1;
+    fXMinP[i] = fXMaxP[i] = -1;
+    fXMinE[i] = fXMaxE[i] = -1;
+    fYMin[i] = fYMax[i] = -1;
     fXRes[i] = fYRes[i] = 0;
   }
   fRMin[0] = 0;
   fRMax[0] = 999.;
+  fXMinP[0] = 0;
+  fXMaxP[0] = 999.;
+  fXMinE[0] = 0;
+  fXMaxE[0] = 999.;
+  fYMin[0] = 0;
+  fYMax[0] = 999.;
 
   Reset();
 }
@@ -61,8 +70,8 @@ KMCProbeFwd* KMCLayerFwd::AddMCTrack(KMCProbeFwd* src)
 //__________________________________________________________________________
 void KMCLayerFwd::Print(Option_t *opt) const
 {
-  printf("Lr%3d(A%3d) %15s %+7.3f<Z<%+7.3f X2X0=%.3e XRho=%.3e SigX=%.3e SigY=%.3e Eff:%4.2f XMin:%.4e XMax:%.4e YMin:%.4e YMax:%.4e",
-	 GetUniqueID(),fActiveID,GetName(), fZ-fThickness/2,fZ+fThickness/2, fx2X0,fXRho,fXRes[0],fYRes[0],fEff,fXMin[0],fXMax[0], fYMin[0],fYMax[0]);
+  printf("Lr%3d(A%3d) %15s %+7.3f<Z<%+7.3f X2X0=%.3e XRho=%.3e SigX=%.3e SigY=%.3e Eff:%4.2f XMinP:%.4e XMaxP:%.4e XMinE:%.4e XMaxE:%.4e YMin:%.4e YMax:%.4e",
+	 GetUniqueID(),fActiveID,GetName(), fZ-fThickness/2,fZ+fThickness/2, fx2X0,fXRho,fXRes[0],fYRes[0],fEff,fXMinP[0],fXMaxP[0],fXMinE[0],fXMaxE[0], fYMin[0],fYMax[0]);
   for (int ir=1;ir<fNAccReg;ir++) { // print extra regions
     printf("SigX=%.3e SigY=%.3e RMax:%.3e ",fXRes[ir],fYRes[ir],fRMax[ir]);
   }

@@ -47,11 +47,6 @@ double meGeV = meMeV/1000.;
 double Hstave = 1.5;  // cm
 double Lstave = 50; //27.12;   // cm
 double Rbeampipe = 2.413; // cm
-double RoffsetBfield = 5.7; // cm
-double xPsideL = -RoffsetBfield-Lstave;
-double xPsideR = -RoffsetBfield;       
-double xEsideL = +RoffsetBfield;       
-double xEsideR = +RoffsetBfield+Lstave;
 double yUp = +Hstave/2.;
 double yDn = -Hstave/2.;
 
@@ -61,25 +56,17 @@ double yH = 10.8;
 double z1 = 100;
 double z2 = 202.9;
 
-double zEL1I = -999;
-double zEL1O = -999;
-double zPL1I = -999;
-double zPL1O = -999;
+double zL1I = -999;
+double zL1O = -999;
 
-double zEL2I = -999;
-double zEL2O = -999;
-double zPL2I = -999;
-double zPL2O = -999;
+double zL2I = -999;
+double zL2O = -999;
 
-double zEL3I = -999;
-double zEL3O = -999;
-double zPL3I = -999;
-double zPL3O = -999;
+double zL3I = -999;
+double zL3O = -999;
 
-double zEL4I = -999;
-double zEL4O = -999;
-double zPL4I = -999;
-double zPL4O = -999;
+double zL4I = -999;
+double zL4O = -999;
 
 double xMinEI = -999;
 double xMinEO = -999;
@@ -94,43 +81,32 @@ double xMaxPO = -999;
 double zLastLayer  = -999;
 double zFirstLayer = -999;
 
-vector<TString> layernames = {"EL1I","EL1O","PL1I","PL1O",
-										"EL2I","EL2O","PL2I","PL2O",
-										"EL3I","EL3O","PL3I","PL3O",
-										"EL4I","EL4O","PL4I","PL4O"};
+vector<TString> layernames = {"L1I","L1O", "L2I","L2O", "L3I","L3O", "L4I","L4O"};
 
 void setParametersFromDet()
 {
 	cout << "====================================" << endl;
 	cout << "============DEFINITIONS+============" << endl;
 	cout << "====================================" << endl;
-	KMCLayerFwd* layer_outer_ele = det->GetLayer("EL1O");
-	KMCLayerFwd* layer_inner_ele = det->GetLayer("EL1I");
-	KMCLayerFwd* layer_outer_pos = det->GetLayer("PL1O");
-	KMCLayerFwd* layer_inner_pos = det->GetLayer("PL1I");
+	KMCLayerFwd* layer_outer = det->GetLayer("L1O");
+	KMCLayerFwd* layer_inner = det->GetLayer("L1I");
 	
-	Hstave = layer_outer_ele->GetYMax()-layer_outer_ele->GetYMin();
-	Lstave = layer_outer_ele->GetXMax()-layer_outer_ele->GetXMin();
+	Hstave = layer_outer->GetYMax()-layer_outer->GetYMin();
+	Lstave = layer_outer->GetXMaxP()-layer_outer->GetXMinP();
 	cout << "Hstave=" << Hstave << ", Lstave=" << Lstave << endl;
 	
-	xMinEI = layer_inner_ele->GetXMin();
-	xMinEO = layer_outer_ele->GetXMin();
-	xMinPI = layer_inner_pos->GetXMin();
-	xMinPO = layer_outer_pos->GetXMin();
+	xMinEI = layer_inner->GetXMinE();
+	xMinEO = layer_outer->GetXMinE();
+	xMinPI = layer_inner->GetXMinP();
+	xMinPO = layer_outer->GetXMinP();
 	cout << "xMinEI=" << xMinEI << ", xMinEO=" << xMinEO << ", xMinPI=" << xMinPI << ", xMinPO=" << xMinPO << endl;
 	
-	xMaxEI = layer_inner_ele->GetXMax();
-	xMaxEO = layer_outer_ele->GetXMax();
-	xMaxPI = layer_inner_pos->GetXMax();
-	xMaxPO = layer_outer_pos->GetXMax();
+	xMaxEI = layer_inner->GetXMaxE();
+	xMaxEO = layer_outer->GetXMaxE();
+	xMaxPI = layer_inner->GetXMaxP();
+	xMaxPO = layer_outer->GetXMaxP();
 	cout << "xMaxEI=" << xMaxEI << ", xMaxEO=" << xMaxEO << ", xMaxPI=" << xMaxPI << ", xMaxPO=" << xMaxPO << endl;
-	
-	xPsideL = layer_outer_pos->GetXMin();
-	xPsideR = layer_inner_pos->GetXMax();
-	xEsideL = layer_inner_ele->GetXMin();
-	xEsideR = layer_outer_ele->GetXMax();
-	cout << "xPsideL=" << xPsideL << ", xPsideR=" << xPsideR << ", xEsideL=" << xEsideL << ", xEsideR=" << xEsideR << endl;
-	
+		
 	yUp = +Hstave/2.;
 	yDn = -Hstave/2.;
 	cout << "yUp=" << yUp << ", yDn=" << yDn << endl;
@@ -160,52 +136,33 @@ void setParametersFromDet()
 	z2 = BfieldZmax;
 	cout << "xW=" << xW << ", yH=" << yH << ", z1=" << z1 << ", z2=" << z2 << endl;
 	
-	zEL1I = det->GetLayer("EL1I")->GetZ();
-	zEL1O = det->GetLayer("EL1O")->GetZ();
-	zPL1I = det->GetLayer("PL1I")->GetZ();
-	zPL1O = det->GetLayer("PL1O")->GetZ();
-	cout << "zEL1I=" << zEL1I << ", zEL1O=" << zEL1O << ", zPL1I=" << zPL1I << ", zPL1O=" << zPL1O << endl;
+	zL1I = det->GetLayer("L1I")->GetZ();
+	zL1O = det->GetLayer("L1O")->GetZ();
+	cout << "zL1I=" << zL1I << ", zL1O=" << zL1O << endl;
 
-	zEL2I = det->GetLayer("EL2I")->GetZ();
-	zEL2O = det->GetLayer("EL2O")->GetZ();
-	zPL2I = det->GetLayer("PL2I")->GetZ();
-	zPL2O = det->GetLayer("PL2O")->GetZ();
-	cout << "zEL2I=" << zEL2I << ", zEL2O=" << zEL2O << ", zPL2I=" << zPL2I << ", zPL2O=" << zPL2O << endl;
+	zL2I = det->GetLayer("L2I")->GetZ();
+	zL2O = det->GetLayer("L2O")->GetZ();
+	cout << "zL2I=" << zL2I << ", zL2O=" << zL2O << endl;
 
-	zEL3I = det->GetLayer("EL3I")->GetZ();
-	zEL3O = det->GetLayer("EL3O")->GetZ();
-	zPL3I = det->GetLayer("PL3I")->GetZ();
-	zPL3O = det->GetLayer("PL3O")->GetZ();
-	cout << "zEL3I=" << zEL3I << ", zEL3O=" << zEL3O << ", zPL3I=" << zPL3I << ", zPL3O=" << zPL3O << endl;
+	zL3I = det->GetLayer("L3I")->GetZ();
+	zL3O = det->GetLayer("L3O")->GetZ();
+	cout << "zL3I=" << zL3I << ", zL3O=" << zL3O << endl;
 
-	zEL4I = det->GetLayer("EL4I")->GetZ();
-	zEL4O = det->GetLayer("EL4O")->GetZ();
-	zPL4I = det->GetLayer("PL4I")->GetZ();
-	zPL4O = det->GetLayer("PL4O")->GetZ();
-	cout << "zEL4I=" << zEL4I << ", zEL4O=" << zEL4O << ", zPL4I=" << zPL4I << ", zPL4O=" << zPL4O << endl;
+	zL4I = det->GetLayer("L4I")->GetZ();
+	zL4O = det->GetLayer("L4O")->GetZ();
+	cout << "zL4I=" << zL4I << ", zL4O=" << zL4O << endl;
 	
-	zLastLayer  = zPL4I;
-	zFirstLayer = zPL1O;
+	zLastLayer  = zL4I;
+	zFirstLayer = zL1O;
 	cout << "zLastLayer=" << zLastLayer << ", zFirstLayer=" << zFirstLayer << endl;
 	
 	cout << "====================================" << endl;
 	cout << "====================================" << endl;
 }
 
-// void resetToTridentGeometry()
-// {
-// 	Lstave = 50;   // cm for BPPP or 50 for Trident
-// 	RoffsetBfield = 14; // cm for Trident in in B=1.0T
-// 	xPsideL = -RoffsetBfield-Lstave;
-// 	xPsideR = -RoffsetBfield;
-// 	xEsideL = +RoffsetBfield;
-// 	xEsideR = +RoffsetBfield+Lstave;
-// }
-
 int acceptcls(double x, double y, double z, double step=0.1)
 {
-	if(x<0 && (abs(z-zEL1I)>step && abs(z-zEL1O)>step) && (abs(z-zEL2I)>step && abs(z-zEL2O)>step) && (abs(z-zEL3I)>step && abs(z-zEL3O)>step) && (abs(z-zEL4I)>step && abs(z-zEL4O)>step)) return 0;
-	if(x>0 && (abs(z-zPL1I)>step && abs(z-zPL1O)>step) && (abs(z-zPL2I)>step && abs(z-zPL2O)>step) && (abs(z-zPL3I)>step && abs(z-zPL3O)>step) && (abs(z-zPL4I)>step && abs(z-zPL4O)>step)) return 0;
+	if( (abs(z-zL1I)>step && abs(z-zL1O)>step) && (abs(z-zL2I)>step && abs(z-zL2O)>step) && (abs(z-zL3I)>step && abs(z-zL3O)>step) && (abs(z-zL4I)>step && abs(z-zL4O)>step) ) return 0;
 	if(x<xMinEO || x>xMinPO) return 0;
 	if(x>xMaxEI && x<xMinPI) return 0;
    if(y>yUp    || y<yDn)    return 0;
@@ -364,27 +321,13 @@ TPolyLine3D* GetLayer(TString side, TString io, double z, Color_t col)
 	Double_t zC[] = {z,z,z,z,z};
    
 	TPolyLine3D* polyline = 0;
-   if(side=="L" && io=="I") polyline = new TPolyLine3D(n,xIP,y,zC);
-   if(side=="R" && io=="I") polyline = new TPolyLine3D(n,xIE,y,zC);
-   if(side=="L" && io=="O") polyline = new TPolyLine3D(n,xOP,y,zC);
-   if(side=="R" && io=="O") polyline = new TPolyLine3D(n,xOE,y,zC);
+   if(side=="P" && io=="I") polyline = new TPolyLine3D(n,xIP,y,zC);
+   if(side=="E" && io=="I") polyline = new TPolyLine3D(n,xIE,y,zC);
+   if(side=="P" && io=="O") polyline = new TPolyLine3D(n,xOP,y,zC);
+   if(side=="E" && io=="O") polyline = new TPolyLine3D(n,xOE,y,zC);
    polyline->SetLineColor(col);
    return polyline;
 }
-
-// TPolyLine3D* GetLayer(TString side, double z, Color_t col)
-// {
-//    Int_t n=5;
-//    Double_t xL[] = {xPsideL,xPsideL,xPsideR,xPsideR,xPsideL};
-//    Double_t xR[] = {xEsideR,xEsideR,xEsideL,xEsideL,xEsideR};
-//    Double_t y[] = {yDn,yUp,yUp,yDn,yDn};
-//    Double_t zC[] = {z,z,z,z,z};
-//    TPolyLine3D* polyline = 0;
-//    if(side=="L") polyline = new TPolyLine3D(n,xL,y,zC);
-//    if(side=="R") polyline = new TPolyLine3D(n,xR,y,zC);
-//    polyline->SetLineColor(col);
-//    return polyline;
-// }
 
 TPolyLine3D* GeDipole(Color_t col)
 {
@@ -440,61 +383,61 @@ void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TSt
    view_pm3d->SetRange(-80,-50,0, +80,+50,350);
    view_pm3d->ShowAxis();
    
-   TPolyLine3D* stave1LI = GetLayer("L","I",zPL1I,kGreen+3);
-   TPolyLine3D* stave1LO = GetLayer("L","O",zPL1O,kGreen+3);
-   TPolyLine3D* stave1RI = GetLayer("R","I",zEL1I,kGreen+3);
-   TPolyLine3D* stave1RO = GetLayer("R","O",zEL1O,kGreen+3);
-   TPolyLine3D* stave2LI = GetLayer("L","I",zPL2I,kGreen+3);
-   TPolyLine3D* stave2LO = GetLayer("L","O",zPL2O,kGreen+3);
-   TPolyLine3D* stave2RI = GetLayer("R","I",zEL2I,kGreen+3);
-   TPolyLine3D* stave2RO = GetLayer("R","O",zEL2O,kGreen+3);
-   TPolyLine3D* stave3LI = GetLayer("L","I",zPL3I,kGreen+3);
-   TPolyLine3D* stave3LO = GetLayer("L","O",zPL3O,kGreen+3);
-   TPolyLine3D* stave3RI = GetLayer("R","I",zEL3I,kGreen+3);
-   TPolyLine3D* stave3RO = GetLayer("R","O",zEL3O,kGreen+3);
-   TPolyLine3D* stave4LI = GetLayer("L","I",zPL4I,kGreen+3);
-   TPolyLine3D* stave4LO = GetLayer("L","O",zPL4O,kGreen+3);
-   TPolyLine3D* stave4RI = GetLayer("R","I",zEL4I,kGreen+3);
-   TPolyLine3D* stave4RO = GetLayer("R","O",zEL4O,kGreen+3);
+   TPolyLine3D* stave1PI = GetLayer("P","I",zL1I,kGreen+3);
+   TPolyLine3D* stave1PO = GetLayer("P","O",zL1O,kGreen+3);
+   TPolyLine3D* stave1EI = GetLayer("E","I",zL1I,kGreen+3);
+   TPolyLine3D* stave1EO = GetLayer("E","O",zL1O,kGreen+3);
+   TPolyLine3D* stave2PI = GetLayer("P","I",zL2I,kGreen+3);
+   TPolyLine3D* stave2PO = GetLayer("P","O",zL2O,kGreen+3);
+   TPolyLine3D* stave2EI = GetLayer("E","I",zL2I,kGreen+3);
+   TPolyLine3D* stave2EO = GetLayer("E","O",zL2O,kGreen+3);
+   TPolyLine3D* stave3PI = GetLayer("P","I",zL3I,kGreen+3);
+   TPolyLine3D* stave3PO = GetLayer("P","O",zL3O,kGreen+3);
+   TPolyLine3D* stave3EI = GetLayer("E","I",zL3I,kGreen+3);
+   TPolyLine3D* stave3EO = GetLayer("E","O",zL3O,kGreen+3);
+   TPolyLine3D* stave4PI = GetLayer("P","I",zL4I,kGreen+3);
+   TPolyLine3D* stave4PO = GetLayer("P","O",zL4O,kGreen+3);
+   TPolyLine3D* stave4EI = GetLayer("E","I",zL4I,kGreen+3);
+   TPolyLine3D* stave4EO = GetLayer("E","O",zL4O,kGreen+3);
    TPolyLine3D* dipole  = GeDipole(kGray);
    
    cnv_pl3d->cd();
    dipole->Draw();
-   stave1LI->Draw();
-   stave1LO->Draw();
-   stave1RI->Draw();
-   stave1RO->Draw();
-   stave2LI->Draw();
-   stave2LO->Draw();
-   stave2RI->Draw();
-   stave2RO->Draw();
-   stave3LI->Draw();
-   stave3LO->Draw();
-   stave3RI->Draw();
-   stave3RO->Draw();
-   stave4LI->Draw();
-   stave4LO->Draw();
-   stave4RI->Draw();
-   stave4RO->Draw();
+   stave1PI->Draw();
+   stave1PO->Draw();
+   stave1EI->Draw();
+   stave1EO->Draw();
+   stave2PI->Draw();
+   stave2PO->Draw();
+   stave2EI->Draw();
+   stave2EO->Draw();
+   stave3PI->Draw();
+   stave3PO->Draw();
+   stave3EI->Draw();
+   stave3EO->Draw();
+   stave4PI->Draw();
+   stave4PO->Draw();
+   stave4EI->Draw();
+   stave4EO->Draw();
    
    cnv_pm3d->cd();
    dipole->Draw();
-   stave1LI->Draw();
-   stave1LO->Draw();
-   stave1RI->Draw();
-   stave1RO->Draw();
-   stave2LI->Draw();
-   stave2LO->Draw();
-   stave2RI->Draw();
-   stave2RO->Draw();
-   stave3LI->Draw();
-   stave3LO->Draw();
-   stave3RI->Draw();
-   stave3RO->Draw();
-   stave4LI->Draw();
-   stave4LO->Draw();
-   stave4RI->Draw();
-   stave4RO->Draw();
+   stave1PI->Draw();
+   stave1PO->Draw();
+   stave1EI->Draw();
+   stave1EO->Draw();
+   stave2PI->Draw();
+   stave2PO->Draw();
+   stave2EI->Draw();
+   stave2EO->Draw();
+   stave3PI->Draw();
+   stave3PO->Draw();
+   stave3EI->Draw();
+   stave3EO->Draw();
+   stave4PI->Draw();
+   stave4PO->Draw();
+   stave4EI->Draw();
+   stave4EO->Draw();
    
    for(int i=0 ; i<(int)poll.size() ; ++i)
 	{
@@ -525,22 +468,22 @@ void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TSt
    TFile* flines = new TFile(storage+"/data/root/"+process+"_geometry"+suff+".root","RECREATE");
    flines->cd();
    dipole->Write();
-   stave1LI->Write();
-   stave1LO->Write();
-   stave1RI->Write();
-   stave1RO->Write();
-   stave2LI->Write();
-   stave2LO->Write();
-   stave2RI->Write();
-   stave2RO->Write();
-   stave3LI->Write();
-   stave3LO->Write();
-   stave3RI->Write();
-   stave3RO->Write();
-   stave4LI->Write();
-   stave4LO->Write();
-   stave4RI->Write();
-   stave4RO->Write();
+   stave1PI->Write();
+   stave1PO->Write();
+   stave1EI->Write();
+   stave1EO->Write();
+   stave2PI->Write();
+   stave2PO->Write();
+   stave2EI->Write();
+   stave2EO->Write();
+   stave3PI->Write();
+   stave3PO->Write();
+   stave3EI->Write();
+   stave3EO->Write();
+   stave4PI->Write();
+   stave4PO->Write();
+   stave4EI->Write();
+   stave4EO->Write();
    leg->Write();
    // flines->Write();
    flines->Close();
@@ -579,22 +522,6 @@ bool accepttrk(vector<TVector3>& clusters, bool fullacc, double step=0.1)
    return (fullacc) ? (acc>=nreqlayers) : (acc>0);
 }
 
-// bool acceptpts(TPolyMarker3D* points, bool fullacc, double step=0.1)
-// {
-//    int nlayers = 4;
-//    int acc = 0;
-//    Double_t x,y,z;
-// 	for(int p=0 ; p<points->GetN() ; p++)
-// 	{
-//    	points->GetPoint(p,x,y,z);
-// 		// if(x<0 && (abs(z-zEL1I)>step && abs(z-zEL1O)>step) && (abs(z-zEL2I)>step && abs(z-zEL2O)>step) && (abs(z-zEL3I)>step && abs(z-zEL3O)>step) && (abs(z-zEL4I)>step && abs(z-zEL4O)>step)) return 0;
-// 		// if(x>0 && (abs(z-zPL1I)>step && abs(z-zPL1O)>step) && (abs(z-zPL2I)>step && abs(z-zPL2O)>step) && (abs(z-zPL3I)>step && abs(z-zPL3O)>step) && (abs(z-zPL4I)>step && abs(z-zPL4O)>step)) return 0;
-// 		if(x<0 && abs(z-zEL4I)>step) break;
-// 		if(x>0 && abs(z-zPL4I)>step) break;
-//    	acc += acceptcls(x,y,z,step);
-// 	}
-//    return (fullacc) ? (acc>=nlayers) : (acc>0);
-// }
 
 /// for the output tree
 int ngen = 0;
@@ -801,14 +728,14 @@ int main(int argc, char *argv[])
    zlayer->push_back(0);     // IP (vertex)
    zlayer->push_back(z1);    // start of dipol
    zlayer->push_back(z2);    // end of dipol
-   zlayer->push_back(zEL1I); // L1 inner
-   zlayer->push_back(zEL1O); // L1 outer
-   zlayer->push_back(zEL2I); // L2 inner
-   zlayer->push_back(zEL2O); // L2 outer
-   zlayer->push_back(zEL3I); // L3 inner
-   zlayer->push_back(zEL3O); // L3 outer
-   zlayer->push_back(zEL4I); // L4 inner
-   zlayer->push_back(zEL4O); // L4 outer
+   zlayer->push_back(zL1I); // L1 inner
+   zlayer->push_back(zL1O); // L1 outer
+   zlayer->push_back(zL2I); // L2 inner
+   zlayer->push_back(zL2O); // L2 outer
+   zlayer->push_back(zL3I); // L3 inner
+   zlayer->push_back(zL3O); // L3 outer
+   zlayer->push_back(zL4I); // L4 inner
+   zlayer->push_back(zL4O); // L4 outer
 
 
 
@@ -928,7 +855,6 @@ int main(int argc, char *argv[])
 			reset_layers_all();
 			reset_layers_tracks();
 			
-			
          // prepare the probe
 			double vX = (process.Contains("bkg")) ? vx->at(igen) : 0.;
 			double vY = (process.Contains("bkg")) ? vy->at(igen) : 0.;
@@ -967,14 +893,15 @@ int main(int argc, char *argv[])
 			clusters_xyz.push_back( new TPolyMarker3D() );
 			clusters_r.push_back( vtmpTVector3d );
 			acc.push_back( 0 );
+
 			
 			// get the reconstructed propagated to the vertex
 			for(unsigned int k=0 ; k<layernames.size() ; k++)
 			{
 				TString LYR = layernames[k];
 				if(!det->GetLayer(LYR)->IsITS())       continue;
-				if(crg[slvidx]<0 && LYR.Contains("P")) continue;
-				if(crg[slvidx]>0 && LYR.Contains("E")) continue;
+				// if(crg[slvidx]<0 && LYR.Contains("P")) continue;
+				// if(crg[slvidx]>0 && LYR.Contains("E")) continue;
 				AddCluster(slvidx,index_offset,process,LYR);
 			}
 			int nclusters = clusters_layerid[slvidx].size(); // same as layers hit by the track

@@ -295,27 +295,31 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   TString fmtAct = "aaffff*fff";
   for (int i=0;i<KMCLayerFwd::kMaxAccReg-1;i++) fmtAct += "fff";
   while ( (narg=inp->FindEntry("activelayer",0,fmtAct.Data(),0,1))>0 ) {
-    // expect format "activelayer:type	NAME MATERIAL Z	DZ sigmaX sigmaZ [eff XMin XMax YMin YMax] [sigmaX1 sigmaY1 RMax1] ...  [sigmaX4 sigmaYN RMaxN]
+    // expect format "activelayer:type	NAME MATERIAL Z	DZ sigmaX sigmaZ [eff XMinP XMaxP XMinE XMaxE YMin YMax] [sigmaX1 sigmaY1 RMax1] ...  [sigmaX4 sigmaYN RMaxN]
     // the optional triplets [sigmaXk sigmaYk RMaxk] allow to define regions with different resolutions and eff, max possible N is 
     // KMCLayerFwd::kMaxAccReg-1
     mat = GetMaterial(inp->GetArg(1,"U"));
-    double eff = narg > 6 ? inp->GetArgF(6) : 1.0;
-    double xmn = narg > 7 ? inp->GetArgF(7) : 0.0;
-    double xmx = narg > 8 ? inp->GetArgF(8) : 1e9;  
-    double ymn = narg > 9 ? inp->GetArgF(9) : 0.0;
-    double ymx = narg > 10 ? inp->GetArgF(10) : 1e9;  
+    double eff  = narg > 6  ? inp->GetArgF(6) : 1.0;
+    double xmnP = narg > 7  ? inp->GetArgF(7) : 0.0;
+    double xmxP = narg > 8  ? inp->GetArgF(8) : 1e9;  
+    double xmnE = narg > 9  ? inp->GetArgF(9) : 0.0;
+    double xmxE = narg > 10 ? inp->GetArgF(10) : 1e9;  
+    double ymn  = narg > 11 ? inp->GetArgF(11) : 0.0;
+    double ymx  = narg > 12 ? inp->GetArgF(12) : 1e9;  
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
     KMCLayerFwd* lr = AddLayer(inp->GetModifier(), inp->GetArg(0,"U"),  inp->GetArgF(2),  
 			       mat->GetRadLength(), mat->GetDensity(), 
 			       inp->GetArgF(3), inp->GetArgF(4), inp->GetArgF(5), eff);    
 //     lr->SetRMin(rmn);
 //     lr->SetRMax(rmx);
-    lr->SetXMin(xmn);
-    lr->SetXMax(xmx);
+    lr->SetXMinP(xmnP);
+    lr->SetXMaxP(xmxP);
+    lr->SetXMinE(xmnE);
+    lr->SetXMaxE(xmxE);
     lr->SetYMin(ymn);
     lr->SetYMax(ymx);
     lr->SetMaterial(mat);
-    int nExtra = narg - 11; // are there extra settings
+    int nExtra = narg - 13; // are there extra settings
     if (nExtra>0) {
       if ( (nExtra%3) ) {
 	printf("ReadSetup: %d extra values provided for activelayer are not multiple of 3\n",nExtra);
@@ -566,7 +570,10 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
     /// this is for acceptance in a rectangular shape
     double probeX = probe->GetX();
     double probeY = probe->GetY();
-    if ((probeX<lr->GetXMax() && probeX>lr->GetXMin()) && (probeY<lr->GetYMax() && probeY>lr->GetYMin())) {
+	 bool inY = (probeY>=lr->GetYMin() || probeY<=lr->GetYMax());
+	 bool inP = ( (probeX>=lr->GetXMinP() && probeX<=lr->GetXMaxP()) && inY );
+	 bool inE = ( (probeX>=lr->GetXMinE() && probeX<=lr->GetXMaxE()) && inY );
+    if(inP || inE) {
       if (resp>0) cl->Set(probe->GetXLoc(),probe->GetYLoc(), probe->GetZLoc(),probe->GetTrID());
       else cl->Kill();
     }
@@ -1531,7 +1538,11 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
 //     }
     double x = probTr->GetX();
     double y = probTr->GetY();
-    if ((x>lr->GetXMax() || x<lr->GetXMin()) || (y>lr->GetYMax() || y<lr->GetYMin())) {
+	 bool inY = (y>=lr->GetYMin() || y<=lr->GetYMax());
+	 bool inP = ( (x>=lr->GetXMinP() && x<=lr->GetXMaxP()) && inY );
+	 bool inE = ( (x>=lr->GetXMinE() && x<=lr->GetXMaxE()) && inY );	 
+    if( !inP && !inE )
+	 {
       /*if (!bg)*/ lr->GetMCCluster()->Kill(); 
       continue;
     }
