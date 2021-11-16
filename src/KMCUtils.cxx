@@ -8,31 +8,39 @@ MagField::MagField(UInt_t id) {
   SetUniqueID(id);
   fNReg = 0;
   for (int i=kMaxReg;i--;){
-    fZMin[i] = 1e9;
-    fZMax[i] = 1e-9;
+    // fZMin[i] = 1e9;
+    // fZMax[i] = 1e-9;
 	 
-    fXMin[i] = 1e9;
-    fXMax[i] = 1e-9;
+    // fXMin[i] = 1e9;
+    // fXMax[i] = 1e-9;
 	 
-    fYMin[i] = 1e9;
-    fYMax[i] = 1e-9;
+    // fYMin[i] = 1e9;
+    // fYMax[i] = 1e-9;
 	 
     for (int j=3;j--;) fBVal[i][j] = 0;
     for (int j=3;j--;) fBValNonUniform[i][j] = NULL;
 
 	 
-    double Ly  = 59.92/10; // cm
-    double Lz  = 1440/10; // cm
-    double Lx  = (980-2*(202+70))/10; // cm
-    double zDipoleCenter = 2050/10; // cm
+    // double Ly  = 59.92/10; // cm
+    // double Lz  = 1440/10; // cm
+    // double Lx  = (980-2*(202+70))/10; // cm
+    // double zDipoleCenter = 2050/10; // cm
     double B0y = -1.2*10; // kG -0.95*10 for trident or -1.2*10 for bppp
-    
-    double xmin = -Lx/2.;
-    double xmax = +Lx/2.;
-    double ymin = -Ly/2.;
-    double ymax = +Ly/2.;
-    double zmin = zDipoleCenter-Lz/2.;
-    double zmax = zDipoleCenter+Lz/2.;
+    // const double* fbvals = GetBVals();
+    // const double* fzmin  = GetZMin();
+    // const double* fzmax  = GetZMax();
+    // const double* fxmin  = GetXMin();
+    // const double* fxmax  = GetXMax();
+    // const double* fymin  = GetYMin();
+    // const double* fymax  = GetYMax();
+
+    double xmin = GetXMin()[0];
+    std::cout << "xmin: " << xmin << std::endl;
+    double xmax = GetXMax()[0];
+    double ymin = GetYMin()[0];
+    double ymax = GetYMax()[0];
+    double zmin = GetZMin()[0];
+    double zmax = GetZMax()[0];
     if(i==0)
     {
         std::cout<< "setting up the field function!" << std::endl;
