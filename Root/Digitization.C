@@ -103,7 +103,7 @@ vector<double>  layersz;
 void setParametersFromDet()
 {
 	cout << "====================================" << endl;
-	cout << "============DEFINITIONS+============" << endl;
+	cout << "============DEFINITIONS=============" << endl;
 	cout << "====================================" << endl;
 	KMCLayerFwd* layer_outer_ele = det->GetLayer("EL1O");
 	KMCLayerFwd* layer_inner_ele = det->GetLayer("EL1I");
@@ -139,22 +139,23 @@ void setParametersFromDet()
 	//// get the Bfield from the setup
 	TVirtualMagField* fld = TGeoGlobalMagField::Instance()->GetField();
 	MagField* fldm = (MagField*) fld;
-	const double* BfieldObj = fldm->GetBVals(0);    // region 0
+	const double BfieldKG = fldm->GetBVals(0,1);  // region 0, the B field is only in the y direction (0,B,0), hence the index 1
 	const double* BfieldXminObj = fldm->GetXMin(); // region 0
 	const double* BfieldXmaxObj = fldm->GetXMax(); // region 0
 	const double* BfieldYminObj = fldm->GetYMin(); // region 0
 	const double* BfieldYmaxObj = fldm->GetYMax(); // region 0
 	const double* BfieldZminObj = fldm->GetZMin(); // region 0
 	const double* BfieldZmaxObj = fldm->GetZMax(); // region 0
-	double BfieldValTesla = BfieldObj[1]/10; /// the B dield is only in the y direction (0,B,0), hence the index 1
+	const std::string BFunction = fldm->GetFunctionForm(0,1);
+	double BfieldValTesla = BfieldKG/10; /// the B dield is only in the y direction (0,B,0), hence the index 1
 	double BfieldXmin = BfieldXminObj[0]; // region 0
-   double BfieldXmax = BfieldXmaxObj[0]; // region 0
-   double BfieldYmin = BfieldYminObj[0]; // region 0
-   double BfieldYmax = BfieldYmaxObj[0]; // region 0
-   double BfieldZmin = BfieldZminObj[0]; // region 0
-   double BfieldZmax = BfieldZmaxObj[0]; // region 0
+	double BfieldXmax = BfieldXmaxObj[0]; // region 0
+	double BfieldYmin = BfieldYminObj[0]; // region 0
+	double BfieldYmax = BfieldYmaxObj[0]; // region 0
+	double BfieldZmin = BfieldZminObj[0]; // region 0
+	double BfieldZmax = BfieldZmaxObj[0]; // region 0
 	cout << "BfieldValTesla=" << BfieldValTesla << ", BfieldXmin=" << BfieldXmin << ", BfieldXmax=" << BfieldXmax << ", BfieldYmin=" << BfieldYmin << ", BfieldYmax=" << BfieldYmax << ", BfieldZmin=" << BfieldZmin << ", BfieldZmax=" << BfieldZmax << endl;
-	
+	cout << "Bfunction: " << BFunction << std::endl;
 	xW = BfieldXmax-BfieldXmin;
 	yH = BfieldYmax-BfieldYmin;
 	z1 = BfieldZmin;
@@ -755,6 +756,8 @@ int main(int argc, char *argv[])
    zlayer->push_back(zEL3O); // L3 outer
    zlayer->push_back(zEL4I); // L4 inner
    zlayer->push_back(zEL4O); // L4 outer
+   
+
 
 
 
@@ -924,7 +927,7 @@ int main(int argc, char *argv[])
 				AddCluster(slvidx,index_offset,process,LYR);
 			}
 			int nclusters = clusters_layerid[slvidx].size(); // same as layers hit by the track
-			cout << "slvidx=" << slvidx << ", E=" << trkp4[slvidx].E() << ", Q=" << crg[slvidx] << " --> Nclusters=" << nclusters << endl;
+			//cout << "slvidx=" << slvidx << ", E=" << trkp4[slvidx].E() << ", Q=" << crg[slvidx] << " --> Nclusters=" << nclusters << endl;
 			for(int j=0 ; j<nclusters ; ++j)
 			{
 			   Double_t x,y,z;
@@ -933,7 +936,7 @@ int main(int argc, char *argv[])
 			   y = clusters_r[slvidx][j].Y();
 			   z = clusters_r[slvidx][j].Z();
 				int layerid = clusters_layerid[slvidx][j];
-				cout << "point " << j << ", layerid=" << layerid << ", layername=" << det->GetLayer(layerid)->GetName() << ", xyz=(" << x << "," << y << "," << z << ")" << endl;
+				//cout << "point " << j << ", layerid=" << layerid << ", layername=" << det->GetLayer(layerid)->GetName() << ", xyz=(" << x << "," << y << "," << z << ")" << endl;
 				// det->GetLayer(layerid)->Print();
 			}
 			

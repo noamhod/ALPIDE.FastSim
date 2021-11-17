@@ -10,21 +10,21 @@ class MagField: public TVirtualMagField
  public:
   enum {kMaxReg=5}; // max number of field regions may be changed
   MagField(UInt_t id);
+  /// second constructor for the non-uniform magnetic field
+  MagField(UInt_t id, double dipoleConst, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, std::string *functionForm);
   virtual ~MagField() {}
   virtual void Field(const Double_t *xyz, Double_t *bxyz);
-  
-  // double fField(const Double_t *xyz);
- 
   //
   void SetNReg(int n) {fNReg = n;}
   int GetNReg() const {return fNReg;}
-  const double* GetZMin() const {return fZMin;}
-  const double* GetZMax() const {return fZMax;}
-  const double* GetYMin() const {return fYMin;}
-  const double* GetYMax() const {return fYMax;}
-  const double* GetXMin() const {return fXMin;}
-  const double* GetXMax() const {return fXMax;}
-  const double* GetBVals(int ir) const {return &fBVal[ir][0];} 
+  const double *GetZMin() const {return fZMin;} /// access entire array
+  const double *GetZMax() const {return fZMax;} /// access entire array
+  const double *GetYMin() const {return fYMin;}
+  const double *GetYMax() const {return fYMax;}
+  const double *GetXMin() const {return fXMin;}
+  const double *GetXMax() const {return fXMax;}
+  const double GetBVals(int ir, int index) const {return fBVal[ir][index];}
+  const std::string GetFunctionForm(int nreg, int index) const {return functionFormStr[nreg][index];}
   void SetZMin(int nreg, double zmin) { fZMin[nreg] = zmin; }
   void SetZMax(int nreg, double zmax) { fZMax[nreg] = zmax; }
   void SetYMin(int nreg, double ymin) { fYMin[nreg] = ymin; }
@@ -32,6 +32,7 @@ class MagField: public TVirtualMagField
   void SetXMin(int nreg, double xmin) { fXMin[nreg] = xmin; }
   void SetXMax(int nreg, double xmax) { fXMax[nreg] = xmax; }
   void SetBVals(int nreg, int index, double val) { fBVal[nreg][index] = val; }
+  void SetFunctionForm(int nreg, int index, std::string funcForm){functionFormStr[nreg][index] = funcForm;}
 
  protected:
   int fNReg = 0;
@@ -42,6 +43,7 @@ class MagField: public TVirtualMagField
   double fXMin[kMaxReg]; // min x of each field region
   double fXMax[kMaxReg]; // max x of each field region
   double fBVal[kMaxReg][3]; // field values
+  std::string functionFormStr[kMaxReg][3];
   TF3* fBValNonUniform[kMaxReg][3]; // non uniform field values
   //
   ClassDef(MagField, 1) // custom magfield

@@ -223,26 +223,35 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   // with optional data  
   //  original line commented here; new lines follow 
   //  if ( (narg=inp->FindEntry("define","magfield","d|",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
-  if ( (narg=inp->FindEntry("define","magfield","d?f?f?f?f?f?f?f?f",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
+  if ( (narg=inp->FindEntry("define","magfield","dfffffffaaa",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
   printf("Magnetic Field: %d\n",fMagFieldID);
   int nreg = 0;
-  Double_t xminDipole  = narg > 1 ? inp->GetArgF(1) : -9999;  
-  Double_t xmaxDipole  = narg > 2 ? inp->GetArgF(2) : -9999;  
-  Double_t yminDipole  = narg > 3 ? inp->GetArgF(3) : -9999;  
-  Double_t ymaxDipole  = narg > 4 ? inp->GetArgF(4) : -9999;  
-  Double_t zminDipole  = narg > 5 ? inp->GetArgF(5) : -9999;  
-  Double_t zmaxDipole  = narg > 6 ? inp->GetArgF(6) : -9999;  
-  Double_t dipoleField = narg > 7 ? inp->GetArgF(7) : -9999;
+  Double_t xminDipole               = narg > 1 ? inp->GetArgF(1) : -9999;  
+  Double_t xmaxDipole               = narg > 2 ? inp->GetArgF(2) : -9999;  
+  Double_t yminDipole               = narg > 3 ? inp->GetArgF(3) : -9999;  
+  Double_t ymaxDipole               = narg > 4 ? inp->GetArgF(4) : -9999;  
+  Double_t zminDipole               = narg > 5 ? inp->GetArgF(5) : -9999;  
+  Double_t zmaxDipole               = narg > 6 ? inp->GetArgF(6) : -9999;  
+  Double_t dipoleField              = narg > 7 ? inp->GetArgF(7) : -9999;
+  std::string functionalFormStringX = narg > 8 ? inp->GetArg(8) : "NONE";
+  std::string functionalFormStringY = narg > 9 ? inp->GetArg(9) : "NONE";
+  std::string functionalFormStringZ = narg > 10 ? inp->GetArg(10) : "NONE";
+  std::string function3D[3]         = {functionalFormStringX, functionalFormStringY, functionalFormStringZ};
   std::cout << "dipole dimensions: x=["<<xminDipole<<","<<xmaxDipole<<"], y=["<<yminDipole<<","<<ymaxDipole<<"], z=["<<zminDipole<<","<<zmaxDipole<<"]" << std::endl;
   std::cout << "dipole strength  : B=" << dipoleField << " kG" << std::endl;
+  std::cout << "functional form for dipole magnetic field: [" << function3D[0] << ", " << function3D[1] << ", " << function3D[2] << "]" << std::endl;
+
+
   if (narg>3) nreg = 1;
   // this part is relevant for exra mag field, e.g. MS toroid
+  // this is not reading from the setup properly ! BEWARE
   Double_t zminToroid  = narg > 4 ? inp->GetArgF(4) : -9999;  
   Double_t zmaxToroid  = narg > 5 ? inp->GetArgF(5) : -9999;  
   Double_t toroidField = narg > 6 ? inp->GetArgF(6) : -9999;  
   Double_t toroidRmin  = narg > 7 ? inp->GetArgF(7) : -9999;  
-  Double_t toroidRmax  = narg > 8 ? inp->GetArgF(8) : -9999;
-  if (narg>8) nreg = 2;
+  Double_t toroidRmax  = narg > 11 ? inp->GetArgF(8) : -9999;
+  if (narg>11) nreg = 2;
+  
   // end modification
   // -------------------------------------------------------------------
   //
@@ -270,14 +279,7 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     lr->SetMaterial(mat);
     lr->SetDead(kTRUE);
   }
-  TString fmtwindow = "aafffffff";
-  while ( (narg=inp->FindEntry("window","",fmtwindow.Data(),0,1))>0 ) {
-    mat = GetMaterial(inp->GetArg(1,"U"));
-    if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
-    KMCLayerFwd* lr = AddLayer("window", inp->GetArg(0,"U"),  inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), inp->GetArgF(3));
-    lr->SetMaterial(mat);
-    lr->SetDead(kTRUE);
-  }
+  
   //
   // Absorber
   inp->Rewind();
@@ -318,35 +320,36 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     int nExtra = narg - 11; // are there extra settings
     if (nExtra>0) {
       if ( (nExtra%3) ) {
-	printf("ReadSetup: %d extra values provided for activelayer are not multiple of 3\n",nExtra);
-	printf("%s\n",inp->GetLastBuffer());
-	exit(1);
+        printf("ReadSetup: %d extra values provided for activelayer are not multiple of 3\n",nExtra);
+        printf("%s\n",inp->GetLastBuffer());
+        exit(1);
       }
       int nBloc = nExtra/3;
       if (nBloc>=KMCLayerFwd::kMaxAccReg) {
-	printf("ReadSetup: number of extra regions in activelayer %d should not exceed %d\n",nBloc,KMCLayerFwd::kMaxAccReg-1);
-	printf("%s\n",inp->GetLastBuffer());
-	exit(1);
+        printf("ReadSetup: number of extra regions in activelayer %d should not exceed %d\n",nBloc,KMCLayerFwd::kMaxAccReg-1);
+        printf("%s\n",inp->GetLastBuffer());
+        exit(1);
       }
       lr->SetNAccRegions(nBloc+1);
       for (int i=0;i<nBloc;i++) {
-	double sigxE = inp->GetArgF(9+3*i+0);
-	double sigyE = inp->GetArgF(9+3*i+1);	
-	double rmaxE = inp->GetArgF(9+3*i+2);
-	if (rmaxE <= lr->GetRMax(i)) {
-	  printf("ReadSetup: RMax=%.3f of %d-th extra region in activelayer must exceed R=%.3f of previous region\n",rmaxE, i+1, lr->GetRMax(i));
-	  printf("%s\n",inp->GetLastBuffer());
-	  exit(1);
-	}
-	lr->SetRMin(lr->GetRMax(i), i+1);
-	lr->SetRMax(rmaxE, i+1);
-	lr->SetXRes(sigxE, i+1);
-	lr->SetYRes(sigyE, i+1);
+      double sigxE = inp->GetArgF(9+3*i+0);
+      double sigyE = inp->GetArgF(9+3*i+1);	
+      double rmaxE = inp->GetArgF(9+3*i+2);
+      if (rmaxE <= lr->GetRMax(i)) {
+        printf("ReadSetup: RMax=%.3f of %d-th extra region in activelayer must exceed R=%.3f of previous region\n",rmaxE, i+1, lr->GetRMax(i));
+        printf("%s\n",inp->GetLastBuffer());
+        exit(1);
+      }
+      lr->SetRMin(lr->GetRMax(i), i+1);
+      lr->SetRMax(rmaxE, i+1);
+      lr->SetXRes(sigxE, i+1);
+      lr->SetYRes(sigyE, i+1);
       }
       
     }
     
   }
+
   //-------------------------------------
   //
   // init mag field
@@ -356,7 +359,18 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     // -------------------------------------------------------------------
     // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
     // with optional data  
-    fld = new MagField(TMath::Abs(fMagFieldID));
+
+    if ((function3D[0].find("NONE")==std::string::npos) || (function3D[1].find("NONE")==std::string::npos) || (function3D[2].find("NONE")==std::string::npos)){
+      // constructor for the non-uniform magnetic field
+      fld = new MagField(TMath::Abs(fMagFieldID),dipoleField,xminDipole, xmaxDipole, yminDipole, ymaxDipole, zminDipole, zmaxDipole, function3D);
+      std::cout << "----- Non uniform magnetic field constructor-----" << std::endl;
+    }
+    else{
+      // constructor for the uniform magnetic field
+      fld = new MagField(TMath::Abs(fMagFieldID));
+      std::cout << "----- Uniform magnetic field constructor-----" << std::endl;
+    }
+
     if (nreg>0) {
       fld->SetNReg(nreg);
       if (xminDipole>-9999)  ((MagField *) fld)->SetXMin(0,xminDipole);
@@ -366,9 +380,13 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
       if (zminDipole>-9999)  ((MagField *) fld)->SetZMin(0,zminDipole);
       if (zmaxDipole>-9999)  ((MagField *) fld)->SetZMax(0,zmaxDipole);
       if (dipoleField>-9999) ((MagField *) fld)->SetBVals(0,1,dipoleField);
+      /// if NONE not in the string, set the function form
+      if (functionalFormStringX.find("NONE")==std::string::npos)((MagField *) fld)->SetFunctionForm(0,0,function3D[0]);
+      if (functionalFormStringY.find("NONE")==std::string::npos)((MagField *) fld)->SetFunctionForm(0,1,function3D[1]);
+      if (functionalFormStringZ.find("NONE")==std::string::npos)((MagField *) fld)->SetFunctionForm(0,2,function3D[2]);
     }
     if (nreg>1) {
-		if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
+		  if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
       if (zmaxToroid>-9999) ((MagField *) fld)->SetZMax(1,zmaxToroid);
       if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
       if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
@@ -463,17 +481,17 @@ void KMCDetectorFwd::ClassifyLayers()
       fLastActiveLayer = il; 
       lr->SetActiveID(fNActiveLayers++);
       if (lr->IsITS()) {
-	fLastActiveLayerITS = il;
-	fNActiveLayersITS++;
-	fLayersITS.AddLast(lr);
+        fLastActiveLayerITS = il;
+        fNActiveLayersITS++;
+        fLayersITS.AddLast(lr);
       }
       if (lr->IsMS())   {
-	fNActiveLayersMS++;
-	fLayersMS.AddLast(lr);
+        fNActiveLayersMS++;
+        fLayersMS.AddLast(lr);
       }
       if (lr->IsTrig()) {
-	fNActiveLayersTR++;
-	fLayersTR.AddLast(lr);
+        fNActiveLayersTR++;
+        fLayersTR.AddLast(lr);
       }
     }
   }
@@ -610,24 +628,24 @@ Bool_t KMCDetectorFwd::PropagateToZBxByBz(KMCProbeFwd* trc,double z,double maxDZ
   if (ib1>ib0) { // fwd propagation with field boundaries crossing
     for (int ib=ib0;ib<ib1;ib++) {
       if ( ib&0x1 ) { // we are in the odd (field ON) region, go till the end of field reg.
-	//	printf("Here00 | %d %f\n",ib>>1,fFldZMaxs[ib>>1]);
-	fZSteps[nzst++] = fFldZMaxs[ib>>1] + fgkFldEps;
+        //	printf("Here00 | %d %f\n",ib>>1,fFldZMaxs[ib>>1]);
+        fZSteps[nzst++] = fFldZMaxs[ib>>1] + fgkFldEps;
       }
       else { // we are in even (field free) region, go till the beginning of next field reg.
-	//	printf("Here01 | %d %f\n",ib>>1,fFldZMins[ib>>1]);
-	fZSteps[nzst++] = fFldZMins[ib>>1] + fgkFldEps;
+        //	printf("Here01 | %d %f\n",ib>>1,fFldZMins[ib>>1]);
+        fZSteps[nzst++] = fFldZMins[ib>>1] + fgkFldEps;
       }
     }
   }
   else if (ib1<ib0) { // bwd propagation
     for (int ib=ib0;ib>ib1;ib--) {
       if ( ib&0x1 ) { // we are in the odd (field ON) region, go till the beginning of field reg.
-	//	printf("Here10 | %d %f\n",(ib-1)>>1,fFldZMins[(ib-1)>>1]);
-	fZSteps[nzst++] = fFldZMins[(ib-1)>>1] - fgkFldEps;
+        //	printf("Here10 | %d %f\n",(ib-1)>>1,fFldZMins[(ib-1)>>1]);
+        fZSteps[nzst++] = fFldZMins[(ib-1)>>1] - fgkFldEps;
       }
       else { // we are in even (field free) region, go till the beginning of next field reg.
-	//	printf("Here11 | %d %f\n",(ib-1)>>1,fFldZMaxs[(ib-1)>>1]);
-	fZSteps[nzst++] = fFldZMaxs[(ib-1)>>1] - fgkFldEps;
+        //	printf("Here11 | %d %f\n",(ib-1)>>1,fFldZMaxs[(ib-1)>>1]);
+        fZSteps[nzst++] = fFldZMaxs[(ib-1)>>1] - fgkFldEps;
       }
     }
   }
