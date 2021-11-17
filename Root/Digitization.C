@@ -146,8 +146,8 @@ void setParametersFromDet()
 	const double* BfieldYmaxObj = fldm->GetYMax(); // region 0
 	const double* BfieldZminObj = fldm->GetZMin(); // region 0
 	const double* BfieldZmaxObj = fldm->GetZMax(); // region 0
-	const std::string BFunction = fldm->GetFunctionForm(0,1);
-	double BfieldValTesla = BfieldKG/10; /// the B dield is only in the y direction (0,B,0), hence the index 1
+	const std::string BFunction = fldm->GetFunctionForm(0,1); /// 1 is for y component of the field
+	double BfieldValTesla = BfieldKG/10; /// the B field is only in the y direction (0,B,0), hence the index 1
 	double BfieldXmin = BfieldXminObj[0]; // region 0
 	double BfieldXmax = BfieldXmaxObj[0]; // region 0
 	double BfieldYmin = BfieldYminObj[0]; // region 0
