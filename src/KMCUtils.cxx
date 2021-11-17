@@ -9,7 +9,6 @@ MagField::MagField(UInt_t id) {
   fNReg = 0;
   for (int i=kMaxReg;i--;){
     for (int j=3;j--;) fBVal[i][j] = 0;
-    for (int j=3;j--;) fBValNonUniform[i][j] = NULL;
   }
 }
 
@@ -18,11 +17,13 @@ MagField::MagField(UInt_t id, double dipoleConst, double xmin, double xmax, doub
   SetUniqueID(id);
   fNReg = 0;
   for (int i=kMaxReg;i--;){
-    for (int j=3;j--;) fBVal[i][j] = 0;
-    for (int j=3;j--;) fBValNonUniform[i][j] = NULL;
-    std::string str = std::to_string(i);
-    fBValNonUniform[i][1] = new TF3(("B1_RegId_"+str+"_yComp").c_str(),(*(functionForm+1)).c_str(),xmin,xmax,ymin,ymax,zmin,zmax); //// x component uses 0, y component uses 1 and z component uses 2
-    fBValNonUniform[i][1]->SetParameter(0,dipoleConst);
+    for (int j=3;j--;){
+      std::string reg = std::to_string(i);
+      std::string comp = std::to_string(j);
+      if(*(functionForm+j)!="NONE"){
+        fBValNonUniform[i][j] = new TF3(("B1_RegId_"+reg+"_Comp_"+comp).c_str(),(*(functionForm+j)).c_str(),xmin,xmax,ymin,ymax,zmin,zmax);
+        fBValNonUniform[i][j]->SetParameter(0,dipoleConst);
+      }
   }
 }
 
