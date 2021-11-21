@@ -140,16 +140,16 @@ def readparticles(name,xivalue=7.0,mpids=[]):
 def main():
     
     parser = argparse.ArgumentParser(description='Code to transform h5 format to root')
-    parser.add_argument('-p', action="store", dest="processName", type=str, default="glaser")
-    parser.add_argument('-t', action="store", dest="phase", type=str, default="phase0")
-    parser.add_argument('-d', action="store", dest="fullpath", type=str, default="/nfs/dust/luxe/group/MCProduction/Signal/ptarmigan-v0.8.1/")
-    parser.add_argument('-x', action="store", dest="xiValue", type=float, default=3.0)
-    parser.add_argument('-g', action="store_true", dest="needGLaser")
+    parser.add_argument('-p', action="store", required=True, dest="processName", type=str, default="glaser")
+    parser.add_argument('-t', action="store", required=True, dest="phase", type=str, default="phase0")
+    parser.add_argument('-x', action="store", required=True, dest="xi", type=str, default="3.0")
+    parser.add_argument('-g', action="store_true", required=False, dest="needGLaser")
     argus = parser.parse_args()
 
      
     phase   = argus.phase
-    xiInput = argus.xiValue
+    xiStr   = argus.xi 
+    xiInput = float(argus.xi)
     photon  = argus.needGLaser
     process = argus.processName
     
@@ -158,11 +158,10 @@ def main():
     else:
         indir = "e-laser"
         
-    path    = argus.fullpath+indir+"/"+phase+"/gpc"
+    path    = storage+"/data/h5/"+process+"/"+phase+"/"+xiStr+"/"
     
     #### replace this while running on DESY
-    #targetdir = path.replace("TomPtarmiganFiles","TomPtarmiganFiles/root/raw")
-    targetdir = "TomPtarmiganFiles/root/raw/"+indir+"/"+phase+"/xi_"+str(xiInput)
+    targetdir  = storage+"/data/root/raw/"+process+"/"+phase+"/"+xiStr+"/"
     p         = subprocess.Popen("mkdir -p "+targetdir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err  = p.communicate()
 
@@ -195,8 +194,11 @@ def main():
     tt_out.Branch('time',time_out)
     tt_out.Branch('xi',xi_out)
 
-    fIns = glob.glob(path+"/"+str(xiInput)+"/*"+str(xiInput)+"_*.h5")
-    
+    print("path=",path)
+    print("targetdir=",targetdir)
+    fIns = glob.glob(path+"/*.h5")
+    print(fIns)   
+ 
     counter = 0
     for name in fIns:
         ### clear output tree branches
