@@ -699,14 +699,17 @@ int main(int argc, char *argv[])
 	if(argc<2) { printf("argc<2, exitting now\n"); exit(-1); }
 	//// validate inputs
 	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n",argv[1]); exit(-1); }
-	if(argc==3 and !((TString)argv[2]).Contains("-evnt=")) { printf("argc=3 but cannot parse %s\n",argv[2]); exit(-1); }
-	if(argc==4 and !((TString)argv[3]).Contains("-seed=")) { printf("argc=4 but cannot parse %s\n",argv[3]); exit(-1); }
+	if(argc==3 and !((TString)argv[2]).Contains("-path=")) { printf("argc=4 but cannot parse %s\n",argv[3]); exit(-1); }
+	if(argc==4 and !((TString)argv[3]).Contains("-evnt=")) { printf("argc=3 but cannot parse %s\n",argv[2]); exit(-1); }
+	if(argc==5 and !((TString)argv[4]).Contains("-seed=")) { printf("argc=5 but cannot parse %s\n",argv[4]); exit(-1); }
 	//// assign inputs
 	TString process = ((TString)argv[1]).ReplaceAll("-proc=",""); // mandatory
-	int     evnt    = (argc>2) ? toint(((TString)argv[2]).ReplaceAll("-evnt=","")) : -1; // job id [optional]
-	int     Seed    = (argc>3) ? toint(((TString)argv[3]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
+	TString path    = ((TString)argv[2]).ReplaceAll("-path=",""); // mandatory
+	int     evnt    = (argc>3) ? toint(((TString)argv[3]).ReplaceAll("-evnt=","")) : -1; // job id [optional]
+	int     Seed    = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
 	//// print assigned inputs
 	cout << "process=" << process << endl;
+	cout << "path=" << path << endl;
 	cout << "evnt=" << evnt << endl;
 	cout << "Seed=" << Seed << endl;
 	
@@ -771,7 +774,8 @@ int main(int argc, char *argv[])
 	int index_offset = (process.Contains("bkg")) ? 10000 : 100000;
 
    /// get the particles from a ttree
-   TFile* fIn = new TFile(storage+"/data/root/raw_"+process+".root","READ");
+   // TFile* fIn = new TFile(storage+"/data/root/raw_"+process+".root","READ");
+   TFile* fIn = new TFile(path+"/raw_"+process+".root","READ");
    TTree* tIn = (TTree*)fIn->Get("tt");
    int nev = tIn->GetEntries();
    vector<double>* vx    = 0;
