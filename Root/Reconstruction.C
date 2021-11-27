@@ -4,6 +4,7 @@
 #include "TLorentzVector.h"
 #include "TGenPhaseSpace.h"
 #include "TRandom.h"
+#include "TVector3.h"
 #include "TF1.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -34,6 +35,17 @@
 
 using namespace std;
 
+struct Cluster {
+	int type;
+	int lyrid;
+	TString lyrnm;
+	int clsid;
+	int npixl;
+	int shape;
+	double charge;
+	TVector3 r;
+};
+
 typedef map<int, int>                TMapii;
 typedef map<TString, int >           TMapTSi;
 typedef map<TString, float >         TMapTSf;
@@ -42,48 +54,29 @@ typedef map<TString, vector<int> >   TMapTSvi;
 typedef map<TString, vector<float> > TMapTSvf;
 typedef map<int,TString>             TMapiTS;
 typedef map<TString, TH1D* >         TMapTSTH1D;
+typedef map<TString, vector<Cluster> > TMapTSvCls; // formatted as 
 
 TString storage =  gSystem->ExpandPathName("$STORAGEDIR");
 
+int nMinHits = 4;
+
 double vX=0,vY=0,vZ=0; // event vertex
 KMCDetectorFwd* det = 0;
-vector<double>* zlayer = new vector<double>;
+
 double meMeV = 0.5109989461; //MeV
 double meGeV = meMeV/1000.;
 double meGeV2 = meGeV*meGeV;
 double cm2m = 0.01;
+
+// for matching these must be the same as in digitisation
+int index_offset_bkg = 100000;
+int index_offset_sig = 10000000;
 
 //// temp stuff:
 double bestdistance = -1;
 int bestmatchtrui = -1;
 int bestmatchreci = -1;
 
-//// for matching:
-int index_offset_sig = 100000;
-int index_offset_bkg = 10000;
-
-//// staves geometry
-double Hstave = 1.5;  // cm
-double Lstave = 50; //27.12;   // cm
-double Rbeampipe = 2.413; // cm
-double RoffsetBfield = 5.7;
-double x1L = -RoffsetBfield-Lstave;
-double x1R = -RoffsetBfield;       
-double x2L = +RoffsetBfield;       
-double x2R = +RoffsetBfield+Lstave;
-double yUp = +Hstave/2.;
-double yDn = -Hstave/2.;
-double zDipoleExit = 202.9;
-double B  = 1.0; // Tesla if(proc=="trident") else 1.7 
-double LB = 1.029;   // meters
-double EseedMin = 1.0; // GeV
-double EseedMaxBPPP = 16.0; // GeV
-double EseedMaxTRIDENT = 5.0; // GeV
-//// dipole geometry
-double xWdipole = 33.0;
-double yHdipole = 10.8;
-double z1dipole = 100.0;
-double z2dipole = 202.9;
 //// uncertainties
 float dxAlignmentXFEL = 0.005; //0.005; // cm
 float dyAlignmentXFEL = 0.005; //0.005; // cm
@@ -94,38 +87,234 @@ float dyAlignmentInTray = 0.000; // cm
 bool doMisalignmentX = false;
 bool doMisalignmentY = false;
 
-
+//// seed energies
+double EseedMin = 1.0; // GeV
+double EseedMaxBPPP = 16.0; // GeV
+double EseedMaxTRIDENT = 5.0; // GeV
 
 // double yDipoleExitMin = -0.05; ## cm --> TODO: need tuning
 // double yDipoleExitMax = +0.05; ## cm --> TODO: need tuning
 // double xAbsMargins = 0.025; # cm --> TODO: need tuning
-// double yAbsMargins = 0.025 if(proc=="bppp") else 0.1 # cm --> TODO: need tuning
+// double yAbsMargins = 0.025 if(proc=="glaser") else 0.1 # cm --> TODO: need tuning
 
 vector<TString> sides{"Eside","Pside"};
-vector<TString> coord{"x","y","z"};
-vector<TString> attri{"id","type"};
-TMapiTS         layers = { {300,"L1"}, {310,"L2"}, {320,"L3"}, {330,"L4"} };
-TMapTSi         szlayers = { {"L1",300}, {"L2",310}, {"L3",320}, {"L4",330} };
-TMapTSi         silayers = { {"L1",1}, {"L2",2}, {"L3",3}, {"L4",4} };
-TMapiTS         islayers = { {1,"L1"}, {3,"L2"}, {5,"L3"}, {7,"L4"} };
-TMapTSvf        cached_clusters_xyz; /// coordinates (x,y,z)
-TMapTSvi        cached_clusters_att; /// attributes (type and id)
-TMapii          cached_clusters_all_ids; /// attributes (type and id)
+// vector<TString> iolyr{"Inner","Outer"};
+// vector<TString> coord{"x","y","z"};
+// vector<TString> attri{"id","type"};
+vector<TString> layersnames;
+vector<double>  layersz;
+vector<double> zlayer;
+TMapiTS layers;
+TMapTSi szlayers;
+TMapTSi silayers;
+TMapiTS islayers;
 
-void resetToTridentGeometry()
+TMapTSvCls cached_clusters; /// formatted per side per layer e.g. as: cached_clusters[side+"_"+layerid][i].r.X() or cached_clusters[side+"_"+layerid][i].clsid
+// TMapTSvi   cached_clusters_att; /// attributes (type and id)
+TMapii     cached_clusters_all_ids; /// 
+TMapii     cached_clusters_id2lyr; /// 
+
+
+//// staves geometry
+double Hstave = 1.5;  // cm
+double Lstave = 50; //27.12;   // cm
+double Rbeampipe = 2.413; // cm
+double RoffsetBfield = 5.7; // cm
+double xPsideL = -RoffsetBfield-Lstave;
+double xPsideR = -RoffsetBfield;       
+double xEsideL = +RoffsetBfield;       
+double xEsideR = +RoffsetBfield+Lstave;
+double yUp = +Hstave/2.;
+double yDn = -Hstave/2.;
+
+//// dipole geometry
+double xWdipole = 33.0;
+double yHdipole = 10.8;
+double z1dipole = 100;
+double z2dipole = 202.9;
+double zDipoleExit = z2dipole;
+
+// dipole field
+double B  = 1.0;
+double LB = 1.029; // meters
+
+double zEL1I = -999;
+double zEL1O = -999;
+double zPL1I = -999;
+double zPL1O = -999;
+
+double zEL2I = -999;
+double zEL2O = -999;
+double zPL2I = -999;
+double zPL2O = -999;
+
+double zEL3I = -999;
+double zEL3O = -999;
+double zPL3I = -999;
+double zPL3O = -999;
+
+double zEL4I = -999;
+double zEL4O = -999;
+double zPL4I = -999;
+double zPL4O = -999;
+
+int iEL1I = -999;
+int iEL1O = -999;
+int iPL1I = -999;
+int iPL1O = -999;
+
+int iEL2I = -999;
+int iEL2O = -999;
+int iPL2I = -999;
+int iPL2O = -999;
+
+int iEL3I = -999;
+int iEL3O = -999;
+int iPL3I = -999;
+int iPL3O = -999;
+
+int iEL4I = -999;
+int iEL4O = -999;
+int iPL4I = -999;
+int iPL4O = -999;
+
+double xMinEI = -999;
+double xMinEO = -999;
+double xMinPI = -999;
+double xMinPO = -999;
+
+double xMaxEI = -999;
+double xMaxEO = -999;
+double xMaxPI = -999;
+double xMaxPO = -999;
+
+double zLastLayer  = -999;
+double zFirstLayer = -999;
+TString LastLayer  = "";
+TString FirstLayer = "";
+
+void setParametersFromDet(TString side)
 {
-	cout << "Resetting to Trident geometry!" << endl;
-	Lstave = 50;   // cm for BPPP or 50 for Trident
-	RoffsetBfield = 14; // cm for Trident in in B=1.4T
-	x1L = -RoffsetBfield-Lstave;
-	x1R = -RoffsetBfield;       
-	x2L = +RoffsetBfield;       
-	x2R = +RoffsetBfield+Lstave;
+	cout << "====================================" << endl;
+	cout << "============DEFINITIONS=============" << endl;
+	cout << "====================================" << endl;
+	KMCLayerFwd* layer_outer = (side=="Eside") ? det->GetLayer("EL1O") : det->GetLayer("PL1O");
+	KMCLayerFwd* layer_inner = (side=="Eside") ? det->GetLayer("EL1I") : det->GetLayer("PL1I");
+	
+	Hstave = layer_outer->GetYMax()-layer_outer->GetYMin();
+	Lstave = layer_outer->GetXMax()-layer_outer->GetXMin();
+	cout << "Hstave=" << Hstave << ", Lstave=" << Lstave << endl;
+	
+	xMinEI = (side=="Eside") ? layer_inner->GetXMin() : -999;
+	xMinEO = (side=="Eside") ? layer_outer->GetXMin() : -999;
+	xMinPI = (side=="Pside") ? layer_inner->GetXMin() : -999;
+	xMinPO = (side=="Pside") ? layer_outer->GetXMin() : -999;
+	cout << "xMinEI=" << xMinEI << ", xMinEO=" << xMinEO << ", xMinPI=" << xMinPI << ", xMinPO=" << xMinPO << endl;
+	
+	xMaxEI = (side=="Eside") ? layer_inner->GetXMax() : -999;
+	xMaxEO = (side=="Eside") ? layer_outer->GetXMax() : -999;
+	xMaxPI = (side=="Pside") ? layer_inner->GetXMax() : -999;
+	xMaxPO = (side=="Pside") ? layer_outer->GetXMax() : -999;
+	cout << "xMaxEI=" << xMaxEI << ", xMaxEO=" << xMaxEO << ", xMaxPI=" << xMaxPI << ", xMaxPO=" << xMaxPO << endl;
+	
+	xPsideL = (side=="Eside") ? layer_outer->GetXMin() : -999;
+	xPsideR = (side=="Eside") ? layer_inner->GetXMax() : -999;
+	xEsideL = (side=="Pside") ? layer_inner->GetXMin() : -999;
+	xEsideR = (side=="Pside") ? layer_outer->GetXMax() : -999;
+	cout << "xPsideL=" << xPsideL << ", xPsideR=" << xPsideR << ", xEsideL=" << xEsideL << ", xEsideR=" << xEsideR << endl;
+	
+	yUp = +Hstave/2.;
+	yDn = -Hstave/2.;
+	cout << "yUp=" << yUp << ", yDn=" << yDn << endl;
+	
+	//// get the Bfield from the setup
+	TVirtualMagField* fld = TGeoGlobalMagField::Instance()->GetField();
+	MagField* fldm = (MagField*) fld;
+	const double BfieldKG = fldm->GetBVals(0,1);  // region 0, the B field is only in the y direction (0,B,0), hence the index 1
+	const double* BfieldXminObj = fldm->GetXMin(); // region 0
+	const double* BfieldXmaxObj = fldm->GetXMax(); // region 0
+	const double* BfieldYminObj = fldm->GetYMin(); // region 0
+	const double* BfieldYmaxObj = fldm->GetYMax(); // region 0
+	const double* BfieldZminObj = fldm->GetZMin(); // region 0
+	const double* BfieldZmaxObj = fldm->GetZMax(); // region 0
+	const std::string BFunction = fldm->GetFunctionForm(0,1); /// 1 is for y component of the field
+	double BfieldValTesla = BfieldKG/10; /// the B field is only in the y direction (0,B,0), hence the index 1
+	double BfieldXmin = BfieldXminObj[0]; // region 0
+	double BfieldXmax = BfieldXmaxObj[0]; // region 0
+	double BfieldYmin = BfieldYminObj[0]; // region 0
+	double BfieldYmax = BfieldYmaxObj[0]; // region 0
+	double BfieldZmin = BfieldZminObj[0]; // region 0
+	double BfieldZmax = BfieldZmaxObj[0]; // region 0
+	cout << "BfieldValTesla=" << BfieldValTesla << ", BfieldXmin=" << BfieldXmin << ", BfieldXmax=" << BfieldXmax << ", BfieldYmin=" << BfieldYmin << ", BfieldYmax=" << BfieldYmax << ", BfieldZmin=" << BfieldZmin << ", BfieldZmax=" << BfieldZmax << endl;
+	cout << "Bfunction: " << BFunction << std::endl;
+	xWdipole = BfieldXmax-BfieldXmin;
+	yHdipole = BfieldYmax-BfieldYmin;
+	z1dipole = BfieldZmin;
+	z2dipole = BfieldZmax;
+	zDipoleExit = z2dipole;
+	B  = BfieldValTesla;
+	LB = z2dipole-z1dipole;
+	cout << "xWdipole=" << xWdipole << ", yHdipole=" << yHdipole << ", z1dipole=" << z1dipole << ", z2dipole=" << z2dipole << endl;
+	
+	zEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetZ():-999; iEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetID():-999;
+	zEL1O = (side=="Eside") ? det->GetLayer("EL1O")->GetZ():-999; iEL1O = (side=="Eside") ? det->GetLayer("EL1O")->GetID():-999;
+	zPL1I = (side=="Pside") ? det->GetLayer("PL1I")->GetZ():-999; iPL1I = (side=="Pside") ? det->GetLayer("PL1I")->GetID():-999;
+	zPL1O = (side=="Pside") ? det->GetLayer("PL1O")->GetZ():-999; iPL1O = (side=="Pside") ? det->GetLayer("PL1O")->GetID():-999;
+	cout << "zEL1I=" << zEL1I << ", zEL1O=" << zEL1O << ", zPL1I=" << zPL1I << ", zPL1O=" << zPL1O << endl;
+
+	zEL2I = (side=="Eside") ? det->GetLayer("EL2I")->GetZ():-999;  iEL2I = (side=="Eside") ? det->GetLayer("EL2I")->GetID():-999;
+	zEL2O = (side=="Eside") ? det->GetLayer("EL2O")->GetZ():-999;  iEL2O = (side=="Eside") ? det->GetLayer("EL2O")->GetID():-999;
+	zPL2I = (side=="Pside") ? det->GetLayer("PL2I")->GetZ():-999;  iPL2I = (side=="Pside") ? det->GetLayer("PL2I")->GetID():-999;
+	zPL2O = (side=="Pside") ? det->GetLayer("PL2O")->GetZ():-999;  iPL2O = (side=="Pside") ? det->GetLayer("PL2O")->GetID():-999;
+	cout << "zEL2I=" << zEL2I << ", zEL2O=" << zEL2O << ", zPL2I=" << zPL2I << ", zPL2O=" << zPL2O << endl;
+
+	zEL3I = (side=="Eside") ? det->GetLayer("EL3I")->GetZ():-999; iEL3I = (side=="Eside") ? det->GetLayer("EL3I")->GetID():-999;
+	zEL3O = (side=="Eside") ? det->GetLayer("EL3O")->GetZ():-999; iEL3O = (side=="Eside") ? det->GetLayer("EL3O")->GetID():-999;
+	zPL3I = (side=="Pside") ? det->GetLayer("PL3I")->GetZ():-999; iPL3I = (side=="Pside") ? det->GetLayer("PL3I")->GetID():-999;
+	zPL3O = (side=="Pside") ? det->GetLayer("PL3O")->GetZ():-999; iPL3O = (side=="Pside") ? det->GetLayer("PL3O")->GetID():-999;
+	cout << "zEL3I=" << zEL3I << ", zEL3O=" << zEL3O << ", zPL3I=" << zPL3I << ", zPL3O=" << zPL3O << endl;
+
+	zEL4I = (side=="Eside") ? det->GetLayer("EL4I")->GetZ():-999; iEL4I = (side=="Eside") ? det->GetLayer("EL4I")->GetID():-999;
+	zEL4O = (side=="Eside") ? det->GetLayer("EL4O")->GetZ():-999; iEL4O = (side=="Eside") ? det->GetLayer("EL4O")->GetID():-999;
+	zPL4I = (side=="Pside") ? det->GetLayer("PL4I")->GetZ():-999; iPL4I = (side=="Pside") ? det->GetLayer("PL4I")->GetID():-999;
+	zPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetZ():-999; iPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetID():-999;
+	cout << "zEL4I=" << zEL4I << ", zEL4O=" << zEL4O << ", zPL4I=" << zPL4I << ", zPL4O=" << zPL4O << endl;
+	
+	// IP (vertex) --> start of dipol --> end of dipole and then the layers
+	if(side=="Eside")
+	{
+		layersnames = {"EL1I","EL1O","EL2I","EL2O","EL3I","EL3O","EL4I","EL4O"};
+		zlayer   = {0,z1dipole,z2dipole,zEL1I,zEL1O,zEL2I,zEL2O,zEL3I,zEL3O,zEL4I,zEL4O};
+		layersz  = {zEL1I,zEL1O,zEL2I,zEL2O,zEL3I,zEL3O,zEL4I,zEL4O};
+		layers   = {{iEL1I,"EL1I"},{iEL1O,"EL1O"},{iEL2I,"EL2I"},{iEL2O,"EL2O"},{iEL3I,"EL3I"},{iEL3O,"EL3O"},{iEL4I,"EL4I"},{iEL4O,"EL4O"}};
+		szlayers = {{"EL1I",zEL1I},{"EL1O",zEL1O},{"EL2I",zEL2I},{"EL2O",zEL2O},{"EL3I",zEL3I},{"EL3O",zEL3O},{"EL4I",zEL4I},{"EL4O",zEL4O}};
+		silayers = {{"EL1I",iEL1I},{"EL1O",iEL1O},{"EL2I",iEL2I},{"EL2O",iEL2O},{"EL3I",iEL3I},{"EL3O",iEL3O},{"EL4I",iEL4I}, {"EL4O",iEL4O}};
+		islayers = {{iEL1I,"EL1I"},{iEL1O,"EL1O"},{iEL2I,"EL2I"},{iEL2O,"EL2O"},{iEL3I,"EL3I"},{iEL3O,"EL3O"},{iEL4I,"EL4I"},{iEL4O,"EL4O"}};
+	}
+	if(side=="Pside")
+	{
+		layersnames = {"PL1I","PL1O","PL2I","PL2O","PL3I","PL3O","PL4I","PL4O"};
+		zlayer   = {0,z1dipole,z2dipole,zPL1I,zPL1O,zPL2I,zPL2O,zPL3I,zPL3O,zPL4I,zPL4O};
+		layersz  = {zPL1I,zPL1O,zPL2I,zPL2O,zPL3I,zPL3O,zPL4I,zPL4O};
+		layers   = {{iPL1I,"PL1I"},{iPL1O,"PL1O"},{iPL2I,"PL2I"},{iPL2O,"PL2O"},{iPL3I,"PL3I"},{iPL3O,"PL3O"},{iPL4I,"PL4I"},{iPL4O,"PL4O"}};
+		szlayers = {{"PL1I",zPL1I},{"PL1O",zPL1O},{"PL2I",zPL2I},{"PL2O",zPL2O},{"PL3I",zPL3I},{"PL3O",zPL3O},{"PL4I",zPL4I},{"PL4O",zPL4O}};
+		silayers = {{"PL1I",iPL1I},{"PL1O",iPL1O},{"PL2I",iPL2I},{"PL2O",iPL2O},{"PL3I",iPL3I},{"PL3O",iPL3O},{"PL4I",iPL4I}, {"PL4O",iPL4O}};
+		islayers = {{iPL1I,"PL1I"},{iPL1O,"PL1O"},{iPL2I,"PL2I"},{iPL2O,"PL2O"},{iPL3I,"PL3I"},{iPL3O,"PL3O"},{iPL4I,"PL4I"},{iPL4O,"PL4O"}};
+	}
+	
+	zLastLayer  = (side=="Eside") ? zEL4I : zPL4I;
+	zFirstLayer = (side=="Eside") ? zPL1O : zPL1O;
+	LastLayer  = (side=="Eside") ? "EL4I" : "PL4I";
+	FirstLayer = (side=="Eside") ? "PL1O" : "PL1O";
+	cout << "zLastLayer=" << zLastLayer << " ("<<LastLayer<<"), zFirstLayer=" << zFirstLayer << " ("<<FirstLayer<<")"<< endl;
+	
+	cout << "====================================" << endl;
+	cout << "====================================" << endl;
 }
 
 bool accept(double x, double y)
 {
-	bool failx = (x<x1L || (x>x1R && x<x2L) || x>x2R);
+	bool failx = (x<xPsideL || (x>xPsideR && x<xEsideL) || x>xEsideR);
 	bool faily = (y>yUp || y<yDn);
 	if(failx || faily) return false;
 	return true;
@@ -158,7 +347,7 @@ Color_t trkcol(double E)
 
 TLegend* trkcolleg()
 {
-	TLegend* leg = new TLegend(0.12,0.60,0.50,0.80);
+	TLegend* leg = new TLegend(0.12,0.30,0.50,0.60);
 	leg->SetFillStyle(4000); // will be transparent
 	leg->SetFillColor(0);
 	leg->SetTextFont(42);
@@ -209,15 +398,37 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
 	return polyline;
 }
 
-bool islayer(double z)
+// bool islayer(double z)
+// {
+// 	for(int j=0 ; j<(int)zlayer.size() ; ++j)
+// 	{
+// 		double dz = abs(zlayer.[j]-z);
+// 		if(dz<1.e-6) return true;
+// 	}
+// 	return false;
+// }
+bool islayer(double z, int layerindex=-1, double stepsize=1)
 {
-	for(int j=0 ; j<(int)zlayer->size() ; ++j)
+	if(layerindex>=0)
 	{
-		double dz = abs(zlayer->at(j)-z);
-		if(dz<1.e-6) return true;
+		double dz = abs(zlayer[layerindex]-z);
+		if(dz<stepsize) return true;
+	}
+	else
+	{
+		for(int j=0 ; j<(int)zlayer.size() ; ++j)
+		{
+			double dz = abs(zlayer[j]-z);
+			if(dz<stepsize/2.)
+			{
+				return true;
+			}
+		}
 	}
 	return false;
 }
+
+
 
 TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax, double zstep, Color_t col=kBlack)
 {
@@ -238,7 +449,7 @@ TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax
 		zp[iz] = xyz[2];
 		nz++;
 	}
-	TPolyMarker3D *polymarker = new TPolyMarker3D(zlayer->size());
+	TPolyMarker3D *polymarker = new TPolyMarker3D(zlayer.size());
 	polymarker->SetMarkerColor(col);
 	int n = 0;
 	for(int i=0;i<nz+1;i++) {
@@ -249,50 +460,178 @@ TPolyMarker3D* TrackMarker3d(const KMCProbeFwd* source, double zmin, double zmax
 	return polymarker;
 }
 
-TPolyLine3D* GetLayer(TString side, double z, Color_t col)
+TPolyLine3D* GetLayer(TString side, TString io, double z, Color_t col)
 {
-	Int_t n=5;
-	Double_t xL[] = {x1L,x1L,x1R,x1R,x1L};
-	Double_t xR[] = {x2R,x2R,x2L,x2L,x2R};
-	Double_t y[] = {yDn,yUp,yUp,yDn,yDn};
+   Int_t n=5;
+	
+	Double_t xIE[] = { xMinEI,xMinEI,xMaxEI,xMaxEI,xMinEI };
+	Double_t xIP[] = { xMinPI,xMinPI,xMaxPI,xMaxPI,xMinPI };
+	
+	Double_t xOE[] = { xMinEO,xMinEO,xMaxEO,xMaxEO,xMinEO };
+	Double_t xOP[] = { xMinPO,xMinPO,xMaxPO,xMaxPO,xMinPO };
+	
+   Double_t y[] = {yDn,yUp,yUp,yDn,yDn};
+   
 	Double_t zC[] = {z,z,z,z,z};
+	
 	TPolyLine3D* polyline = 0;
-	if(side=="L") polyline = new TPolyLine3D(n,xL,y,zC);
-	if(side=="R") polyline = new TPolyLine3D(n,xR,y,zC);
-	polyline->SetLineColor(col);
-	return polyline;
+   if(side=="P" && io=="I") polyline = new TPolyLine3D(n,xIP,y,zC);
+   if(side=="E" && io=="I") polyline = new TPolyLine3D(n,xIE,y,zC);
+   if(side=="P" && io=="O") polyline = new TPolyLine3D(n,xOP,y,zC);
+   if(side=="E" && io=="O") polyline = new TPolyLine3D(n,xOE,y,zC);
+   polyline->SetLineColor(col);
+   return polyline;
 }
 
-TPolyLine3D* GeDipole(Color_t col)
+TPolyLine3D* GetLayerFront(TString side, TString io, double z, Color_t col)
 {
-	TPolyLine3D* polyline = new TPolyLine3D();
-	polyline->SetPoint(0,-xWdipole/2,-yHdipole/2,z1dipole);
-	polyline->SetPoint(1,-xWdipole/2,+yHdipole/2,z1dipole);
-	polyline->SetPoint(2,+xWdipole/2,+yHdipole/2,z1dipole);
-	polyline->SetPoint(3,+xWdipole/2,-yHdipole/2,z1dipole);
-	polyline->SetPoint(4,-xWdipole/2,-yHdipole/2,z1dipole);
-
-	polyline->SetPoint(5,-xWdipole/2,-yHdipole/2,z2dipole); // go up
-
-	polyline->SetPoint(6,-xWdipole/2,+yHdipole/2,z2dipole); // move
-	polyline->SetPoint(7,-xWdipole/2,+yHdipole/2,z1dipole); // go down
-	polyline->SetPoint(8,-xWdipole/2,+yHdipole/2,z2dipole); // up again
-
-	polyline->SetPoint(9,+xWdipole/2,+yHdipole/2,z2dipole); // move
-	polyline->SetPoint(10,+xWdipole/2,+yHdipole/2,z1dipole); // go down
-	polyline->SetPoint(11,+xWdipole/2,+yHdipole/2,z2dipole); // up again
-
-	polyline->SetPoint(12,+xWdipole/2,-yHdipole/2,z2dipole); // move
-	polyline->SetPoint(13,+xWdipole/2,-yHdipole/2,z1dipole); // go down
-	polyline->SetPoint(14,+xWdipole/2,-yHdipole/2,z2dipole); // up again
-
-	polyline->SetPoint(15,-xWdipole/2,-yHdipole/2,z2dipole); // move
-	polyline->SetPoint(16,-xWdipole/2,-yHdipole/2,z1dipole); // go down
-	polyline->SetPoint(17,-xWdipole/2,-yHdipole/2,z2dipole); // up again
-
-	polyline->SetLineColor(col);
-	return polyline;
+   Int_t n=4;
+	
+	Double_t xIE[] = { xMinEI,xMinEI,xMaxEI,xMaxEI };
+	Double_t xIP[] = { xMinPI,xMinPI,xMaxPI,xMaxPI };
+	
+	Double_t xOE[] = { xMinEO,xMinEO,xMaxEO,xMaxEO };
+	Double_t xOP[] = { xMinPO,xMinPO,xMaxPO,xMaxPO };
+	
+   Double_t y[] = {yUp,yDn,yDn,yUp};
+   
+	Double_t zC[] = {z,z,z,z};
+   
+	TPolyLine3D* polyline = 0;
+   if(side=="P" && io=="I") polyline = new TPolyLine3D(n,xIP,y,zC);
+   if(side=="E" && io=="I") polyline = new TPolyLine3D(n,xIE,y,zC);
+   if(side=="P" && io=="O") polyline = new TPolyLine3D(n,xOP,y,zC);
+   if(side=="E" && io=="O") polyline = new TPolyLine3D(n,xOE,y,zC);
+   polyline->SetLineColor(col);
+   return polyline;
 }
+
+TPolyLine3D* GetDipole(Color_t col)
+{
+   TPolyLine3D* polyline = new TPolyLine3D();
+   polyline->SetPoint(0,-xWdipole/2,-yHdipole/2,z1dipole);
+   polyline->SetPoint(1,-xWdipole/2,+yHdipole/2,z1dipole);
+   polyline->SetPoint(2,+xWdipole/2,+yHdipole/2,z1dipole);
+   polyline->SetPoint(3,+xWdipole/2,-yHdipole/2,z1dipole);
+   polyline->SetPoint(4,-xWdipole/2,-yHdipole/2,z1dipole);
+
+   polyline->SetPoint(5,-xWdipole/2,-yHdipole/2,z2dipole); // go up
+
+   polyline->SetPoint(6,-xWdipole/2,+yHdipole/2,z2dipole); // move
+   polyline->SetPoint(7,-xWdipole/2,+yHdipole/2,z1dipole); // go down
+   polyline->SetPoint(8,-xWdipole/2,+yHdipole/2,z2dipole); // up again
+
+   polyline->SetPoint(9,+xWdipole/2,+yHdipole/2,z2dipole); // move
+   polyline->SetPoint(10,+xWdipole/2,+yHdipole/2,z1dipole); // go down
+   polyline->SetPoint(11,+xWdipole/2,+yHdipole/2,z2dipole); // up again
+
+   polyline->SetPoint(12,+xWdipole/2,-yHdipole/2,z2dipole); // move
+   polyline->SetPoint(13,+xWdipole/2,-yHdipole/2,z1dipole); // go down
+   polyline->SetPoint(14,+xWdipole/2,-yHdipole/2,z2dipole); // up again
+
+   polyline->SetPoint(15,-xWdipole/2,-yHdipole/2,z2dipole); // move
+   polyline->SetPoint(16,-xWdipole/2,-yHdipole/2,z1dipole); // go down
+   polyline->SetPoint(17,-xWdipole/2,-yHdipole/2,z2dipole); // up again
+
+   polyline->SetLineColor(col);
+   return polyline;
+}
+
+TPolyLine3D* GetDipoleFront(Color_t col)
+{
+   TPolyLine3D* polyline = new TPolyLine3D();
+   polyline->SetPoint(0,-xWdipole/2,-yHdipole/2,z1dipole);
+   polyline->SetPoint(1,+xWdipole/2,-yHdipole/2,z1dipole);
+   polyline->SetPoint(2,+xWdipole/2,-yHdipole/2,z2dipole);
+   polyline->SetPoint(3,-xWdipole/2,-yHdipole/2,z2dipole);
+   polyline->SetPoint(4,-xWdipole/2,-yHdipole/2,z1dipole);
+   polyline->SetLineColor(col);
+   return polyline;
+}
+
+bool skipglitches(TPolyMarker3D* points)
+{
+	Double_t x,y,z;
+	for(int n=0 ; n<points->GetN() ; ++n)
+	{
+		points->GetPoint(n,x,y,z);
+		if(abs(x)>40 || abs(y)>5) return true;
+	}
+	return false;
+}
+
+void WriteGeometry(vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, TString process, vector<int>& inacc, vector<TPolyMarker3D*>& clusters, TString suff="")
+{
+   TCanvas* cnv_pl3d = new TCanvas("cnv_pl3d"+suff,"",500,500);
+   TView* view_pl3d = TView::CreateView(1);
+   view_pl3d->SetRange(-60,-20,0, +60,+20,zLastLayer+15);
+   view_pl3d->ShowAxis();
+   
+   TCanvas* cnv_pm3d = new TCanvas("cnv_pm3d"+suff,"",500,500);
+   TView* view_pm3d = TView::CreateView(1);
+   view_pm3d->SetRange(-60,-20,0, +60,+20,zLastLayer+15);
+   view_pm3d->ShowAxis();
+	
+	vector<TPolyLine3D*> staves;
+	vector<TPolyLine3D*> fstaves;
+	for(unsigned int l=0 ; l<layersz.size() ; ++l)
+	{
+		double  z  = layersz[l];
+		TString io = (layersnames[l].Contains("I")) ? "I" : "O";
+		TString pe = (layersnames[l].Contains("P")) ? "P" : "E";
+		staves.push_back( GetLayer(pe,io,z,kGreen+3) );
+		fstaves.push_back( GetLayerFront(pe,io,z,kGreen+3) );
+	}
+
+   TPolyLine3D* dipole  = GetDipole(kGray);
+	TPolyLine3D* fdipole = GetDipoleFront(kGray);
+	
+   cnv_pl3d->cd();
+   dipole->Draw();
+	for(unsigned int l=0 ; l<staves.size() ; l++) staves[l]->Draw();
+	
+   cnv_pm3d->cd();
+   dipole->Draw();
+	for(unsigned int l=0 ; l<staves.size() ; l++) staves[l]->Draw();
+	
+   for(int i=0 ; i<(int)poll.size() ; ++i)
+	{
+		/// check acceptance
+		if(!inacc[i]) continue;
+		/// check for glitches
+		if(skipglitches(polm[i])) continue;
+		
+		cnv_pl3d->cd();
+		poll[i]->Draw();
+		clusters[i]->Draw();
+		
+		cnv_pm3d->cd();
+		polm[i]->Draw();
+	}
+   
+   TLegend* leg = trkcolleg();
+   cnv_pl3d->cd();
+	fdipole->Draw();
+	for(unsigned int l=0 ; l<fstaves.size() ; l++) fstaves[l]->Draw();
+   leg->Draw("same");
+	
+   cnv_pm3d->cd();
+   leg->Draw("same");
+	
+   cnv_pl3d->SaveAs(storage+"/output/root/"+process+"_tracks_pl3d"+suff+".root");
+   cnv_pl3d->SaveAs(storage+"/output/pdf/"+process+"_tracks_pl3d"+suff+".pdf");
+   cnv_pm3d->SaveAs(storage+"/output/root/"+process+"_tracks_pm3d"+suff+".root");
+   cnv_pm3d->SaveAs(storage+"/output/pdf/"+process+"_tracks_pm3d"+suff+".pdf");
+   
+   TFile* flines = new TFile(storage+"/data/root/"+process+"_geometry"+suff+".root","RECREATE");
+   flines->cd();
+   dipole->Write();
+   fdipole->Write();
+	for(unsigned int l=0 ; l<staves.size() ; l++)  { staves[l]->Write(); fstaves[l]->Write(); }
+   leg->Write();
+   flines->Close();
+}
+
 
 bool accepttrk(vector<TPolyMarker3D*>& polm, int itrk)
 {
@@ -303,7 +642,7 @@ bool accepttrk(vector<TPolyMarker3D*>& polm, int itrk)
 	{
 		Double_t xr,yr,zr;
 		polm[itrk]->GetPoint(i,xr,yr,zr);
-		if(zr<300) continue; //// count only the active layers
+		if(zr<zLastLayer+15) continue; //// count only the active layers
 		int inacclayer = accept(xr,yr);
 		acctrk += inacclayer;
 	}
@@ -342,65 +681,75 @@ int CheckMatchingByID(int id1, int id2, int id3, int id4)
 	return posixs[0];
 }
 
+
 void prepare_cahced_clusters()
 {
-	vector<float> vf;
+	/// clear first
+	for(TMapTSvCls::iterator it=cached_clusters.begin() ; it!=cached_clusters.end() ; ++it) it->second.clear();
+	cached_clusters.clear();
+	/// then rebuild
+	vector<Cluster> vc;
 	vector<int> vi;
-	for(unsigned int s=0 ; s<sides.size() ; ++s)
+	for(TMapiTS::iterator it=layers.begin() ; it!=layers.begin() ; ++it)
 	{
-		for(TMapiTS::iterator it=layers.begin() ; it!=layers.begin() ; ++it)
-		{
-			for(unsigned int c=0 ; c<coord.size() ; ++c)
-			{
-				cached_clusters_xyz.insert( make_pair(coord[c]+"_"+it->second+"_"+sides[s],vf) );
-			}
-			for(unsigned int a=0 ; a<attri.size() ; ++a)
-			{
-				cached_clusters_att.insert( make_pair(attri[a]+"_"+it->second+"_"+sides[s],vi) );
-			}
-		}
+		// int     layerid   = it->first;
+		TString layername = it->second;
+		cached_clusters.insert( make_pair(layername,vc) );
 	}
 }
 
+
 void clear_cached_clusters()
 {
-	for(TMapTSvf::iterator it=cached_clusters_xyz.begin() ; it!=cached_clusters_xyz.end() ; ++it) it->second.clear();
-	for(TMapTSvi::iterator it=cached_clusters_att.begin() ; it!=cached_clusters_att.end() ; ++it) it->second.clear();
+	cached_clusters_id2lyr.clear();
+	for(TMapTSvCls::iterator it=cached_clusters.begin() ; it!=cached_clusters.end() ; ++it) it->second.clear();
 }
 
-int cache_clusters(vector<TPolyMarker3D*>* clusters_xyz, vector<vector<int> >* clusters_type, vector<vector<int> >* clusters_id, TString side, vector<int>* acc=0, int nMaxToCache=1410065407)
+
+int cache_clusters(vector<vector<TVector3> >* clusters_r, vector<vector<int> >* clusters_type, vector<vector<int> >* clusters_id, vector<vector<int> >* clusters_layerid, TString side, int nMaxToCache=1410065407)
 {
 	int ncached = 0;
-	int ntrks = (int)clusters_xyz->size();
+	int ntrks = (int)clusters_r->size();
 	int ntrkmax = (nMaxToCache>0 && nMaxToCache<ntrks) ? nMaxToCache : ntrks;
 	for(int i=0 ; i<ntrkmax ; i++)
 	{
-		if(acc) // if the vector is provided (for background only)
+		// if(acc) // if the vector is provided (for background only)
+		// {
+		// 	if(!acc->at(i)) continue; // check acceptnce
+		// }
+		for(Int_t j=0 ; j<clusters_r->at(i).size() ; ++j)
 		{
-			if(!acc->at(i)) continue; // check acceptnce
-		}
-		for(Int_t j=0 ; j<clusters_xyz->at(i)->GetN() ; ++j)
-		{
-			float x,y,z;
-			clusters_xyz->at(i)->GetPoint(j,x,y,z); // the clusters
-			if(x>0 and side=="Pside") continue;
-			if(x<0 and side=="Eside") continue;
-			TString sd = (x>0) ? "Eside" : "Pside";
-			TString lr = layers[z];
+			double x = clusters_r->at(i)[j].X();
+			double y = clusters_r->at(i)[j].Y();
+			double z = clusters_r->at(i)[j].Z();
+			if(x<0 and side=="Pside") continue;
+			if(x>0 and side=="Eside") continue;
+			int lyrid = clusters_layerid->at(i)[j];
+			TString lyrname = layers[lyrid];
+			int clstype = clusters_type->at(i)[j];
+			int clsid = clusters_id->at(i)[j];
 			
 			x = (doMisalignmentX) ? x+XvariationSign*dxAlignmentXFEL : x;
 			y = (doMisalignmentY) ? y+YvariationSign*dyAlignmentXFEL : y;
 			
-			cached_clusters_xyz["x_"+lr+"_"+sd].push_back(x);
-			cached_clusters_xyz["y_"+lr+"_"+sd].push_back(y);
-			cached_clusters_xyz["z_"+lr+"_"+sd].push_back(z);
-			cached_clusters_att["type_"+lr+"_"+sd].push_back( clusters_type->at(i)[silayers[lr]-1] );
-			cached_clusters_att["id_"+lr+"_"+sd].push_back( clusters_id->at(i)[silayers[lr]-1] );
+			Cluster cls;
+			cls.type  = clstype;
+			cls.lyrid = lyrid;
+			cls.lyrnm = lyrname;
+			cls.clsid = clsid;
+			cls.npixl = -1;
+			cls.shape = -1;
+			cls.charge = -1;
+			cls.r.SetXYZ(x,y,z);
+			
+			cached_clusters[lyrname].push_back(cls);
+			cached_clusters_id2lyr.insert(make_pair(clsid,lyrid));
 			ncached++;
 		}
 	}
 	return ncached;
 }
+
 
 void reset_layers_all()
 {
@@ -421,7 +770,7 @@ void reset_layers_tracks(Int_t skip=-1)
 	}
 }
 
-void add_bkg_cluster(int iLayer, float x, float y, float z, int id)
+void embed_cluster(int iLayer, float x, float y, float z, int id)
 {
 	/// set the clusters of the seed
 	double clxyzTrk[3];
@@ -433,55 +782,53 @@ void add_bkg_cluster(int iLayer, float x, float y, float z, int id)
 	det->GetLayer(iLayer)->AddBgCluster(clxyzTrk[0], clxyzTrk[1], clxyzTrk[2], id);
 }
 
+
 void add_all_clusters(TString side)
 {
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
+		int     lid = it->first;
 		TString slr = it->second;
-		int     zlr = it->first;
-		for(unsigned int i=0 ; i<cached_clusters_xyz["x_"+slr+"_"+side].size() ; ++i)
+		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
 		{
-			float x = cached_clusters_xyz["x_"+slr+"_"+side][i];
-			float y = cached_clusters_xyz["y_"+slr+"_"+side][i];
-			float z = cached_clusters_xyz["z_"+slr+"_"+side][i];
-			int  id = cached_clusters_att["id_"+slr+"_"+side][i];
-			if(zlr==300) add_bkg_cluster(1,x,y,z,id);
-			if(zlr==310) add_bkg_cluster(3,x,y,z,id);
-			if(zlr==320) add_bkg_cluster(5,x,y,z,id);
-			if(zlr==330) add_bkg_cluster(7,x,y,z,id);
+			float x = cached_clusters[slr][j].r.X();
+			float y = cached_clusters[slr][j].r.Y();
+			float z = cached_clusters[slr][j].r.Z();
+			int cid = cached_clusters[slr][j].clsid;
+			embed_cluster(lid,x,y,z,cid);	
 		}
-	}	
-	/// sort clusters
-	for(int l=0 ; l<det->GetLayers()->GetEntries() ; l++)
+	}
+	/// must sort clusters
+	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
-		det->GetLayer(l)->GetMCCluster()->Kill();
-		det->GetLayer(l)->SortBGClusters(); /// sort!!!
-		
+		int lid = it->first;
+		det->GetLayer(lid)->GetMCCluster()->Kill();
+		det->GetLayer(lid)->SortBGClusters(); /// sort!!!
 		/// after sorting, need to map the cluster ids to their indices!!!
-		bool active = (l==1 or l==3 or l==5 or l==7);
-		if(!active) continue;
-		for(int n=0 ; n<det->GetLayer(l)->GetNBgClusters() ; ++n)
+		for(int n=0 ; n<det->GetLayer(lid)->GetNBgClusters() ; ++n)
 		{
-			KMCClusterFwd *cl = det->GetLayer(l)->GetBgCluster(n);
-			int id = cl->GetTrID();
+			int id = det->GetLayer(lid)->GetBgCluster(n)->GetTrID();
 			cached_clusters_all_ids.insert( make_pair(id,n) );
 		}
 	}
 }
 
+
 void print_all_clusters(TString side, bool doprint = true)
 {	
 	if(!doprint) return;
-	for(int l=1 ; l<=7 ; l+=2) // active layers
+	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
-		for(int c=0 ; c<det->GetLayer(l)->GetNBgClusters() ; c++)
+		int     ilr = it->first;
+		TString slr = it->second;
+		for(int c=0 ; c<det->GetLayer(ilr)->GetNBgClusters() ; c++)
 		{
-			KMCClusterFwd* cluster = det->GetLayer(l)->GetBgCluster(c);
+			KMCClusterFwd* cluster = det->GetLayer(ilr)->GetBgCluster(c);
 			int  id = cluster->GetTrID();
 			float x = cluster->GetXLab();
 			float y = cluster->GetYLab();
 			float z = cluster->GetZLab();
-			cout << "side=" << side << ", layer=" << l << ", id=" << id << " --> r={" << x << ", " << y << ", " << z << "}" << endl;
+			cout << "side=" << side << ", layer=" << ilr << ", id=" << id << " --> r={" << x << ", " << y << ", " << z << "}" << endl;
 		}
 		cout << endl;
 	}
@@ -491,30 +838,37 @@ void print_all_clusters(TString side, bool doprint = true)
 	}
 }
 
-int fill_output_clusters(TString side, vector<TPolyMarker3D*>& cxyz, vector<int>& ctype, vector<int>& cid)
+int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>& ctype, vector<int>& cid)
 {
 	int nclusters = 0;
-	for(int l=1 ; l<=7 ; l+=2) // active layers
+	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
-		for(int c=0 ; c<det->GetLayer(l)->GetNBgClusters() ; c++)
+		vector<TVector3> v3tmp;
+		r.push_back(v3tmp);
+		int     ilr = it->first;
+		TString slr = it->second;
+		for(int c=0 ; c<det->GetLayer(ilr)->GetNBgClusters() ; c++)
 		{
-			KMCClusterFwd* cluster = det->GetLayer(l)->GetBgCluster(c);
+			KMCClusterFwd* cluster = det->GetLayer(ilr)->GetBgCluster(c);
 			int  id  = cluster->GetTrID();
 			float x  = cluster->GetXLab();
 			float y  = cluster->GetYLab();
 			float z  = cluster->GetZLab();
 	
-			int idx = getvecindex(id, cached_clusters_att["id_"+islayers[l]+"_"+side]);
-			int typ = (idx>=0) ? cached_clusters_att["type_"+islayers[l]+"_"+side][ idx ] : -3;
+			/// TODO!!!
+			// int idx = getvecindex(id, cached_clusters_att["id_"+islayers[ilr]+"_"+side]);
+			// int typ = (idx>=0) ? cached_clusters_att["type_"+islayers[l]+"_"+side][ idx ] : -3;
 			// cout << "id=" << id << ", idx=" << idx << ", typ=" << typ << endl;
-			if(idx<0) cout << "WARNING: cannot find in=" << id << " in cached clusters vector" << endl;
-		
-			TPolyMarker3D *point = new TPolyMarker3D();
-			point->SetNextPoint(x,y,z);
+			// if(idx<0) cout << "WARNING: cannot find in=" << id << " in cached clusters vector" << endl;
 			
-			cxyz.push_back(point);
-			ctype.push_back(typ);
-			cid.push_back(id);
+			int thisindex = r.size()-1;
+			
+			TVector3 point(x,y,z);
+			r[thisindex].push_back(point);
+			// ctype.push_back(typ);
+			ctype.push_back(-999); //TODO!!!
+			// cid.push_back(id);
+			cid.push_back(-999); //TODO!!!
 			nclusters++;
 		}
 	}
@@ -573,42 +927,49 @@ float zofx(float* r1,float* r2, float x)
 	return z;
 }
 
+
+///TODO!!!
 bool check_clusters(unsigned int i1, unsigned int i4, TString side)
 {
-	float yAbsMargins = 0.02; // cm (a "road" of 200 microns around the line between r4 and r1)
-	float xAbsMargins = 0.02; // cm (a "road" of 200 microns around the line between r4 and r1)
-	float r1min[3] = { cached_clusters_xyz["x_L1_"+side][i1]-xAbsMargins, cached_clusters_xyz["y_L1_"+side][i1]-yAbsMargins, cached_clusters_xyz["z_L1_"+side][i1] };
-	float r1max[3] = { cached_clusters_xyz["x_L1_"+side][i1]+xAbsMargins, cached_clusters_xyz["y_L1_"+side][i1]+yAbsMargins, cached_clusters_xyz["z_L1_"+side][i1] };
-	float r4min[3] = { cached_clusters_xyz["x_L4_"+side][i4]-xAbsMargins, cached_clusters_xyz["y_L4_"+side][i4]-yAbsMargins, cached_clusters_xyz["z_L4_"+side][i4] };
-	float r4max[3] = { cached_clusters_xyz["x_L4_"+side][i4]+xAbsMargins, cached_clusters_xyz["y_L4_"+side][i4]+yAbsMargins, cached_clusters_xyz["z_L4_"+side][i4] };
+	TString slyr1 = (side=="Eside") ? "EL1I" : "PL1I";
+	TString slyr2 = (side=="Eside") ? "EL2I" : "PL2I";
+	TString slyr3 = (side=="Eside") ? "EL3I" : "PL3I";
+	TString slyr4 = (side=="Eside") ? "EL4I" : "PL4I";
+	
+	float yAbsMargins = 0.03; //0.02; // cm (a "road" of 200 microns around the line between r4 and r1)
+	float xAbsMargins = 0.03; //0.02; // cm (a "road" of 200 microns around the line between r4 and r1)
+	float r1min[3]; r1min[0]=cached_clusters[slyr1][i1].r.X()-xAbsMargins; r1min[1]=cached_clusters[slyr1][i1].r.Y()-yAbsMargins; r1min[2]=cached_clusters[slyr1][i1].r.Z();
+	float r1max[3]; r1max[0]=cached_clusters[slyr1][i1].r.X()+xAbsMargins; r1max[1]=cached_clusters[slyr1][i1].r.Y()+yAbsMargins; r1max[2]=cached_clusters[slyr1][i1].r.Z();
+	float r4min[3]; r4min[0]=cached_clusters[slyr4][i4].r.X()-xAbsMargins; r4min[1]=cached_clusters[slyr4][i4].r.Y()-yAbsMargins; r4min[2]=cached_clusters[slyr4][i4].r.Z();
+	float r4max[3]; r4max[0]=cached_clusters[slyr4][i4].r.X()+xAbsMargins; r4max[1]=cached_clusters[slyr4][i4].r.Y()+yAbsMargins; r4max[2]=cached_clusters[slyr4][i4].r.Z();
 
 	/// check possible clusters in layer 2
-	float y2min = yofz(r1min,r4min,(float)szlayers["L2"]);
-	float y2max = yofz(r1max,r4max,(float)szlayers["L2"]);
-	float x2min = xofz(r1min,r4min,(float)szlayers["L2"]);
-	float x2max = xofz(r1max,r4max,(float)szlayers["L2"]);
+	float y2min = yofz(r1min,r4min,(float)szlayers[slyr2]);
+	float y2max = yofz(r1max,r4max,(float)szlayers[slyr2]);
+	float x2min = xofz(r1min,r4min,(float)szlayers[slyr2]);
+	float x2max = xofz(r1max,r4max,(float)szlayers[slyr2]);
 	bool accept2 = false;
-	for(unsigned int i2=0 ; i2<cached_clusters_xyz["x_L2_"+side].size() ; ++i2)
-	{	
-		bool acceptyz = ( cached_clusters_xyz["y_L2_"+side][i2]>=y2min and cached_clusters_xyz["y_L2_"+side][i2]<=y2max );
+	for(unsigned int i2=0 ; i2<cached_clusters[slyr2].size() ; ++i2)
+	{
+		bool acceptyz = ( cached_clusters[slyr2][i2].r.Y()>=y2min and cached_clusters[slyr2][i2].r.Y()<=y2max );
 		if(!acceptyz) continue;
-		bool acceptxz = ( cached_clusters_xyz["x_L2_"+side][i2]>=x2min and cached_clusters_xyz["x_L2_"+side][i2]<=x2max );
+		bool acceptxz = ( cached_clusters[slyr2][i2].r.X()>=x2min and cached_clusters[slyr2][i2].r.X()<=x2max );
 		if(!acceptxz) continue;
 		accept2 = true;
 		break;
 	}
 	if(!accept2) return false;
 
-	float y3min = yofz(r1min,r4min,(float)szlayers["L3"]);
-	float y3max = yofz(r1max,r4max,(float)szlayers["L3"]);
-	float x3min = xofz(r1min,r4min,(float)szlayers["L3"]);
-	float x3max = xofz(r1max,r4max,(float)szlayers["L3"]);
+	float y3min = yofz(r1min,r4min,(float)szlayers[slyr3]);
+	float y3max = yofz(r1max,r4max,(float)szlayers[slyr3]);
+	float x3min = xofz(r1min,r4min,(float)szlayers[slyr3]);
+	float x3max = xofz(r1max,r4max,(float)szlayers[slyr3]);
 	bool accept3 = false;
-	for(unsigned int i3=0 ; i3<cached_clusters_xyz["x_L3_"+side].size() ; ++i3)
+	for(unsigned int i3=0 ; i3<cached_clusters[slyr3].size() ; ++i3)
 	{
-		bool acceptyz = ( cached_clusters_xyz["y_L3_"+side][i3]>=y3min and cached_clusters_xyz["y_L3_"+side][i3]<=y3max );
+		bool acceptyz = ( cached_clusters[slyr3][i3].r.Y()>=y3min and cached_clusters[slyr3][i3].r.Y()<=y3max );
 		if(!acceptyz) continue;
-		bool acceptxz = ( cached_clusters_xyz["x_L3_"+side][i3]>=x3min and cached_clusters_xyz["x_L3_"+side][i3]<=x3max );
+		bool acceptxz = ( cached_clusters[slyr3][i3].r.X()>=x3min and cached_clusters[slyr3][i3].r.X()<=x3max );
 		if(!acceptxz) continue;
 		accept3 = true;
 		break;
@@ -618,36 +979,53 @@ bool check_clusters(unsigned int i1, unsigned int i4, TString side)
 	return true;
 }
 
-bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned int i4, TString side, TLorentzVector& p, bool calibrate=false)
+bool adaptive_dx14_vs_x4(double x4, double x1, TF1* fDxvsX, double width0, int tirals=3)
+{
+	double dx = abs(x4-x1);
+	if(dx>5) return false;
+	double width = width0;
+	double step  = width0/4.;
+	for(int i=1 ; i<=tirals ; ++i)
+	{
+		bool passUp = (dx<(fDxvsX->Eval(x4)+width));
+		bool passDn = (dx>(fDxvsX->Eval(x4)-width));
+		// cout << i << ": width=" << width << ", passUp=" << passUp << ", passDn=" << passDn << endl;
+		if(passUp && passDn) return true;
+		width = width0 + i*step; // increase the width by 20% each time
+	}
+	return false;
+}
+
+
+
+bool makeseed_nonuniformB(TString process, float* r1, float* r4, unsigned int i1, unsigned int i4, TString side, TLorentzVector& p, TF1* fEvsX, TF1* fDxvsX)
 {
 	if(abs(r1[0])>=abs(r4[0]))            return false; // |x1| must be smaller than |x4|
-	if(r1[0]>0 and r4[0]<0)               return false;
-	if(r1[0]<0 and r4[0]>0)               return false;
-	if(r1[2]==r4[2])                      return false; // if z1=z4...
-	float yDipoleExitAbsMax = (process=="bppp") ? 0.2 : 0.7; // cm
-	float xDipoleExitAbsMin = (process=="bppp") ? 1.  : 4. ; // cm
-	float xDipoleExitAbsMax = (process=="bppp") ? 25. : 30.;	// cm
+	if(r1[0]*r4[0]<0)                     return false; // not on the same side...
+	if(r1[2]==r4[2])                      return false; // trivial, make sure z is not the same
+	float yDipoleExitAbsMax = (process=="glaser") ? 0.12 : 0.7; // cm
+	float xDipoleExitAbsMin = (process=="glaser") ? 2.  : 4. ; // cm
+	float xDipoleExitAbsMax = (process=="glaser") ? 15. : 30.; // cm
 	float yDipoleExit = yofz(r1,r4,zDipoleExit);
 	float xDipoleExit = xofz(r1,r4,zDipoleExit);
-	if(abs(yDipoleExit)>yDipoleExitAbsMax) return false; // the track should point to |y|<~0.2 at the dipole exit
-	if(abs(xDipoleExit)<xDipoleExitAbsMin) return false; // the track should point to |x|<~1.0 at the dipole exit
-	if(abs(xDipoleExit)>xDipoleExitAbsMax) return false;
-	if(!check_clusters(i1,i4,side))        return false; // minimum one cluster at layer 2 and one at layer 3
+	if(abs(yDipoleExit)>yDipoleExitAbsMax) return false; // the track should point to |y|<yDipoleExitAbsMax at the dipole exit
+	if(abs(xDipoleExit)<xDipoleExitAbsMin) return false; // the track should point to |x|>xDipoleExitAbsMin at the dipole exit
+	if(abs(xDipoleExit)>xDipoleExitAbsMax) return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
+	// if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])*(1+0.1))) return false; // new cut!!
+	// if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])*(1-0.1))) return false; // new cut!!
+	if(abs(r4[0]-r1[0])>5.5 || abs(r4[0]-r1[0])<0.5) return false; // new cut!!
+	if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])+0.1))   return false; // new cut!!
+	if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])-0.1))   return false; // new cut!!
+	// if(!adaptive_dx14_vs_x4(r4[0],r1[0],fDxvsX,0.2,4)) return false;
+	// if(!check_clusters(i1,i4,side))        return false; // minimum one cluster at layer 2 and one at layer 3 ///TODO!!!
 
 	TRandom rnd;
 	rnd.SetSeed();
 	double posneg = rnd.Uniform(-1,+1);
 	double pxgaus = rnd.Gaus(7.2e-4,5.0e-4);
 
-	double x0 = 0;
-	double z0 = zofx(r1,r4,x0);
-	double xExit = abs(xofz(r1,r4,zDipoleExit))*cm2m;
-	double H = abs((zDipoleExit-z0))*cm2m;
-	double R = H*(LB)/xExit + xExit; // look this up in my slides
-	double P = 0.3*B*R;
-	P = (calibrate) ? P/1.001 : P;
-	
-	// if(i4==0 and side=="Eside") cout << "z0=" << z0 << ", xExit=" << xExit << ", H=" << H << ", R=" << R << ", P=" << P << endl;
+	double xExit = abs(xofz(r1,r4,zDipoleExit)); // in cm!
+	double P = fEvsX->Eval(r4[0]); // in GeV
 
 	TVector2 v1(r1[2],r1[1]);
 	TVector2 v4(r4[2],r4[1]);
@@ -660,52 +1038,13 @@ bool makeseed(TString process, float* r1, float* r4, unsigned int i1, unsigned i
 	p.SetPxPyPzE(px,py,pz,TMath::Sqrt(px*px + py*py + pz*pz + meGeV2));
 	// if(i4==0 and side=="Eside") cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
 	// cout << "side=" << side << ", px=" << px << ", py=" << py << ", pz=" << pz << endl;
-	float EseedMax = (process=="bppp") ? EseedMaxBPPP : EseedMaxTRIDENT;	// GeV
+	float EseedMax = (process=="glaser") ? EseedMaxBPPP : EseedMaxTRIDENT;	// GeV
 	if(p.E()<EseedMin or p.E()>EseedMax) return false;
 
 	return true;
 }
 
 
-int imatched(TPolyMarker3D* mrec, vector<TPolyMarker3D*>* clusters_xyz, TString side, double maxdistance=0.5)
-{
-	bestdistance = -1;
-	bestmatchtrui = -1;
-	bestmatchreci = -1;
-	int imindistance = -1;
-	double mindistance = 1e10;
-	for(unsigned int i=0 ; i<clusters_xyz->size() ; i++)
-	{
-		double distance = 0;
-		for(Int_t jTru=0 ; jTru<clusters_xyz->at(i)->GetN() ; ++jTru)
-		{
-			double xTru,yTru,zTru;
-			clusters_xyz->at(i)->GetPoint(jTru,xTru,yTru,zTru); // the clusters
-			if(xTru>0 and side=="Pside") continue;
-			if(xTru<0 and side=="Eside") continue;
-			for(Int_t jRec=0 ; jRec<mrec->GetN() ; ++jRec)
-			{
-				double xRec,yRec,zRec;
-				mrec->GetPoint(jRec,xRec,yRec,zRec);
-				if(abs(zRec-zTru)<1e-2)
-				{
-					distance += sqrt((xRec-xTru)*(xRec-xTru)+(yRec-yTru)*(yRec-yTru));
-					// cout << "i=" << i << ", rTru={" << xTru << "," << yTru << "," << zTru << "}, rRec={" << xRec << "," << yRec << "," << zRec << "} --> distance=" << distance << endl;
-				}
-			}
-		}
-		// distance is the sum of sqrt{dx^2+dy^2} from all 4 rec clusters and the truth position of the truth digitised clusters
-		if(distance>0 and distance<mindistance and distance<maxdistance)
-		{
-			imindistance = i;
-			mindistance  = distance;
-			bestdistance = distance;
-		}
-		// if(distance>0) cout << "i=" << i << ", distance=" << distance << " --> {mindistance=" << mindistance << ", imindistance=" << imindistance << "}"<< endl;
-	}
-	// cout << "imindistance=" << imindistance << ", mindistance=" << mindistance << endl;
-	return imindistance;
-}
 
 TString FormatEventID(int evnt)
 {
@@ -730,12 +1069,6 @@ int toint(TString str)
 }
 
 
-// void Reconstruction(TString process, int nMaxBkgTrks=-1, int Seed=12345)
-// {
-// 	cout << "Settings" << endl;
-// 	TString setup = "../setup/setupLUXE_"+process+".txt";
-// 	gROOT->LoadMacro("Loader.C+");
-// 	gRandom->SetSeed(Seed);
 
 int main(int argc, char *argv[])
 {	
@@ -743,6 +1076,7 @@ int main(int argc, char *argv[])
 	printf("Program Name Is: %s",argv[0]);
 	if(argc>=2) 
 	{ 
+		//gInterpreter->GenerateDictionary("vector<vector<TVector3> >",    "vector");
 		printf("\nNumber Of Arguments Passed: %d",argc); 
 		printf("\n----Following Are The Command Line Arguments Passed----"); 
 		for(argcounter=0;argcounter<argc;argcounter++) printf("\nargv[%d]: %s",argcounter,argv[argcounter]);
@@ -752,297 +1086,63 @@ int main(int argc, char *argv[])
 	if(argc<2) { printf("argc<2, exitting now\n"); exit(-1); }
 	//// validate inputs
 	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n",argv[1]); exit(-1); }
-	if(argc==3 and !((TString)argv[2]).Contains("-evnt=")) { printf("argc=3 but cannot parse %s\n",argv[2]); exit(-1); }
-	if(argc==4 and !((TString)argv[3]).Contains("-seed=")) { printf("argc=4 but cannot parse %s\n",argv[3]); exit(-1); }
-	if(argc==5 and !((TString)argv[4]).Contains("-ntrk=")) { printf("argc=5 but cannot parse %s\n",argv[4]); exit(-1); }
+	if(argc==3 and !((TString)argv[2]).Contains("-dobg=")) { printf("argc=3 but cannot parse %s\n",argv[2]); exit(-1); }
+	if(argc==4 and !((TString)argv[3]).Contains("-evnt=")) { printf("argc=4 but cannot parse %s\n",argv[3]); exit(-1); }
+	if(argc==5 and !((TString)argv[4]).Contains("-seed=")) { printf("argc=5 but cannot parse %s\n",argv[4]); exit(-1); }
+	if(argc==6 and !((TString)argv[5]).Contains("-ntrk=")) { printf("argc=6 but cannot parse %s\n",argv[5]); exit(-1); }
 	//// assign inputs
 	TString process = ((TString)argv[1]).ReplaceAll("-proc=",""); // mandatory
-	int     evnt    = (argc>2)     ? toint(((TString)argv[2]).ReplaceAll("-evnt=","")) : -1; // job id [optional]
-	int     Seed    = (argc>3)     ? toint(((TString)argv[3]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
-	int     nMaxBkgTrks = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-ntrk=","")) : -1; // job id [optional]
+	int     dobg     = (argc>2) ? toint(((TString)argv[2]).ReplaceAll("-dobg=","")) : 0; // job id [optional]
+	int     evnt     = (argc>2) ? toint(((TString)argv[3]).ReplaceAll("-evnt=","")) : -1; // job id [optional]
+	int     Seed     = (argc>3) ? toint(((TString)argv[4]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
+	int     nsigtrks = (argc>4) ? toint(((TString)argv[5]).ReplaceAll("-ntrk=","")) : -1; // job id [optional]
 	//// print assigned inputs
 	cout << "process=" << process << endl;
+	cout << "dobkg?=" << dobg << endl;
 	cout << "evnt=" << evnt << endl;
-	cout << "nMaxBkgTrks=" << nMaxBkgTrks << endl;
+	cout << "nsigtrks=" << nsigtrks << endl;
 	cout << "Seed=" << Seed << endl;
-	
-	
-	
-	
 	
 	// TString proc = process;
 	TString eventid = (evnt<0) ? "" : FormatEventID(evnt);
 	TStopwatch stopwatch;
-	TString setup = "../setup/setupLUXE_"+process+".txt";
-	det = new KMCDetectorFwd();
-	det->ReadSetup(setup,setup);
-	det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VertexTelescope
-	det->SetMinITSHits(det->GetNumberOfActiveLayersITS()); // require hit in every layer
-	det->SetMinMSHits(0); // we don't have muon spectrometer
-	det->SetMinTRHits(0); // we don't have muon trigger stations
-	// max number of seeds on each layer to propagate (per muon track)
-	det->SetMaxSeedToPropagate(3000); // relevant only if background is considered
-	// set chi2 cuts
-	// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
-	// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
-	det->SetMaxChi2Cl(10.);  // max track to cluster chi2
-	// det->SetMaxChi2NDF(3.5); // max total chi2/ndf
-	// det->SetMaxChi2NDF((process=="trident")?15.:5.); // max total chi2/ndf
-	// det->SetMaxChi2NDF((process=="trident")?15.:5.); // max total chi2/ndf
-	det->SetMaxChi2NDF((process=="trident")?15.:5.); // max total chi2/ndf
-	det->SetMaxChi2Vtx(20e9);  // fiducial cut on chi2 of convergence to vtx
-	// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
-	// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
-	det->SetDefStepAir(1); // IMPORTANT FOR NON-UNIFORM FIELDS
-	det->SetMinP2Propagate(0.3); //NA60+
-	det->SetIncludeVertex(kTRUE); // count vertex as an extra measured point
-	det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
-	det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
-	// for reconstruction:
-	// det->SetErrorScale(500.);
-	// det->SetErrorScale( (process=="trident")?500.:200. );
-	det->SetErrorScale( (process=="trident")?500.:300. ); // was 400 earlier, can be also anywhere up to 1000
-	det->Print();
-	// det->BookControlHistos();
 	
-	zlayer->push_back(0);   //// NOAM --> GET FROM THE SETUP --> IP (vertex)
-	zlayer->push_back(100); //// NOAM --> GET FROM THE SETUP --> start of dipol
-	zlayer->push_back(200); //// NOAM --> GET FROM THE SETUP --> end of dipol
-	zlayer->push_back(300); //// NOAM --> GET FROM THE SETUP --> layer 1
-	zlayer->push_back(310); //// NOAM --> GET FROM THE SETUP --> layer 2
-	zlayer->push_back(320); //// NOAM --> GET FROM THE SETUP --> layer 3
-	zlayer->push_back(330); //// NOAM --> GET FROM THE SETUP --> layer 4
-
-	int outN = (process=="trident") ? 10 : 10;
 	
-	//// get the Bfield from the setup
-	TVirtualMagField* fld = TGeoGlobalMagField::Instance()->GetField();
-	MagField* fldm = (MagField*) fld;
-	const double* BfieldObj = fldm->GetBVals(0);
-	double BfieldValTesla = BfieldObj[1]/10; /// the B dield is only in the y direction (0,B,0), hence the index 1
-	cout << "BfieldValTesla=" << BfieldValTesla << " [T]" << endl;
-	B = BfieldValTesla;
-	// B = (process=="trident") ? 1.0 : 1.75;
+	/// get the B-field vs xExit functions to read off the 
+	// TFile* fEvsx = new TFile(storage+"/output/root/test_bfield_fit.root","READ");
+	// TF1* fEvsX_pos = (TF1*)fEvsx->Get("fEvsX_pos");
+	// TF1* fEvsX_ele = (TF1*)fEvsx->Get("fEvsX_ele");
+	
+	TFile* fFits = new TFile(storage+"/output/root/test_bfield_fit2.root","READ");
+	
 
-	if(process=="trident")
+	TF1* fEvsX_L1I_Eside = (TF1*)fFits->Get("h2_E_vs_x_L1I_Eside");
+	TF1* fEvsX_L1I_Pside = (TF1*)fFits->Get("h2_E_vs_x_L1I_Pside");
+	TF1* fEvsX_L4I_Eside = (TF1*)fFits->Get("h2_E_vs_x_L4I_Eside");
+	TF1* fEvsX_L4I_Pside = (TF1*)fFits->Get("h2_E_vs_x_L4I_Pside");
+	TF1* fDx14vsX_L4I_Eside = (TF1*)fFits->Get("h2_dx14_vs_x_L4I_Eside");
+	TF1* fDx14vsX_L4I_Pside = (TF1*)fFits->Get("h2_dx14_vs_x_L4I_Pside");
+	cout << "setup fits from files" << endl;
+
+	int outN = (process=="elaser") ? 10 : 10;
+
+	if(process=="elaser")
 	{
-		resetToTridentGeometry();
+		// resetToTridentGeometry();
 		cout << "Doing only Pside!" << endl;
-		sides.clear(); sides.push_back("Pside"); /// do not reconstruct the Eside
+		sides.clear();
+		sides.push_back("Pside"); /// do not reconstruct the Eside
 	}
-
-	/// get the signal clusters
-	cout << "Getting signal clusters from tree" << endl;
-	TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"_"+eventid+".root","READ");
-	TTree* tSig = (TTree*)fSig->Get("dig");
-	int                      sig_ngen          = 0;
-	int                      sig_nslv          = 0;
-	int                      sig_nacc          = 0;
-	vector<double>*          sig_wgt           = 0;
-	vector<int>*             sig_crg           = 0;
-	vector<float>*           sig_xvtx          = 0;
-	vector<float>*           sig_yvtx          = 0;
-	vector<float>*           sig_zvtx          = 0;
-	vector<TLorentzVector>*  sig_trkp4         = 0;
-	vector<int>*             sig_acc           = 0;
-	vector<vector<int> >*    sig_clusters_id   = 0;
-	vector<vector<int> >*    sig_clusters_type = 0;
-	vector<TPolyMarker3D*>*  sig_clusters_xyz  = 0;
-	vector<TPolyMarker3D*>*  sig_trkpts        = 0;
-	vector<TPolyLine3D*>*    sig_trklin        = 0;
-	tSig->SetBranchAddress("ngen",         &sig_ngen);
-	tSig->SetBranchAddress("nslv",         &sig_nslv);
-	tSig->SetBranchAddress("nacc",         &sig_nacc);
-	tSig->SetBranchAddress("wgt",          &sig_wgt);
-	tSig->SetBranchAddress("crg",          &sig_crg);
-   tSig->SetBranchAddress("xvtx",         &sig_xvtx);
-   tSig->SetBranchAddress("yvtx",         &sig_yvtx);
-   tSig->SetBranchAddress("zvtx",         &sig_zvtx);
-	tSig->SetBranchAddress("trkp4",        &sig_trkp4);
-	tSig->SetBranchAddress("acc",          &sig_acc);
-	tSig->SetBranchAddress("clusters_id",  &sig_clusters_id);
-	tSig->SetBranchAddress("clusters_type",&sig_clusters_type);
-	tSig->SetBranchAddress("clusters_xyz", &sig_clusters_xyz);
-	tSig->SetBranchAddress("trkpts",       &sig_trkpts);
-	tSig->SetBranchAddress("trklin",       &sig_trklin);
 	
-	/// get the background clusters
-	cout << "Getting background clusters from tree" << endl;
-	// TChain* tBkg = new TChain("dig");
-	// tBkg->Add(storage+"/data/root/dig_"+process+"_bkg_0*.root");
-	// cout << "---- TChain content ----" << endl;
-	// tBkg->ls();
-	// cout << "------------------------" << endl;
-	TFile* fBkg = new TFile(storage+"/data/root/dig/dig_"+process+"_bkg_"+eventid+".root","READ");
-	TTree* tBkg = (TTree*)fBkg->Get("dig");
-	int                      bkg_ngen          = 0;
-	int                      bkg_nslv          = 0;
-	int                      bkg_nacc          = 0;
-	vector<double>*          bkg_wgt           = 0;
-	vector<int>*             bkg_crg           = 0;
-	vector<float>*           bkg_xvtx          = 0;
-	vector<float>*           bkg_yvtx          = 0;
-	vector<float>*           bkg_zvtx          = 0;
-	vector<TLorentzVector>*  bkg_trkp4         = 0;
-	vector<int>*             bkg_acc           = 0;
-	vector<vector<int> >*    bkg_clusters_id   = 0;
-	vector<vector<int> >*    bkg_clusters_type = 0;
-	vector<TPolyMarker3D*>*  bkg_clusters_xyz  = 0;
-	vector<TPolyMarker3D*>*  bkg_trkpts        = 0;
-	vector<TPolyLine3D*>*    bkg_trklin        = 0;
-	tBkg->SetBranchAddress("ngen",         &bkg_ngen);
-	tBkg->SetBranchAddress("nslv",         &bkg_nslv);
-	tBkg->SetBranchAddress("nacc",         &bkg_nacc);
-	tBkg->SetBranchAddress("wgt",          &bkg_wgt);
-	tBkg->SetBranchAddress("crg",          &bkg_crg);
-   tBkg->SetBranchAddress("xvtx",         &bkg_xvtx);
-   tBkg->SetBranchAddress("yvtx",         &bkg_yvtx);
-   tBkg->SetBranchAddress("zvtx",         &bkg_zvtx);
-	tBkg->SetBranchAddress("trkp4",        &bkg_trkp4);
-	tBkg->SetBranchAddress("acc",          &bkg_acc);
-	tBkg->SetBranchAddress("clusters_id",  &bkg_clusters_id);
-	tBkg->SetBranchAddress("clusters_type",&bkg_clusters_type);
-	tBkg->SetBranchAddress("clusters_xyz", &bkg_clusters_xyz);
-	tBkg->SetBranchAddress("trkpts",       &bkg_trkpts);
-	tBkg->SetBranchAddress("trklin",       &bkg_trklin);
-	
-
 	// output tree
 	cout << "Setting the output tree" << endl;
-	gInterpreter->GenerateDictionary("vector<TLorentzVector>", "vector");
-	gInterpreter->GenerateDictionary("vector<TPolyMarker3D*>", "vector");
-	gInterpreter->GenerateDictionary("vector<TPolyLine3D*>",   "vector");
-	gInterpreter->GenerateDictionary("vector<vector<int> >",   "vector");
+	gInterpreter->GenerateDictionary("vector<TLorentzVector>",    "vector");
+	gInterpreter->GenerateDictionary("vector<TPolyMarker3D*>",    "vector");
+	gInterpreter->GenerateDictionary("vector<TPolyLine3D*>",      "vector");
+	gInterpreter->GenerateDictionary("vector<vector<int> >",      "vector");
+	gInterpreter->GenerateDictionary("vector<vector<TVector3> >", "vector");
 	gSystem->Exec("mkdir -p "+storage+"/data/root/rec");
-	TFile* fOut = new TFile(storage+"/data/root/rec/rec_"+process+"_"+eventid+".root","RECREATE");
-	TTree* tOut = new TTree("reco","reco");
-	/// all clusters output branches
-	vector<TPolyMarker3D*>  all_clusters_xyz;
-	vector<int>             all_clusters_type;
-	vector<int>             all_clusters_id;
-	tOut->Branch("all_clusters_xyz",  &all_clusters_xyz);
-	tOut->Branch("all_clusters_type", &all_clusters_type);
-	tOut->Branch("all_clusters_id",   &all_clusters_id);
-	/// truth output branches
-	vector<int>            true_acc;
-	vector<float>          true_wgt;
-	vector<float>          true_x;
-	vector<float>          true_y;
-	vector<float>          true_z;
-	vector<float>          true_q;
-	vector<TLorentzVector> true_p;
-	vector<TPolyMarker3D*> true_trckmar;
-	vector<TPolyLine3D*>   true_trcklin;
-	vector<vector<int> >   true_rec_imatch;
-	vector<vector<int> >   true_clusters_id;
-	tOut->Branch("true_acc",         &true_acc);
-	tOut->Branch("true_wgt",         &true_wgt);
-	tOut->Branch("true_x",           &true_x);
-	tOut->Branch("true_y",           &true_y);
-	tOut->Branch("true_z",           &true_z);
-	tOut->Branch("true_q",           &true_q);
-	tOut->Branch("true_p",           &true_p);
-	tOut->Branch("true_trckmar",     &true_trckmar);
-	tOut->Branch("true_trcklin",     &true_trcklin);
-	tOut->Branch("true_rec_imatch",  &true_rec_imatch);
-	tOut->Branch("true_clusters_id", &true_clusters_id);
-	/// background tracks output branches
-	vector<int>              bkgr_acc;
-	vector<float>            bkgr_wgt;
-	vector<float>            bkgr_x;
-	vector<float>            bkgr_y;
-	vector<float>            bkgr_z;
-	vector<float>            bkgr_q;
-	vector<TLorentzVector>   bkgr_p;
-	vector<TPolyMarker3D*>   bkgr_trckmar;
-	vector<TPolyLine3D*>     bkgr_trcklin;
-	vector<vector<int> >     bkgr_clusters_id;
-	tOut->Branch("bkgr_acc",         &bkgr_acc);
-	tOut->Branch("bkgr_wgt",         &bkgr_wgt);
-	tOut->Branch("bkgr_x",           &bkgr_x);
-	tOut->Branch("bkgr_y",           &bkgr_y);
-	tOut->Branch("bkgr_z",           &bkgr_z);
-	tOut->Branch("bkgr_q",           &bkgr_q);
-	tOut->Branch("bkgr_p",           &bkgr_p);
-	tOut->Branch("bkgr_trckmar",     &bkgr_trckmar);
-	tOut->Branch("bkgr_trcklin",     &bkgr_trcklin);
-	tOut->Branch("bkgr_clusters_id", &bkgr_clusters_id);
-	/// seeds output branches
-	vector<int>            seed_type;
-	vector<vector<int> >   seed_clusters_id;
-	vector<float>          seed_q;
-	vector<TLorentzVector> seed_p;
-	tOut->Branch("seed_type",        &seed_type);
-	tOut->Branch("seed_clusters_id", &seed_clusters_id);
-	tOut->Branch("seed_q",           &seed_q);
-	tOut->Branch("seed_p",           &seed_p);
-	/// reconstructed clusters output branches
-	vector<float>            reco_q;
-	vector<TLorentzVector>   reco_p;
-	vector<float>            reco_x;
-	vector<float>            reco_y;
-	vector<float>            reco_z;
-	vector<TPolyMarker3D*>   reco_trckmar;
-	vector<TPolyLine3D*>     reco_trcklin;
-	vector<float>            reco_chi2dof;
-	vector<int>              reco_ismtchd;
-	vector<int>              reco_ixmtchd;
-	vector<int>              reco_idmtchd;
-	vector<vector<int> >     reco_clusters_id;
-	vector<double>           reco_Tgl;
-	vector<double>           reco_Snp; // the slope in X direction: probe->GetTrack()->GetSnp()
-	vector<double>           reco_alpha;
-	vector<double>           reco_signedinvpT; // new: the curvature (q/Pyz): probe->GetTrack()->GetSigned1Pt()
-	vector<double>           reco_sigmaY2;
-	vector<double>           reco_sigmaZY;
-	vector<double>           reco_sigmaZ2;
-	vector<double>           reco_sigmaSnpY;
-	vector<double>           reco_sigmaSnpZ;
-	vector<double>           reco_sigmaSnp2; // probe->GetTrack()->GetSigmaSnp2()
-	vector<double>           reco_sigmaTglY;
-	vector<double>           reco_sigmaTglZ;
-	vector<double>           reco_sigmaTglSnp;
-	vector<double>           reco_sigmaTgl2;
-	vector<double>           reco_sigma1PtY;
-	vector<double>           reco_sigma1PtZ;
-	vector<double>           reco_sigma1PtSnp;
-	vector<double>           reco_sigma1PtTgl;
-	vector<double>           reco_sigma1Pt2;
-	vector<double>           reco_invpT;
-	vector<double>           reco_signedpT;
-	tOut->Branch("reco_q",           &reco_q);
-	tOut->Branch("reco_p",           &reco_p);
-	tOut->Branch("reco_x",           &reco_x);
-	tOut->Branch("reco_y",           &reco_y);
-	tOut->Branch("reco_z",           &reco_z);
-	tOut->Branch("reco_trckmar",     &reco_trckmar);
-	tOut->Branch("reco_trcklin",     &reco_trcklin);
-	tOut->Branch("reco_chi2dof",     &reco_chi2dof);
-	tOut->Branch("reco_ismtchd",     &reco_ismtchd);
-	tOut->Branch("reco_ixmtchd",     &reco_ixmtchd);
-	tOut->Branch("reco_idmtchd",     &reco_idmtchd);
-	tOut->Branch("reco_clusters_id", &reco_clusters_id);
-	tOut->Branch("reco_Tgl",         &reco_Tgl        );
-	tOut->Branch("reco_Snp",         &reco_Snp        );
-	tOut->Branch("reco_alpha",       &reco_alpha      );
-	tOut->Branch("reco_signedinvpT", &reco_signedinvpT);
-	tOut->Branch("reco_sigmaY2",     &reco_sigmaY2    );
-	tOut->Branch("reco_sigmaZY",     &reco_sigmaZY    );
-	tOut->Branch("reco_sigmaZ2",     &reco_sigmaZ2    );
-	tOut->Branch("reco_sigmaSnpY",   &reco_sigmaSnpY  );
-	tOut->Branch("reco_sigmaSnpZ",   &reco_sigmaSnpZ  );
-	tOut->Branch("reco_sigmaSnp2",   &reco_sigmaSnp2  );
-	tOut->Branch("reco_sigmaTglY",   &reco_sigmaTglY  );
-	tOut->Branch("reco_sigmaTglZ",   &reco_sigmaTglZ  );
-	tOut->Branch("reco_sigmaTglSnp", &reco_sigmaTglSnp);
-	tOut->Branch("reco_sigmaTgl2",   &reco_sigmaTgl2  );
-	tOut->Branch("reco_sigma1PtY",   &reco_sigma1PtY  );
-	tOut->Branch("reco_sigma1PtZ",   &reco_sigma1PtZ  );
-	tOut->Branch("reco_sigma1PtSnp", &reco_sigma1PtSnp);
-	tOut->Branch("reco_sigma1PtTgl", &reco_sigma1PtTgl);
-	tOut->Branch("reco_sigma1Pt2",   &reco_sigma1Pt2  );
-	tOut->Branch("reco_invpT",       &reco_invpT      );
-	tOut->Branch("reco_signedpT",    &reco_signedpT   );
+	
 	
 	/// monitoring histograms
 	Int_t nlogebins = 30;
@@ -1072,167 +1172,441 @@ int main(int argc, char *argv[])
 	hname = "h_E_eff_sed_Pside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",68,0,17)) );
 	hname = "h_E_eff_rec_Eside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",68,0,17)) );
 	hname = "h_E_eff_rec_Pside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",68,0,17)) );
- 
-	/// prepare the dictionaries
-	prepare_cahced_clusters();
- 
-	/// for timing
-	Double_t av_cputime  = 0;
-	Double_t av_realtime = 0;
- 
-	/// loop on events
-	Int_t nsigevents = tSig->GetEntries();
-	Int_t nbkgevents = tBkg->GetEntries();
-	if(nbkgevents<nsigevents)
+	
+	
+	
+	
+	/////////////////////
+	/// loop on the sides
+	for(unsigned int s=0 ; s<sides.size() ; ++s)
 	{
-		cout << "ERROR: nbkgevents<nsigevents" << endl;
-		cout << "       nsigevents=" << nsigevents << endl;
-		cout << "       nbkgevents=" << nbkgevents << endl;
-		exit(-1);
-	}
-	cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
-	for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
-	// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
-	{
-		stopwatch.Start();
+		TString side = sides[s];
 		
-		//////////////////////////////
-		//// get the next input entry
-		tSig->GetEntry(iev); /// signal
-		tBkg->GetEntry(iev); /// background
+		TFile* fOut = new TFile(storage+"/data/root/rec/rec_"+process+"_"+eventid+"_"+side+".root","RECREATE");
+		TTree* tOut = new TTree("reco","reco");
+		/// all clusters output branches
+		vector<TPolyMarker3D*>     all_clusters_xyz;
+		vector<vector<TVector3> >  all_clusters_r;
+		vector<int>                all_clusters_type;
+		vector<int>                all_clusters_id;
+		tOut->Branch("all_clusters_xyz",  &all_clusters_xyz);
+		tOut->Branch("all_clusters_r",    &all_clusters_r);
+		tOut->Branch("all_clusters_type", &all_clusters_type);
+		tOut->Branch("all_clusters_id",   &all_clusters_id);
+		/// truth output branches
+		vector<int>            true_acc;
+		vector<float>          true_wgt;
+		vector<float>          true_x;
+		vector<float>          true_y;
+		vector<float>          true_z;
+		vector<float>          true_q;
+		vector<TLorentzVector> true_p;
+		vector<TPolyMarker3D*> true_trckmar;
+		vector<TPolyLine3D*>   true_trcklin;
+		vector<vector<int> >   true_rec_imatch;
+		vector<vector<int> >   true_clusters_id;
+		tOut->Branch("true_acc",         &true_acc);
+		tOut->Branch("true_wgt",         &true_wgt);
+		tOut->Branch("true_x",           &true_x);
+		tOut->Branch("true_y",           &true_y);
+		tOut->Branch("true_z",           &true_z);
+		tOut->Branch("true_q",           &true_q);
+		tOut->Branch("true_p",           &true_p);
+		tOut->Branch("true_trckmar",     &true_trckmar);
+		tOut->Branch("true_trcklin",     &true_trcklin);
+		tOut->Branch("true_rec_imatch",  &true_rec_imatch);
+		tOut->Branch("true_clusters_id", &true_clusters_id);
+		/// background tracks output branches
+		vector<int>              bkgr_acc;
+		vector<float>            bkgr_wgt;
+		vector<float>            bkgr_x;
+		vector<float>            bkgr_y;
+		vector<float>            bkgr_z;
+		vector<float>            bkgr_q;
+		vector<TLorentzVector>   bkgr_p;
+		vector<TPolyMarker3D*>   bkgr_trckmar;
+		vector<TPolyLine3D*>     bkgr_trcklin;
+		vector<vector<int> >     bkgr_clusters_id;
+		tOut->Branch("bkgr_acc",         &bkgr_acc);
+		tOut->Branch("bkgr_wgt",         &bkgr_wgt);
+		tOut->Branch("bkgr_x",           &bkgr_x);
+		tOut->Branch("bkgr_y",           &bkgr_y);
+		tOut->Branch("bkgr_z",           &bkgr_z);
+		tOut->Branch("bkgr_q",           &bkgr_q);
+		tOut->Branch("bkgr_p",           &bkgr_p);
+		tOut->Branch("bkgr_trckmar",     &bkgr_trckmar);
+		tOut->Branch("bkgr_trcklin",     &bkgr_trcklin);
+		tOut->Branch("bkgr_clusters_id", &bkgr_clusters_id);
+		/// seeds output branches
+		vector<int>            seed_type;
+		vector<vector<int> >   seed_clusters_id;
+		vector<float>          seed_q;
+		vector<TLorentzVector> seed_p;
+		tOut->Branch("seed_type",        &seed_type);
+		tOut->Branch("seed_clusters_id", &seed_clusters_id);
+		tOut->Branch("seed_q",           &seed_q);
+		tOut->Branch("seed_p",           &seed_p);
+		/// reconstructed clusters output branches
+		vector<float>             reco_q;
+		vector<TLorentzVector>    reco_p;
+		vector<float>             reco_x;
+		vector<float>             reco_y;
+		vector<float>             reco_z;
+		vector<vector<TVector3> > reco_trck_cls_r;
+		vector<TPolyMarker3D*>   reco_trckmar;
+		vector<TPolyLine3D*>     reco_trcklin;
+		vector<float>            reco_chi2dof;
+		vector<int>              reco_ismtchd;
+		vector<int>              reco_ixmtchd;
+		vector<int>              reco_idmtchd;
+		vector<vector<int> >     reco_clusters_id;
+		vector<double>           reco_Tgl;
+		vector<double>           reco_Snp; // the slope in X direction: probe->GetTrack()->GetSnp()
+		vector<double>           reco_alpha;
+		vector<double>           reco_signedinvpT; // new: the curvature (q/Pyz): probe->GetTrack()->GetSigned1Pt()
+		vector<double>           reco_sigmaY2;
+		vector<double>           reco_sigmaZY;
+		vector<double>           reco_sigmaZ2;
+		vector<double>           reco_sigmaSnpY;
+		vector<double>           reco_sigmaSnpZ;
+		vector<double>           reco_sigmaSnp2; // probe->GetTrack()->GetSigmaSnp2()
+		vector<double>           reco_sigmaTglY;
+		vector<double>           reco_sigmaTglZ;
+		vector<double>           reco_sigmaTglSnp;
+		vector<double>           reco_sigmaTgl2;
+		vector<double>           reco_sigma1PtY;
+		vector<double>           reco_sigma1PtZ;
+		vector<double>           reco_sigma1PtSnp;
+		vector<double>           reco_sigma1PtTgl;
+		vector<double>           reco_sigma1Pt2;
+		vector<double>           reco_invpT;
+		vector<double>           reco_signedpT;
+		tOut->Branch("reco_q",           &reco_q);
+		tOut->Branch("reco_p",           &reco_p);
+		tOut->Branch("reco_x",           &reco_x);
+		tOut->Branch("reco_y",           &reco_y);
+		tOut->Branch("reco_z",           &reco_z);
+		tOut->Branch("reco_trck_cls_r",  &reco_trck_cls_r);
+		tOut->Branch("reco_trckmar",     &reco_trckmar);
+		tOut->Branch("reco_trcklin",     &reco_trcklin);
+		tOut->Branch("reco_chi2dof",     &reco_chi2dof);
+		tOut->Branch("reco_ismtchd",     &reco_ismtchd);
+		tOut->Branch("reco_ixmtchd",     &reco_ixmtchd);
+		tOut->Branch("reco_idmtchd",     &reco_idmtchd);
+		tOut->Branch("reco_clusters_id", &reco_clusters_id);
+		tOut->Branch("reco_Tgl",         &reco_Tgl        );
+		tOut->Branch("reco_Snp",         &reco_Snp        );
+		tOut->Branch("reco_alpha",       &reco_alpha      );
+		tOut->Branch("reco_signedinvpT", &reco_signedinvpT);
+		tOut->Branch("reco_sigmaY2",     &reco_sigmaY2    );
+		tOut->Branch("reco_sigmaZY",     &reco_sigmaZY    );
+		tOut->Branch("reco_sigmaZ2",     &reco_sigmaZ2    );
+		tOut->Branch("reco_sigmaSnpY",   &reco_sigmaSnpY  );
+		tOut->Branch("reco_sigmaSnpZ",   &reco_sigmaSnpZ  );
+		tOut->Branch("reco_sigmaSnp2",   &reco_sigmaSnp2  );
+		tOut->Branch("reco_sigmaTglY",   &reco_sigmaTglY  );
+		tOut->Branch("reco_sigmaTglZ",   &reco_sigmaTglZ  );
+		tOut->Branch("reco_sigmaTglSnp", &reco_sigmaTglSnp);
+		tOut->Branch("reco_sigmaTgl2",   &reco_sigmaTgl2  );
+		tOut->Branch("reco_sigma1PtY",   &reco_sigma1PtY  );
+		tOut->Branch("reco_sigma1PtZ",   &reco_sigma1PtZ  );
+		tOut->Branch("reco_sigma1PtSnp", &reco_sigma1PtSnp);
+		tOut->Branch("reco_sigma1PtTgl", &reco_sigma1PtTgl);
+		tOut->Branch("reco_sigma1Pt2",   &reco_sigma1Pt2  );
+		tOut->Branch("reco_invpT",       &reco_invpT      );
+		tOut->Branch("reco_signedpT",    &reco_signedpT   );
 		
-		////////////////////////////////////////////
-		/// clear output vectors: digitized clusters
-		for(unsigned int x=0 ; x<all_clusters_xyz.size() ; ++x) delete all_clusters_xyz[x];
-		all_clusters_xyz.clear();
-		all_clusters_type.clear();
-		all_clusters_id.clear();
-		/// clear output vectors: truth signal physics
-		for(unsigned int x=0 ; x<true_rec_imatch.size() ; ++x) true_rec_imatch[x].clear();
-		true_rec_imatch.clear();
-		for(unsigned int x=0 ; x<true_clusters_id.size() ; ++x) true_clusters_id[x].clear();
-		true_clusters_id.clear();
-		true_acc.clear();
-		true_wgt.clear();
-		true_x.clear();
-		true_y.clear();
-		true_z.clear();
-		true_q.clear();
-		true_p.clear();
-		true_trckmar.clear();
-		true_trcklin.clear();
-		/// clear output vectors: truth background physics
-		bkgr_acc.clear();
-		bkgr_wgt.clear();
-		bkgr_x.clear();
-		bkgr_y.clear();
-		bkgr_z.clear();
-		bkgr_q.clear();
-		bkgr_p.clear();
-		bkgr_trckmar.clear();
-		bkgr_trcklin.clear();
-		for(unsigned int x=0 ; x<bkgr_clusters_id.size() ; ++x) bkgr_clusters_id[x].clear();
-		bkgr_clusters_id.clear();
-		/// clear output vectors: seeds
-		seed_type.clear();
-		for(unsigned int x=0 ; x<seed_clusters_id.size() ; ++x) seed_clusters_id[x].clear();
-		seed_clusters_id.clear();
-		seed_q.clear();
-		seed_p.clear();
-		/// clear output vectors: reconstruction
-		reco_q.clear();
-		reco_p.clear();
-		reco_x.clear();
-		reco_y.clear();
-		reco_z.clear();
-		for(unsigned int x=0 ; x<reco_trckmar.size() ; ++x) delete reco_trckmar[x];
-		for(unsigned int x=0 ; x<reco_trcklin.size() ; ++x) delete reco_trcklin[x];
-		reco_trckmar.clear();
-		reco_trcklin.clear();
-		reco_chi2dof.clear();
-		reco_ismtchd.clear();
-		reco_ixmtchd.clear();
-		reco_idmtchd.clear();
-		for(unsigned int x=0 ; x<reco_clusters_id.size() ; ++x) reco_clusters_id[x].clear();
-		reco_clusters_id.clear();
-		reco_Tgl.clear();         
-		reco_Snp.clear();
-		reco_alpha.clear();
-		reco_signedinvpT.clear(); 
-		reco_sigmaY2.clear();
-		reco_sigmaZY.clear();
-		reco_sigmaZ2.clear();
-		reco_sigmaSnpY.clear();
-		reco_sigmaSnpZ.clear();
-		reco_sigmaSnp2.clear();
-		reco_sigmaTglY.clear();
-		reco_sigmaTglZ.clear();
-		reco_sigmaTglSnp.clear();
-		reco_sigmaTgl2.clear();
-		reco_sigma1PtY.clear();
-		reco_sigma1PtZ.clear();
-		reco_sigma1PtSnp.clear();
-		reco_sigma1PtTgl.clear();
-		reco_sigma1Pt2.clear();
-		reco_invpT.clear();
-		reco_signedpT.clear();
+	
+		TString setup = "../setup/setupLUXE_"+process+"_"+side+".txt";
+		det = new KMCDetectorFwd();
+		det->ReadSetup(setup,setup);
+		det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VertexTelescope
+		// det->SetMinITSHits( det->GetNumberOfActiveLayersITS() ); // require hit in every layer
+		det->SetMinITSHits( nMinHits ); // require hit in at least 4 layers //TODO!!!
+		det->SetMinMSHits(0); // we don't have muon spectrometer
+		det->SetMinTRHits(0); // we don't have muon trigger stations
+		// max number of seeds on each layer to propagate (per muon track)
+		det->SetMaxSeedToPropagate(3000); // relevant only if background is considered
+		// set chi2 cuts
+		// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
+		// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
+		det->SetMaxChi2Cl(10.);  // max track to cluster chi2
+		// det->SetMaxChi2NDF(3.5); // max total chi2/ndf
+		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
+		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
+		det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
+		det->SetMaxChi2Vtx(20e9);  // fiducial cut on chi2 of convergence to vtx
+		// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
+		// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
+		det->SetDefStepAir(1); // IMPORTANT FOR NON-UNIFORM FIELDS
+		det->SetMinP2Propagate(0.3); //NA60+
+		det->SetIncludeVertex(kTRUE); // count vertex as an extra measured point
+		det->ImposeVertex(0.,0.,0.); // the vertex position is imposed NOAM
+		det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
+		// for reconstruction:
+		// det->SetErrorScale(500.);
+		// det->SetErrorScale( (process=="elaser")?500.:200. );
+		det->SetErrorScale( (process=="elaser")?500.:300. ); // was 400 earlier, can be also anywhere up to 1000
+		det->Print();
+		// det->BookControlHistos();
+		
+		///////////////////////////////
+		setParametersFromDet(side); ///
+		///////////////////////////////
 		
 		
-		//// clear cached clusters
-		clear_cached_clusters(); /// clear for both sides
+		/// get the input signal clusters
+		int                        sig_ngen          = 0;
+		int                        sig_nslv          = 0;
+		int                        sig_nacc          = 0;
+		vector<double>*            sig_wgt           = 0;
+		vector<int>*               sig_crg           = 0;
+		vector<float>*             sig_xvtx          = 0;
+		vector<float>*             sig_yvtx          = 0;
+		vector<float>*             sig_zvtx          = 0;
+		vector<TLorentzVector>*    sig_trkp4         = 0;
+		vector<int>*               sig_acc           = 0;
+		vector<vector<int> >*      sig_clusters_layerid = 0;
+		vector<vector<int> >*      sig_clusters_id   = 0;
+		vector<vector<int> >*      sig_clusters_type = 0;
+		vector<TPolyMarker3D*>*    sig_clusters_xyz  = 0;
+		vector<vector<TVector3> >* sig_clusters_r    = 0;
+		vector<TPolyMarker3D*>*    sig_trkpts        = 0;
+		vector<TPolyLine3D*>*      sig_trklin        = 0;
+		cout << "Getting signal clusters from tree" << endl;
+		TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"_"+eventid+".root","READ");
+		TTree* tSig = (TTree*)fSig->Get("dig_"+side);
+		tSig->SetBranchAddress("ngen",         &sig_ngen);
+		tSig->SetBranchAddress("nslv",         &sig_nslv);
+		tSig->SetBranchAddress("nacc",         &sig_nacc);
+		tSig->SetBranchAddress("wgt",          &sig_wgt);
+		tSig->SetBranchAddress("crg",          &sig_crg);
+	   tSig->SetBranchAddress("xvtx",         &sig_xvtx);
+	   tSig->SetBranchAddress("yvtx",         &sig_yvtx);
+	   tSig->SetBranchAddress("zvtx",         &sig_zvtx);
+		tSig->SetBranchAddress("trkp4",        &sig_trkp4);
+		tSig->SetBranchAddress("acc",          &sig_acc);
+		tSig->SetBranchAddress("clusters_layerid",  &sig_clusters_layerid);
+		tSig->SetBranchAddress("clusters_id",  &sig_clusters_id);
+		tSig->SetBranchAddress("clusters_type",&sig_clusters_type);
+		tSig->SetBranchAddress("clusters_xyz", &sig_clusters_xyz);
+		tSig->SetBranchAddress("clusters_r",   &sig_clusters_r);
+		tSig->SetBranchAddress("trkpts",       &sig_trkpts);
+		tSig->SetBranchAddress("trklin",       &sig_trklin);
 		
-		/// rest all the layers of the detector (including inactive if any)
-		reset_layers_all(); // reset both sides 
 		
-		/// fill truth signal tracks:
-		vector<int> vitmp;
-		for(unsigned int t=0 ; t<sig_crg->size() ; ++t)
+		/// get the input background clusters
+		int                        bkg_ngen          = 0;
+		int                        bkg_nslv          = 0;
+		int                        bkg_nacc          = 0;
+		vector<double>*            bkg_wgt           = 0;
+		vector<int>*               bkg_crg           = 0;
+		vector<float>*             bkg_xvtx          = 0;
+		vector<float>*             bkg_yvtx          = 0;
+		vector<float>*             bkg_zvtx          = 0;
+		vector<TLorentzVector>*    bkg_trkp4         = 0;
+		vector<int>*               bkg_acc           = 0;
+		vector<vector<int> >*      bkg_clusters_layerid = 0;
+		vector<vector<int> >*      bkg_clusters_id   = 0;
+		vector<vector<int> >*      bkg_clusters_type = 0;
+		vector<TPolyMarker3D*>*    bkg_clusters_xyz  = 0;
+		vector<vector<TVector3> >* bkg_clusters_r    = 0;
+		vector<TPolyMarker3D*>*    bkg_trkpts        = 0;
+		vector<TPolyLine3D*>*      bkg_trklin        = 0;
+		TFile* fBkg = 0;
+		TTree* tBkg = 0;
+		if(dobg)
 		{
-			vector<int> vtruid{ sig_clusters_id->at(t)[0],sig_clusters_id->at(t)[1],sig_clusters_id->at(t)[2],sig_clusters_id->at(t)[3] };
-			true_clusters_id.push_back( vtruid );
-			true_acc.push_back( sig_acc->at(t) );
-			true_wgt.push_back( sig_wgt->at(t) );
-			true_x.push_back( sig_xvtx->at(t) );
-			true_y.push_back( sig_yvtx->at(t) );
-			true_z.push_back( sig_zvtx->at(t) );
-			true_q.push_back( sig_crg->at(t) );
-			true_p.push_back( sig_trkp4->at(t) );
-			true_trckmar.push_back( sig_trkpts->at(t) );
-			true_trcklin.push_back( sig_trklin->at(t) );
-			true_rec_imatch.push_back( vitmp );
+			/// get the background clusters
+			cout << "Getting background clusters from tree" << endl;
+			// TChain* tBkg = new TChain("dig");
+			// tBkg->Add(storage+"/data/root/dig_"+process+"_bkg_0*.root");
+			// cout << "---- TChain content ----" << endl;
+			// tBkg->ls();
+			// cout << "------------------------" << endl;
+			fBkg = new TFile(storage+"/data/root/dig/dig_"+process+"_bkg_"+eventid+".root","READ");
+			tBkg = (TTree*)fBkg->Get("dig_"+side);
+			tBkg->SetBranchAddress("ngen",         &bkg_ngen);
+			tBkg->SetBranchAddress("nslv",         &bkg_nslv);
+			tBkg->SetBranchAddress("nacc",         &bkg_nacc);
+			tBkg->SetBranchAddress("wgt",          &bkg_wgt);
+			tBkg->SetBranchAddress("crg",          &bkg_crg);
+	   	tBkg->SetBranchAddress("xvtx",         &bkg_xvtx);
+	   	tBkg->SetBranchAddress("yvtx",         &bkg_yvtx);
+	   	tBkg->SetBranchAddress("zvtx",         &bkg_zvtx);
+			tBkg->SetBranchAddress("trkp4",        &bkg_trkp4);
+			tBkg->SetBranchAddress("acc",          &bkg_acc);
+			tBkg->SetBranchAddress("clusters_layerid",  &bkg_clusters_layerid);
+			tBkg->SetBranchAddress("clusters_id",  &bkg_clusters_id);
+			tBkg->SetBranchAddress("clusters_type",&bkg_clusters_type);
+			tBkg->SetBranchAddress("clusters_xyz", &bkg_clusters_xyz);
+			tBkg->SetBranchAddress("clusters_r",   &bkg_clusters_r);
+			tBkg->SetBranchAddress("trkpts",       &bkg_trkpts);
+			tBkg->SetBranchAddress("trklin",       &bkg_trklin);
 		}
-		
-		/// fill truth background tracks:
-		int nbtrks = (int)bkg_crg->size();
-		int nbmax = (nMaxBkgTrks>0 && nMaxBkgTrks<nbtrks) ? nMaxBkgTrks : nbtrks;
-		for(int b=0 ; b<nbmax ; ++b)
+	 
+		/// prepare the dictionaries
+		prepare_cahced_clusters();
+	
+		/// for timing
+		Double_t av_cputime  = 0;
+		Double_t av_realtime = 0;
+	 
+		/// loop on events
+		Int_t nsigevents = tSig->GetEntries();
+		Int_t nbkgevents = (dobg) ? tBkg->GetEntries() : -1;
+		if(dobg && nbkgevents<nsigevents)
 		{
-			if(!bkg_acc->at(b)) continue; // ignore tracks out of acceptance!
+			cout << "ERROR: nbkgevents<nsigevents" << endl;
+			cout << "       nsigevents=" << nsigevents << endl;
+			cout << "       nbkgevents=" << nbkgevents << endl;
+			exit(-1);
+		}
+		cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
+		for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
+		// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
+		{
+			stopwatch.Start();
 			
-			vector<int> vbkgid{ bkg_clusters_id->at(b)[0],bkg_clusters_id->at(b)[1],bkg_clusters_id->at(b)[2],bkg_clusters_id->at(b)[3] };
-			bkgr_clusters_id.push_back( vbkgid );
-			bkgr_acc.push_back( bkg_acc->at(b) );
-			bkgr_wgt.push_back( bkg_wgt->at(b) );
-			bkgr_x.push_back( bkg_xvtx->at(b) );
-			bkgr_y.push_back( bkg_yvtx->at(b) );
-			bkgr_z.push_back( bkg_zvtx->at(b) );
-			bkgr_q.push_back( bkg_crg->at(b) );
-			bkgr_p.push_back( bkg_trkp4->at(b) );
-		   bkgr_trckmar.push_back( bkg_trkpts->at(b) );			
-			// for(unsigned int xx=0 ; xx<bkg_trkpts->at(b)->GetN() ; xx++)
-			// {
-			// 	Double_t x,y,z;
-			// 	bkg_trkpts->at(b)->GetPoint(xx,x,y,z);
-			// 	cout << "background track: #" << b << " point #" << xx << ", xyz={"<<x<<","<<y<<","<<z<<"}" << endl;
-			// }
-		   bkgr_trcklin.push_back( bkg_trklin->at(b) );
-		}
-		
-		/////////////////////
-		/// loop on the sides
-		for(unsigned int s=0 ; s<sides.size() ; ++s)
-		{
-			TString side = sides[s];
+			//////////////////////////////
+			//// get the next input entry
+			tSig->GetEntry(iev); /// signal
+			if(dobg) tBkg->GetEntry(iev); /// background
+			
+			////////////////////////////////////////////
+			/// clear output vectors: digitized clusters
+			for(unsigned int x=0 ; x<all_clusters_xyz.size() ; ++x)
+			{
+				delete all_clusters_xyz[x];
+				all_clusters_r[x].clear();
+			}
+			all_clusters_xyz.clear();
+			all_clusters_r.clear();
+			all_clusters_type.clear();
+			all_clusters_id.clear();
+			/// clear output vectors: truth signal physics
+			for(unsigned int x=0 ; x<true_rec_imatch.size() ; ++x) true_rec_imatch[x].clear();
+			true_rec_imatch.clear();
+			for(unsigned int x=0 ; x<true_clusters_id.size() ; ++x) true_clusters_id[x].clear();
+			true_clusters_id.clear();
+			true_acc.clear();
+			true_wgt.clear();
+			true_x.clear();
+			true_y.clear();
+			true_z.clear();
+			true_q.clear();
+			true_p.clear();
+			true_trckmar.clear();
+			true_trcklin.clear();
+			/// clear output vectors: truth background physics
+			bkgr_acc.clear();
+			bkgr_wgt.clear();
+			bkgr_x.clear();
+			bkgr_y.clear();
+			bkgr_z.clear();
+			bkgr_q.clear();
+			bkgr_p.clear();
+			bkgr_trckmar.clear();
+			bkgr_trcklin.clear();
+			for(unsigned int x=0 ; x<bkgr_clusters_id.size() ; ++x) bkgr_clusters_id[x].clear();
+			bkgr_clusters_id.clear();
+			/// clear output vectors: seeds
+			seed_type.clear();
+			for(unsigned int x=0 ; x<seed_clusters_id.size() ; ++x) seed_clusters_id[x].clear();
+			seed_clusters_id.clear();
+			seed_q.clear();
+			seed_p.clear();
+			/// clear output vectors: reconstruction
+			reco_q.clear();
+			reco_p.clear();
+			reco_x.clear();
+			reco_y.clear();
+			reco_z.clear();
+			for(unsigned int x=0 ; x<reco_trck_cls_r.size() ; ++x) reco_trck_cls_r[x].clear();
+			for(unsigned int x=0 ; x<reco_trckmar.size() ; ++x) delete reco_trckmar[x];
+			for(unsigned int x=0 ; x<reco_trcklin.size() ; ++x) delete reco_trcklin[x];
+			reco_trck_cls_r.clear();
+			reco_trckmar.clear();
+			reco_trcklin.clear();
+			reco_chi2dof.clear();
+			reco_ismtchd.clear();
+			reco_ixmtchd.clear();
+			reco_idmtchd.clear();
+			for(unsigned int x=0 ; x<reco_clusters_id.size() ; ++x) reco_clusters_id[x].clear();
+			reco_clusters_id.clear();
+			reco_Tgl.clear();         
+			reco_Snp.clear();
+			reco_alpha.clear();
+			reco_signedinvpT.clear(); 
+			reco_sigmaY2.clear();
+			reco_sigmaZY.clear();
+			reco_sigmaZ2.clear();
+			reco_sigmaSnpY.clear();
+			reco_sigmaSnpZ.clear();
+			reco_sigmaSnp2.clear();
+			reco_sigmaTglY.clear();
+			reco_sigmaTglZ.clear();
+			reco_sigmaTglSnp.clear();
+			reco_sigmaTgl2.clear();
+			reco_sigma1PtY.clear();
+			reco_sigma1PtZ.clear();
+			reco_sigma1PtSnp.clear();
+			reco_sigma1PtTgl.clear();
+			reco_sigma1Pt2.clear();
+			reco_invpT.clear();
+			reco_signedpT.clear();
+			
+			//// clear cached clusters
+			clear_cached_clusters(); /// clear for both sides
+			
+			/// rest all the layers of the detector (including inactive if any)
+			reset_layers_all(); // reset both sides
+			
+			/// fill truth signal tracks:
+			vector<int> vitmp;
+			for(unsigned int t=0 ; t<sig_crg->size() ; ++t)
+			{
+				if(side=="Eside" && sig_crg->at(t)>0) continue;
+				if(side=="Pside" && sig_crg->at(t)<0) continue;
+				
+				vector<int> vtruid;
+				for(int k=0 ; k<sig_clusters_id->at(t).size() ; ++k) vtruid.push_back( sig_clusters_id->at(t)[k] );
+				true_clusters_id.push_back( vtruid );
+				true_acc.push_back( sig_acc->at(t) );
+				true_wgt.push_back( sig_wgt->at(t) );
+				true_x.push_back( sig_xvtx->at(t) );
+				true_y.push_back( sig_yvtx->at(t) );
+				true_z.push_back( sig_zvtx->at(t) );
+				true_q.push_back( sig_crg->at(t) );
+				true_p.push_back( sig_trkp4->at(t) );
+				true_trckmar.push_back( sig_trkpts->at(t) );
+				true_trcklin.push_back( sig_trklin->at(t) );
+				true_rec_imatch.push_back( vitmp );
+			}
+			
+			/// fill truth background tracks:
+			int nbtrks = (dobg) ? (int)bkg_crg->size() : -1;
+			int nbmax  = nbtrks; //(nMaxBkgTrks>0 && nMaxBkgTrks<nbtrks) ? nMaxBkgTrks : nbtrks;
+			if(dobg)
+			{
+				for(int b=0 ; b<nbmax ; ++b)
+				{
+					if(!bkg_acc->at(b)) continue; // ignore tracks out of acceptance!
+					
+					vector<int> vbkgid;
+					for(int k=0 ; k<bkg_clusters_id->at(b).size() ; ++k) vbkgid.push_back( bkg_clusters_id->at(b)[k] );
+					bkgr_clusters_id.push_back( vbkgid );
+					bkgr_acc.push_back( bkg_acc->at(b) );
+					bkgr_wgt.push_back( bkg_wgt->at(b) );
+					bkgr_x.push_back( bkg_xvtx->at(b) );
+					bkgr_y.push_back( bkg_yvtx->at(b) );
+					bkgr_z.push_back( bkg_zvtx->at(b) );
+					bkgr_q.push_back( bkg_crg->at(b) );
+					bkgr_p.push_back( bkg_trkp4->at(b) );
+				   bkgr_trckmar.push_back( bkg_trkpts->at(b) );
+				   bkgr_trcklin.push_back( bkg_trklin->at(b) );
+				}
+			}
 			
 			/// clear this side's indices
 			cached_clusters_all_ids.clear();
@@ -1258,10 +1632,10 @@ int main(int argc, char *argv[])
 			}
 		   
 			/// make a pool of all signal clusters
-			int ncached_signal_clusters = cache_clusters(sig_clusters_xyz,sig_clusters_type,sig_clusters_id,side);
+			int ncached_signal_clusters = cache_clusters(sig_clusters_r,sig_clusters_type,sig_clusters_id,sig_clusters_layerid,side,nsigtrks);
 
 			/// make a pool of all background and noise clusters
-			int ncached_background_clusters = cache_clusters(bkg_clusters_xyz,bkg_clusters_type,bkg_clusters_id,side,bkg_acc,nMaxBkgTrks);
+			int ncached_background_clusters = (dobg) ? cache_clusters(bkg_clusters_r,bkg_clusters_type,bkg_clusters_id,bkg_clusters_layerid,side): -1;
 			
 			/// rest all the layers of the detector (including inactive if any)
 			reset_layers_all(); // reset both sides 
@@ -1271,48 +1645,55 @@ int main(int argc, char *argv[])
 			print_all_clusters(side,false);
 			
 			/// write out all clusters when these are sorted
-			int all_clusters = fill_output_clusters(side,all_clusters_xyz,all_clusters_type,all_clusters_id);
+			int all_clusters = fill_output_clusters(side,all_clusters_r,all_clusters_type,all_clusters_id);
 			// cout << "ncached_signal_clusters=" << ncached_signal_clusters << ", ncached_background_clusters=" << ncached_background_clusters << ", all_clusters=" << all_clusters << endl;
 			
 			/// offset for signal id's !!!
-			int sigoffset = 100000; // should be multiplied by the layer number
+			// int sigoffset = 100000; // should be multiplied by the layer number
+			int index_offset = (process.Contains("bkg")) ? index_offset_bkg : index_offset_sig; // assuming no chance to have >index_offset tracks (and hence clusters) per tracker arm (and hence per layer)
+			
 			
 			/// run over all clusters of layer 4 in the pool --> these are the seeds for the KalmanFilter fit
-			for(unsigned int i4=0 ; i4<cached_clusters_xyz["x_L4_"+side].size() ; ++i4)
+			TString slyr4 = (side=="Eside") ? "EL4I" : "PL4I";
+			TString slyr1 = (side=="Eside") ? "EL1I" : "PL1I";
+			int     ilyr4 = silayers[slyr4];
+			int     ilyr1 = silayers[slyr1];
+			// cout << "ilyr1=" << ilyr1 << ", ilyr4=" << ilyr4 << endl;
+			
+			/// loop on seeds
+			for(unsigned int i4=0 ; i4<cached_clusters[slyr4].size() ; ++i4)
 			// for(unsigned int i4=0 ; i4<1 ; ++i4)
 			{
 				// reset all tracks from all layers
 				reset_layers_tracks();
 				
 				vector<TLorentzVector> pseeds;
-				for(unsigned int i1=0 ; i1<cached_clusters_xyz["x_L1_"+side].size() ; ++i1)
+				for(unsigned int i1=0 ; i1<cached_clusters[slyr1].size() ; ++i1)
 				{	
 					// reset all tracks from all layers but layer 0
 					reset_layers_tracks(0);
 					
 					/// find the momentum of the seed
 					TLorentzVector pseed;
-					bool docalibrate = true;
-					float r1[3] = {cached_clusters_xyz["x_L1_"+side][i1], cached_clusters_xyz["y_L1_"+side][i1], cached_clusters_xyz["z_L1_"+side][i1]};
-					float r4[3] = {cached_clusters_xyz["x_L4_"+side][i4], cached_clusters_xyz["y_L4_"+side][i4], cached_clusters_xyz["z_L4_"+side][i4]};
-					bool seed = makeseed(process,r1,r4,i1,i4,side,pseed,docalibrate);
+					float r1[3]; r1[0]=cached_clusters[slyr1][i1].r.X(); r1[1]=cached_clusters[slyr1][i1].r.Y(); r1[2]=cached_clusters[slyr1][i1].r.Z();
+					float r4[3]; r4[0]=cached_clusters[slyr4][i4].r.X(); r4[1]=cached_clusters[slyr4][i4].r.Y(); r4[2]=cached_clusters[slyr4][i4].r.Z();
+					
+					bool seed = makeseed_nonuniformB(process,r1,r4,i1,i4,side,pseed, (side=="Pside")?fEvsX_L4I_Pside:fEvsX_L4I_Eside, (side=="Pside")?fDx14vsX_L4I_Pside:fDx14vsX_L4I_Eside );
 					if(!seed) continue; // cannot make a meaningful seed
 					pseeds.push_back(pseed);
-					bool issig  = ( cached_clusters_att["type_L1_"+side][i1]==1 and cached_clusters_att["type_L4_"+side][i4]==1 );
-					bool sameid = ( (cached_clusters_att["id_L1_"+side][i1]-1*sigoffset)==(cached_clusters_att["id_L4_"+side][i4]-4*sigoffset) );
+					bool issig  = ( cached_clusters[slyr1][i1].type==1 && cached_clusters[slyr4][i4].type==1 );
+					bool sameid = ( (cached_clusters[slyr1][i1].clsid-ilyr1*index_offset_sig)==(cached_clusters[slyr4][i4].clsid-ilyr4*index_offset_sig) );
 					seed_type.push_back( issig and sameid );
-					vector<int> vidseed{cached_clusters_att["id_L1_"+side][i1],-1,-1,cached_clusters_att["id_L4_"+side][i4]};
+					vector<int> vidseed{cached_clusters[slyr1][i1].clsid,-1,-1,cached_clusters[slyr4][i4].clsid};
 					seed_clusters_id.push_back(vidseed);
-					n_seeds++;
-		   		
 					seed_q.push_back(crg);
 					seed_p.push_back(pseed);
+					n_seeds++;
 				} // end of loop on clusters in layer 1
 				if(n_seeds<1) continue;
+				cout << "nseeds=" << n_seeds << " for i4=" << i4 << " out of " << cached_clusters[slyr4].size() << " clusters in layer4 (with " << n_recos << " recos)" << endl;
+				for(int d=0 ; d<seed_type.size() ; ++d) {if(seed_type[d]) cout << "at least one true seed" << endl; break;}
 				
-				// bool doPrint0 = (cached_clusters_att["id_L4_"+side][i4]==0+4*sigoffset and cached_clusters_att["type_L4_"+side][i4]==1 and side=="Eside");
-				// bool doPrint2 = (cached_clusters_att["id_L4_"+side][i4]==2+4*sigoffset and cached_clusters_att["type_L4_"+side][i4]==1 and side=="Eside");
-				// bool doPrint = (doPrint0 or doPrint2);
 				bool doPrint = false;
 				if(doPrint) cout << "\n\n\n########################################## calling SolveSingleTrackViaKalmanMC_Noam_multiseed for i4=" << i4 << " ######################################" << endl;
 				// prepare the probe from the seed and do the KF fit
@@ -1329,35 +1710,50 @@ int main(int argc, char *argv[])
 				
 				if(doPrint) {cout << "Track fit succeeded, associated clusters are:" << endl; trw->Print("clid");}
 				
+				/// save clusters of the track
+				vector<TVector3> v3tmp;
+				reco_trck_cls_r.push_back( v3tmp );
+				
+				/// the rec index - important to set it here!
+				unsigned int irec = reco_trck_cls_r.size()-1;
+				
 				/// get the clusters of the winner tracK
-				int win_cls_id1 = trw->GetClID(1); // provide active layer ID, not the physical ones (most are passive)
-				int win_cls_id2 = trw->GetClID(2); // provide active layer ID, not the physical ones (most are passive)
-				int win_cls_id3 = trw->GetClID(3); // provide active layer ID, not the physical ones (most are passive)
-				int win_cls_id4 = trw->GetClID(4); // provide active layer ID, not the physical ones (most are passive)
-				int win_cls_inx1 = cached_clusters_all_ids[win_cls_id1];
-				int win_cls_inx2 = cached_clusters_all_ids[win_cls_id2];
-				int win_cls_inx3 = cached_clusters_all_ids[win_cls_id3];
-				int win_cls_inx4 = cached_clusters_all_ids[win_cls_id4];
-				if(doPrint) cout << "going to kill: id1="<<win_cls_id1<<", id2="<<win_cls_id2<<", id3="<<win_cls_id3<<", id4="<<win_cls_id4<<endl;
-				if(doPrint) cout << "               ix1="<<win_cls_inx1<<", ix2="<<win_cls_inx2<<", ix3="<<win_cls_inx3<<", ix4="<<win_cls_inx4<<endl;
-				if(win_cls_id1>0) { det->GetLayer(1)->GetBgCluster( win_cls_inx1 )->Kill(); }
-				if(win_cls_id2>0) { det->GetLayer(3)->GetBgCluster( win_cls_inx2 )->Kill(); }
-				if(win_cls_id3>0) { det->GetLayer(5)->GetBgCluster( win_cls_inx3 )->Kill(); }
-				if(win_cls_id4>0) { det->GetLayer(7)->GetBgCluster( win_cls_inx4 )->Kill(); }
-				if(doPrint) det->CheckClusters(win_cls_inx1,win_cls_inx2,win_cls_inx3,win_cls_inx4);
+				vector<int> win_cls_id;
+				vector<int> win_cls_inx;
+				TMapii win_cls_id2lr;
+				const int* probeclusters = trw->GetClID();
+				int nprobeclusters = sizeof(probeclusters);
+				// cout << "nprobeclusters=" << nprobeclusters << endl;
+				// trw->Print("clid etp");
+				trw->Print("clid");
+				for(int l=0 ; l<=nprobeclusters ; ++l)
+				{
+					int cid = probeclusters[l];
+					if(cid<0) continue;
+					int cix = cached_clusters_all_ids[cid];
+					int ilr = cached_clusters_id2lyr[cid]; /// essential to find the correct layer!
+					TString lname = layers[ilr];
+					win_cls_id.push_back( cid ); // provide active layer ID, not the physical ones (most are passive)
+					win_cls_inx.push_back( cix );
+					win_cls_id2lr.insert(make_pair(cid,ilr));
+					if(doPrint) cout << "going to kill cluster id=" << cid << " in ix=" << cix << ", from " << det->GetLayer(ilr)->GetNBgClusters() << " on layer " << ilr << endl;
+					// cout << "cid=" << cid << " in layer=" << ilr << ": " << lname << endl;
+					double xwin = det->GetLayer(ilr)->GetBgCluster(cix)->GetXLab();
+					double ywin = det->GetLayer(ilr)->GetBgCluster(cix)->GetYLab();
+					double zwin = det->GetLayer(ilr)->GetBgCluster(cix)->GetZLab();
+					reco_trck_cls_r[irec].push_back(TVector3(xwin,ywin,zwin)); // fill before killing!
+					det->GetLayer(ilr)->GetBgCluster(cix)->Kill();
+				}
+				/// save the clusters' id of the winner track 
+				reco_clusters_id.push_back( win_cls_id );
 				
-				vector<int> vrecid{ win_cls_id1,win_cls_id2,win_cls_id3,win_cls_id4 };
-				reco_clusters_id.push_back( vrecid );
-				
+				/// reco kinematics etc
 				TLorentzVector prec;
 				double pxyz[3];
 				double xyz[3];
 				trw->GetPXYZ(pxyz);
 				trw->GetXYZ(xyz);
 				prec.SetXYZM(pxyz[0],pxyz[1],pxyz[2],meGeV);
-				int ismatched =  0; // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
-				int ixmatched = -1; // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
-				int idmatched = -1; // TODO: GET THE WINNER CLUSTERS AND CHECK ALL LAYERS
 				float chi2dof = trw->GetNormChi2();
 				reco_chi2dof.push_back( chi2dof );
 				reco_q.push_back( crg );
@@ -1365,57 +1761,45 @@ int main(int argc, char *argv[])
 				reco_x.push_back( xyz[0] );
 				reco_y.push_back( xyz[1] );
 				reco_z.push_back( xyz[2] );
-				reco_trckmar.push_back( TrackMarker3d(trw,0,361,0.1,trkcol(prec.E())) );
-				reco_trcklin.push_back( TrackLine3d(trw,361,1,trkcol(prec.E())) );
+				reco_trckmar.push_back( TrackMarker3d(trw,0,zLastLayer+1,0.1,trkcol(prec.E())) );
+				reco_trcklin.push_back( TrackLine3d(trw,zLastLayer+1,1,trkcol(prec.E())) );
 
-				/// TODO: this is a test
-				unsigned int irec = reco_trckmar.size()-1;
 
-				Int_t imatch = imatched(reco_trckmar[irec],sig_clusters_xyz,side);
-				bestmatchtrui = imatch;
-				bestmatchreci = irec;
+				/// rec-tru matching
+				int ismatched =  0;
+				int ixmatched = -1;
+				int idmatched = -1;
+				int imatch = -1;
+				for(TMapii::iterator it=win_cls_id2lr.begin() ; it!=win_cls_id2lr.end() ; ++it)
+				{
+					int cid = it->first;
+					int lid = it->second;
+					int ix = cid-lid*index_offset_sig;
+					if(it==win_cls_id2lr.begin()) imatch = ix;
+					if(ix!=imatch)
+					{
+						imatch = -1;
+						break;
+					}
+					// cout << "lid=" << lid << " cid=" << cid << endl;
+				}
 				if(imatch>=0)
 				{
+					cout << "found match index: " << imatch << ", Etru=" << true_p[imatch].E() << ", Erec=" << prec.E() << endl;
 					ismatched = 1;
 					ixmatched = imatch;
 					idmatched = true_clusters_id[imatch][0];
 					true_rec_imatch[imatch].push_back( irec );
 					n_match++;
-					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << sig_trkp4->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
 				}
-				else
-				{
-					ismatched =  0;
-					ixmatched = -1;
-					idmatched = -1;
-					// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
-				}
-				
-				// Int_t imatch = CheckMatchingByID(win_cls_id1,win_cls_id2,win_cls_id3,win_cls_id4);
-				// bestmatchtrui = imatch;
-				// bestmatchreci = irec;
-				// if(imatch>=0)
-				// {
-				// 	ismatched = 1;
-				// 	ixmatched = imatch;
-				// 	idmatched = true_clusters_id[imatch][0];
-				// 	true_rec_imatch[imatch].push_back( irec );
-				// 	n_match++;
-				// 	// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=" << sig_trkp4->at(imatch).E() << " GeV, Erec=" << prec.E() << "GeV --> imatch=" << imatch << ": win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
-				// }
-				// else
-				// {
-				// 	ismatched =  0;
-				// 	ixmatched = -1;
-				// 	idmatched = -1;
-				// 	// cout << "Ntru=" << n_truth << ", Nclsperlyr=" << ncached_signal_clusters/4 << ", Etru=!!!NOT MATCHED!!!, Erec=" << prec.E() << "GeV --> win_cls_id1=" << win_cls_id1 << ", win_cls_id2=" << win_cls_id2 << ", win_cls_id3=" << win_cls_id3 << ", win_cls_id4=" << win_cls_id4 << endl;
-				// }
-
-				
+				else { ismatched =  0; ixmatched = -1; idmatched = -1; }
 				reco_ismtchd.push_back( ismatched );
 				reco_ixmtchd.push_back( ixmatched );
 				reco_idmtchd.push_back( idmatched );
+				cout << "n_recos=" << n_recos << ", n_match=" << n_match << endl;
 				
+				
+				/// more kinematics
 				TrackPar* trk = trw->GetTrack();
 				reco_Tgl.push_back( trk->GetTgl() );
 				reco_Snp.push_back( trk->GetSnp() );
@@ -1442,24 +1826,28 @@ int main(int argc, char *argv[])
 				pseeds.clear(); /// this is maybe redundant
 			} // end of loop on clusters in layer 4
 			
-			////////////////////////////////////////////////////////////
-			/// post-processing per side histos to fill
+			///////////////////////////////////////////////
+			/// post-processing per side histos to fill ///
+			///////////////////////////////////////////////
+			
+			/// seed matching
 			for(unsigned int t=0 ; t<true_q.size() ; ++t)
 			{
 				if(side=="Eside" and true_q[t]>0) continue;
 				if(side=="Pside" and true_q[t]<0) continue;
 				if(true_rec_imatch[t].size()>0) n_trumt++;
-				else
-				{
-					cout << "This truth track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV with bestdistance=" << bestdistance << ", bestmatchtrui=" << bestmatchtrui << ", bestmatchreci=" << bestmatchreci << endl;
-				}
-				
+				// else
+				// {
+				// 	cout << "This truth track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV with bestdistance=" << bestdistance << ", bestmatchtrui=" << bestmatchtrui << ", bestmatchreci=" << bestmatchreci << endl;
+				// }
 				histos["h_E_tru_all_"+side]->Fill( true_p[t].E() );
 				int truid1 = true_clusters_id[t][0];
 				int truid4 = true_clusters_id[t][3];
+				// cout << "truid1=" << truid1 << ", truid4=" << truid4 << endl;
 				for(unsigned int s=0 ; s<seed_p.size() ; ++s)
 				{
 					if(seed_type[s]!=1)                continue; // has to be signal track
+					// cout << "seed_clusters_id["<<s<<"][0]=" << seed_clusters_id[s][0] << ", seed_clusters_id["<<s<<"][3]=" << seed_clusters_id[s][3] << endl;
 					if(seed_clusters_id[s][0]!=truid1) continue; // match cluster id of layer 1
 					if(seed_clusters_id[s][3]!=truid4) continue; // match cluster id of layer 4 
 					histos["h_dErel_sed_gen_"+side]->Fill((seed_p[s].E()-true_p[t].E())/true_p[t].E());
@@ -1468,6 +1856,7 @@ int main(int argc, char *argv[])
 					break;
 				}
 			}
+			
 			/// TODO: add a vector for all truth tracks, to have an inner vector of all matched reco tracks.
 			/// TODO: then need to check if the truth track has more than 1 reco track and take the better one when filling.
 			vector<int> ixtrumatched;
@@ -1509,29 +1898,29 @@ int main(int argc, char *argv[])
 								<< ", n_match=" << n_match
 									<< ", n_trumt=" << n_trumt
 										<< ", eff(rec,mat)=" << mateff << "%"<< endl;
-		} // end of loop on sides
 		
-		fOut->cd();
-		tOut->Fill();
-		
-		stopwatch.Stop();
-		Double_t cputime  = stopwatch.CpuTime();
-		Double_t realtime = stopwatch.RealTime();
-		av_cputime  += cputime;
-		av_realtime += realtime;
-		cout << "Event #" << iev << ": CPU time=" << cputime << ", Real time=" << realtime << endl;
-		if((iev%outN)==0) printf("Done %d out of %d --> CPUav=%g, REAL=%g\n",iev,nsigevents,av_cputime/(iev+1),av_realtime/(iev+1));
-	}
+			fOut->cd();
+			tOut->Fill();
+			
+			stopwatch.Stop();
+			Double_t cputime  = stopwatch.CpuTime();
+			Double_t realtime = stopwatch.RealTime();
+			av_cputime  += cputime;
+			av_realtime += realtime;
+			cout << "Event #" << iev << ": CPU time=" << cputime << ", Real time=" << realtime << endl;
+			if((iev%outN)==0) printf("Done %d out of %d --> CPUav=%g, REAL=%g\n",iev,nsigevents,av_cputime/(iev+1),av_realtime/(iev+1));
+		} // end of loop on events
 	
-	histos["h_E_eff_sed_Eside"]->Divide(histos["h_E_tru_sed_mat_Eside"],histos["h_E_tru_all_Eside"]);
-	histos["h_E_eff_sed_Pside"]->Divide(histos["h_E_tru_sed_mat_Pside"],histos["h_E_tru_all_Pside"]);
-	histos["h_E_eff_rec_Eside"]->Divide(histos["h_E_tru_rec_mat_Eside"],histos["h_E_tru_all_Eside"]);
-	histos["h_E_eff_rec_Pside"]->Divide(histos["h_E_tru_rec_mat_Pside"],histos["h_E_tru_all_Pside"]);
-	fOut->cd();
-	tOut->Write();
-	for(TMapTSTH1D::iterator it=histos.begin() ; it!=histos.end() ; ++it) it->second->Write();
-	fOut->Write();
-	fOut->Close();
+		histos["h_E_eff_sed_Eside"]->Divide(histos["h_E_tru_sed_mat_Eside"],histos["h_E_tru_all_Eside"]);
+		histos["h_E_eff_sed_Pside"]->Divide(histos["h_E_tru_sed_mat_Pside"],histos["h_E_tru_all_Pside"]);
+		histos["h_E_eff_rec_Eside"]->Divide(histos["h_E_tru_rec_mat_Eside"],histos["h_E_tru_all_Eside"]);
+		histos["h_E_eff_rec_Pside"]->Divide(histos["h_E_tru_rec_mat_Pside"],histos["h_E_tru_all_Pside"]);
+		fOut->cd();
+		tOut->Write();
+		for(TMapTSTH1D::iterator it=histos.begin() ; it!=histos.end() ; ++it) it->second->Write();
+		fOut->Write();
+		fOut->Close();
+	} // end of loop on sides
 	
 	return 0;
 }
