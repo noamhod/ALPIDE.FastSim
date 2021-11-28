@@ -89,16 +89,19 @@ def band(name,h2,tf1,xmin,xmax,width=0.1):
    return grUp,grDn
    
 
+process = "glaser"
 
-tfile = TFile("../data/root/dig/dig_glaser_.root","READ")
 
-# hnames = ["h2_y_vs_x_L1I","h2_y_vs_x_L1O","h2_y_vs_x_L4I","h2_y_vs_x_L4O",
+tfile = TFile("../data/root/dig/dig_"+process+"_.root","READ")
+
+# hnames = ["h2_y_vs_x_exit",
+#           "h2_y_vs_x_L1I","h2_y_vs_x_L1O","h2_y_vs_x_L4I","h2_y_vs_x_L4O",
 #           "h2_E_vs_x_L1I","h2_E_vs_x_L1O","h2_E_vs_x_L4I","h2_E_vs_x_L4O",
 #           "h2_dx14_vs_x_L4I","h2_dx14_vs_x_L4O" ]
 hnames = ["h2_y_vs_x_exit",
           "h2_y_vs_x_L1I","h2_y_vs_x_L4I",
           "h2_E_vs_x_L1I","h2_E_vs_x_L4I",
-          "h2_dx14_vs_x_L4I" ]
+          "h2_dx14_vs_x_L4I"]
 
 fits = {"E_vs_x":"[0]+[1]/([2]+x)", "dx14_vs_x":"pol1"}
 xmins = {"Eside":-50,"Pside":+5}
@@ -136,9 +139,11 @@ for hname in hnames:
    if(gr): graphs.update({name+"_gr":gr})
 
 
+outname = "inputs_for_reco_"+process
+
 ### plot
 cnv = TCanvas("c","",1200,500)
-cnv.SaveAs("test_bfield_fit2.pdf(")
+cnv.SaveAs(outname+".pdf(")
 for name,h in histos.items():
    cnv = TCanvas("c_"+name,"",1200,500)
    cnv.Divide(2,1)
@@ -165,12 +170,12 @@ for name,h in histos.items():
       bDn_Eside.Draw("l")
       bDn_Pside.Draw("l")
       
-   cnv.SaveAs("test_bfield_fit2.pdf")
+   cnv.SaveAs(outname+".pdf")
 cnv = TCanvas("c","",1200,500)
-cnv.SaveAs("test_bfield_fit2.pdf)")
+cnv.SaveAs(outname+".pdf)")
 
 
-fout = TFile("test_bfield_fit2.root","RECREATE")
+fout = TFile(outname+".root","RECREATE")
 fout.cd()
 for name,h in histos.items():    h.Write()
 for name,q in quantiles.items(): q.Write()

@@ -791,7 +791,8 @@ int main(int argc, char *argv[])
 	gInterpreter->GenerateDictionary("vector<vector<TVector3> >",    "vector");
 	gInterpreter->GenerateDictionary("vector<vector<TPolyLine3D> >", "vector");
 	gSystem->Exec("mkdir -p "+storage+"/data/root/dig");
-	TString fOutName = storage+"/data/root/dig/dig_"+process+"_"+eventid+".root";
+	TString isflat = (path.Contains("flat")) ? "_flat" : "";
+	TString fOutName = storage+"/data/root/dig/dig_"+process+"_"+eventid+flat+".root";
 	fOut = new TFile(fOutName,"RECREATE");
 	
 	/// stuff which depend on the side
@@ -871,8 +872,8 @@ int main(int argc, char *argv[])
 		hname = "h2_E_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",200,-50,+50, 170,0,+17)) );
 		hname = "h2_E_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",200,-50,+50, 170,0,+17)) );
 		
-		hname = "h2_dx14_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];x_{4}-x_{1} [cm];Tracks",200,-50,+50, 100,0,+6)) );
-		hname = "h2_dx14_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];x_{4}-x_{1} [cm];Tracks",200,-50,+50, 100,0,+6)) );
+		hname = "h2_dx14_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",200,-50,+50, 100,0,+6)) );
+		hname = "h2_dx14_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",200,-50,+50, 100,0,+6)) );
 
 
 	   /// loop on events

@@ -931,17 +931,17 @@ float zofx(float* r1,float* r2, float x)
 ///TODO!!!
 bool check_clusters(unsigned int i1, unsigned int i4, TString side)
 {
-	TString slyr1 = (side=="Eside") ? "EL1I" : "PL1I";
+	TString slyr1I = (side=="Eside") ? "EL1I" : "PL1I";
 	TString slyr2 = (side=="Eside") ? "EL2I" : "PL2I";
 	TString slyr3 = (side=="Eside") ? "EL3I" : "PL3I";
-	TString slyr4 = (side=="Eside") ? "EL4I" : "PL4I";
+	TString slyr4I = (side=="Eside") ? "EL4I" : "PL4I";
 	
 	float yAbsMargins = 0.03; //0.02; // cm (a "road" of 200 microns around the line between r4 and r1)
 	float xAbsMargins = 0.03; //0.02; // cm (a "road" of 200 microns around the line between r4 and r1)
-	float r1min[3]; r1min[0]=cached_clusters[slyr1][i1].r.X()-xAbsMargins; r1min[1]=cached_clusters[slyr1][i1].r.Y()-yAbsMargins; r1min[2]=cached_clusters[slyr1][i1].r.Z();
-	float r1max[3]; r1max[0]=cached_clusters[slyr1][i1].r.X()+xAbsMargins; r1max[1]=cached_clusters[slyr1][i1].r.Y()+yAbsMargins; r1max[2]=cached_clusters[slyr1][i1].r.Z();
-	float r4min[3]; r4min[0]=cached_clusters[slyr4][i4].r.X()-xAbsMargins; r4min[1]=cached_clusters[slyr4][i4].r.Y()-yAbsMargins; r4min[2]=cached_clusters[slyr4][i4].r.Z();
-	float r4max[3]; r4max[0]=cached_clusters[slyr4][i4].r.X()+xAbsMargins; r4max[1]=cached_clusters[slyr4][i4].r.Y()+yAbsMargins; r4max[2]=cached_clusters[slyr4][i4].r.Z();
+	float r1min[3]; r1min[0]=cached_clusters[slyr1I][i1].r.X()-xAbsMargins; r1min[1]=cached_clusters[slyr1I][i1].r.Y()-yAbsMargins; r1min[2]=cached_clusters[slyr1I][i1].r.Z();
+	float r1max[3]; r1max[0]=cached_clusters[slyr1I][i1].r.X()+xAbsMargins; r1max[1]=cached_clusters[slyr1I][i1].r.Y()+yAbsMargins; r1max[2]=cached_clusters[slyr1I][i1].r.Z();
+	float r4min[3]; r4min[0]=cached_clusters[slyr4I][i4].r.X()-xAbsMargins; r4min[1]=cached_clusters[slyr4I][i4].r.Y()-yAbsMargins; r4min[2]=cached_clusters[slyr4I][i4].r.Z();
+	float r4max[3]; r4max[0]=cached_clusters[slyr4I][i4].r.X()+xAbsMargins; r4max[1]=cached_clusters[slyr4I][i4].r.Y()+yAbsMargins; r4max[2]=cached_clusters[slyr4I][i4].r.Z();
 
 	/// check possible clusters in layer 2
 	float y2min = yofz(r1min,r4min,(float)szlayers[slyr2]);
@@ -998,7 +998,8 @@ bool adaptive_dx14_vs_x4(double x4, double x1, TF1* fDxvsX, double width0, int t
 
 
 
-bool makeseed_nonuniformB(TString process, float* r1, float* r4, unsigned int i1, unsigned int i4, TString side, TLorentzVector& p, TF1* fEvsX, TF1* fDxvsX)
+// bool makeseed_nonuniformB(TString process, float* r1, float* r4, unsigned int i1, unsigned int i4, TString side, TLorentzVector& p, TF1* fEvsX, TF1* fDxvsX)
+bool makeseed_nonuniformB(TString process, float* r1, float* r4, TString side, TLorentzVector& p, TF1* fEvsX, TF1* fDxvsX)
 {
 	if(abs(r1[0])>=abs(r4[0]))            return false; // |x1| must be smaller than |x4|
 	if(r1[0]*r4[0]<0)                     return false; // not on the same side...
@@ -1024,8 +1025,9 @@ bool makeseed_nonuniformB(TString process, float* r1, float* r4, unsigned int i1
 	double posneg = rnd.Uniform(-1,+1);
 	double pxgaus = rnd.Gaus(7.2e-4,5.0e-4);
 
-	double xExit = abs(xofz(r1,r4,zDipoleExit)); // in cm!
-	double P = fEvsX->Eval(r4[0]); // in GeV
+	// double xExit = abs(xofz(r1,r4,zDipoleExit)); // in cm!
+	double E = fEvsX->Eval(r1[0]); // in GeV
+	double P = sqrt(E*E-meGeV2);
 
 	TVector2 v1(r1[2],r1[1]);
 	TVector2 v4(r4[2],r4[1]);
@@ -1035,7 +1037,8 @@ bool makeseed_nonuniformB(TString process, float* r1, float* r4, unsigned int i1
 	double px = (posneg>=0) ? pxgaus : -pxgaus;
 	double py = P*uy;
 	double pz = P*uz;
-	p.SetPxPyPzE(px,py,pz,TMath::Sqrt(px*px + py*py + pz*pz + meGeV2));
+	// p.SetPxPyPzE(px,py,pz,TMath::Sqrt(px*px + py*py + pz*pz + meGeV2));
+	p.SetPxPyPzE(px,py,pz,E);
 	// if(i4==0 and side=="Eside") cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
 	// cout << "side=" << side << ", px=" << px << ", py=" << py << ", pz=" << pz << endl;
 	float EseedMax = (process=="glaser") ? EseedMaxBPPP : EseedMaxTRIDENT;	// GeV
@@ -1093,9 +1096,9 @@ int main(int argc, char *argv[])
 	//// assign inputs
 	TString process = ((TString)argv[1]).ReplaceAll("-proc=",""); // mandatory
 	int     dobg     = (argc>2) ? toint(((TString)argv[2]).ReplaceAll("-dobg=","")) : 0; // job id [optional]
-	int     evnt     = (argc>2) ? toint(((TString)argv[3]).ReplaceAll("-evnt=","")) : -1; // job id [optional]
-	int     Seed     = (argc>3) ? toint(((TString)argv[4]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
-	int     nsigtrks = (argc>4) ? toint(((TString)argv[5]).ReplaceAll("-ntrk=","")) : -1; // job id [optional]
+	int     evnt     = (argc>3) ? toint(((TString)argv[3]).ReplaceAll("-evnt=","")) : -1; // job id [optional]
+	int     Seed     = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-seed=","")) : 12345; // seed [optional]
+	int     nsigtrks = (argc>5) ? toint(((TString)argv[5]).ReplaceAll("-ntrk=","")) : -1; // job id [optional]
 	//// print assigned inputs
 	cout << "process=" << process << endl;
 	cout << "dobkg?=" << dobg << endl;
@@ -1113,9 +1116,8 @@ int main(int argc, char *argv[])
 	// TF1* fEvsX_pos = (TF1*)fEvsx->Get("fEvsX_pos");
 	// TF1* fEvsX_ele = (TF1*)fEvsx->Get("fEvsX_ele");
 	
-	TFile* fFits = new TFile(storage+"/output/root/test_bfield_fit2.root","READ");
-	
-
+	TString fFitsName = storage+"/output/root/inputs_for_reco_"+process+".root";
+	TFile* fFits = new TFile(fFitsName,"READ");
 	TF1* fEvsX_L1I_Eside = (TF1*)fFits->Get("h2_E_vs_x_L1I_Eside");
 	TF1* fEvsX_L1I_Pside = (TF1*)fFits->Get("h2_E_vs_x_L1I_Pside");
 	TF1* fEvsX_L4I_Eside = (TF1*)fFits->Get("h2_E_vs_x_L4I_Eside");
@@ -1464,7 +1466,6 @@ int main(int argc, char *argv[])
 		}
 		cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
 		for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
-		// for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
 		{
 			stopwatch.Start();
 			
@@ -1654,22 +1655,45 @@ int main(int argc, char *argv[])
 			
 			
 			/// run over all clusters of layer 4 in the pool --> these are the seeds for the KalmanFilter fit
-			TString slyr4 = (side=="Eside") ? "EL4I" : "PL4I";
-			TString slyr1 = (side=="Eside") ? "EL1I" : "PL1I";
-			int     ilyr4 = silayers[slyr4];
-			int     ilyr1 = silayers[slyr1];
-			// cout << "ilyr1=" << ilyr1 << ", ilyr4=" << ilyr4 << endl;
+			TString slyr4I = (side=="Eside") ? "EL4I" : "PL4I";
+			TString slyr1I = (side=="Eside") ? "EL1I" : "PL1I";
+			TString slyr4O = (side=="Eside") ? "EL4O" : "PL4O";
+			TString slyr1O = (side=="Eside") ? "EL1O" : "PL1O";
+			int     ilyr4I = silayers[slyr4I];
+			int     ilyr1I = silayers[slyr1I];
+			int     ilyr4O = silayers[slyr4O];
+			int     ilyr1O = silayers[slyr1O];
+			// cout << "ilyr1I=" << ilyr1I << ", ilyr4I=" << ilyr4I << endl;
 			
 			/// loop on seeds
-			for(unsigned int i4=0 ; i4<cached_clusters[slyr4].size() ; ++i4)
-			// for(unsigned int i4=0 ; i4<1 ; ++i4)
+			unsigned int n4I = cached_clusters[slyr4I].size();
+			unsigned int n4O = cached_clusters[slyr4O].size();
+			unsigned int n1I = cached_clusters[slyr1I].size();
+			unsigned int n1O = cached_clusters[slyr1O].size();
+			// for(unsigned int i4=0 ; i4<cached_clusters[slyr4I].size() ; ++i4)
+			for(unsigned int i4all=0 ; i4all<(n4I+n4O) ; ++i4all)
 			{
+				unsigned int i4 = (i4all<n4I) ? i4all  : i4all-n4I;
+				TString slyr4   = (i4all<n4I) ? slyr4I : slyr4O;
+				int     ilyr4   = (i4all<n4I) ? ilyr4I : ilyr4O;
+				// if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()<xMinEI)) continue;
+				// if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()>xMaxPI)) continue;
+				if(slyr4==slyr4O) continue;
+				
 				// reset all tracks from all layers
 				reset_layers_tracks();
 				
 				vector<TLorentzVector> pseeds;
-				for(unsigned int i1=0 ; i1<cached_clusters[slyr1].size() ; ++i1)
-				{	
+				// for(unsigned int i1=0 ; i1<cached_clusters[slyr1I].size() ; ++i1)
+				for(unsigned int i1all=0 ; i1all<(n1O+n1I) ; ++i1all)
+				{
+					unsigned int i1 = (i1all<n1O) ? i1all  : i1all-n1O;
+					TString slyr1   = (i1all<n1O) ? slyr1O : slyr1I;
+					int     ilyr1   = (i1all<n1O) ? ilyr1O : ilyr1I;
+					// if(slyr1==slyr1I && (side=="Eside" && cached_clusters[slyr1][i1].r.X()>xMaxEO)) continue;
+					// if(slyr1==slyr1I && (side=="Pside" && cached_clusters[slyr1][i1].r.X()<xMinPO)) continue;
+					if(slyr1==slyr1O) continue;
+					
 					// reset all tracks from all layers but layer 0
 					reset_layers_tracks(0);
 					
@@ -1678,7 +1702,22 @@ int main(int argc, char *argv[])
 					float r1[3]; r1[0]=cached_clusters[slyr1][i1].r.X(); r1[1]=cached_clusters[slyr1][i1].r.Y(); r1[2]=cached_clusters[slyr1][i1].r.Z();
 					float r4[3]; r4[0]=cached_clusters[slyr4][i4].r.X(); r4[1]=cached_clusters[slyr4][i4].r.Y(); r4[2]=cached_clusters[slyr4][i4].r.Z();
 					
-					bool seed = makeseed_nonuniformB(process,r1,r4,i1,i4,side,pseed, (side=="Pside")?fEvsX_L4I_Pside:fEvsX_L4I_Eside, (side=="Pside")?fDx14vsX_L4I_Pside:fDx14vsX_L4I_Eside );
+					TF1* fEvsX    = 0;
+					TF1* fDx14vsX = 0;
+					if(slyr1==slyr1I)
+					{
+						fEvsX    = (side=="Pside") ? fEvsX_L1I_Pside    : fEvsX_L1I_Eside;
+						fDx14vsX = (side=="Pside") ? fDx14vsX_L4I_Pside : fDx14vsX_L4I_Eside;
+					}
+					else
+					{
+						// fEvsX    = (side=="Pside") ? fEvsX_L1O_Pside    : fEvsX_L1O_Eside;
+						// fDx14vsX = (side=="Pside") ? fDx14vsX_L4O_Pside : fDx14vsX_L4O_Eside;
+					}
+
+					
+					// bool seed = makeseed_nonuniformB(process,r1,r4,i1,i4,side,pseed,fEvsX,fDx14vsX);
+					bool seed = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsX,fDx14vsX);
 					if(!seed) continue; // cannot make a meaningful seed
 					pseeds.push_back(pseed);
 					bool issig  = ( cached_clusters[slyr1][i1].type==1 && cached_clusters[slyr4][i4].type==1 );
