@@ -980,31 +980,47 @@ int main(int argc, char *argv[])
 				double xMaxI = (side=="Eside") ? xMaxEI : xMaxPI;
 				double xMinO = (side=="Eside") ? xMinEO : xMinPO;
 				double xMaxO = (side=="Eside") ? xMaxEO : xMaxPO;
-				double x1I, x4I, x1O, x4O;
+				double x1I=0;
+				double x4I=0;
+				double x1O=0;
+				double x4O=0;
 				for(Int_t n=0 ; n<trkpts_fullrange[slvidx]->GetN() ; ++n)
 				{
 					Double_t xp, yp, zp;
 					trkpts_fullrange[slvidx]->GetPoint(n,xp,yp,zp);
 					// histos2["h2_z_vs_x"]->Fill(xp,zp);
 					// histos2["h2_z_vs_y"]->Fill(yp,zp);
+					bool isInnerX = (xp>xMinI && xp<xMaxI);
+					bool isOuterX = (xp>xMinO && xp<xMaxO);
 					if(zp==z2dipole)                              histos2["h2_y_vs_x_exit_"+side]->Fill(xp,yp);
-					if(zp==zfirstinner && (xp>xMinI && xp<xMaxI)) histos2["h2_y_vs_x_L1I_"+side]->Fill(xp,yp);
-					if(zp==zlastinner && (xp>xMinI && xp<xMaxI))  histos2["h2_y_vs_x_L4I_"+side]->Fill(xp,yp);
-					if(zp==zfirstouter && (xp>xMinO && xp<xMaxO)) histos2["h2_y_vs_x_L1O_"+side]->Fill(xp,yp);
-					if(zp==zlastouter && (xp>xMinO && xp<xMaxO))  histos2["h2_y_vs_x_L4O_"+side]->Fill(xp,yp);
 					
-					if(zp==zfirstinner && (xp>xMinI && xp<xMaxI)) histos2["h2_E_vs_x_L1I_"+side]->Fill(xp,trkp4[slvidx].E());
-					if(zp==zlastinner && (xp>xMinI && xp<xMaxI))  histos2["h2_E_vs_x_L4I_"+side]->Fill(xp,trkp4[slvidx].E());
-					if(zp==zfirstouter && (xp>xMinO && xp<xMaxO)) histos2["h2_E_vs_x_L1O_"+side]->Fill(xp,trkp4[slvidx].E());
-					if(zp==zlastouter && (xp>xMinO && xp<xMaxO))  histos2["h2_E_vs_x_L1O_"+side]->Fill(xp,trkp4[slvidx].E());
+					if(zp==zfirstinner && isInnerX) histos2["h2_y_vs_x_L1I_"+side]->Fill(xp,yp);
+					if(zp==zlastinner  && isInnerX) histos2["h2_y_vs_x_L4I_"+side]->Fill(xp,yp);
+					if(zp==zfirstouter && isOuterX) histos2["h2_y_vs_x_L1O_"+side]->Fill(xp,yp);
+					if(zp==zlastouter  && isOuterX) histos2["h2_y_vs_x_L4O_"+side]->Fill(xp,yp);
 					
-					if(zp==zfirstinner && (xp>xMinI && xp<xMaxI)) x1I = xp;
-					if(zp==zlastinner && (xp>xMinI && xp<xMaxI))  x4I = xp;
-					if(zp==zfirstouter && (xp>xMinO && xp<xMaxO)) x1O = xp;
-					if(zp==zlastouter && (xp>xMinO && xp<xMaxO))  x4O = xp;
+					if(zp==zfirstinner && isInnerX) histos2["h2_E_vs_x_L1I_"+side]->Fill(xp,trkp4[slvidx].E());
+					if(zp==zlastinner  && isInnerX) histos2["h2_E_vs_x_L4I_"+side]->Fill(xp,trkp4[slvidx].E());
+					if(zp==zfirstouter && isOuterX) histos2["h2_E_vs_x_L1O_"+side]->Fill(xp,trkp4[slvidx].E());
+					if(zp==zlastouter  && isOuterX) histos2["h2_E_vs_x_L4O_"+side]->Fill(xp,trkp4[slvidx].E());
+					
+					if(zp==zfirstinner && isInnerX) x1I = xp;
+					if(zp==zlastinner  && isInnerX) x4I = xp;
+					if(zp==zfirstouter && isOuterX) x1O = xp;
+					if(zp==zlastouter  && isOuterX) x4O = xp;
 				}
-				histos2["h2_dx14_vs_x_L4I_"+side]->Fill(x4I,abs(x4I-x1I));
-				histos2["h2_dx14_vs_x_L4O_"+side]->Fill(x4O,abs(x4O-x1O));
+				double dx41I = 0;
+				double dx410 = 0;
+				if(x4I>xMinI && x4I<xMaxI)
+				{
+					if((x1I>xMinI && x1I<xMaxI)) { dx41I = abs(x4I-x1I); histos2["h2_dx14_vs_x_L4I_"+side]->Fill(x4I,dx41I); }
+				}
+				if(x4O>xMinO && x4O<xMaxO)
+				{
+					if     ((x1O>xMinO && x1O<xMaxO)) { dx410 = abs(x4O-x1O); histos2["h2_dx14_vs_x_L4O_"+side]->Fill(x4O,dx410); }
+					else if((x1I>xMinI && x1I<xMaxI)) { dx410 = abs(x4O-x1I); histos2["h2_dx14_vs_x_L4O_"+side]->Fill(x4O,dx410); }
+				}
+				
 	         
 				clusters_id.push_back( vtmp );
 				clusters_layerid.push_back( vtmp );
