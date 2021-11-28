@@ -9,10 +9,12 @@ import ROOT
 from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TF2, TGraph, TGraph2D, TRandom, TVector2, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
 import argparse
 parser = argparse.ArgumentParser(description='BackgroundGenerator.py...')
+parser.add_argument('-proc', metavar='proc',  required=True,  help='process')
 parser.add_argument('-nevnt', metavar='events',  required=True,  help='N events')
 parser.add_argument('-ntrk', metavar='background tracks',  required=True,  help='N background tracks')
 parser.add_argument('-e', metavar='energy',  required=False, help='beam energy')
 argus = parser.parse_args()
+proc  = argus.proc
 Nevt  = int(argus.nevnt)
 Ntracks = int(argus.ntrk) ## tracks to generate
 
@@ -34,10 +36,10 @@ cm2m = 1.e-2
 cm2um = 1.e4
 um2cm = 1.e-4
 
-Emin = 0.5
-Emax = 18
+Emin = 1
+Emax = 16.5
 
-tf = TFile( storage+'/data/root/raw/flat/raw_flat.root', 'recreate' )
+tf = TFile( storage+"/data/root/raw/flat/raw_"+proc+".root", 'recreate' )
 tt = TTree( 'tt','tt' )
 vx    = ROOT.std.vector( float )()
 vy    = ROOT.std.vector( float )()
@@ -74,21 +76,19 @@ for n in range(Nevt):
    rnd = TRandom()
    rnd.SetSeed()
    
-   vx0 = 0
-   vy0 = 0
-   vz0 = 0
-   
    ### generate tracks
    ntrks = 0
    while(ntrks<Ntracks):      
       ntrks+=1
-      E0 = rnd.Uniform(Emin,Emax)
-      P0 = ROOT.TMath.Sqrt(E0*E0-me2)
-      Px = 0
-      Py = 0
-      Pz = P0
+      vx0 = 0 ## should be random
+      vy0 = 0 ## should be random
+      vz0 = 0 ## should be random
+      Px = 0  ## should be random
+      Py = 0  ## should be random
+      Pz = rnd.Uniform(Emin,Emax)
+      E0  = math.sqrt(Px*Px+Py*Py+Pz*Pz+me2)
       p4 = TLorentzVector()
-      p4.SetXYZM(Px,Py,Pz,me)
+      p4.SetPxPyPzE(Px,Py,Pz,E0)
       wgt0 = 1
       pdgId0 = 11 if(rnd.Uniform()>0.5) else -11
       

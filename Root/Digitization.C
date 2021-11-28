@@ -792,7 +792,7 @@ int main(int argc, char *argv[])
 	gInterpreter->GenerateDictionary("vector<vector<TPolyLine3D> >", "vector");
 	gSystem->Exec("mkdir -p "+storage+"/data/root/dig");
 	TString isflat = (path.Contains("flat")) ? "_flat" : "";
-	TString fOutName = storage+"/data/root/dig/dig_"+process+"_"+eventid+flat+".root";
+	TString fOutName = storage+"/data/root/dig/dig_"+process+"_"+eventid+isflat+".root";
 	fOut = new TFile(fOutName,"RECREATE");
 	
 	/// stuff which depend on the side
