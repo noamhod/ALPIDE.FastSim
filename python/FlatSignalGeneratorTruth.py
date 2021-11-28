@@ -6,7 +6,7 @@ import array
 import numpy as np
 import config as cfg
 import ROOT
-from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TF2, TGraph, TGraph2D, TRandom, TVector2, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
+from ROOT import TFile, TTree, TH1D, TH2D, TH3D, TF1, TF2, TGraph, TGraph2D, TRandom,TRandom3, TVector2, TVector3, TLorentzVector, TPolyMarker3D, TPolyLine3D, TPolyLine, TCanvas, TView, TLatex, TLegend
 import argparse
 parser = argparse.ArgumentParser(description='BackgroundGenerator.py...')
 parser.add_argument('-proc', metavar='proc',  required=True,  help='process')
@@ -39,8 +39,8 @@ um2cm = 1.e-4
 Emin = 1
 Emax = 16.5
 
-tf = TFile( storage+"/data/root/raw/flat/raw_"+proc+".root", 'recreate' )
-tt = TTree( 'tt','tt' )
+tf    = TFile( storage+"/data/root/raw/flat/raw_"+proc+".root", 'recreate' )
+tt    = TTree( 'tt','tt' )
 vx    = ROOT.std.vector( float )()
 vy    = ROOT.std.vector( float )()
 vz    = ROOT.std.vector( float )()
@@ -60,6 +60,7 @@ tt.Branch('E',  E)
 tt.Branch('pdgId',pdgId)
 tt.Branch('wgt',wgt)
 
+
 n=0 ### init n
 for n in range(Nevt):
    ### clear
@@ -76,18 +77,21 @@ for n in range(Nevt):
    rnd = TRandom()
    rnd.SetSeed()
    
+   gRandom = TRandom3(0)
+   gRandom.SetSeed(0)
+
    ### generate tracks
    ntrks = 0
    while(ntrks<Ntracks):      
       ntrks+=1
-      vx0 = 0 ## should be random
-      vy0 = 0 ## should be random
-      vz0 = 0 ## should be random
-      Px = 0  ## should be random
-      Py = 0  ## should be random
-      Pz = rnd.Uniform(Emin,Emax)
-      E0  = math.sqrt(Px*Px+Py*Py+Pz*Pz+me2)
-      p4 = TLorentzVector()
+      vx0  = h_vx.GetRandom() ## should be random
+      vy0  = h_vy.GetRandom() ## should be random
+      vz0  = h_vz.GetRandom() ## should be random
+      Px   = h_Px.GetRandom()  ## should be random
+      Py   = h_Py.GetRandom()  ## should be random
+      Pz   = rnd.Uniform(Emin,Emax)
+      E0   = math.sqrt(Px*Px+Py*Py+Pz*Pz+me2)
+      p4   = TLorentzVector()
       p4.SetPxPyPzE(Px,Py,Pz,E0)
       wgt0 = 1
       pdgId0 = 11 if(rnd.Uniform()>0.5) else -11

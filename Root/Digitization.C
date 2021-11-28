@@ -961,12 +961,12 @@ int main(int argc, char *argv[])
 				// trutrk->GetPXYZ(pxyztmp);
 				
 				int slvidx = nslv-1;
-	         wgt.push_back( wgt0->at(igen) );
-	         xvtx.push_back( vx->at(igen) );
-	         yvtx.push_back( vy->at(igen) );
-	         zvtx.push_back( vz->at(igen) );
-	         crg.push_back( q );
-	         trkp4.push_back( ptmp );
+				wgt.push_back( wgt0->at(igen) );
+				xvtx.push_back( vx->at(igen) );
+				yvtx.push_back( vy->at(igen) );
+				zvtx.push_back( vz->at(igen) );
+				crg.push_back( q );
+				trkp4.push_back( ptmp );
 				if(!process.Contains("bkg")) trkpts_fullrange.push_back( TrackMarker3d(trutrk,0,zLastLayer+15,0.1,trkcol(ptmp.E()),false,true) );
 				trkpts.push_back( TrackMarker3d(trutrk,0,zLastLayer+15,0.1,trkcol(ptmp.E())) );
 				trklin.push_back( TrackLine3d(trutrk,zLastLayer+15,1,trkcol(ptmp.E())) );
