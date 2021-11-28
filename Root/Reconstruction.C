@@ -1109,6 +1109,7 @@ int main(int argc, char *argv[])
 	// TString proc = process;
 	TString eventid = (evnt<0) ? "" : FormatEventID(evnt);
 	TStopwatch stopwatch;
+	TStopwatch stopwatch1;
 	
 	
 	/// get the B-field vs xExit functions to read off the 
@@ -1737,9 +1738,15 @@ int main(int argc, char *argv[])
 				if(doPrint) cout << "\n\n\n########################################## calling SolveSingleTrackViaKalmanMC_Noam_multiseed for i4=" << i4 << " ######################################" << endl;
 				// prepare the probe from the seed and do the KF fit
 				
+				stopwatch1.Start();
 				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99,doPrint);
+				stopwatch1.Stop();
+				Double_t cputime1  = stopwatch1.CpuTime();
+				Double_t realtime1 = stopwatch1.RealTime();
+				cout << "cputime1=" << cputime1 << ", realtime1=" << realtime1 << endl;
 				if(!solved) continue; // reconstruction failed
 				n_solve++;
+				
 				
 				// get the reconstructed propagated to the vertex 
 				KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack();
@@ -1800,7 +1807,8 @@ int main(int argc, char *argv[])
 				reco_x.push_back( xyz[0] );
 				reco_y.push_back( xyz[1] );
 				reco_z.push_back( xyz[2] );
-				reco_trckmar.push_back( TrackMarker3d(trw,0,zLastLayer+1,0.1,trkcol(prec.E())) );
+				// reco_trckmar.push_back( TrackMarker3d(trw,0,zLastLayer+1,0.1,trkcol(prec.E())) );
+				reco_trckmar.push_back( TrackMarker3d(trw,0,zLastLayer+1,1,trkcol(prec.E())) );
 				reco_trcklin.push_back( TrackLine3d(trw,zLastLayer+1,1,trkcol(prec.E())) );
 
 
