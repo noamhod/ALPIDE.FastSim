@@ -867,13 +867,14 @@ int main(int argc, char *argv[])
 		hname = "h2_y_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];y [cm];Tracks",200,-50,+50, 200,-0.5,+0.5)) );
 		hname = "h2_y_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];y [cm];Tracks",200,-50,+50, 200,-0.5,+0.5)) );
 
-		hname = "h2_E_vs_x_L1I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];E [GeV];Tracks",200,-50,+50, 170,0,+17)) );
-		hname = "h2_E_vs_x_L1O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];E [GeV];Tracks",200,-50,+50, 170,0,+17)) );
-		hname = "h2_E_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",200,-50,+50, 170,0,+17)) );
-		hname = "h2_E_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",200,-50,+50, 170,0,+17)) );
+		hname = "h2_E_vs_x_L1I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];E [GeV];Tracks",400,-50,+50, 340,0,+17)) );
+		hname = "h2_E_vs_x_L1O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];E [GeV];Tracks",400,-50,+50, 340,0,+17)) );
+		hname = "h2_E_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",400,-50,+50, 340,0,+17)) );
+		hname = "h2_E_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",400,-50,+50, 340,0,+17)) );
 		
-		hname = "h2_dx14_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",200,-50,+50, 100,0,+6)) );
-		hname = "h2_dx14_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",200,-50,+50, 100,0,+6)) );
+		hname = "h2_dx14_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",500,-50,+50, 400,0,+8)) );
+		hname = "h2_dx14_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",500,-50,+50, 400,0,+8)) );
+		hname = "h2_dx14_vs_x_L4X_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",500,-50,+50, 400,0,+8)) );
 
 
 	   /// loop on events
@@ -1013,12 +1014,12 @@ int main(int argc, char *argv[])
 				double dx410 = 0;
 				if(x4I>xMinI && x4I<xMaxI)
 				{
-					if((x1I>xMinI && x1I<xMaxI)) { dx41I = abs(x4I-x1I); histos2["h2_dx14_vs_x_L4I_"+side]->Fill(x4I,dx41I); }
+					if     ((x1I>xMinI && x1I<xMaxI)) histos2["h2_dx14_vs_x_L4I_"+side]->Fill(x4I,abs(x4I-x1I));
 				}
 				if(x4O>xMinO && x4O<xMaxO)
 				{
-					if     ((x1O>xMinO && x1O<xMaxO)) { dx410 = abs(x4O-x1O); histos2["h2_dx14_vs_x_L4O_"+side]->Fill(x4O,dx410); }
-					else if((x1I>xMinI && x1I<xMaxI)) { dx410 = abs(x4O-x1I); histos2["h2_dx14_vs_x_L4O_"+side]->Fill(x4O,dx410); }
+					if     ((x1O>xMinO && x1O<xMaxO)) histos2["h2_dx14_vs_x_L4O_"+side]->Fill(x4O,abs(x4O-x1O));
+					else if((x1I>xMinI && x1I<xMaxI)) histos2["h2_dx14_vs_x_L4X_"+side]->Fill(x4O,abs(x4O-x1I));
 				}
 				
 	         
