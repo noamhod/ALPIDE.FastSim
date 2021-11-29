@@ -90,25 +90,25 @@ def band(name,h2,tf1,xmin,xmax,width=0.1):
    
 
 process = "glaser"
+isflat  = "_flat" ## "_flat" or ""
 
-
-tfile = TFile("../data/root/dig/dig_"+process+"_.root","READ")
+tfile = TFile("../data/root/dig/dig_"+process+"_"+isflat+".root","READ")
 
 # hnames = ["h2_y_vs_x_exit",
 #           "h2_y_vs_x_L1I","h2_y_vs_x_L1O","h2_y_vs_x_L4I","h2_y_vs_x_L4O",
 #           "h2_E_vs_x_L1I","h2_E_vs_x_L1O","h2_E_vs_x_L4I","h2_E_vs_x_L4O",
 #           "h2_dx14_vs_x_L4I","h2_dx14_vs_x_L4O" ]
 hnames = ["h2_y_vs_x_exit",
-          "h2_y_vs_x_L1I","h2_y_vs_x_L4I",
-          "h2_E_vs_x_L1I","h2_E_vs_x_L4I",
-          "h2_dx14_vs_x_L4I"]
+          "h2_y_vs_x_L1I","h2_y_vs_x_L4I","h2_y_vs_x_L1O","h2_y_vs_x_L4O",
+          "h2_E_vs_x_L1I","h2_E_vs_x_L4I","h2_E_vs_x_L1O","h2_E_vs_x_L4O",
+          "h2_dx14_vs_x_L4I","h2_dx14_vs_x_L4O","h2_dx14_vs_x_L4X"]
 
 fits = {"E_vs_x":"[0]+[1]/([2]+x)", "dx14_vs_x":"pol1"}
 xmins = {"Eside":-50,"Pside":+5}
 xmaxs = {"Eside":-5,"Pside":+50}
 qMed = 50
-qUp = 67
-qDn = 33
+qUp = 99#67
+qDn = 1##33
 
 histos    = {}
 quantiles = {}
@@ -122,6 +122,7 @@ for hname in hnames:
    h2.Add(tfile.Get(hname+"_Pside"))
    histos.update( {name:h2} )
    histos[name].SetDirectory(0)
+   histos[name].SetTitle(hname.replace("h2_","").replace("_"," "))
    ## get median quantile
    quantiles.update( {name+"_q"+str(qMed):histos[name].QuantilesX(qMed/100)} )
    quantiles[name+"_q"+str(qMed)].SetLineColor(ROOT.kBlack)
