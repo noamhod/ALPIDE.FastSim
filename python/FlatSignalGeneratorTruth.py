@@ -39,6 +39,16 @@ um2cm = 1.e-4
 Emin = 1
 Emax = 16.5
 
+tIn    = TFile( storage+"/data/root/raw/glaser/phase0/gpc/7.0/hist_"+proc+".root")
+tIn.cd()
+
+h_vx   = tIn.Get("h_vx")
+h_vy   = tIn.Get("h_vy")
+h_vz   = tIn.Get("h_vz")
+h_Px   = tIn.Get("h_Px")
+h_Py   = tIn.Get("h_Py")
+h_Pz   = tIn.Get("h_Pz")
+
 tf    = TFile( storage+"/data/root/raw/flat/raw_"+proc+".root", 'recreate' )
 tt    = TTree( 'tt','tt' )
 vx    = ROOT.std.vector( float )()
@@ -84,9 +94,9 @@ for n in range(Nevt):
    ntrks = 0
    while(ntrks<Ntracks):      
       ntrks+=1
-      vx0  = h_vx.GetRandom() ## should be random
-      vy0  = h_vy.GetRandom() ## should be random
-      vz0  = h_vz.GetRandom() ## should be random
+      vx0  = h_vx.GetRandom()  ## should be random
+      vy0  = h_vy.GetRandom()  ## should be random
+      vz0  = h_vz.GetRandom()  ## should be random
       Px   = h_Px.GetRandom()  ## should be random
       Py   = h_Py.GetRandom()  ## should be random
       Pz   = rnd.Uniform(Emin,Emax)

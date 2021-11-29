@@ -92,7 +92,7 @@ def band(name,h2,tf1,xmin,xmax,width=0.1):
 process = "glaser"
 
 
-tfile = TFile("../data/root/dig/dig_"+process+"_.root","READ")
+tfile = TFile("../data/root/dig/dig_"+process+"__flat.root","READ")
 
 # hnames = ["h2_y_vs_x_exit",
 #           "h2_y_vs_x_L1I","h2_y_vs_x_L1O","h2_y_vs_x_L4I","h2_y_vs_x_L4O",
@@ -101,11 +101,14 @@ tfile = TFile("../data/root/dig/dig_"+process+"_.root","READ")
 hnames = ["h2_y_vs_x_exit",
           "h2_y_vs_x_L1I","h2_y_vs_x_L4I",
           "h2_E_vs_x_L1I","h2_E_vs_x_L4I",
-          "h2_dx14_vs_x_L4I"]
+          "h2_dx14_vs_x_L4I", "h2_y_vs_x_L1O","h2_y_vs_x_L4O",
+          "h2_E_vs_x_L1O","h2_E_vs_x_L4O",
+          "h2_dx14_vs_x_L4O"]
 
 fits = {"E_vs_x":"[0]+[1]/([2]+x)", "dx14_vs_x":"pol1"}
-xmins = {"Eside":-50,"Pside":+5}
-xmaxs = {"Eside":-5,"Pside":+50}
+### first element for inner layer, second for outer layer
+xmins = {"Eside":[-50,-60], "Pside":[+5,+25]}
+xmaxs = {"Eside":[-5,-25], "Pside":[+50,+60]}
 qMed = 50
 qUp = 67
 qDn = 33
@@ -157,18 +160,25 @@ for name,h in histos.items():
    h.Draw("col")
    if(name+"_gr" in graphs):
       graphs[name+"_gr"].Draw("ps")
-      # if("y_vs_x" in name): continue
-      sfunc = fits["E_vs_x"] if("E_vs_x" in name) else fits["dx14_vs_x"]
-      tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,xmins["Eside"],xmaxs["Eside"])})
-      tf1s.update({name+"_Pside":fit(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,xmins["Pside"],xmaxs["Pside"])})
-      tf1s[name+"_Eside"].Draw("same")
-      tf1s[name+"_Pside"].Draw("same")
-      bUp_Eside,bDn_Eside = band(name+"_band_Eside",h,tf1s[name+"_Eside"],xmins["Eside"],xmaxs["Eside"])
-      bUp_Pside,bDn_Pside = band(name+"_band_Pside",h,tf1s[name+"_Pside"],xmins["Pside"],xmaxs["Pside"])
-      bUp_Eside.Draw("l")
-      bUp_Pside.Draw("l")
-      bDn_Eside.Draw("l")
-      bDn_Pside.Draw("l")
+      if("y_vs_x" not in name): 
+         sfunc = fits["E_vs_x"] if("E_vs_x" in name) else fits["dx14_vs_x"]
+         ### choose the limit of the fits
+         if("I" in name):
+            index = 0
+         else:
+            index = 1
+         ### inner layer
+         tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,xmins["Eside"][index],xmaxs["Eside"][index])})
+         tf1s.update({name+"_Pside":fit(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,xmins["Pside"][index],xmaxs["Pside"][index])})
+         tf1s[name+"_Eside"].Draw("same")
+         tf1s[name+"_Pside"].Draw("same")
+         bUp_Eside,bDn_Eside = band(name+"_band_Eside",h,tf1s[name+"_Eside"],xmins["Eside"][index],xmaxs["Eside"][index])
+         bUp_Pside,bDn_Pside = band(name+"_band_Pside",h,tf1s[name+"_Pside"],xmins["Pside"][index],xmaxs["Pside"][index])
+         bUp_Eside.Draw("l")
+         bUp_Pside.Draw("l")
+         bDn_Eside.Draw("l")
+         bDn_Pside.Draw("l")
+         
       
    cnv.SaveAs(outname+".pdf")
 cnv = TCanvas("c","",1200,500)

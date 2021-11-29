@@ -304,8 +304,8 @@ void setParametersFromDet(TString side)
 	
 	zLastLayer  = (side=="Eside") ? zEL4I : zPL4I;
 	zFirstLayer = (side=="Eside") ? zPL1O : zPL1O;
-	LastLayer  = (side=="Eside") ? "EL4I" : "PL4I";
-	FirstLayer = (side=="Eside") ? "PL1O" : "PL1O";
+	LastLayer   = (side=="Eside") ? "EL4I" : "PL4I";
+	FirstLayer  = (side=="Eside") ? "PL1O" : "PL1O";
 	cout << "zLastLayer=" << zLastLayer << " ("<<LastLayer<<"), zFirstLayer=" << zFirstLayer << " ("<<FirstLayer<<")"<< endl;
 	
 	cout << "====================================" << endl;
@@ -1117,7 +1117,7 @@ int main(int argc, char *argv[])
 	// TF1* fEvsX_pos = (TF1*)fEvsx->Get("fEvsX_pos");
 	// TF1* fEvsX_ele = (TF1*)fEvsx->Get("fEvsX_ele");
 	
-	TString fFitsName = storage+"/output/root/inputs_for_reco_"+process+".root";
+	TString fFitsName = storage+"/data/root/inputs_for_reco_"+process+".root";
 	TFile* fFits = new TFile(fFitsName,"READ");
 	TF1* fEvsX_L1I_Eside = (TF1*)fFits->Get("h2_E_vs_x_L1I_Eside");
 	TF1* fEvsX_L1I_Pside = (TF1*)fFits->Get("h2_E_vs_x_L1I_Pside");
@@ -1125,6 +1125,13 @@ int main(int argc, char *argv[])
 	TF1* fEvsX_L4I_Pside = (TF1*)fFits->Get("h2_E_vs_x_L4I_Pside");
 	TF1* fDx14vsX_L4I_Eside = (TF1*)fFits->Get("h2_dx14_vs_x_L4I_Eside");
 	TF1* fDx14vsX_L4I_Pside = (TF1*)fFits->Get("h2_dx14_vs_x_L4I_Pside");
+    TF1* fEvsX_L1O_Eside = (TF1*)fFits->Get("h2_E_vs_x_L1O_Eside");
+	TF1* fEvsX_L1O_Pside = (TF1*)fFits->Get("h2_E_vs_x_L1O_Pside");
+	TF1* fEvsX_L4O_Eside = (TF1*)fFits->Get("h2_E_vs_x_L4O_Eside");
+	TF1* fEvsX_L4O_Pside = (TF1*)fFits->Get("h2_E_vs_x_L4O_Pside");
+	TF1* fDx14vsX_L4O_Eside = (TF1*)fFits->Get("h2_dx14_vS_x_L4O_Eside");
+	TF1* fDx14vsX_L4O_Pside = (TF1*)fFits->Get("h2_dx14_vs_x_L4O_Pside");
+
 	cout << "setup fits from files" << endl;
 
 	int outN = (process=="elaser") ? 10 : 10;
@@ -1377,16 +1384,17 @@ int main(int argc, char *argv[])
 		vector<TPolyMarker3D*>*    sig_trkpts        = 0;
 		vector<TPolyLine3D*>*      sig_trklin        = 0;
 		cout << "Getting signal clusters from tree" << endl;
-		TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"_"+eventid+".root","READ");
+		// TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"_"+eventid+"_flat.root","READ");  /// remove _flat when working with real signal samples
+		TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"__flat.root","READ");  /// remove _flat when working with real signal samples
 		TTree* tSig = (TTree*)fSig->Get("dig_"+side);
 		tSig->SetBranchAddress("ngen",         &sig_ngen);
 		tSig->SetBranchAddress("nslv",         &sig_nslv);
 		tSig->SetBranchAddress("nacc",         &sig_nacc);
 		tSig->SetBranchAddress("wgt",          &sig_wgt);
 		tSig->SetBranchAddress("crg",          &sig_crg);
-	   tSig->SetBranchAddress("xvtx",         &sig_xvtx);
-	   tSig->SetBranchAddress("yvtx",         &sig_yvtx);
-	   tSig->SetBranchAddress("zvtx",         &sig_zvtx);
+	    tSig->SetBranchAddress("xvtx",         &sig_xvtx);
+	    tSig->SetBranchAddress("yvtx",         &sig_yvtx);
+	    tSig->SetBranchAddress("zvtx",         &sig_zvtx);
 		tSig->SetBranchAddress("trkp4",        &sig_trkp4);
 		tSig->SetBranchAddress("acc",          &sig_acc);
 		tSig->SetBranchAddress("clusters_layerid",  &sig_clusters_layerid);
@@ -1434,9 +1442,9 @@ int main(int argc, char *argv[])
 			tBkg->SetBranchAddress("nacc",         &bkg_nacc);
 			tBkg->SetBranchAddress("wgt",          &bkg_wgt);
 			tBkg->SetBranchAddress("crg",          &bkg_crg);
-	   	tBkg->SetBranchAddress("xvtx",         &bkg_xvtx);
-	   	tBkg->SetBranchAddress("yvtx",         &bkg_yvtx);
-	   	tBkg->SetBranchAddress("zvtx",         &bkg_zvtx);
+			tBkg->SetBranchAddress("xvtx",         &bkg_xvtx);
+			tBkg->SetBranchAddress("yvtx",         &bkg_yvtx);
+			tBkg->SetBranchAddress("zvtx",         &bkg_zvtx);
 			tBkg->SetBranchAddress("trkp4",        &bkg_trkp4);
 			tBkg->SetBranchAddress("acc",          &bkg_acc);
 			tBkg->SetBranchAddress("clusters_layerid",  &bkg_clusters_layerid);
@@ -1605,8 +1613,8 @@ int main(int argc, char *argv[])
 					bkgr_z.push_back( bkg_zvtx->at(b) );
 					bkgr_q.push_back( bkg_crg->at(b) );
 					bkgr_p.push_back( bkg_trkp4->at(b) );
-				   bkgr_trckmar.push_back( bkg_trkpts->at(b) );
-				   bkgr_trcklin.push_back( bkg_trklin->at(b) );
+				    bkgr_trckmar.push_back( bkg_trkpts->at(b) );
+				    bkgr_trcklin.push_back( bkg_trklin->at(b) );
 				}
 			}
 			
@@ -1671,14 +1679,13 @@ int main(int argc, char *argv[])
 			unsigned int n4O = cached_clusters[slyr4O].size();
 			unsigned int n1I = cached_clusters[slyr1I].size();
 			unsigned int n1O = cached_clusters[slyr1O].size();
-			// for(unsigned int i4=0 ; i4<cached_clusters[slyr4I].size() ; ++i4)
 			for(unsigned int i4all=0 ; i4all<(n4I+n4O) ; ++i4all)
 			{
 				unsigned int i4 = (i4all<n4I) ? i4all  : i4all-n4I;
 				TString slyr4   = (i4all<n4I) ? slyr4I : slyr4O;
 				int     ilyr4   = (i4all<n4I) ? ilyr4I : ilyr4O;
-				// if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()<xMinEI)) continue;
-				// if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()>xMaxPI)) continue;
+				// if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
+				// if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
 				if(slyr4==slyr4O) continue;
 				
 				// reset all tracks from all layers
@@ -1691,8 +1698,8 @@ int main(int argc, char *argv[])
 					unsigned int i1 = (i1all<n1O) ? i1all  : i1all-n1O;
 					TString slyr1   = (i1all<n1O) ? slyr1O : slyr1I;
 					int     ilyr1   = (i1all<n1O) ? ilyr1O : ilyr1I;
-					// if(slyr1==slyr1I && (side=="Eside" && cached_clusters[slyr1][i1].r.X()>xMaxEO)) continue;
-					// if(slyr1==slyr1I && (side=="Pside" && cached_clusters[slyr1][i1].r.X()<xMinPO)) continue;
+					// if(slyr1==slyr1I && (side=="Eside" && cached_clusters[slyr1][i1].r.X()<xMaxEO)) continue;
+					// if(slyr1==slyr1I && (side=="Pside" && cached_clusters[slyr1][i1].r.X()>xMinPO)) continue;
 					if(slyr1==slyr1O) continue;
 					
 					// reset all tracks from all layers but layer 0
@@ -1712,8 +1719,8 @@ int main(int argc, char *argv[])
 					}
 					else
 					{
-						// fEvsX    = (side=="Pside") ? fEvsX_L1O_Pside    : fEvsX_L1O_Eside;
-						// fDx14vsX = (side=="Pside") ? fDx14vsX_L4O_Pside : fDx14vsX_L4O_Eside;
+						fEvsX    = (side=="Pside") ? fEvsX_L1O_Pside    : fEvsX_L1O_Eside;
+						fDx14vsX = (side=="Pside") ? fDx14vsX_L4O_Pside : fDx14vsX_L4O_Eside;
 					}
 
 					
