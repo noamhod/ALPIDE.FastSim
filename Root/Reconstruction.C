@@ -1014,7 +1014,7 @@ bool makeseed_nonuniformB(TString process, float* r1, float* r4, TString side, T
 	if(abs(xDipoleExit)>xDipoleExitAbsMax) return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
 	// if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])*(1+0.1))) return false; // new cut!!
 	// if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])*(1-0.1))) return false; // new cut!!
-	if(abs(r4[0]-r1[0])>5.5 || abs(r4[0]-r1[0])<0.5) return false; // new cut!!
+	if(abs(r4[0]-r1[0])>7.5 || abs(r4[0]-r1[0])<0.5) return false; // new cut!!
 	if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])+0.1))   return false; // new cut!!
 	if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])-0.1))   return false; // new cut!!
 	// if(!adaptive_dx14_vs_x4(r4[0],r1[0],fDxvsX,0.2,4)) return false;
@@ -1113,18 +1113,27 @@ int main(int argc, char *argv[])
 	
 	
 	/// get the B-field vs xExit functions to read off the 
-	// TFile* fEvsx = new TFile(storage+"/output/root/test_bfield_fit.root","READ");
-	// TF1* fEvsX_pos = (TF1*)fEvsx->Get("fEvsX_pos");
-	// TF1* fEvsX_ele = (TF1*)fEvsx->Get("fEvsX_ele");
-	
-	TString fFitsName = storage+"/output/root/inputs_for_reco_"+process+".root";
+	TString fFitsName = storage+"/output/root/inputs_for_reco_"+process+"_flat.root";
 	TFile* fFits = new TFile(fFitsName,"READ");
 	TF1* fEvsX_L1I_Eside = (TF1*)fFits->Get("h2_E_vs_x_L1I_Eside");
 	TF1* fEvsX_L1I_Pside = (TF1*)fFits->Get("h2_E_vs_x_L1I_Pside");
-	TF1* fEvsX_L4I_Eside = (TF1*)fFits->Get("h2_E_vs_x_L4I_Eside");
-	TF1* fEvsX_L4I_Pside = (TF1*)fFits->Get("h2_E_vs_x_L4I_Pside");
+	// TF1* fEvsX_L4I_Eside = (TF1*)fFits->Get("h2_E_vs_x_L4I_Eside");
+	// TF1* fEvsX_L4I_Pside = (TF1*)fFits->Get("h2_E_vs_x_L4I_Pside");
+	
+	TF1* fEvsX_L1O_Eside = (TF1*)fFits->Get("h2_E_vs_x_L1O_Eside");
+	TF1* fEvsX_L1O_Pside = (TF1*)fFits->Get("h2_E_vs_x_L1O_Pside");
+	// TF1* fEvsX_L4O_Eside = (TF1*)fFits->Get("h2_E_vs_x_L4O_Eside");
+	// TF1* fEvsX_L4O_Pside = (TF1*)fFits->Get("h2_E_vs_x_L4O_Pside");
+	
 	TF1* fDx14vsX_L4I_Eside = (TF1*)fFits->Get("h2_dx14_vs_x_L4I_Eside");
 	TF1* fDx14vsX_L4I_Pside = (TF1*)fFits->Get("h2_dx14_vs_x_L4I_Pside");
+	
+	TF1* fDx14vsX_L4O_Eside = (TF1*)fFits->Get("h2_dx14_vs_x_L4O_Eside");
+	TF1* fDx14vsX_L4O_Pside = (TF1*)fFits->Get("h2_dx14_vs_x_L4O_Pside");
+	
+	TF1* fDx14vsX_L4X_Eside = (TF1*)fFits->Get("h2_dx14_vs_x_L4X_Eside");
+	TF1* fDx14vsX_L4X_Pside = (TF1*)fFits->Get("h2_dx14_vs_x_L4X_Pside");
+	
 	cout << "setup fits from files" << endl;
 
 	int outN = (process=="elaser") ? 10 : 10;
@@ -1677,9 +1686,9 @@ int main(int argc, char *argv[])
 				unsigned int i4 = (i4all<n4I) ? i4all  : i4all-n4I;
 				TString slyr4   = (i4all<n4I) ? slyr4I : slyr4O;
 				int     ilyr4   = (i4all<n4I) ? ilyr4I : ilyr4O;
-				// if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()<xMinEI)) continue;
-				// if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()>xMaxPI)) continue;
-				if(slyr4==slyr4O) continue;
+				if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
+				if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
+				// if(slyr4==slyr4O) continue;
 				
 				// reset all tracks from all layers
 				reset_layers_tracks();
@@ -1691,9 +1700,9 @@ int main(int argc, char *argv[])
 					unsigned int i1 = (i1all<n1O) ? i1all  : i1all-n1O;
 					TString slyr1   = (i1all<n1O) ? slyr1O : slyr1I;
 					int     ilyr1   = (i1all<n1O) ? ilyr1O : ilyr1I;
-					// if(slyr1==slyr1I && (side=="Eside" && cached_clusters[slyr1][i1].r.X()>xMaxEO)) continue;
-					// if(slyr1==slyr1I && (side=="Pside" && cached_clusters[slyr1][i1].r.X()<xMinPO)) continue;
-					if(slyr1==slyr1O) continue;
+					if(slyr1==slyr1I && (side=="Eside" && cached_clusters[slyr1][i1].r.X()<xMaxEO)) continue;
+					if(slyr1==slyr1I && (side=="Pside" && cached_clusters[slyr1][i1].r.X()>xMinPO)) continue;
+					// if(slyr1==slyr1O) continue;
 					
 					// reset all tracks from all layers but layer 0
 					reset_layers_tracks(0);
@@ -1705,19 +1714,30 @@ int main(int argc, char *argv[])
 					
 					TF1* fEvsX    = 0;
 					TF1* fDx14vsX = 0;
+					
 					if(slyr1==slyr1I)
 					{
-						fEvsX    = (side=="Pside") ? fEvsX_L1I_Pside    : fEvsX_L1I_Eside;
-						fDx14vsX = (side=="Pside") ? fDx14vsX_L4I_Pside : fDx14vsX_L4I_Eside;
+						fEvsX = (side=="Pside") ? fEvsX_L1I_Pside : fEvsX_L1I_Eside;
 					}
 					else
 					{
-						// fEvsX    = (side=="Pside") ? fEvsX_L1O_Pside    : fEvsX_L1O_Eside;
-						// fDx14vsX = (side=="Pside") ? fDx14vsX_L4O_Pside : fDx14vsX_L4O_Eside;
+						fEvsX = (side=="Pside") ? fEvsX_L1O_Pside : fEvsX_L1O_Eside;
 					}
-
 					
-					// bool seed = makeseed_nonuniformB(process,r1,r4,i1,i4,side,pseed,fEvsX,fDx14vsX);
+					if(slyr4==slyr4I && slyr1==slyr1I)
+					{
+						fDx14vsX = (side=="Pside") ? fDx14vsX_L4I_Pside : fDx14vsX_L4I_Eside;
+					}
+					else if(slyr4==slyr4O && slyr1==slyr1O)
+					{
+						fDx14vsX = (side=="Pside") ? fDx14vsX_L4O_Pside : fDx14vsX_L4O_Eside;
+					}
+					else if(slyr4==slyr4O && slyr1==slyr1I)
+					{
+						fDx14vsX = (side=="Pside") ? fDx14vsX_L4X_Pside : fDx14vsX_L4X_Eside;
+					}
+					else continue; // cannot happen!
+					
 					bool seed = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsX,fDx14vsX);
 					if(!seed) continue; // cannot make a meaningful seed
 					pseeds.push_back(pseed);
@@ -1792,6 +1812,7 @@ int main(int argc, char *argv[])
 				}
 				/// save the clusters' id of the winner track 
 				reco_clusters_id.push_back( win_cls_id );
+				if(win_cls_id.size()<4) exit(-1);
 				
 				/// reco kinematics etc
 				TLorentzVector prec;
@@ -1844,7 +1865,6 @@ int main(int argc, char *argv[])
 				reco_ixmtchd.push_back( ixmatched );
 				reco_idmtchd.push_back( idmatched );
 				cout << "n_recos=" << n_recos << ", n_match=" << n_match << endl;
-				
 				
 				/// more kinematics
 				TrackPar* trk = trw->GetTrack();

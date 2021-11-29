@@ -103,12 +103,13 @@ hnames = ["h2_y_vs_x_exit",
           "h2_E_vs_x_L1I","h2_E_vs_x_L4I","h2_E_vs_x_L1O","h2_E_vs_x_L4O",
           "h2_dx14_vs_x_L4I","h2_dx14_vs_x_L4O","h2_dx14_vs_x_L4X"]
 
-fits = {"E_vs_x":"[0]+[1]/([2]+x)", "dx14_vs_x":"pol1"}
+# fits = {"E_vs_x":"[0]+[1]/([2]+x)", "dx14_vs_x":"pol1"}
+fits = {"E_vs_x":"[0]/([1]+x)", "dx14_vs_x":"pol1"}
 xmins = {"Eside":-50,"Pside":+5}
 xmaxs = {"Eside":-5,"Pside":+50}
 qMed = 50
-qUp = 99#67
-qDn = 1##33
+qUp = 67
+qDn = 33
 
 histos    = {}
 quantiles = {}
@@ -140,7 +141,7 @@ for hname in hnames:
    if(gr): graphs.update({name+"_gr":gr})
 
 
-outname = "inputs_for_reco_"+process
+outname = "inputs_for_reco_"+process+isflat
 
 ### plot
 cnv = TCanvas("c","",1200,500)
@@ -158,25 +159,26 @@ for name,h in histos.items():
    h.Draw("col")
    if(name+"_gr" in graphs):
       graphs[name+"_gr"].Draw("ps")
-      # if("y_vs_x" in name): continue
+      if("y_vs_x" in name and isflat==""): continue
       sfunc = fits["E_vs_x"] if("E_vs_x" in name) else fits["dx14_vs_x"]
       tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,xmins["Eside"],xmaxs["Eside"])})
       tf1s.update({name+"_Pside":fit(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,xmins["Pside"],xmaxs["Pside"])})
       tf1s[name+"_Eside"].Draw("same")
       tf1s[name+"_Pside"].Draw("same")
-      bUp_Eside,bDn_Eside = band(name+"_band_Eside",h,tf1s[name+"_Eside"],xmins["Eside"],xmaxs["Eside"])
-      bUp_Pside,bDn_Pside = band(name+"_band_Pside",h,tf1s[name+"_Pside"],xmins["Pside"],xmaxs["Pside"])
-      bUp_Eside.Draw("l")
-      bUp_Pside.Draw("l")
-      bDn_Eside.Draw("l")
-      bDn_Pside.Draw("l")
+      if("dx14_vs_x" in name):
+         bUp_Eside,bDn_Eside = band(name+"_band_Eside",h,tf1s[name+"_Eside"],xmins["Eside"],xmaxs["Eside"])
+         bUp_Pside,bDn_Pside = band(name+"_band_Pside",h,tf1s[name+"_Pside"],xmins["Pside"],xmaxs["Pside"])
+         bUp_Eside.Draw("l")
+         bUp_Pside.Draw("l")
+         bDn_Eside.Draw("l")
+         bDn_Pside.Draw("l")
       
    cnv.SaveAs(outname+".pdf")
 cnv = TCanvas("c","",1200,500)
 cnv.SaveAs(outname+".pdf)")
 
 
-fout = TFile(outname+".root","RECREATE")
+fout = TFile("../output/root/"+outname+".root","RECREATE")
 fout.cd()
 for name,h in histos.items():    h.Write()
 for name,q in quantiles.items(): q.Write()

@@ -862,19 +862,19 @@ int main(int argc, char *argv[])
 		// hname = "h2_z_vs_y_"+side; histos2.insert( make_pair(hname, new TH2D(hname,";y [cm];z [cm];Tracks",1000,-100,+100, 2000,0,+400)) );
 		hname = "h2_y_vs_x_exit_"+side; histos2.insert( make_pair(hname, new TH2D(hname,";x_{exit} [cm];y_{exit} [cm];Tracks",200,-15,+15, 200,-0.2,+0.2)) );
 		
-		hname = "h2_y_vs_x_L1I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];y [cm];Tracks",200,-50,+50, 200,-0.5,+0.5)) );
-		hname = "h2_y_vs_x_L1O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];y [cm];Tracks",200,-50,+50, 200,-0.5,+0.5)) );
-		hname = "h2_y_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];y [cm];Tracks",200,-50,+50, 200,-0.5,+0.5)) );
-		hname = "h2_y_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];y [cm];Tracks",200,-50,+50, 200,-0.5,+0.5)) );
+		hname = "h2_y_vs_x_L1I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];y [cm];Tracks",300,-55,+55, 200,-0.5,+0.5)) );
+		hname = "h2_y_vs_x_L1O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];y [cm];Tracks",300,-55,+55, 200,-0.5,+0.5)) );
+		hname = "h2_y_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];y [cm];Tracks",300,-55,+55, 200,-0.5,+0.5)) );
+		hname = "h2_y_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];y [cm];Tracks",300,-55,+55, 200,-0.5,+0.5)) );
 
-		hname = "h2_E_vs_x_L1I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];E [GeV];Tracks",400,-50,+50, 340,0,+17)) );
-		hname = "h2_E_vs_x_L1O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];E [GeV];Tracks",400,-50,+50, 340,0,+17)) );
-		hname = "h2_E_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",400,-50,+50, 340,0,+17)) );
-		hname = "h2_E_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",400,-50,+50, 340,0,+17)) );
+		hname = "h2_E_vs_x_L1I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];E [GeV];Tracks",500,-55,+55, 340,0,+17)) );
+		hname = "h2_E_vs_x_L1O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{1} [cm];E [GeV];Tracks",500,-55,+55, 340,0,+17)) );
+		hname = "h2_E_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",500,-55,+55, 340,0,+17)) );
+		hname = "h2_E_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];E [GeV];Tracks",500,-55,+55, 340,0,+17)) );
 		
-		hname = "h2_dx14_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",500,-50,+50, 400,0,+8)) );
-		hname = "h2_dx14_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",500,-50,+50, 400,0,+8)) );
-		hname = "h2_dx14_vs_x_L4X_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",500,-50,+50, 400,0,+8)) );
+		hname = "h2_dx14_vs_x_L4I_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",600,-55,+55, 400,0,+8)) );
+		hname = "h2_dx14_vs_x_L4O_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",600,-55,+55, 400,0,+8)) );
+		hname = "h2_dx14_vs_x_L4X_"+side;  histos2.insert( make_pair(hname, new TH2D(hname,";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks",600,-55,+55, 400,0,+8)) );
 
 
 	   /// loop on events
@@ -1010,8 +1010,6 @@ int main(int argc, char *argv[])
 					if(zp==zfirstouter && isOuterX) x1O = xp;
 					if(zp==zlastouter  && isOuterX) x4O = xp;
 				}
-				double dx41I = 0;
-				double dx410 = 0;
 				if(x4I>xMinI && x4I<xMaxI)
 				{
 					if     ((x1I>xMinI && x1I<xMaxI)) histos2["h2_dx14_vs_x_L4I_"+side]->Fill(x4I,abs(x4I-x1I));

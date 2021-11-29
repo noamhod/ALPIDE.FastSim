@@ -1743,7 +1743,7 @@ Bool_t KMCDetectorFwd::NeedToKill(KMCProbeFwd* probe) const
     int nITSMax = nITS + il; // maximum it can have
     if (nITSMax<fMinITSHits) {
       kill = kTRUE;
-		// AliInfo(Form("Kill due to no chance to collect enough ITS hits: nITS=%d, nITSMax=%d, fMinITSHits=%d",nITS,nITSMax,fMinITSHits));
+      //if(nITSMax==4 && nITS==3) printf("Kill due to no chance to collect enough ITS hits: nITS=%d, nITSMax=%d, fMinITSHits=%d, il=%d\n",nITS,nITSMax,fMinITSHits,il);
       break;
     } // has no chance to collect enough ITS hits
     //
