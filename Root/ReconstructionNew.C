@@ -105,6 +105,7 @@ vector<TString> layersnames;
 vector<double>  layersz;
 vector<double> zlayer;
 TMapiTS layers;
+TMapiTS firstlayer, secondlayer, thirdlayer;
 TMapTSi szlayers;
 TMapTSi silayers;
 TMapiTS islayers;
@@ -284,22 +285,28 @@ void setParametersFromDet(TString side)
 	if(side=="Eside")
 	{
 		layersnames = {"EL1I","EL1O","EL2I","EL2O","EL3I","EL3O","EL4I","EL4O"};
-		zlayer   = {0,z1dipole,z2dipole,zEL1I,zEL1O,zEL2I,zEL2O,zEL3I,zEL3O,zEL4I,zEL4O};
-		layersz  = {zEL1I,zEL1O,zEL2I,zEL2O,zEL3I,zEL3O,zEL4I,zEL4O};
-		layers   = {{iEL1I,"EL1I"},{iEL1O,"EL1O"},{iEL2I,"EL2I"},{iEL2O,"EL2O"},{iEL3I,"EL3I"},{iEL3O,"EL3O"},{iEL4I,"EL4I"},{iEL4O,"EL4O"}};
-		szlayers = {{"EL1I",zEL1I},{"EL1O",zEL1O},{"EL2I",zEL2I},{"EL2O",zEL2O},{"EL3I",zEL3I},{"EL3O",zEL3O},{"EL4I",zEL4I},{"EL4O",zEL4O}};
-		silayers = {{"EL1I",iEL1I},{"EL1O",iEL1O},{"EL2I",iEL2I},{"EL2O",iEL2O},{"EL3I",iEL3I},{"EL3O",iEL3O},{"EL4I",iEL4I}, {"EL4O",iEL4O}};
-		islayers = {{iEL1I,"EL1I"},{iEL1O,"EL1O"},{iEL2I,"EL2I"},{iEL2O,"EL2O"},{iEL3I,"EL3I"},{iEL3O,"EL3O"},{iEL4I,"EL4I"},{iEL4O,"EL4O"}};
+		zlayer      = {0,z1dipole,z2dipole,zEL1I,zEL1O,zEL2I,zEL2O,zEL3I,zEL3O,zEL4I,zEL4O};
+		layersz     = {zEL1I,zEL1O,zEL2I,zEL2O,zEL3I,zEL3O,zEL4I,zEL4O};
+		layers      = {{iEL1I,"EL1I"},{iEL1O,"EL1O"},{iEL2I,"EL2I"},{iEL2O,"EL2O"},{iEL3I,"EL3I"},{iEL3O,"EL3O"},{iEL4I,"EL4I"},{iEL4O,"EL4O"}};
+		firstlayer  = {{iEL1I,"EL1I"},{iEL1O,"EL1O"}};
+		secondlayer = {{iEL2I,"EL2I"},{iEL2O,"EL2O"}};
+		thirdlayer  = {{iEL3I,"EL3I"},{iEL3O,"EL3O"}};
+		szlayers    = {{"EL1I",zEL1I},{"EL1O",zEL1O},{"EL2I",zEL2I},{"EL2O",zEL2O},{"EL3I",zEL3I},{"EL3O",zEL3O},{"EL4I",zEL4I},{"EL4O",zEL4O}};
+		silayers    = {{"EL1I",iEL1I},{"EL1O",iEL1O},{"EL2I",iEL2I},{"EL2O",iEL2O},{"EL3I",iEL3I},{"EL3O",iEL3O},{"EL4I",iEL4I}, {"EL4O",iEL4O}};
+		islayers    = {{iEL1I,"EL1I"},{iEL1O,"EL1O"},{iEL2I,"EL2I"},{iEL2O,"EL2O"},{iEL3I,"EL3I"},{iEL3O,"EL3O"},{iEL4I,"EL4I"},{iEL4O,"EL4O"}};
 	}
 	if(side=="Pside")
 	{
 		layersnames = {"PL1I","PL1O","PL2I","PL2O","PL3I","PL3O","PL4I","PL4O"};
-		zlayer   = {0,z1dipole,z2dipole,zPL1I,zPL1O,zPL2I,zPL2O,zPL3I,zPL3O,zPL4I,zPL4O};
-		layersz  = {zPL1I,zPL1O,zPL2I,zPL2O,zPL3I,zPL3O,zPL4I,zPL4O};
-		layers   = {{iPL1I,"PL1I"},{iPL1O,"PL1O"},{iPL2I,"PL2I"},{iPL2O,"PL2O"},{iPL3I,"PL3I"},{iPL3O,"PL3O"},{iPL4I,"PL4I"},{iPL4O,"PL4O"}};
-		szlayers = {{"PL1I",zPL1I},{"PL1O",zPL1O},{"PL2I",zPL2I},{"PL2O",zPL2O},{"PL3I",zPL3I},{"PL3O",zPL3O},{"PL4I",zPL4I},{"PL4O",zPL4O}};
-		silayers = {{"PL1I",iPL1I},{"PL1O",iPL1O},{"PL2I",iPL2I},{"PL2O",iPL2O},{"PL3I",iPL3I},{"PL3O",iPL3O},{"PL4I",iPL4I}, {"PL4O",iPL4O}};
-		islayers = {{iPL1I,"PL1I"},{iPL1O,"PL1O"},{iPL2I,"PL2I"},{iPL2O,"PL2O"},{iPL3I,"PL3I"},{iPL3O,"PL3O"},{iPL4I,"PL4I"},{iPL4O,"PL4O"}};
+		zlayer      = {0,z1dipole,z2dipole,zPL1I,zPL1O,zPL2I,zPL2O,zPL3I,zPL3O,zPL4I,zPL4O};
+		layersz     = {zPL1I,zPL1O,zPL2I,zPL2O,zPL3I,zPL3O,zPL4I,zPL4O};
+		layers      = {{iPL1I,"PL1I"},{iPL1O,"PL1O"},{iPL2I,"PL2I"},{iPL2O,"PL2O"},{iPL3I,"PL3I"},{iPL3O,"PL3O"},{iPL4I,"PL4I"},{iPL4O,"PL4O"}};
+		firstlayer  = {{iPL1I,"PL1I"},{iPL1O,"PL1O"}};
+		secondlayer = {{iPL2I,"PL2I"},{iPL2O,"PL2O"}};
+		thirdlayer  = {{iPL3I,"PL3I"},{iPL3O,"PL3O"}};
+		szlayers    = {{"PL1I",zPL1I},{"PL1O",zPL1O},{"PL2I",zPL2I},{"PL2O",zPL2O},{"PL3I",zPL3I},{"PL3O",zPL3O},{"PL4I",zPL4I},{"PL4O",zPL4O}};
+		silayers    = {{"PL1I",iPL1I},{"PL1O",iPL1O},{"PL2I",iPL2I},{"PL2O",iPL2O},{"PL3I",iPL3I},{"PL3O",iPL3O},{"PL4I",iPL4I}, {"PL4O",iPL4O}};
+		islayers    = {{iPL1I,"PL1I"},{iPL1O,"PL1O"},{iPL2I,"PL2I"},{iPL2O,"PL2O"},{iPL3I,"PL3I"},{iPL3O,"PL3O"},{iPL4I,"PL4I"},{iPL4O,"PL4O"}};
 	}
 	
 	zLastLayer  = (side=="Eside") ? zEL4I : zPL4I;
@@ -398,6 +405,18 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
 	return polyline;
 }
 
+
+double predictXPosition(double x1, double z1, double x4, double z4, double z){
+	/// x4-x1 should not be 0
+	double x = -999999.0;
+    if((x4-x1)!=0){
+		double slope    = (z4-z1)/(x4-x1);
+		double constant = (z1*x4-z4*x1)/(x4-x1);
+		x        = (z - constant)/slope;
+	} 
+	return x;
+  
+}
 // bool islayer(double z)
 // {
 // 	for(int j=0 ; j<(int)zlayer.size() ; ++j)
@@ -782,14 +801,12 @@ void embed_cluster(int iLayer, float x, float y, float z, int id)
 	det->GetLayer(iLayer)->AddBgCluster(clxyzTrk[0], clxyzTrk[1], clxyzTrk[2], id);
 }
 
-
-void add_all_clusters(TString side, Cluster clus)
+void add_all_clusters(TString side)
 {
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
 		int     lid = it->first;
 		TString slr = it->second;
-		if(slr.Contains("4"))continue; // don't loop over the 4th layer
 		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
 		{
 			float x = cached_clusters[slr][j].r.X();
@@ -814,10 +831,91 @@ void add_all_clusters(TString side, Cluster clus)
 	}
 }
 
+void add_all_clusters(TString side, TString slyr, int layerid, int i4, TF1* fDx14vsX)
+{   
+	/// first embed the fourth layer pivot cluter
+	embed_cluster(layerid,cached_clusters[slyr][i4].r.X(), cached_clusters[slyr][i4].r.Y(),cached_clusters[slyr][i4].r.Z(),cached_clusters[slyr][i4].clsid);
+
+    double x4          = cached_clusters[slyr][i4].r.X();
+	double z4          = cached_clusters[slyr][i4].r.Z();
+	double x1predicted = fDx14vsX->Eval(x4);
+	double z1predicted = -9999999.0;
+	TString funcName   = fDx14vsX->GetName();
+	
+	if(funcName.Contains("4I"))     z1predicted = 426.21;
+	else if(funcName.Contains("4O"))z1predicted = 425.01;
+	else                            z1predicted = 425.01;  /// this is the case where one point in in L1Inner and other point in L4Outer
+
+	/// loop over first layer, but embed only those clusters which are along the predicted line 
+	for(TMapiTS::iterator it=firstlayer.begin() ; it!=firstlayer.end() ; ++it)
+	{
+		int     lid = it->first;
+		TString slr = it->second;
+		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
+		{
+			float x = cached_clusters[slr][j].r.X();
+			if(x>(x1predicted+10))continue;
+			float y = cached_clusters[slr][j].r.Y();
+			float z = cached_clusters[slr][j].r.Z();
+			int cid = cached_clusters[slr][j].clsid;
+            /// embed only when the cluster is along the predicted line
+			embed_cluster(lid,x,y,z,cid);	
+		}
+	}
+    /// loop over second layer, but embed only those clusters which are along the predicted line 
+	for(TMapiTS::iterator it=secondlayer.begin() ; it!=secondlayer.end() ; ++it)
+	{
+		int     lid = it->first;
+		TString slr = it->second;
+		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
+		{
+			float x = cached_clusters[slr][j].r.X();
+			float y = cached_clusters[slr][j].r.Y();
+			float z = cached_clusters[slr][j].r.Z();
+			int cid = cached_clusters[slr][j].clsid;
+			/// embed only when the cluster is along the predicted line
+			double x2predicted = predictXPosition(x1predicted,z1predicted,x4,z4,z);
+			if(x<=x2predicted+10)
+			   embed_cluster(lid,x,y,z,cid);
+		}
+	}
+	/// loop over third layer, but embed only those clusters which are along the predicted line 
+	for(TMapiTS::iterator it=thirdlayer.begin() ; it!=thirdlayer.end() ; ++it)
+	{
+		int     lid = it->first;
+		TString slr = it->second;
+		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
+		{
+			float x = cached_clusters[slr][j].r.X();
+			float y = cached_clusters[slr][j].r.Y();
+			float z = cached_clusters[slr][j].r.Z();
+			int cid = cached_clusters[slr][j].clsid;
+			/// embed only when the cluster is along the predicted line
+			double x3predicted = predictXPosition(x1predicted,z1predicted,x4,z4,z);
+			if(x<=x3predicted+10)
+			   embed_cluster(lid,x,y,z,cid);
+		}
+	}
+	/// must sort clusters
+	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
+	{
+		int lid = it->first;
+		det->GetLayer(lid)->GetMCCluster()->Kill();
+		det->GetLayer(lid)->SortBGClusters(); /// sort!!!
+		/// after sorting, need to map the cluster ids to their indices!!!
+		for(int n=0 ; n<det->GetLayer(lid)->GetNBgClusters() ; ++n)
+		{
+			int id = det->GetLayer(lid)->GetBgCluster(n)->GetTrID();
+			cached_clusters_all_ids.insert( make_pair(id,n) );
+		}
+	}
+}
+
 
 void print_all_clusters(TString side, bool doprint = true)
 {	
 	if(!doprint) return;
+	/// print only from 1,2 and 3 layers
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
 		int     ilr = it->first;
@@ -839,13 +937,12 @@ void print_all_clusters(TString side, bool doprint = true)
 	}
 }
 
-int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>& ctype, vector<int>& cid, Cluster clus)
+int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>& ctype, vector<int>& cid, TString slyr, int i4, TF1* fDx14vsX)
 {
 	int nclusters = 0;
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
 		TString slr = it->second;
-		if(slr.Contains("4"))continue; // don't loop over the 4th layer
 		vector<TVector3> v3tmp;
 		r.push_back(v3tmp);
 		// int     ilr = it->first;
@@ -1678,7 +1775,9 @@ int main(int argc, char *argv[])
 			unsigned int n1I = cached_clusters[slyr1I].size();
 			unsigned int n1O = cached_clusters[slyr1O].size();
 			for(unsigned int i4all=0 ; i4all<(n4I+n4O) ; ++i4all)
-			{
+			{  
+				TF1* fEvsX    = 0;
+				TF1* fDx14vsX = 0;
 				unsigned int i4 = (i4all<n4I) ? i4all  : i4all-n4I;
 				TString slyr4   = (i4all<n4I) ? slyr4I : slyr4O;
 				int     ilyr4   = (i4all<n4I) ? ilyr4I : ilyr4O;
@@ -1707,9 +1806,6 @@ int main(int argc, char *argv[])
 					TLorentzVector pseed;
 					float r1[3]; r1[0]=cached_clusters[slyr1][i1].r.X(); r1[1]=cached_clusters[slyr1][i1].r.Y(); r1[2]=cached_clusters[slyr1][i1].r.Z();
 					float r4[3]; r4[0]=cached_clusters[slyr4][i4].r.X(); r4[1]=cached_clusters[slyr4][i4].r.Y(); r4[2]=cached_clusters[slyr4][i4].r.Z();
-					
-					TF1* fEvsX    = 0;
-					TF1* fDx14vsX = 0;
 					
 					if(slyr1==slyr1I)
 					{
@@ -1757,9 +1853,10 @@ int main(int argc, char *argv[])
 				stopwatch1.Start();
 				/// write out all clusters when these are sorted
 				/// add all clusters to the detector
-				add_all_clusters(side,cached_clusters[slyr4][i4]);
-				// print_all_clusters(side,false);
-				int all_clusters = fill_output_clusters(side,all_clusters_r,all_clusters_type,all_clusters_id, cached_clusters[slyr4][i4]);
+				add_all_clusters(side, slyr4, ilyr4, i4, fDx14vsX); /// this is embedding clusters along predicted points
+				///add_all_clusters(side);
+				print_all_clusters(side,false);
+				int all_clusters = fill_output_clusters(side,all_clusters_r,all_clusters_type,all_clusters_id, slyr4, i4, fDx14vsX);
 				
 				// cout << "ncached_signal_clusters=" << ncached_signal_clusters << ", ncached_background_clusters=" << ncached_background_clusters << ", all_clusters=" << all_clusters << endl;
 				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99,doPrint);
