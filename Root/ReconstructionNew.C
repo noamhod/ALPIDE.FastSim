@@ -44,7 +44,6 @@ struct Cluster {
 	int shape;
 	double charge;
 	TVector3 r;
-	// bool isKilled=false;
 };
 
 typedef map<int, int>                TMapii;
@@ -304,9 +303,9 @@ void setParametersFromDet(TString side)
 	}
 	
 	zLastLayer  = (side=="Eside") ? zEL4I : zPL4I;
-	zFirstLayer = (side=="Eside") ? zPL1O : zPL1O;
+	zFirstLayer = (side=="Eside") ? zEL1O : zPL1O;
 	LastLayer   = (side=="Eside") ? "EL4I" : "PL4I";
-	FirstLayer  = (side=="Eside") ? "PL1O" : "PL1O";
+	FirstLayer  = (side=="Eside") ? "EL1O" : "PL1O";
 	cout << "zLastLayer=" << zLastLayer << " ("<<LastLayer<<"), zFirstLayer=" << zFirstLayer << " ("<<FirstLayer<<")"<< endl;
 	
 	cout << "====================================" << endl;
@@ -742,7 +741,6 @@ int cache_clusters(vector<vector<TVector3> >* clusters_r, vector<vector<int> >* 
 			cls.shape = -1;
 			cls.charge = -1;
 			cls.r.SetXYZ(x,y,z);
-			cls.isKilled = false;
 			
 			cached_clusters[lyrname].push_back(cls);
 			cached_clusters_id2lyr.insert(make_pair(clsid,lyrid));
@@ -785,70 +783,13 @@ void embed_cluster(int iLayer, float x, float y, float z, int id)
 }
 
 
-// void add_all_clusters(TString side)
-// {
-// 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
-// 	{
-// 		int     lid = it->first;
-// 		TString slr = it->second;
-// 		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
-// 		{
-// 			float x = cached_clusters[slr][j].r.X();
-// 			float y = cached_clusters[slr][j].r.Y();
-// 			float z = cached_clusters[slr][j].r.Z();
-// 			int cid = cached_clusters[slr][j].clsid;
-// 			embed_cluster(lid,x,y,z,cid);	
-// 		}
-// 	}
-// 	/// must sort clusters
-// 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
-// 	{
-// 		int lid = it->first;
-// 		det->GetLayer(lid)->GetMCCluster()->Kill();
-// 		det->GetLayer(lid)->SortBGClusters(); /// sort!!!
-// 		/// after sorting, need to map the cluster ids to their indices!!!
-// 		for(int n=0 ; n<det->GetLayer(lid)->GetNBgClusters() ; ++n)
-// 		{
-// 			int id = det->GetLayer(lid)->GetBgCluster(n)->GetTrID();
-// 			cached_clusters_all_ids.insert( make_pair(id,n) );
-// 		}
-// 	}
-// }
-
-
-// void print_all_clusters(TString side, bool doprint = true)
-// {	
-// 	if(!doprint) return;
-// 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
-// 	{
-// 		int     ilr = it->first;
-// 		TString slr = it->second;
-// 		for(int c=0 ; c<det->GetLayer(ilr)->GetNBgClusters() ; c++)
-// 		{
-// 			KMCClusterFwd* cluster = det->GetLayer(ilr)->GetBgCluster(c);
-// 			int  id = cluster->GetTrID();
-// 			float x = cluster->GetXLab();
-// 			float y = cluster->GetYLab();
-// 			float z = cluster->GetZLab();
-// 			cout << "side=" << side << ", layer=" << ilr << ", id=" << id << " --> r={" << x << ", " << y << ", " << z << "}" << endl;
-// 		}
-// 		cout << endl;
-// 	}
-// 	for(TMapii::iterator it=cached_clusters_all_ids.begin() ; it!=cached_clusters_all_ids.end() ; it++)
-// 	{
-// 		cout << "id=" << it->first << " --> index=" << it->second << endl;
-// 	}
-// }
-
-
-
-
-void add_all_clusters(TString side)
+void add_all_clusters(TString side, Cluster clus)
 {
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
 		int     lid = it->first;
 		TString slr = it->second;
+		if(slr.Contains("4"))continue; // don't loop over the 4th layer
 		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
 		{
 			float x = cached_clusters[slr][j].r.X();
@@ -898,52 +839,17 @@ void print_all_clusters(TString side, bool doprint = true)
 	}
 }
 
-// int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>& ctype, vector<int>& cid)
-// {
-// 	int nclusters = 0;
-// 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
-// 	{
-// 		vector<TVector3> v3tmp;
-// 		r.push_back(v3tmp);
-// 		int     ilr = it->first;
-// 		TString slr = it->second;
-// 		for(int c=0 ; c<det->GetLayer(ilr)->GetNBgClusters() ; c++)
-// 		{
-// 			KMCClusterFwd* cluster = det->GetLayer(ilr)->GetBgCluster(c);
-// 			int  id  = cluster->GetTrID();
-// 			float x  = cluster->GetXLab();
-// 			float y  = cluster->GetYLab();
-// 			float z  = cluster->GetZLab();
-	
-// 			/// TODO!!!
-// 			// int idx = getvecindex(id, cached_clusters_att["id_"+islayers[ilr]+"_"+side]);
-// 			// int typ = (idx>=0) ? cached_clusters_att["type_"+islayers[l]+"_"+side][ idx ] : -3;
-// 			// cout << "id=" << id << ", idx=" << idx << ", typ=" << typ << endl;
-// 			// if(idx<0) cout << "WARNING: cannot find in=" << id << " in cached clusters vector" << endl;
-			
-// 			int thisindex = r.size()-1;
-			
-// 			TVector3 point(x,y,z);
-// 			r[thisindex].push_back(point);
-// 			// ctype.push_back(typ);
-// 			ctype.push_back(-999); //TODO!!!
-// 			// cid.push_back(id);
-// 			cid.push_back(-999); //TODO!!!
-// 			nclusters++;
-// 		}
-// 	}
-// 	return nclusters;
-// }
-
-int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>& ctype, vector<int>& cid)
+int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>& ctype, vector<int>& cid, Cluster clus)
 {
 	int nclusters = 0;
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
+		TString slr = it->second;
+		if(slr.Contains("4"))continue; // don't loop over the 4th layer
 		vector<TVector3> v3tmp;
 		r.push_back(v3tmp);
 		// int     ilr = it->first;
-		TString slr = it->second;
+		
 		for(int c=0 ; c<cached_clusters[slr].size() ; c++)
 		{
 			Cluster cluster = cached_clusters[slr][c];
@@ -971,7 +877,6 @@ int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>
 	}
 	return nclusters;
 }
-
 
 TVector2 rUnit2(TVector2 r1, TVector2 r2)
 {
@@ -1750,13 +1655,6 @@ int main(int argc, char *argv[])
 			/// rest all the layers of the detector (including inactive if any)
 			reset_layers_all(); // reset both sides 
 			
-			/// add all clusters to the detector
-			// add_all_clusters(side);
-			// print_all_clusters(side,false);
-			
-			/// write out all clusters when these are sorted
-			int all_clusters = fill_output_clusters(side,all_clusters_r,all_clusters_type,all_clusters_id);
-			// cout << "ncached_signal_clusters=" << ncached_signal_clusters << ", ncached_background_clusters=" << ncached_background_clusters << ", all_clusters=" << all_clusters << endl;
 			
 			/// offset for signal id's !!!
 			// int sigoffset = 100000; // should be multiplied by the layer number
@@ -1857,6 +1755,13 @@ int main(int argc, char *argv[])
 				// prepare the probe from the seed and do the KF fit
 				
 				stopwatch1.Start();
+				/// write out all clusters when these are sorted
+				/// add all clusters to the detector
+				add_all_clusters(side,cached_clusters[slyr4][i4]);
+				// print_all_clusters(side,false);
+				int all_clusters = fill_output_clusters(side,all_clusters_r,all_clusters_type,all_clusters_id, cached_clusters[slyr4][i4]);
+				
+				// cout << "ncached_signal_clusters=" << ncached_signal_clusters << ", ncached_background_clusters=" << ncached_background_clusters << ", all_clusters=" << all_clusters << endl;
 				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99,doPrint);
 				stopwatch1.Stop();
 				Double_t cputime1  = stopwatch1.CpuTime();
@@ -1910,7 +1815,7 @@ int main(int argc, char *argv[])
 				}
 				/// save the clusters' id of the winner track 
 				reco_clusters_id.push_back( win_cls_id );
-				if(win_cls_id.size()<4)continue;// exit(-1);
+				if(win_cls_id.size()<4)exit(-1);
 				
 				/// reco kinematics etc
 				TLorentzVector prec;

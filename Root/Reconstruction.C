@@ -303,9 +303,9 @@ void setParametersFromDet(TString side)
 	}
 	
 	zLastLayer  = (side=="Eside") ? zEL4I : zPL4I;
-	zFirstLayer = (side=="Eside") ? zPL1O : zPL1O;
+	zFirstLayer = (side=="Eside") ? zEL1O : zPL1O;
 	LastLayer   = (side=="Eside") ? "EL4I" : "PL4I";
-	FirstLayer  = (side=="Eside") ? "PL1O" : "PL1O";
+	FirstLayer  = (side=="Eside") ? "EL1O" : "PL1O";
 	cout << "zLastLayer=" << zLastLayer << " ("<<LastLayer<<"), zFirstLayer=" << zFirstLayer << " ("<<FirstLayer<<")"<< endl;
 	
 	cout << "====================================" << endl;
@@ -1812,7 +1812,7 @@ int main(int argc, char *argv[])
 				}
 				/// save the clusters' id of the winner track 
 				reco_clusters_id.push_back( win_cls_id );
-				if(win_cls_id.size()<4)continue;// exit(-1);
+				if(win_cls_id.size()<4)exit(-1);
 				
 				/// reco kinematics etc
 				TLorentzVector prec;
