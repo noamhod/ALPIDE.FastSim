@@ -1007,6 +1007,7 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 	double x4   = cached_clusters[slyr][i4].r.X();
 	double z4   = cached_clusters[slyr][i4].r.Z();
 	embed_cluster(cached_clusters[slyr][i4]);
+	std::cout << "x4: " << x4 << " z4: " << z4 << " in " << slyr << std::endl;
     
 	/// II: if x4 and x1 are in the inner layer
 	double dxabs1I  = fDx14vsXMap["L4I_"+side]->Eval(x4);
@@ -1028,19 +1029,22 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 	double x2OPivotII = xofz(x1IPivot, x4, z1I, z4, zEL2O);
 	double x3IPivotII = xofz(x1IPivot, x4, z1I, z4, zEL3I);
 	double x3OPivotII = xofz(x1IPivot, x4, z1I, z4, zEL3O);
+	std::cout << "x2IPivotII: " << x2IPivotII << " x2OPivotII: " << x2OPivotII << " x3IPivotII: " << x3IPivotII << " x3OPivotII: " << x3OPivotII << std::endl;
 
     /// OO: find the x along layer 2 and 3
 	double x2IPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL2I);
 	double x2OPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL2O);
 	double x3IPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL3I);
 	double x3OPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL3O);
-
+	std::cout << "x2IPivotOO: " << x2IPivotOO << " x2OPivotOO: " << x2OPivotOO << " x3IPivotOO: " << x3IPivotOO << " x3OPivotOO: " << x3OPivotOO << std::endl;
+    
 	/// OI: find the x along layer 2 and 3
 	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2I);
 	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2O);                           
 	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3I);
 	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3O);
-
+	std::cout << "x2IPivotOI: " << x2IPivotOI << " x2OPivotOI: " << x2OPivotOI << " x3IPivotOI: " << x3IPivotOI << " x3OPivotOI: " << x3OPivotOI << std::endl;
+	
     bool isL1I = (side=="Pside") ? ((x1IPivot-rw)<xMaxPI) : ((x1IPivot+rw)>xMinEI); 
     bool isL1O = (side=="Pside") ? ((x1OPivot-rw)<xMaxPO) : ((x1OPivot+rw)>xMinEO); 
 	
@@ -1496,34 +1500,34 @@ int main(int argc, char *argv[])
 		vector<float>             reco_y;
 		vector<float>             reco_z;
 		vector<vector<TVector3> > reco_trck_cls_r;
-		vector<TPolyMarker3D*>   reco_trckmar;
-		vector<TPolyLine3D*>     reco_trcklin;
-		vector<float>            reco_chi2dof;
-		vector<int>              reco_ismtchd;
-		vector<int>              reco_ixmtchd;
-		vector<int>              reco_idmtchd;
-		vector<vector<int> >     reco_clusters_id;
-		vector<double>           reco_Tgl;
-		vector<double>           reco_Snp; // the slope in X direction: probe->GetTrack()->GetSnp()
-		vector<double>           reco_alpha;
-		vector<double>           reco_signedinvpT; // new: the curvature (q/Pyz): probe->GetTrack()->GetSigned1Pt()
-		vector<double>           reco_sigmaY2;
-		vector<double>           reco_sigmaZY;
-		vector<double>           reco_sigmaZ2;
-		vector<double>           reco_sigmaSnpY;
-		vector<double>           reco_sigmaSnpZ;
-		vector<double>           reco_sigmaSnp2; // probe->GetTrack()->GetSigmaSnp2()
-		vector<double>           reco_sigmaTglY;
-		vector<double>           reco_sigmaTglZ;
-		vector<double>           reco_sigmaTglSnp;
-		vector<double>           reco_sigmaTgl2;
-		vector<double>           reco_sigma1PtY;
-		vector<double>           reco_sigma1PtZ;
-		vector<double>           reco_sigma1PtSnp;
-		vector<double>           reco_sigma1PtTgl;
-		vector<double>           reco_sigma1Pt2;
-		vector<double>           reco_invpT;
-		vector<double>           reco_signedpT;
+		vector<TPolyMarker3D*>    reco_trckmar;
+		vector<TPolyLine3D*>      reco_trcklin;
+		vector<float>             reco_chi2dof;
+		vector<int>               reco_ismtchd;
+		vector<int>               reco_ixmtchd;
+		vector<int>               reco_idmtchd;
+		vector<vector<int> >      reco_clusters_id;
+		vector<double>            reco_Tgl;
+		vector<double>            reco_Snp; // the slope in X direction: probe->GetTrack()->GetSnp()
+		vector<double>            reco_alpha;
+		vector<double>            reco_signedinvpT; // new: the curvature (q/Pyz): probe->GetTrack()->GetSigned1Pt()
+		vector<double>            reco_sigmaY2;
+		vector<double>            reco_sigmaZY;
+		vector<double>            reco_sigmaZ2;
+		vector<double>            reco_sigmaSnpY;
+		vector<double>            reco_sigmaSnpZ;
+		vector<double>            reco_sigmaSnp2; // probe->GetTrack()->GetSigmaSnp2()
+		vector<double>            reco_sigmaTglY;
+		vector<double>            reco_sigmaTglZ;
+		vector<double>            reco_sigmaTglSnp;
+		vector<double>            reco_sigmaTgl2;
+		vector<double>            reco_sigma1PtY;
+		vector<double>            reco_sigma1PtZ;
+		vector<double>            reco_sigma1PtSnp;
+		vector<double>            reco_sigma1PtTgl;
+		vector<double>            reco_sigma1Pt2;
+		vector<double>            reco_invpT;
+		vector<double>            reco_signedpT;
 		tOut->Branch("reco_q",           &reco_q);
 		tOut->Branch("reco_p",           &reco_p);
 		tOut->Branch("reco_x",           &reco_x);
@@ -1905,10 +1909,11 @@ int main(int argc, char *argv[])
 			int     ilyr1O = silayers[slyr1O];
 			// cout << "ilyr1I=" << ilyr1I << ", ilyr4I=" << ilyr4I << endl;
 
-			
 			/// loop on seeds
 			unsigned int n4I = cached_clusters[slyr4I].size();
 			unsigned int n4O = cached_clusters[slyr4O].size();
+			unsigned int n1I = cached_clusters[slyr1I].size();
+			unsigned int n1O = cached_clusters[slyr1O].size();
 			for(unsigned int i4all=0 ; i4all<(n4I+n4O) ; ++i4all)
 			{  
 				unsigned int i4 = (i4all<n4O) ? i4all  : i4all-n4O;
@@ -1926,11 +1931,13 @@ int main(int argc, char *argv[])
 
 				add_all_clusters(side, slyr4, i4, fDx14vsXMap, L1I_clsix, L1O_clsix); /// this is embedding clusters along predicted points
 				//if(debug)std::cout << "Print L1I_clsix: " << L1I_clsix->size() << std::endl;
-				///add_all_clusters(side);
+				//add_all_clusters(side);
 				print_all_clusters(side,false);
 				int all_clusters = fill_output_clusters(side,all_clusters_r,all_clusters_type,all_clusters_id);	
 				unsigned int nx1I = L1I_clsix.size();
 				unsigned int nx1O = L1O_clsix.size();
+				std::cout << "from the selective embedding function: nx1I : " << nx1I << " nx1O: " << nx1O << std::endl;
+				std::cout << "from the cached_cluster size:          n1I  : " << n1I << " n1O: " << n1O << std::endl;
 				for(unsigned int ix1all=0 ; ix1all<(nx1I+nx1O) ; ++ix1all)
 				{
 					unsigned int i1 = (ix1all<nx1O) ? L1O_clsix.at(ix1all)  : L1I_clsix.at(ix1all-nx1O);
