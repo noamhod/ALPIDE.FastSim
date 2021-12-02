@@ -35,6 +35,7 @@
 
 using namespace std;
 
+
 struct Cluster {
 	int type;
 	int lyrid;
@@ -119,7 +120,7 @@ TMapTSMapii     cached_clusters_id2ix;
 TMapTSMapivi lookupTable;
 TMapTSAxis axisMap;
 int nAxisBins = 500;
-double rw = 0.5; // in mm, road width along the possible cluster where we embed the clusters
+double rw = 10; // in cm, road width along the possible cluster where we embed the clusters
 
 
 //// staves geometry
@@ -956,8 +957,8 @@ void add_all_clusters(TString side)
 }
 
 
-
-void embed_selective(TString side, TString lyrnumber, TString io, double xPivot, vector<int>& embedded_clusters, vector<int>* allL1ClsIx=0)
+/// layer 2 and 3 clusters embedding
+void embed_selective(TString side, TString lyrnumber, TString io, double xPivot, vector<int>& embedded_clusters)
 {
 	TString slyr = side.ReplaceAll("side","")+"L"+lyrnumber+io;
 	int binUp    = axisMap[slyr].FindBin(xPivot+rw);
@@ -970,7 +971,27 @@ void embed_selective(TString side, TString lyrnumber, TString io, double xPivot,
 			if (foundinvec(clsid, embedded_clusters)) continue;
 			int index = cached_clusters_id2ix[slyr][k];
 			embed_cluster(cached_clusters[slyr][index]);
-			if(allL1ClsIx) allL1ClsIx->push_back(index);
+			embedded_clusters.push_back(clsid);
+		}
+	}
+}
+
+
+/// layer 1 clusters embedding
+void embed_selective(TString side, TString lyrnumber, TString io, double xPivot, vector<int>& embedded_clusters, vector<int>& allL1ClsIx)
+{
+	TString slyr = side.ReplaceAll("side","")+"L"+lyrnumber+io;
+	int binUp    = axisMap[slyr].FindBin(xPivot+rw);
+	int binDown  = axisMap[slyr].FindBin(xPivot-rw);
+	for(int bin=binDown; bin<=binUp; ++bin)
+	{
+		for(size_t k=0; k<lookupTable[slyr][bin].size(); k++)
+		{
+			int clsid = lookupTable[slyr][bin][k];
+			if (foundinvec(clsid, embedded_clusters)) continue;
+			int index = cached_clusters_id2ix[slyr][k];
+			embed_cluster(cached_clusters[slyr][index]);
+			allL1ClsIx.push_back(index);
 			embedded_clusters.push_back(clsid);
 		}
 	}
@@ -979,7 +1000,7 @@ void embed_selective(TString side, TString lyrnumber, TString io, double xPivot,
 
 
 /// turning on only those clusters which are in a specific bin along the rw
-void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,  vector<int>* allL1IClsIx, vector<int>* allL1OClsIx)
+void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,  vector<int>& allL1IClsIx, vector<int>& allL1OClsIx)
 {   
 	vector<int> embedded_clusters;
 	/// first embed the fourth layer pivot cluter
@@ -987,17 +1008,17 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 	double z4   = cached_clusters[slyr][i4].r.Z();
 	embed_cluster(cached_clusters[slyr][i4]);
     
-	/// II: if x4 and x1 is in inner layer
+	/// II: if x4 and x1 are in the inner layer
 	double dxabs1I  = fDx14vsXMap["L4I_"+side]->Eval(x4);
 	double z1I      = zEL1I; // electron or positron, both side has same Z 
 	double x1IPivot = (side=="Pside") ? (x4-dxabs1I) : (x4+dxabs1I);
 
-	/// OO: if x4 is outer and x1 is outer
+	/// OO: if x4 and x1 are in the outer layer
 	double dxabs1O  = fDx14vsXMap["L4O_"+side]->Eval(x4);
 	double z1O      = zEL1O; // electron or positron, both side has same Z 
 	double x1OPivot = (side=="Pside") ? (x4-dxabs1O) : (x4+dxabs1O);
 
-	/// OI: if x4 is outer and x1 is in inner layer
+	/// OI: if x4 is in the outer layer and x1 is in the inner layer
 	double dxabs1X  = fDx14vsXMap["L4X_"+side]->Eval(x4);
 	double z1X      = zEL1I; // electron or positron, both side has same Z 
 	double x1XPivot = (side=="Pside") ? (x4-dxabs1X) : (x4+dxabs1X);
@@ -1016,7 +1037,7 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 
 	/// OI: find the x along layer 2 and 3
 	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2I);
-	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2O);
+	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2O);                           
 	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3I);
 	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3O);
 
@@ -1686,14 +1707,15 @@ int main(int argc, char *argv[])
 			exit(-1);
 		}
 		cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
-		for(int iev=0 ; iev<tSig->GetEntries() ; iev++)
-		{
+		for(int iev=0 ; iev<nsigevents ; iev++)
+		{	
 			stopwatch.Start();
 			
 			//////////////////////////////
 			//// get the next input entry
 			tSig->GetEntry(iev); /// signal
 			if(dobg) tBkg->GetEntry(iev); /// background
+
 			
 			////////////////////////////////////////////
 			/// clear output vectors: digitized clusters
@@ -1857,7 +1879,6 @@ int main(int argc, char *argv[])
 		    //// here prepare the lookup table
 			/// initialize
 			initializeLookupTable();
-
 			
 			/// make a pool of all signal clusters
 			int ncached_signal_clusters = cache_clusters(sig_clusters_r,sig_clusters_type,sig_clusters_id,sig_clusters_layerid,side,nsigtrks);
@@ -1867,7 +1888,6 @@ int main(int argc, char *argv[])
 			
 			/// rest all the layers of the detector (including inactive if any)
 			reset_layers_all(); // reset both sides 
-
 			
 			/// offset for signal id's !!!
 			// int sigoffset = 100000; // should be multiplied by the layer number
@@ -1886,7 +1906,6 @@ int main(int argc, char *argv[])
 			// cout << "ilyr1I=" << ilyr1I << ", ilyr4I=" << ilyr4I << endl;
 
 			
-			
 			/// loop on seeds
 			unsigned int n4I = cached_clusters[slyr4I].size();
 			unsigned int n4O = cached_clusters[slyr4O].size();
@@ -1898,23 +1917,23 @@ int main(int argc, char *argv[])
 				if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
 				if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
 
-
 				// reset all tracks from all layers
 				reset_layers_tracks();
 				vector<TLorentzVector> pseeds;
 
 				/// add all clusters to the detector
-				vector<int> *L1I_clsix=nullptr, *L1O_clsix=nullptr; 
+				vector<int> L1I_clsix, L1O_clsix;
+
 				add_all_clusters(side, slyr4, i4, fDx14vsXMap, L1I_clsix, L1O_clsix); /// this is embedding clusters along predicted points
+				//if(debug)std::cout << "Print L1I_clsix: " << L1I_clsix->size() << std::endl;
 				///add_all_clusters(side);
 				print_all_clusters(side,false);
 				int all_clusters = fill_output_clusters(side,all_clusters_r,all_clusters_type,all_clusters_id);	
-				
-				unsigned int nx1I = L1I_clsix->size();
-				unsigned int nx1O = L1O_clsix->size();
+				unsigned int nx1I = L1I_clsix.size();
+				unsigned int nx1O = L1O_clsix.size();
 				for(unsigned int ix1all=0 ; ix1all<(nx1I+nx1O) ; ++ix1all)
 				{
-					unsigned int i1 = (ix1all<nx1O) ? L1O_clsix->at(ix1all)  : L1I_clsix->at(ix1all-nx1O);
+					unsigned int i1 = (ix1all<nx1O) ? L1O_clsix.at(ix1all)  : L1I_clsix.at(ix1all-nx1O);
 					TString slyr1   = (ix1all<nx1O) ? slyr1O : slyr1I;
 					int     ilyr1   = (ix1all<nx1O) ? ilyr1O : ilyr1I;
 					if(slyr1==slyr1I && (side=="Eside" && cached_clusters[slyr1][i1].r.X()<xMaxEO)) continue;
