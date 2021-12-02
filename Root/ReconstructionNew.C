@@ -46,15 +46,19 @@ struct Cluster {
 	TVector3 r;
 };
 
-typedef map<int, int>                TMapii;
-typedef map<TString, int >           TMapTSi;
-typedef map<TString, float >         TMapTSf;
-typedef map<TString, double >        TMapTSd;
-typedef map<TString, vector<int> >   TMapTSvi;
-typedef map<TString, vector<float> > TMapTSvf;
-typedef map<int,TString>             TMapiTS;
-typedef map<TString, TH1D* >         TMapTSTH1D;
-typedef map<TString, vector<Cluster> > TMapTSvCls; // formatted as 
+typedef map<int, int>                        TMapii;
+typedef map<TString, int >                   TMapTSi;
+typedef map<TString, float >                 TMapTSf;
+typedef map<TString, double >                TMapTSd;
+typedef map<TString, vector<int> >           TMapTSvi;
+typedef map<TString, vector<float> >         TMapTSvf;
+typedef map<int,TString>                     TMapiTS;
+typedef map<TString, TH1D* >                 TMapTSTH1D;
+typedef map<TString, vector<Cluster> >       TMapTSvCls; // formatted as 
+typedef map<TString, map<int, vector<int>>>  TMapTSMapivi; // this is needed for the lookup table
+typedef map<TString, TAxis>                  TMapTSAxis; 
+typedef map<TString, map<int,int>>           TMapTSMapii; 
+typedef map<TString, TF1*>                   TMapTSTF1;
 
 TString storage =  gSystem->ExpandPathName("$STORAGEDIR");
 
@@ -74,22 +78,22 @@ int index_offset_sig = 10000000;
 
 //// temp stuff:
 double bestdistance = -1;
-int bestmatchtrui = -1;
-int bestmatchreci = -1;
+int bestmatchtrui   = -1;
+int bestmatchreci   = -1;
 
 //// uncertainties
-float dxAlignmentXFEL = 0.005; //0.005; // cm
-float dyAlignmentXFEL = 0.005; //0.005; // cm
-float XvariationSign = +1.;
-float YvariationSign = +1.;
+float dxAlignmentXFEL   = 0.005; //0.005; // cm
+float dyAlignmentXFEL   = 0.005; //0.005; // cm
+float XvariationSign    = +1.;
+float YvariationSign    = +1.;
 float dxAlignmentInTray = 0.000; // cm
 float dyAlignmentInTray = 0.000; // cm
-bool doMisalignmentX = false;
-bool doMisalignmentY = false;
+bool doMisalignmentX    = false;
+bool doMisalignmentY    = false;
 
 //// seed energies
-double EseedMin = 1.0; // GeV
-double EseedMaxBPPP = 16.0; // GeV
+double EseedMin        = 1.0; // GeV
+double EseedMaxBPPP    = 16.0; // GeV
 double EseedMaxTRIDENT = 5.0; // GeV
 
 // double yDipoleExitMin = -0.05; ## cm --> TODO: need tuning
@@ -98,22 +102,24 @@ double EseedMaxTRIDENT = 5.0; // GeV
 // double yAbsMargins = 0.025 if(proc=="glaser") else 0.1 # cm --> TODO: need tuning
 
 vector<TString> sides{"Eside","Pside"};
-// vector<TString> iolyr{"Inner","Outer"};
-// vector<TString> coord{"x","y","z"};
-// vector<TString> attri{"id","type"};
 vector<TString> layersnames;
 vector<double>  layersz;
 vector<double> zlayer;
 TMapiTS layers;
-TMapiTS firstlayer, secondlayer, thirdlayer;
 TMapTSi szlayers;
 TMapTSi silayers;
 TMapiTS islayers;
 
-TMapTSvCls cached_clusters; /// formatted per side per layer e.g. as: cached_clusters[side+"_"+layerid][i].r.X() or cached_clusters[side+"_"+layerid][i].clsid
-// TMapTSvi   cached_clusters_att; /// attributes (type and id)
-TMapii     cached_clusters_all_ids; /// 
-TMapii     cached_clusters_id2lyr; /// 
+TMapTSvCls      cached_clusters; /// formatted per side per layer e.g. as: cached_clusters[side+"_"+layerid][i].r.X() or cached_clusters[side+"_"+layerid][i].clsid
+TMapii          cached_clusters_all_ids; /// 
+TMapii          cached_clusters_id2lyr; /// 
+TMapTSMapii     cached_clusters_id2ix;
+
+/// lookup table for cluster id's bin
+TMapTSMapivi lookupTable;
+TMapTSAxis axisMap;
+int nAxisBins = 500;
+double rw = 0.5; // in mm, road width along the possible cluster where we embed the clusters
 
 
 //// staves geometry
@@ -193,6 +199,7 @@ double zLastLayer  = -999;
 double zFirstLayer = -999;
 TString LastLayer  = "";
 TString FirstLayer = "";
+
 
 void setParametersFromDet(TString side)
 {
@@ -281,16 +288,12 @@ void setParametersFromDet(TString side)
 	zPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetZ():-999; iPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetID():-999;
 	cout << "zEL4I=" << zEL4I << ", zEL4O=" << zEL4O << ", zPL4I=" << zPL4I << ", zPL4O=" << zPL4O << endl;
 	
-	// IP (vertex) --> start of dipol --> end of dipole and then the layers
 	if(side=="Eside")
 	{
 		layersnames = {"EL1I","EL1O","EL2I","EL2O","EL3I","EL3O","EL4I","EL4O"};
 		zlayer      = {0,z1dipole,z2dipole,zEL1I,zEL1O,zEL2I,zEL2O,zEL3I,zEL3O,zEL4I,zEL4O};
 		layersz     = {zEL1I,zEL1O,zEL2I,zEL2O,zEL3I,zEL3O,zEL4I,zEL4O};
 		layers      = {{iEL1I,"EL1I"},{iEL1O,"EL1O"},{iEL2I,"EL2I"},{iEL2O,"EL2O"},{iEL3I,"EL3I"},{iEL3O,"EL3O"},{iEL4I,"EL4I"},{iEL4O,"EL4O"}};
-		firstlayer  = {{iEL1I,"EL1I"},{iEL1O,"EL1O"}};
-		secondlayer = {{iEL2I,"EL2I"},{iEL2O,"EL2O"}};
-		thirdlayer  = {{iEL3I,"EL3I"},{iEL3O,"EL3O"}};
 		szlayers    = {{"EL1I",zEL1I},{"EL1O",zEL1O},{"EL2I",zEL2I},{"EL2O",zEL2O},{"EL3I",zEL3I},{"EL3O",zEL3O},{"EL4I",zEL4I},{"EL4O",zEL4O}};
 		silayers    = {{"EL1I",iEL1I},{"EL1O",iEL1O},{"EL2I",iEL2I},{"EL2O",iEL2O},{"EL3I",iEL3I},{"EL3O",iEL3O},{"EL4I",iEL4I}, {"EL4O",iEL4O}};
 		islayers    = {{iEL1I,"EL1I"},{iEL1O,"EL1O"},{iEL2I,"EL2I"},{iEL2O,"EL2O"},{iEL3I,"EL3I"},{iEL3O,"EL3O"},{iEL4I,"EL4I"},{iEL4O,"EL4O"}};
@@ -301,9 +304,6 @@ void setParametersFromDet(TString side)
 		zlayer      = {0,z1dipole,z2dipole,zPL1I,zPL1O,zPL2I,zPL2O,zPL3I,zPL3O,zPL4I,zPL4O};
 		layersz     = {zPL1I,zPL1O,zPL2I,zPL2O,zPL3I,zPL3O,zPL4I,zPL4O};
 		layers      = {{iPL1I,"PL1I"},{iPL1O,"PL1O"},{iPL2I,"PL2I"},{iPL2O,"PL2O"},{iPL3I,"PL3I"},{iPL3O,"PL3O"},{iPL4I,"PL4I"},{iPL4O,"PL4O"}};
-		firstlayer  = {{iPL1I,"PL1I"},{iPL1O,"PL1O"}};
-		secondlayer = {{iPL2I,"PL2I"},{iPL2O,"PL2O"}};
-		thirdlayer  = {{iPL3I,"PL3I"},{iPL3O,"PL3O"}};
 		szlayers    = {{"PL1I",zPL1I},{"PL1O",zPL1O},{"PL2I",zPL2I},{"PL2O",zPL2O},{"PL3I",zPL3I},{"PL3O",zPL3O},{"PL4I",zPL4I},{"PL4O",zPL4O}};
 		silayers    = {{"PL1I",iPL1I},{"PL1O",iPL1O},{"PL2I",iPL2I},{"PL2O",iPL2O},{"PL3I",iPL3I},{"PL3O",iPL3O},{"PL4I",iPL4I}, {"PL4O",iPL4O}};
 		islayers    = {{iPL1I,"PL1I"},{iPL1O,"PL1O"},{iPL2I,"PL2I"},{iPL2O,"PL2O"},{iPL3I,"PL3I"},{iPL3O,"PL3O"},{iPL4I,"PL4I"},{iPL4O,"PL4O"}};
@@ -315,9 +315,53 @@ void setParametersFromDet(TString side)
 	FirstLayer  = (side=="Eside") ? "EL1O" : "PL1O";
 	cout << "zLastLayer=" << zLastLayer << " ("<<LastLayer<<"), zFirstLayer=" << zFirstLayer << " ("<<FirstLayer<<")"<< endl;
 	
+
 	cout << "====================================" << endl;
 	cout << "====================================" << endl;
 }
+
+/// initialize the lookup table
+void initializeLookupTable()
+{
+	vector<int> temp1;
+	for(size_t i=0; i < layersnames.size(); i++)
+	{
+		TString lname = layersnames.at(i);
+		
+		if(lname.Contains("PI"))
+		{
+			TAxis PI(TAxis(nAxisBins,xMinPI, xMaxPI));
+			//If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true. Otherwise, return 0 or fNbins+1.
+			// can we do it more elegantly?
+			PI.SetCanExtend(0);
+			axisMap.insert(make_pair(lname, PI));
+		}
+		if(lname.Contains("PO"))
+		{
+			TAxis PO(TAxis(nAxisBins,xMinPO, xMaxPO));
+			PO.SetCanExtend(0);
+			axisMap.insert(make_pair(lname, PO));
+		} 
+		if(lname.Contains("EI"))
+		{
+			TAxis EI(TAxis(nAxisBins,xMinEI, xMaxEI));
+			EI.SetCanExtend(0);
+			axisMap.insert(make_pair(lname, EI));
+		} 
+		if(lname.Contains("EO"))
+		{
+			TAxis EO(TAxis(nAxisBins,xMinEO, xMaxEO));
+			EO.SetCanExtend(0);
+			axisMap.insert(make_pair(lname, EO));
+		}
+		//initialize the clusterId vector
+		for(int b=1; b < axisMap[lname].GetNbins()+1; ++b)
+		{
+			lookupTable[lname].insert(make_pair(b,temp1));
+		}
+	}
+}
+
 
 bool accept(double x, double y)
 {
@@ -334,6 +378,84 @@ void SetLogBins(Int_t nbins, Double_t min, Double_t max, Double_t* xpoints)
 	Double_t logbinwidth = (Double_t)( (logmax-logmin)/(Double_t)nbins );
 	xpoints[0] = min;
 	for(Int_t i=1 ; i<=nbins ; i++) xpoints[i] = TMath::Power( 10,(logmin + i*logbinwidth) );
+}
+
+
+TVector2 rUnit2(TVector2 r1, TVector2 r2)
+{
+	TVector2 r = (r2-r1).Unit();
+	return r;
+}
+
+float xofz(float* r1,float* r2, float z)
+{
+	float dz = r2[2]-r1[2];
+	float dx = r2[0]-r1[0];
+	if(dz==0)
+	{
+		cout << "ERROR in xofz: dz=0" << endl;
+		exit(-1);
+	}
+	float a = dx/dz;
+	float b = r1[0]-a*r1[2];
+	float x = a*z+b;
+	// cout << "in xofz: x=" << x << ", dz=" << dz << endl;
+	return x;
+}
+
+
+
+float xofz(float x1, float x2, float z1, float z2, float z)
+{
+	float r1[3] = {x1, 0, z1};
+	float r2[3] = {x2, 0, z2};
+	return xofz(r1,r2,z);
+}
+
+
+	
+float yofz(float* r1,float* r2, float z)
+{
+	float dz = r2[2]-r1[2];
+	float dy = r2[1]-r1[1];
+	if(dz==0)
+	{
+		cout << "ERROR in yofz: dz=0" << endl;
+		exit(-1);
+	}
+	float a = dy/dz;
+	float b = r1[1]-a*r1[2];
+	float y = a*z+b;
+	return y;
+}
+
+float yofz(float y1,float y2, float z1, float z2, float z)
+{
+	float r1[3] = {0, y1, z1};
+	float r2[3] = {0, y2, z2};
+	return yofz(r1,r2,z);
+}
+
+float zofx(float* r1,float* r2, float x)
+{
+	float dz = r2[2]-r1[2];
+	float dx = r2[0]-r1[0];
+	if(dx==0)
+	{
+		cout << "ERROR in zofx: dx=0" << endl;
+		exit(-1);
+	}
+	float a = dz/dx;
+	float b = r1[2]-a*r1[0];
+	float z = a*x+b;
+	return z;
+}
+
+float zofx(float x1,float x2, float z1, float z2, float x)
+{
+	float r1[3] = {x1, 0, z1};
+	float r2[3] = {x2, 0, z2};
+	return zofx(r1,r2,x);
 }
 
 Color_t trkcol(double E)
@@ -405,27 +527,6 @@ TPolyLine3D* TrackLine3d(const KMCProbeFwd* source, Double_t zMax, Double_t step
 	return polyline;
 }
 
-
-double predictXPosition(double x1, double z1, double x4, double z4, double z){
-	/// x4-x1 should not be 0
-	double x = -999999.0;
-    if((x4-x1)!=0){
-		double slope    = (z4-z1)/(x4-x1);
-		double constant = (z1*x4-z4*x1)/(x4-x1);
-		x        = (z - constant)/slope;
-	} 
-	return x;
-  
-}
-// bool islayer(double z)
-// {
-// 	for(int j=0 ; j<(int)zlayer.size() ; ++j)
-// 	{
-// 		double dz = abs(zlayer.[j]-z);
-// 		if(dz<1.e-6) return true;
-// 	}
-// 	return false;
-// }
 bool islayer(double z, int layerindex=-1, double stepsize=1)
 {
 	if(layerindex>=0)
@@ -701,19 +802,20 @@ int CheckMatchingByID(int id1, int id2, int id3, int id4)
 }
 
 
-void prepare_cahced_clusters()
+void prepare_cached_clusters()
 {
 	/// clear first
 	for(TMapTSvCls::iterator it=cached_clusters.begin() ; it!=cached_clusters.end() ; ++it) it->second.clear();
 	cached_clusters.clear();
 	/// then rebuild
+	TMapii mapii;
 	vector<Cluster> vc;
-	vector<int> vi;
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.begin() ; ++it)
 	{
 		// int     layerid   = it->first;
 		TString layername = it->second;
 		cached_clusters.insert( make_pair(layername,vc) );
+		cached_clusters_id2ix.insert(make_pair(layername,mapii));
 	}
 }
 
@@ -722,6 +824,9 @@ void clear_cached_clusters()
 {
 	cached_clusters_id2lyr.clear();
 	for(TMapTSvCls::iterator it=cached_clusters.begin() ; it!=cached_clusters.end() ; ++it) it->second.clear();
+	cached_clusters.clear();
+	for(TMapTSMapii::iterator it=cached_clusters_id2ix.begin() ; it!=cached_clusters_id2ix.end() ; ++it) it->second.clear();
+	cached_clusters_id2ix.clear();
 }
 
 
@@ -763,12 +868,17 @@ int cache_clusters(vector<vector<TVector3> >* clusters_r, vector<vector<int> >* 
 			
 			cached_clusters[lyrname].push_back(cls);
 			cached_clusters_id2lyr.insert(make_pair(clsid,lyrid));
+
+			int index = cached_clusters[lyrname].size()-1;
+			cached_clusters_id2ix[lyrname].insert(make_pair(clsid, index));
+		
+		    int bin = axisMap[lyrname].FindBin(x);
+			lookupTable[lyrname][bin].push_back(clsid);
 			ncached++;
 		}
 	}
 	return ncached;
 }
-
 
 void reset_layers_all()
 {
@@ -801,6 +911,20 @@ void embed_cluster(int iLayer, float x, float y, float z, int id)
 	det->GetLayer(iLayer)->AddBgCluster(clxyzTrk[0], clxyzTrk[1], clxyzTrk[2], id);
 }
 
+void embed_cluster(Cluster &cls)
+{
+	/// set the clusters of the seed
+	double clxyzTrk[3];
+	double clxyzLab[3];
+	clxyzLab[0]=cls.r.X();
+	clxyzLab[1]=cls.r.Y();
+	clxyzLab[2]=cls.r.Z();
+	KMCProbeFwd::Lab2Trk(clxyzLab, clxyzTrk);
+	det->GetLayer(cls.lyrid)->AddBgCluster(clxyzTrk[0], clxyzTrk[1], clxyzTrk[2], cls.clsid);
+}
+
+
+/// function to embed all cluster at one go, superslow
 void add_all_clusters(TString side)
 {
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
@@ -831,71 +955,109 @@ void add_all_clusters(TString side)
 	}
 }
 
-void add_all_clusters(TString side, TString slyr, int layerid, int i4, TF1* fDx14vsX)
+
+
+void embed_selective(TString side, TString lyrnumber, TString io, double xPivot, vector<int>& embedded_clusters, vector<int>* allL1ClsIx=0)
+{
+	TString slyr = side.ReplaceAll("side","")+"L"+lyrnumber+io;
+	int binUp    = axisMap[slyr].FindBin(xPivot+rw);
+	int binDown  = axisMap[slyr].FindBin(xPivot-rw);
+	for(int bin=binDown; bin<=binUp; ++bin)
+	{
+		for(size_t k=0; k<lookupTable[slyr][bin].size(); k++)
+		{
+			int clsid = lookupTable[slyr][bin][k];
+			if (foundinvec(clsid, embedded_clusters)) continue;
+			int index = cached_clusters_id2ix[slyr][k];
+			embed_cluster(cached_clusters[slyr][index]);
+			if(allL1ClsIx) allL1ClsIx->push_back(index);
+			embedded_clusters.push_back(clsid);
+		}
+	}
+}
+
+
+
+/// turning on only those clusters which are in a specific bin along the rw
+void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,  vector<int>* allL1IClsIx, vector<int>* allL1OClsIx)
 {   
+	vector<int> embedded_clusters;
 	/// first embed the fourth layer pivot cluter
-	embed_cluster(layerid,cached_clusters[slyr][i4].r.X(), cached_clusters[slyr][i4].r.Y(),cached_clusters[slyr][i4].r.Z(),cached_clusters[slyr][i4].clsid);
+	double x4   = cached_clusters[slyr][i4].r.X();
+	double z4   = cached_clusters[slyr][i4].r.Z();
+	embed_cluster(cached_clusters[slyr][i4]);
+    
+	/// II: if x4 and x1 is in inner layer
+	double dxabs1I  = fDx14vsXMap["L4I_"+side]->Eval(x4);
+	double z1I      = zEL1I; // electron or positron, both side has same Z 
+	double x1IPivot = (side=="Pside") ? (x4-dxabs1I) : (x4+dxabs1I);
 
-    double x4          = cached_clusters[slyr][i4].r.X();
-	double z4          = cached_clusters[slyr][i4].r.Z();
-	double x1predicted = fDx14vsX->Eval(x4);
-	double z1predicted = -9999999.0;
-	TString funcName   = fDx14vsX->GetName();
+	/// OO: if x4 is outer and x1 is outer
+	double dxabs1O  = fDx14vsXMap["L4O_"+side]->Eval(x4);
+	double z1O      = zEL1O; // electron or positron, both side has same Z 
+	double x1OPivot = (side=="Pside") ? (x4-dxabs1O) : (x4+dxabs1O);
+
+	/// OI: if x4 is outer and x1 is in inner layer
+	double dxabs1X  = fDx14vsXMap["L4X_"+side]->Eval(x4);
+	double z1X      = zEL1I; // electron or positron, both side has same Z 
+	double x1XPivot = (side=="Pside") ? (x4-dxabs1X) : (x4+dxabs1X);
+
+	/// II: find the x along layer 2 and 3
+	double x2IPivotII = xofz(x1IPivot, x4, z1I, z4, zEL2I);
+	double x2OPivotII = xofz(x1IPivot, x4, z1I, z4, zEL2O);
+	double x3IPivotII = xofz(x1IPivot, x4, z1I, z4, zEL3I);
+	double x3OPivotII = xofz(x1IPivot, x4, z1I, z4, zEL3O);
+
+    /// OO: find the x along layer 2 and 3
+	double x2IPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL2I);
+	double x2OPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL2O);
+	double x3IPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL3I);
+	double x3OPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL3O);
+
+	/// OI: find the x along layer 2 and 3
+	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2I);
+	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2O);
+	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3I);
+	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3O);
+
+    bool isL1I = (side=="Pside") ? ((x1IPivot-rw)<xMaxPI) : ((x1IPivot+rw)>xMinEI); 
+    bool isL1O = (side=="Pside") ? ((x1OPivot-rw)<xMaxPO) : ((x1OPivot+rw)>xMinEO); 
 	
-	if(funcName.Contains("4I"))     z1predicted = 426.21;
-	else if(funcName.Contains("4O"))z1predicted = 425.01;
-	else                            z1predicted = 425.01;  /// this is the case where one point in in L1Inner and other point in L4Outer
+	bool isIIL2I = (side=="Pside") ? ((x2IPivotII-rw)<xMaxPI) : ((x2IPivotII+rw)>xMinEI); 
+	bool isIIL2O = (side=="Pside") ? ((x2OPivotII-rw)<xMaxPO) : ((x2OPivotII+rw)>xMinEO); 
+	bool isOOL2I = (side=="Pside") ? ((x2IPivotOO-rw)<xMaxPI) : ((x2IPivotOO+rw)>xMinEI); 
+	bool isOOL2O = (side=="Pside") ? ((x2OPivotOO-rw)<xMaxPO) : ((x2OPivotOO+rw)>xMinEO); 
+    bool isOIL2I = (side=="Pside") ? ((x2IPivotOI-rw)<xMaxPI) : ((x2IPivotOI+rw)>xMinEI); 
+	bool isOIL2O = (side=="Pside") ? ((x2OPivotOI-rw)<xMaxPO) : ((x2OPivotOI+rw)>xMinEO); 
 
-	/// loop over first layer, but embed only those clusters which are along the predicted line 
-	for(TMapiTS::iterator it=firstlayer.begin() ; it!=firstlayer.end() ; ++it)
-	{
-		int     lid = it->first;
-		TString slr = it->second;
-		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
-		{
-			float x = cached_clusters[slr][j].r.X();
-			if(x>(x1predicted+10))continue;
-			float y = cached_clusters[slr][j].r.Y();
-			float z = cached_clusters[slr][j].r.Z();
-			int cid = cached_clusters[slr][j].clsid;
-            /// embed only when the cluster is along the predicted line
-			embed_cluster(lid,x,y,z,cid);	
-		}
-	}
-    /// loop over second layer, but embed only those clusters which are along the predicted line 
-	for(TMapiTS::iterator it=secondlayer.begin() ; it!=secondlayer.end() ; ++it)
-	{
-		int     lid = it->first;
-		TString slr = it->second;
-		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
-		{
-			float x = cached_clusters[slr][j].r.X();
-			float y = cached_clusters[slr][j].r.Y();
-			float z = cached_clusters[slr][j].r.Z();
-			int cid = cached_clusters[slr][j].clsid;
-			/// embed only when the cluster is along the predicted line
-			double x2predicted = predictXPosition(x1predicted,z1predicted,x4,z4,z);
-			if(x<=x2predicted+10)
-			   embed_cluster(lid,x,y,z,cid);
-		}
-	}
-	/// loop over third layer, but embed only those clusters which are along the predicted line 
-	for(TMapiTS::iterator it=thirdlayer.begin() ; it!=thirdlayer.end() ; ++it)
-	{
-		int     lid = it->first;
-		TString slr = it->second;
-		for(unsigned int j=0 ; j<cached_clusters[slr].size() ; ++j)
-		{
-			float x = cached_clusters[slr][j].r.X();
-			float y = cached_clusters[slr][j].r.Y();
-			float z = cached_clusters[slr][j].r.Z();
-			int cid = cached_clusters[slr][j].clsid;
-			/// embed only when the cluster is along the predicted line
-			double x3predicted = predictXPosition(x1predicted,z1predicted,x4,z4,z);
-			if(x<=x3predicted+10)
-			   embed_cluster(lid,x,y,z,cid);
-		}
-	}
+	bool isIIL3I = (side=="Pside") ? ((x3IPivotII-rw)<xMaxPI) : ((x3IPivotII+rw)>xMinEI); 
+	bool isIIL3O = (side=="Pside") ? ((x3OPivotII-rw)<xMaxPO) : ((x3OPivotII+rw)>xMinEO); 
+	bool isOOL3I = (side=="Pside") ? ((x3IPivotOO-rw)<xMaxPI) : ((x3IPivotOO+rw)>xMinEI); 
+	bool isOOL3O = (side=="Pside") ? ((x3OPivotOO-rw)<xMaxPO) : ((x3OPivotOO+rw)>xMinEO); 
+	bool isOIL3I = (side=="Pside") ? ((x3IPivotOI-rw)<xMaxPI) : ((x3IPivotOI+rw)>xMinEI); 
+	bool isOIL3O = (side=="Pside") ? ((x3OPivotOI-rw)<xMaxPO) : ((x3OPivotOI+rw)>xMinEO); 
+
+	/// II: find the bins in layer 1 where the x values lie
+	if(isL1I)   embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
+	if(isIIL2I) embed_selective(side, "2", "I", x2IPivotII, embedded_clusters);
+	if(isIIL2O) embed_selective(side, "2", "O", x2OPivotII, embedded_clusters);
+	if(isIIL3I) embed_selective(side, "3", "I", x3IPivotII, embedded_clusters);
+	if(isIIL3O) embed_selective(side, "3", "O", x3OPivotII, embedded_clusters);
+
+	/// OO: find the bins in layer 1 where the x values lie
+	if(isL1O)   embed_selective(side, "1", "O", x1OPivot, embedded_clusters, allL1OClsIx);
+	if(isOOL2I) embed_selective(side, "2", "I", x2IPivotOO, embedded_clusters);
+	if(isOOL2O) embed_selective(side, "2", "O", x2OPivotOO, embedded_clusters);
+	if(isOOL3I) embed_selective(side, "3", "I", x3IPivotOO, embedded_clusters);
+	if(isOOL3O) embed_selective(side, "3", "O", x3OPivotOO, embedded_clusters);
+
+	/// OI: find the bins in layer 1 where the x values lie
+	if(isL1I)   embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
+	if(isOIL2I) embed_selective(side, "2", "I", x2IPivotOI, embedded_clusters);
+	if(isOIL2O) embed_selective(side, "2", "O", x2OPivotOI, embedded_clusters);
+	if(isOIL3I) embed_selective(side, "3", "I", x3IPivotOI, embedded_clusters);
+	if(isOIL3O) embed_selective(side, "3", "O", x3OPivotOI, embedded_clusters);
+
 	/// must sort clusters
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
 	{
@@ -937,7 +1099,7 @@ void print_all_clusters(TString side, bool doprint = true)
 	}
 }
 
-int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>& ctype, vector<int>& cid, TString slyr, int i4, TF1* fDx14vsX)
+int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>& ctype, vector<int>& cid)
 {
 	int nclusters = 0;
 	for(TMapiTS::iterator it=layers.begin() ; it!=layers.end() ; ++it)
@@ -945,7 +1107,6 @@ int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>
 		TString slr = it->second;
 		vector<TVector3> v3tmp;
 		r.push_back(v3tmp);
-		// int     ilr = it->first;
 		
 		for(int c=0 ; c<cached_clusters[slr].size() ; c++)
 		{
@@ -974,59 +1135,6 @@ int fill_output_clusters(TString side, vector<vector<TVector3> >& r, vector<int>
 	}
 	return nclusters;
 }
-
-TVector2 rUnit2(TVector2 r1, TVector2 r2)
-{
-	TVector2 r = (r2-r1).Unit();
-	return r;
-}
-
-float xofz(float* r1,float* r2, float z)
-{
-	float dz = r2[2]-r1[2];
-	float dx = r2[0]-r1[0];
-	if(dz==0)
-	{
-		cout << "ERROR in xofz: dz=0" << endl;
-		exit(-1);
-	}
-	float a = dx/dz;
-	float b = r1[0]-a*r1[2];
-	float x = a*z+b;
-	// cout << "in xofz: x=" << x << ", dz=" << dz << endl;
-	return x;
-}
-	
-float yofz(float* r1,float* r2, float z)
-{
-	float dz = r2[2]-r1[2];
-	float dy = r2[1]-r1[1];
-	if(dz==0)
-	{
-		cout << "ERROR in yofz: dz=0" << endl;
-		exit(-1);
-	}
-	float a = dy/dz;
-	float b = r1[1]-a*r1[2];
-	float y = a*z+b;
-	return y;
-}
-
-float zofx(float* r1,float* r2, float x)
-{
-	float dz = r2[2]-r1[2];
-	float dx = r2[0]-r1[0];
-	if(dx==0)
-	{
-		cout << "ERROR in zofx: dx=0" << endl;
-		exit(-1);
-	}
-	float a = dz/dx;
-	float b = r1[2]-a*r1[0];
-	float z = a*x+b;
-	return z;
-}
-
 
 ///TODO!!!
 bool check_clusters(unsigned int i1, unsigned int i4, TString side)
@@ -1098,7 +1206,6 @@ bool adaptive_dx14_vs_x4(double x4, double x1, TF1* fDxvsX, double width0, int t
 
 
 
-// bool makeseed_nonuniformB(TString process, float* r1, float* r4, unsigned int i1, unsigned int i4, TString side, TLorentzVector& p, TF1* fEvsX, TF1* fDxvsX)
 bool makeseed_nonuniformB(TString process, float* r1, float* r4, TString side, TLorentzVector& p, TF1* fEvsX, TF1* fDxvsX)
 {
 	if(abs(r1[0])>=abs(r4[0]))            return false; // |x1| must be smaller than |x4|
@@ -1233,6 +1340,10 @@ int main(int argc, char *argv[])
 	
 	TF1* fDx14vsX_L4X_Eside = (TF1*)fFits->Get("h2_dx14_vs_x_L4X_Eside");
 	TF1* fDx14vsX_L4X_Pside = (TF1*)fFits->Get("h2_dx14_vs_x_L4X_Pside");
+
+	TMapTSTF1 fDx14vsXMap = {{"L4I_Eside",fDx14vsX_L4I_Eside},{"L4I_Pside",fDx14vsX_L4I_Pside},
+						    {"L4O_Eside",fDx14vsX_L4O_Eside}, {"L4O_Pside",fDx14vsX_L4O_Pside},
+						    {"L4X_Eside",fDx14vsX_L4X_Eside}, {"L4X_Pside",fDx14vsX_L4X_Pside}};
 	
 	cout << "setup fits from files" << endl;
 
@@ -1284,7 +1395,6 @@ int main(int argc, char *argv[])
 	hname = "h_E_eff_sed_Pside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",68,0,17)) );
 	hname = "h_E_eff_rec_Eside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",68,0,17)) );
 	hname = "h_E_eff_rec_Pside"      ; histos.insert( make_pair(hname, new TH1D(hname,";#it{E}_{tru} [GeV];Tracks",68,0,17)) );
-	
 	
 	
 	
@@ -1559,7 +1669,7 @@ int main(int argc, char *argv[])
 		}
 	 
 		/// prepare the dictionaries
-		prepare_cahced_clusters();
+		prepare_cached_clusters();
 	
 		/// for timing
 		Double_t av_cputime  = 0;
@@ -1743,6 +1853,12 @@ int main(int argc, char *argv[])
 				n_truth++;
 			}
 		   
+
+		    //// here prepare the lookup table
+			/// initialize
+			initializeLookupTable();
+
+			
 			/// make a pool of all signal clusters
 			int ncached_signal_clusters = cache_clusters(sig_clusters_r,sig_clusters_type,sig_clusters_id,sig_clusters_layerid,side,nsigtrks);
 
@@ -1751,7 +1867,7 @@ int main(int argc, char *argv[])
 			
 			/// rest all the layers of the detector (including inactive if any)
 			reset_layers_all(); // reset both sides 
-			
+
 			
 			/// offset for signal id's !!!
 			// int sigoffset = 100000; // should be multiplied by the layer number
@@ -1768,36 +1884,41 @@ int main(int argc, char *argv[])
 			int     ilyr4O = silayers[slyr4O];
 			int     ilyr1O = silayers[slyr1O];
 			// cout << "ilyr1I=" << ilyr1I << ", ilyr4I=" << ilyr4I << endl;
+
+			
 			
 			/// loop on seeds
 			unsigned int n4I = cached_clusters[slyr4I].size();
 			unsigned int n4O = cached_clusters[slyr4O].size();
-			unsigned int n1I = cached_clusters[slyr1I].size();
-			unsigned int n1O = cached_clusters[slyr1O].size();
 			for(unsigned int i4all=0 ; i4all<(n4I+n4O) ; ++i4all)
 			{  
-				TF1* fEvsX    = 0;
-				TF1* fDx14vsX = 0;
-				unsigned int i4 = (i4all<n4I) ? i4all  : i4all-n4I;
-				TString slyr4   = (i4all<n4I) ? slyr4I : slyr4O;
-				int     ilyr4   = (i4all<n4I) ? ilyr4I : ilyr4O;
+				unsigned int i4 = (i4all<n4O) ? i4all  : i4all-n4O;
+				TString slyr4   = (i4all<n4O) ? slyr4O : slyr4I;
+				int     ilyr4   = (i4all<n4O) ? ilyr4O : ilyr4I;
 				if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
 				if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
-				// if(slyr4==slyr4O) continue;
-				
+
+
 				// reset all tracks from all layers
 				reset_layers_tracks();
-				
 				vector<TLorentzVector> pseeds;
-				// for(unsigned int i1=0 ; i1<cached_clusters[slyr1I].size() ; ++i1)
-				for(unsigned int i1all=0 ; i1all<(n1O+n1I) ; ++i1all)
+
+				/// add all clusters to the detector
+				vector<int> *L1I_clsix=nullptr, *L1O_clsix=nullptr; 
+				add_all_clusters(side, slyr4, i4, fDx14vsXMap, L1I_clsix, L1O_clsix); /// this is embedding clusters along predicted points
+				///add_all_clusters(side);
+				print_all_clusters(side,false);
+				int all_clusters = fill_output_clusters(side,all_clusters_r,all_clusters_type,all_clusters_id);	
+				
+				unsigned int nx1I = L1I_clsix->size();
+				unsigned int nx1O = L1O_clsix->size();
+				for(unsigned int ix1all=0 ; ix1all<(nx1I+nx1O) ; ++ix1all)
 				{
-					unsigned int i1 = (i1all<n1O) ? i1all  : i1all-n1O;
-					TString slyr1   = (i1all<n1O) ? slyr1O : slyr1I;
-					int     ilyr1   = (i1all<n1O) ? ilyr1O : ilyr1I;
+					unsigned int i1 = (ix1all<nx1O) ? L1O_clsix->at(ix1all)  : L1I_clsix->at(ix1all-nx1O);
+					TString slyr1   = (ix1all<nx1O) ? slyr1O : slyr1I;
+					int     ilyr1   = (ix1all<nx1O) ? ilyr1O : ilyr1I;
 					if(slyr1==slyr1I && (side=="Eside" && cached_clusters[slyr1][i1].r.X()<xMaxEO)) continue;
 					if(slyr1==slyr1I && (side=="Pside" && cached_clusters[slyr1][i1].r.X()>xMinPO)) continue;
-					// if(slyr1==slyr1O) continue;
 					
 					// reset all tracks from all layers but layer 0
 					reset_layers_tracks(0);
@@ -1806,6 +1927,9 @@ int main(int argc, char *argv[])
 					TLorentzVector pseed;
 					float r1[3]; r1[0]=cached_clusters[slyr1][i1].r.X(); r1[1]=cached_clusters[slyr1][i1].r.Y(); r1[2]=cached_clusters[slyr1][i1].r.Z();
 					float r4[3]; r4[0]=cached_clusters[slyr4][i4].r.X(); r4[1]=cached_clusters[slyr4][i4].r.Y(); r4[2]=cached_clusters[slyr4][i4].r.Z();
+					
+					TF1* fEvsX    = 0;
+					TF1* fDx14vsX = 0;
 					
 					if(slyr1==slyr1I)
 					{
@@ -1842,6 +1966,7 @@ int main(int argc, char *argv[])
 					seed_p.push_back(pseed);
 					n_seeds++;
 				} // end of loop on clusters in layer 1
+
 				if(n_seeds<1) continue;
 				cout << "nseeds=" << n_seeds << " for i4=" << i4 << " out of " << cached_clusters[slyr4].size() << " clusters in layer4 (with " << n_recos << " recos)" << endl;
 				for(int d=0 ; d<seed_type.size() ; ++d) {if(seed_type[d]) cout << "at least one true seed" << endl; break;}
@@ -1851,12 +1976,6 @@ int main(int argc, char *argv[])
 				// prepare the probe from the seed and do the KF fit
 				
 				stopwatch1.Start();
-				/// write out all clusters when these are sorted
-				/// add all clusters to the detector
-				add_all_clusters(side, slyr4, ilyr4, i4, fDx14vsX); /// this is embedding clusters along predicted points
-				///add_all_clusters(side);
-				print_all_clusters(side,false);
-				int all_clusters = fill_output_clusters(side,all_clusters_r,all_clusters_type,all_clusters_id, slyr4, i4, fDx14vsX);
 				
 				// cout << "ncached_signal_clusters=" << ncached_signal_clusters << ", ncached_background_clusters=" << ncached_background_clusters << ", all_clusters=" << all_clusters << endl;
 				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds,meGeV,crg,99,doPrint);
@@ -1912,7 +2031,7 @@ int main(int argc, char *argv[])
 				}
 				/// save the clusters' id of the winner track 
 				reco_clusters_id.push_back( win_cls_id );
-				if(win_cls_id.size()<4)exit(-1);
+				if(win_cls_id.size()<4)continue; // exit(-1);
 				
 				/// reco kinematics etc
 				TLorentzVector prec;
