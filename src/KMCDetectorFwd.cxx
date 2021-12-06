@@ -917,8 +917,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     for (int i=15;i--;) covMS[i] = covIdeal[i];
   }
   else { // ITS SA: randomize the starting point
-    double r = currTr->GetR();
-    currTr->ResetCovariance( fErrScale*TMath::Sqrt(lr->GetXRes(r)*lr->GetYRes(r)) ); // RS: this is the coeff to play with
+    // double r = currTr->GetR();
+    double X = currTr->GetX();
+    double Y = currTr->GetY();
+    currTr->ResetCovariance( fErrScale*TMath::Sqrt(lr->GetXRes(X)*lr->GetYRes(Y)) ); // RS: this is the coeff to play with
   }
   //
   int fst = 0;
@@ -933,40 +935,40 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     //
     //    printf("Lr:%d %s IsDead:%d\n",j, lrP->GetName(),lrP->IsDead());
     if (lrP->IsDead()) { // for passive layer just propagate the copy of all tracks of prev layer >>>
-      for (int itrP=ntPrev;itrP--;) { // loop over all tracks from previous layer
-	currTrP = lrP->GetMCTrack(itrP); 
-	if (currTrP->IsKilled()) continue;
-	currTr = lr->AddMCTrack( currTrP );
-	if (fst<fstLim) {
-	  fst++;
-	  // currTr->Print("etp");
-	}
-	if (!PropagateToLayer(currTr,lrP,lr,-1))  {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer
+    	for (int itrP=ntPrev;itrP--;) { // loop over all tracks from previous layer
+			currTrP = lrP->GetMCTrack(itrP); 
+			if (currTrP->IsKilled()) continue;
+			currTr = lr->AddMCTrack( currTrP );
+			if (fst<fstLim) {
+			  fst++;
+			  // currTr->Print("etp");
+			}
+			if (!PropagateToLayer(currTr,lrP,lr,-1))  {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer
       }
       continue;
     } // treatment of dead layer <<<
     //
     if (lrP->IsMS() || lrP->IsTrig()) { // we don't consider bg hits in MS, just update with MC cluster
-      KMCClusterFwd* clmc = lrP->GetMCCluster();
-      for (int itrP=ntPrev;itrP--;) { // loop over all tracks from previous layer
-	currTrP = lrP->GetMCTrack(itrP); if (currTrP->IsKilled()) continue;
-	//	printf("At lr %d  | ",j+1); currTrP->Print("etp");
-	currTr = lr->AddMCTrack( currTrP );
-	if (fst<fstLim) {
-	  fst++;
-	  // currTr->Print("etp");
-	}
-	// printf("\nAt Lr:%s ",lrP->GetName()); currTr->GetTrack()->Print();
-	if (!clmc->IsKilled()) {
-	  //	  lrP->Print("");
-	  //	  printf("BeforeMS Update: "); currTr->Print("etp");
-	  if (!UpdateTrack(currTr, lrP, clmc)) {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // update with correct MC cl.
-	  //	  printf("AfterMS Update: "); currTr->Print("etp");
-	}
-	if (!PropagateToLayer(currTr,lrP,lr,-1))            {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer	
-      }      
-      //      currTr->Print("etp");
-      continue;
+    	KMCClusterFwd* clmc = lrP->GetMCCluster();
+    	for (int itrP=ntPrev;itrP--;) { // loop over all tracks from previous layer
+	 			currTrP = lrP->GetMCTrack(itrP); if (currTrP->IsKilled()) continue;
+	 			//	printf("At lr %d  | ",j+1); currTrP->Print("etp");
+	 			currTr = lr->AddMCTrack( currTrP );
+	 			if (fst<fstLim) {
+	 			  fst++;
+	 			  // currTr->Print("etp");
+	 			}
+	 			// printf("\nAt Lr:%s ",lrP->GetName()); currTr->GetTrack()->Print();
+	 			if (!clmc->IsKilled()) {
+	 			  //	  lrP->Print("");
+	 			  //	  printf("BeforeMS Update: "); currTr->Print("etp");
+	 			  if (!UpdateTrack(currTr, lrP, clmc)) {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // update with correct MC cl.
+	 			  //	  printf("AfterMS Update: "); currTr->Print("etp");
+	 			}
+	 			if (!PropagateToLayer(currTr,lrP,lr,-1)) {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer	
+    	}      
+    	//      currTr->Print("etp");
+    	continue;
     } // treatment of ideal layer <<<
     //
     // active layer under eff. study (ITS?): propagate copy of every track to MC cluster frame (to have them all in the same frame)
@@ -981,14 +983,14 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       currTrP = lrP->GetMCTrack(itrP); if (currTrP->IsKilled()) continue;
       //
       if (checkMS) {
-	checkMS = kFALSE;
-	// check if muon track is well defined
-	if (currTrP->GetNTRHits()<fMinTRHits) {currTrP->Kill(); continue;}
-	if (currTrP->GetNMSHits()<fMinMSHits) {currTrP->Kill(); continue;}
-	//
-	//	printf("Check %d of %d at lr%d Nhits:%d NTR:%d NMS:%d\n",
-	//       itrP,ntPrev,j, currTrP->GetNHits(),currTrP->GetNTRHits(),currTrP->GetNMSHits());
-	if (fHChi2MS) fHChi2MS->Fill(currTr->GetChi2(),currTr->GetNHits());      
+			checkMS = kFALSE;
+			// check if muon track is well defined
+			if (currTrP->GetNTRHits()<fMinTRHits) {currTrP->Kill(); continue;}
+			if (currTrP->GetNMSHits()<fMinMSHits) {currTrP->Kill(); continue;}
+			//
+			//	printf("Check %d of %d at lr%d Nhits:%d NTR:%d NMS:%d\n",
+			//       itrP,ntPrev,j, currTrP->GetNHits(),currTrP->GetNTRHits(),currTrP->GetNMSHits());
+			if (fHChi2MS) fHChi2MS->Fill(currTr->GetChi2(),currTr->GetNHits());      
       }
       //
       // Are we entering to the last ITS layer? Apply Branson plane correction if requested
@@ -997,7 +999,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 
 	trcConstr = *currTrP;
 	fMuTrackLastITS = trcConstr;
-	if (!PropagateToLayer(&trcConstr,lrP,fVtx,-1))  {currTrP->Kill();continue;} // propagate to vertex
+	if (!PropagateToLayer(&trcConstr,lrP,fVtx,-1)) { currTrP->Kill(); continue; } // propagate to vertex
 	//////	trcConstr.ResetCovariance();
 	// update with vertex point + eventual additional error
 	float origErrX = fVtx->GetYRes(), origErrY = fVtx->GetXRes(); 
@@ -1041,8 +1043,8 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       currTr = lr->AddMCTrack( currTrP );
       
       if (fst<fstLim) {
-	fst++;
-	// currTr->Print("etp");
+			fst++;
+			// currTr->Print("etp");
       }
       //
       AliDebug(2,Form("LastChecked before:%d",currTr->GetInnerLayerChecked()));
@@ -1088,13 +1090,13 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       if (currTr->IsKilled()) continue;
       double meas[2] = {0.,0.};
       if (fImposeVertexPosition) {
-	meas[0] = fRefVtx[1]; // bending
-	meas[1] = fRefVtx[2]; // non-bending
+			meas[0] = fRefVtx[1]; // bending
+			meas[1] = fRefVtx[2]; // non-bending
       }
       else {
-	KMCClusterFwd* clv = fVtx->GetMCCluster();
-	meas[0] = clv->GetY(); 
-	meas[1] = clv->GetZ();
+			KMCClusterFwd* clv = fVtx->GetMCCluster();
+			meas[0] = clv->GetY(); 
+			meas[1] = clv->GetZ();
       }
       double measErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(),0,fVtx->GetXRes()*fVtx->GetXRes()}; //  Lab
       //    double chi2v = currTr->GetPredictedChi2(meas,measErr2);
@@ -1178,10 +1180,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC_Noam(double pt, double yrap, 
       for(int itrP=ntPrev;itrP--;) // loop over all tracks from previous layer
 		{
         currTrP = lrP->GetMCTrack(itrP); 
-        if(currTrP->IsKilled())
-        {
-          continue;
-        }
+        if(currTrP->IsKilled()) continue;
         currTr = lr->AddMCTrack( currTrP );
         if(fst<fstLim)
         {
