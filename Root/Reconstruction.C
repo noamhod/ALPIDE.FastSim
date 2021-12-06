@@ -1387,7 +1387,7 @@ int main(int argc, char *argv[])
 		vector<TPolyLine3D*>*      sig_trklin        = 0;
 		cout << "Getting signal clusters from tree" << endl;
 		// TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"_"+eventid+"_flat.root","READ");  /// remove _flat when working with real signal samples
-		TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"__flat.root","READ");  /// remove _flat when working with real signal samples
+		TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"_.root","READ");  /// remove _flat when working with real signal samples
 		TTree* tSig = (TTree*)fSig->Get("dig_"+side);
 		tSig->SetBranchAddress("ngen",         &sig_ngen);
 		tSig->SetBranchAddress("nslv",         &sig_nslv);

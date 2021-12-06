@@ -1,6 +1,7 @@
 #ifndef KMCLAYERFWD_H
 #define KMCLAYERFWD_H
 
+#include <iostream>
 #include <TNamed.h>
 #include <TClonesArray.h>
 #include "KMCClusterFwd.h"

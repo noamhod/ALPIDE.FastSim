@@ -82,7 +82,19 @@ void KMCLayerFwd::Print(Option_t *opt) const
 KMCProbeFwd* KMCLayerFwd::GetWinnerMCTrack()  
 {
   if (!fTrMC.IsSorted()) fTrMC.Sort();
+  //if(fTrMC.GetEntries())
+  if(0)
+  {
+      for(size_t j=0; j < fTrMC.GetEntries(); ++j)
+      { 
+          KMCProbeFwd* trw = (KMCProbeFwd*)fTrMC[j];
+          std::cout << " The track chi2 for fTrMC[" << j << "]: " << trw->GetChi2() << " normChi2: " << trw->GetNormChi2() << " normChi2NITS " << trw->GetNormChi2ITS() << " nITShits: " << trw->GetNITSHits() << std::endl;
+      }
+
+  }
   KMCProbeFwd* win = fTrMC.GetEntries() ? (KMCProbeFwd*)fTrMC[0]:0;
+  std::cout << "win: " << win << std::endl; 
+  if(win) std::cout << "winIsKilled: " << win->IsKilled() << std::endl; 
   if (!win || win->IsKilled()) return 0;
   return win;
 }
