@@ -2301,7 +2301,7 @@ int main(int argc, char *argv[])
 				n_recos++;
 				if(debug2) cout << "n_recos: " << n_recos << endl;
 				
-				if(counter>5) exit(-1);
+				// if(counter>5) exit(-1);
 
 				if (doPrint)
 				{
