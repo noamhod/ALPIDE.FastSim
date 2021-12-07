@@ -8,7 +8,7 @@
 # Bfied is -0.95 T for trident/elaser and 1.2 T for bppp/glaser
 
 # type				ID	xminDipole	xmaxDipole	yminDipole	ymaxDipole	zminDipole	zmaxDipole	Bdipole(kGauss)   FunctionXComp         FunctionYComp      FunctionZComp
-define:magfield	    0	-21.8	    +21.8		-2.996		+2.996		133.0		277.0		-12         NONE    ([0]*(1/((1+exp((-61.6-(z-205))/2.866))*(1+exp(((z-205)-62.2)/2.891))))*(1/((1+exp((-16.5-x)/0.77))*(1+exp((x-16.5)/0.77)))))    NONE
+define:magfield	    0	-21.8	    +21.8		-2.996		+2.996		133.0		277.0		-9.5         NONE    ([0]*(1/((1+exp((-61.6-(z-205))/2.866))*(1+exp(((z-205)-62.2)/2.891))))*(1/((1+exp((-16.5-x)/0.77))*(1+exp((x-16.5)/0.77)))))    NONE
 
 #####. 
 

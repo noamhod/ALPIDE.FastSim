@@ -42,20 +42,26 @@ Emin = 1
 Emax = 16.5
 
 
-h_Px = TH1D("h_Px",";Px;Tracks",200,-0.002,0.002)
-h_Py = TH1D("h_Py",";Py;Tracks",200,-0.002,0.002)
-h_vx = TH1D("h_vx",";vx;Tracks",200,-0.008,0.008)
-h_vy = TH1D("h_vy",";vy;Tracks",200,-0.0025,0.0025)
-h_vz = TH1D("h_vz",";vz;Tracks",200,-0.0015,0.0015)
+h_Px = TH1D("h_Px",";Px;Tracks",200,-0.002,0.002)   if(proc=="glaser") else TH1D("h_Px",";Px;Tracks",200,-0.006,0.006)
+h_Py = TH1D("h_Py",";Py;Tracks",200,-0.002,0.002)   if(proc=="glaser") else TH1D("h_Py",";Py;Tracks",200,-0.006,0.006)
+h_vx = TH1D("h_vx",";vx;Tracks",200,-0.008,0.008)   if(proc=="glaser") else TH1D("h_vx",";vx;Tracks",200,-0.006,0.006)
+h_vy = TH1D("h_vy",";vy;Tracks",200,-0.0025,0.0025) if(proc=="glaser") else TH1D("h_vy",";vy;Tracks",200,-0.0015,0.0015)
+h_vz = TH1D("h_vz",";vz;Tracks",200,-0.0015,0.0015) if(proc=="glaser") else TH1D("h_vz",";vz;Tracks",200,-0.0005,0.0005)
 tfreal = TFile( storage+"/data/root/raw/"+Refsig+"/raw_"+proc+".root", "READ")
 ttreal = tfreal.Get("tt")
+print("getting events from",storage+"/data/root/raw/"+Refsig+"/raw_"+proc+".root")
+m = 0
 for event in ttreal:
+   if(m%2==0 and m>0): print("done %g out of %g" % (m,ttreal.GetEntries()))
    for j in range(event.px.size()):
+      if(event.pdgId[j]==11 and proc=="elaser"): continue
       h_Px.Fill(event.px[j])
       h_Py.Fill(event.py[j])
       h_vx.Fill(event.vx[j])
       h_vy.Fill(event.vy[j])
       h_vz.Fill(event.vz[j])
+   m+=1
+print("done")
 
 tf    = TFile( storage+"/data/root/raw/flat/raw_"+proc+".root", 'recreate' )
 tt    = TTree( 'tt','tt' )
@@ -128,6 +134,7 @@ for n in range(Nevt):
       p4.SetPxPyPzE(Px,Py,Pz,E0)
       wgt0 = 1
       pdgId0 = 11 if(rnd.Uniform()>0.5) else -11
+      if(proc=="elaser"): pdgId0 = -11
       
       ### fill output vectors
       wgt.push_back(wgt0)  
