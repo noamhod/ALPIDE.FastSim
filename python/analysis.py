@@ -14,8 +14,8 @@ argus = parser.parse_args()
 proc  = argus.p
 
 ROOT.gROOT.SetBatch(1)
-ROOT.gStyle.SetOptFit(0);
-ROOT.gStyle.SetOptStat(0);
+ROOT.gStyle.SetOptFit(0)
+ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetPadBottomMargin(0.15)
 ROOT.gStyle.SetPadLeftMargin(0.13)
 # storage =  ROOT.gSystem.ExpandPathName("$STORAGEDIR")
