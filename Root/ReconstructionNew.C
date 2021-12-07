@@ -99,15 +99,16 @@ bool doMisalignmentY = false;
 
 //// seed energies
 double EseedMin = 1.0;		  // GeV
-double EseedMaxBPPP = 16.0;	  // GeV
-double EseedMaxTRIDENT = 5.0; // GeV
+double EseedMaxGLaser = 16.5;	  // GeV
+double EseedMaxELaser = 5.0; // GeV
 
 // double yDipoleExitMin = -0.05; ## cm --> TODO: need tuning
 // double yDipoleExitMax = +0.05; ## cm --> TODO: need tuning
 // double xAbsMargins = 0.025; # cm --> TODO: need tuning
 // double yAbsMargins = 0.025 if(proc=="glaser") else 0.1 # cm --> TODO: need tuning
 
-vector<TString> sides{"Pside", "Eside"};
+vector<TString> sides{"Eside", "Pside"};
+// vector<TString> sides{"Pside", "Eside"};
 vector<TString> layersnames;
 vector<double> layersz;
 vector<double> zlayer;
@@ -125,7 +126,7 @@ TMapTSMapii cached_clusters_id2ix;
 TMapTSMapivi lookupTable;
 TMapTSAxis axisMap;
 int nAxisBins = 500;
-double rw = 0.1; // in cm, road width along the possible cluster where we embed the clusters
+double rw = 0.05; // in cm, road width along the possible cluster where we embed the clusters
 
 //// staves geometry
 double Hstave = 1.5;		// cm
@@ -1141,28 +1142,28 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 	// if (debug) std::cout << "x2IPivotOO: " << x2IPivotOO << " x2OPivotOO: " << x2OPivotOO << " x3IPivotOO: " << x3IPivotOO << " x3OPivotOO: " << x3OPivotOO << std::endl;
 
 	/// OI: find the x along layer 2 and 3
-	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2I);
-	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2O);
-	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3I);
-	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3O);
+	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL2I : zEL2I);
+	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL2O : zEL2O);
+	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL3I : zEL3I);
+	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL3O : zEL3O);
 	// if (debug) std::cout << "x2IPivotOI: " << x2IPivotOI << " x2OPivotOI: " << x2OPivotOI << " x3IPivotOI: " << x3IPivotOI << " x3OPivotOI: " << x3OPivotOI << std::endl;
 
-	bool isL1I = (side == "Pside") ? ((x1IPivot - rw) < xMaxPI) : ((x1IPivot + rw) > xMinEI);
-	bool isL1O = (side == "Pside") ? ((x1OPivot - rw) < xMaxPO) : ((x1OPivot + rw) > xMinEO);
-
-	bool isIIL2I = (side == "Pside") ? ((x2IPivotII - rw) < xMaxPI) : ((x2IPivotII + rw) > xMinEI);
-	bool isIIL2O = (side == "Pside") ? ((x2OPivotII - rw) < xMaxPO) : ((x2OPivotII + rw) > xMinEO);
-	bool isOOL2I = (side == "Pside") ? ((x2IPivotOO - rw) < xMaxPI) : ((x2IPivotOO + rw) > xMinEI);
-	bool isOOL2O = (side == "Pside") ? ((x2OPivotOO - rw) < xMaxPO) : ((x2OPivotOO + rw) > xMinEO);
-	bool isOIL2I = (side == "Pside") ? ((x2IPivotOI - rw) < xMaxPI) : ((x2IPivotOI + rw) > xMinEI);
-	bool isOIL2O = (side == "Pside") ? ((x2OPivotOI - rw) < xMaxPO) : ((x2OPivotOI + rw) > xMinEO);
-
-	bool isIIL3I = (side == "Pside") ? ((x3IPivotII - rw) < xMaxPI) : ((x3IPivotII + rw) > xMinEI);
-	bool isIIL3O = (side == "Pside") ? ((x3OPivotII - rw) < xMaxPO) : ((x3OPivotII + rw) > xMinEO);
-	bool isOOL3I = (side == "Pside") ? ((x3IPivotOO - rw) < xMaxPI) : ((x3IPivotOO + rw) > xMinEI);
-	bool isOOL3O = (side == "Pside") ? ((x3OPivotOO - rw) < xMaxPO) : ((x3OPivotOO + rw) > xMinEO);
-	bool isOIL3I = (side == "Pside") ? ((x3IPivotOI - rw) < xMaxPI) : ((x3IPivotOI + rw) > xMinEI);
-	bool isOIL3O = (side == "Pside") ? ((x3OPivotOI - rw) < xMaxPO) : ((x3OPivotOI + rw) > xMinEO);
+	// bool isL1I = (side == "Pside") ? ((x1IPivot - rw) < xMaxPI) : ((x1IPivot + rw) > xMinEI);
+	// bool isL1O = (side == "Pside") ? ((x1OPivot - rw) < xMaxPO) : ((x1OPivot + rw) > xMinEO);
+	//
+	// bool isIIL2I = (side == "Pside") ? ((x2IPivotII - rw) < xMaxPI) : ((x2IPivotII + rw) > xMinEI);
+	// bool isIIL2O = (side == "Pside") ? ((x2OPivotII - rw) < xMaxPO) : ((x2OPivotII + rw) > xMinEO);
+	// bool isOOL2I = (side == "Pside") ? ((x2IPivotOO - rw) < xMaxPI) : ((x2IPivotOO + rw) > xMinEI);
+	// bool isOOL2O = (side == "Pside") ? ((x2OPivotOO - rw) < xMaxPO) : ((x2OPivotOO + rw) > xMinEO);
+	// bool isOIL2I = (side == "Pside") ? ((x2IPivotOI - rw) < xMaxPI) : ((x2IPivotOI + rw) > xMinEI);
+	// bool isOIL2O = (side == "Pside") ? ((x2OPivotOI - rw) < xMaxPO) : ((x2OPivotOI + rw) > xMinEO);
+	//
+	// bool isIIL3I = (side == "Pside") ? ((x3IPivotII - rw) < xMaxPI) : ((x3IPivotII + rw) > xMinEI);
+	// bool isIIL3O = (side == "Pside") ? ((x3OPivotII - rw) < xMaxPO) : ((x3OPivotII + rw) > xMinEO);
+	// bool isOOL3I = (side == "Pside") ? ((x3IPivotOO - rw) < xMaxPI) : ((x3IPivotOO + rw) > xMinEI);
+	// bool isOOL3O = (side == "Pside") ? ((x3OPivotOO - rw) < xMaxPO) : ((x3OPivotOO + rw) > xMinEO);
+	// bool isOIL3I = (side == "Pside") ? ((x3IPivotOI - rw) < xMaxPI) : ((x3IPivotOI + rw) > xMinEI);
+	// bool isOIL3O = (side == "Pside") ? ((x3OPivotOI - rw) < xMaxPO) : ((x3OPivotOI + rw) > xMinEO);
 
 	// if (debug)
 	// {
@@ -1177,24 +1178,19 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 	// if(isIIL2O) embed_selective(side, "2", "O", x2OPivotII, embedded_clusters);
 	// if(isIIL3I) embed_selective(side, "3", "I", x3IPivotII, embedded_clusters);
 	// if(isIIL3O) embed_selective(side, "3", "O", x3OPivotII, embedded_clusters);
-
 	// /// OO: find the bins in layer 1 where the x values lie
 	// if(isL1O)   embed_selective(side, "1", "O", x1OPivot, embedded_clusters, allL1OClsIx);
 	// if(isOOL2I) embed_selective(side, "2", "I", x2IPivotOO, embedded_clusters);
 	// if(isOOL2O) embed_selective(side, "2", "O", x2OPivotOO, embedded_clusters);
 	// if(isOOL3I) embed_selective(side, "3", "I", x3IPivotOO, embedded_clusters);
 	// if(isOOL3O) embed_selective(side, "3", "O", x3OPivotOO, embedded_clusters);
-
 	// /// OI: find the bins in layer 1 where the x values lie
 	// if(isL1I)   embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
 	// if(isOIL2I) embed_selective(side, "2", "I", x2IPivotOI, embedded_clusters);
 	// if(isOIL2O) embed_selective(side, "2", "O", x2OPivotOI, embedded_clusters);
 	// if(isOIL3I) embed_selective(side, "3", "I", x3IPivotOI, embedded_clusters);
 	// if(isOIL3O) embed_selective(side, "3", "O", x3OPivotOI, embedded_clusters);
-
-
-
-
+	
 	/// II: find the bins in layer 1 where the x values lie
 	embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
 	embed_selective(side, "2", "I", x2IPivotII, embedded_clusters);
@@ -1383,38 +1379,29 @@ bool adaptive_dx14_vs_x4(double x4, double x1, TF1 *fDxvsX, double width0, int t
 
 bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TLorentzVector &p, TF1 *fEvsX, TF1 *fDxvsX)
 {
-	if (abs(r1[0]) >= abs(r4[0]))
-		return false; // |x1| must be smaller than |x4|
-	if (r1[0] * r4[0] < 0)
-		return false; // not on the same side...
-	if (r1[2] == r4[2])
-		return false;											  // trivial, make sure z is not the same
+	if (abs(r1[0]) >= abs(r4[0])) return false; // |x1| must be smaller than |x4|
+	if (r1[0] * r4[0] < 0) return false; // not on the same side...
+	if (r1[2] == r4[2]) return false; // trivial, make sure z is not the same
 	float yDipoleExitAbsMax = (process == "glaser") ? 0.12 : 0.7; // cm
 	float xDipoleExitAbsMin = (process == "glaser") ? 2. : 4.;	  // cm
 	float xDipoleExitAbsMax = (process == "glaser") ? 15. : 30.;  // cm
 	float yDipoleExit = yofz(r1, r4, zDipoleExit);
 	float xDipoleExit = xofz(r1, r4, zDipoleExit);
-	if (abs(yDipoleExit) > yDipoleExitAbsMax)
-		return false; // the track should point to |y|<yDipoleExitAbsMax at the dipole exit
-	if (abs(xDipoleExit) < xDipoleExitAbsMin)
-		return false; // the track should point to |x|>xDipoleExitAbsMin at the dipole exit
-	if (abs(xDipoleExit) > xDipoleExitAbsMax)
-		return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
+	if (abs(yDipoleExit) > yDipoleExitAbsMax) return false; // the track should point to |y|<yDipoleExitAbsMax at the dipole exit
+	if (abs(xDipoleExit) < xDipoleExitAbsMin) return false; // the track should point to |x|>xDipoleExitAbsMin at the dipole exit
+	if (abs(xDipoleExit) > xDipoleExitAbsMax) return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
 	// if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])*(1+0.1))) return false; // new cut!!
 	// if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])*(1-0.1))) return false; // new cut!!
-	if (abs(r4[0] - r1[0]) > 7.5 || abs(r4[0] - r1[0]) < 0.5)
-		return false; // new cut!!
-	if (abs(r4[0] - r1[0]) > (fDxvsX->Eval(r4[0]) + 0.1))
-		return false; // new cut!!
-	if (abs(r4[0] - r1[0]) < (fDxvsX->Eval(r4[0]) - 0.1))
-		return false; // new cut!!
+	if (abs(r4[0] - r1[0]) > 7.5 || abs(r4[0] - r1[0]) < 0.5) return false; // new cut!!
+	if (abs(r4[0] - r1[0]) > (fDxvsX->Eval(r4[0]) + 0.1))     return false; // new cut!!
+	if (abs(r4[0] - r1[0]) < (fDxvsX->Eval(r4[0]) - 0.1))     return false; // new cut!!
 	// if(!adaptive_dx14_vs_x4(r4[0],r1[0],fDxvsX,0.2,4)) return false;
 	// if(!check_clusters(i1,i4,side))        return false; // minimum one cluster at layer 2 and one at layer 3 ///TODO!!!
 
-	TRandom rnd;
-	rnd.SetSeed();
-	double posneg = rnd.Uniform(-1, +1);
-	double pxgaus = rnd.Gaus(7.2e-4, 5.0e-4);
+	// TRandom rnd;
+	// rnd.SetSeed();
+	// double posneg = rnd.Uniform(-1, +1);
+	// double pxgaus = rnd.Gaus(7.2e-4, 5.0e-4);
 
 	// double xExit = abs(xofz(r1,r4,zDipoleExit)); // in cm!
 	double E = fEvsX->Eval(r1[0]); // in GeV
@@ -1425,16 +1412,16 @@ bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, T
 	TVector2 u = rUnit2(v1, v4);
 	double uz = u.X();
 	double uy = u.Y();
-	double px = (posneg >= 0) ? pxgaus : -pxgaus;
+	// double px = (posneg >= 0) ? pxgaus : -pxgaus;
+	double px = 0;
 	double py = P * uy;
 	double pz = P * uz;
 	// p.SetPxPyPzE(px,py,pz,TMath::Sqrt(px*px + py*py + pz*pz + meGeV2));
 	p.SetPxPyPzE(px, py, pz, E);
 	// if(i4==0 and side=="Eside") cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
 	// cout << "side=" << side << ", px=" << px << ", py=" << py << ", pz=" << pz << endl;
-	float EseedMax = (process == "glaser") ? EseedMaxBPPP : EseedMaxTRIDENT; // GeV
-	if (p.E() < EseedMin or p.E() > EseedMax)
-		return false;
+	float EseedMax = (process == "glaser") ? EseedMaxGLaser : EseedMaxElaser; // GeV
+	if(p.E()<EseedMin or p.E()>EseedMax) return false;
 
 	return true;
 }
@@ -1604,6 +1591,8 @@ int main(int argc, char *argv[])
 	hname = "h_E_eff_sed_Pside"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E}_{tru} [GeV];Tracks", 68, 0, 17)));
 	hname = "h_E_eff_rec_Eside"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E}_{tru} [GeV];Tracks", 68, 0, 17)));
 	hname = "h_E_eff_rec_Pside"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E}_{tru} [GeV];Tracks", 68, 0, 17)));
+	hname = "h_Nhits_Pside"; histos.insert(make_pair(hname, new TH1D(hname, ";N_{hits};Tracks", 8, 0, 8)));
+	hname = "h_Nhits_Eside"; histos.insert(make_pair(hname, new TH1D(hname, ";N_{hits};Tracks", 8, 0, 8)));
 
 	/////////////////////
 	/// loop on the sides
@@ -2091,8 +2080,6 @@ int main(int argc, char *argv[])
 			/// loop on seeds
 			unsigned int n4I = cached_clusters[slyr4I].size();
 			unsigned int n4O = cached_clusters[slyr4O].size();
-			unsigned int n1I = cached_clusters[slyr1I].size();
-			unsigned int n1O = cached_clusters[slyr1O].size();
 			if (debug) cout << "before loop over layer 4 clusters" << endl;
 			for (unsigned int i4all = 0; i4all < (n4I + n4O); ++i4all)
 			{
@@ -2215,28 +2202,76 @@ int main(int argc, char *argv[])
 				// prepare the probe from the seed and do the KF fit
 
 				stopwatch1.Start();
+				
+				int nMaxIterations = 10;
+				int nIterations_slv = 0;
+				int nIterations_trw = 0;
+				int nIterations_hit = 0;
+				int nIterations_kil = 0;
+				bool solved = false;
 
-				// cout << "ncached_signal_clusters=" << ncached_signal_clusters << ", ncached_background_clusters=" << ncached_background_clusters << ", all_clusters=" << all_clusters << endl;
-				bool solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds, meGeV, crg, 99, doPrint);
-				if(!solved) continue; // reconstruction failed
+				goto reco;
+
+				reco:
+					// cout << "ncached_signal_clusters=" << ncached_signal_clusters << ", ncached_background_clusters=" << ncached_background_clusters << ", all_clusters=" << all_clusters << endl;
+					solved = det->SolveSingleTrackViaKalmanMC_Noam_multiseed(pseeds, meGeV, crg, 99, doPrint);
+
+				if(!solved)
+				{
+					if(nIterations_slv<3)
+					{
+						nIterations_slv++;
+						goto reco;
+					}
+					continue; // reconstruction failed
+				}
 				n_solve++;
 				// if(debug2) cout << "n_solve: " << n_solve << endl;
 				// cout << "This is event: " << iev << " and i4: " << i4 << endl;
-
+				
 				// get the reconstructed propagated to the vertex
 				KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack();
-				if(!trw) continue; // track was not reconstructed
+				if(!trw)
+				{
+					int itru = cached_clusters[slyr4][i4].clsid - ilyr4 * index_offset_sig;
+					if(nIterations_trw<nMaxIterations)
+					{
+						nIterations_trw++;
+						goto reco;
+					}
+					cout << "!trw: E=" << true_p[itru].E() << endl;
+					continue; // track was not reconstructed
+				}
 				// if(debug2) cout << "winner track is found with chi2 =" << trw->GetChi2() << " ITSHits=" << trw->GetNITSHits() << endl;
-
-            /// FIXME: a dirty fix to kill the tracks with less than minimum hits - this should be killed on the KF side
+				
+				/// FIXME: a dirty fix to kill the tracks with less than minimum hits - this should be killed on the KF side
 				if(trw->GetNITSHits() < nMinHits)
 				{
-					if(debug2) cout << "winner track hass too few hits (ITSHits=" << trw->GetNITSHits() << ")" << endl;
-					trw->Kill(); // trak has too few hits
+					int itru = cached_clusters[slyr4][i4].clsid - ilyr4 * index_offset_sig;
+					// if(debug2) cout << "winner track hass too few hits (ITSHits=" << trw->GetNITSHits() << ")" << endl;
+					if(nIterations_hit<nMaxIterations)
+					{
+						nIterations_hit++;
+						goto reco;
+					}
+					cout << "trw->GetNITSHits()<nMinHits: E=" << true_p[itru].E() << endl;
+					trw->Kill(); // track has too few hits
+					continue; // too few hits
 				}
-
-				if(trw->IsKilled()) continue; // track was killed
+				
+				if(trw->IsKilled())
+				{
+					int itru = cached_clusters[slyr4][i4].clsid - ilyr4 * index_offset_sig;
+					if(nIterations_kil<nMaxIterations)
+					{
+						nIterations_kil++;
+						goto reco;
+					}
+					cout << "trw->IsKilled(): E=" << true_p[itru].E() << endl;
+					continue; // track was killed
+				}
 				n_recos++;
+				
 				
 				stopwatch1.Stop();
 				Double_t cputime1 = stopwatch1.CpuTime();
@@ -2296,6 +2331,9 @@ int main(int argc, char *argv[])
 					det->GetLayer(ilr)->GetBgCluster(cix)->Kill();
 				}
 				
+				int nHits = reco_trck_cls_r[irec].size();
+				histos["h_Nhits_"+side]->Fill(nHits);
+				
 				/// remove the winner cluster from the lookup table
 				remove_from_lookup_table(wincls);
 
@@ -2342,7 +2380,7 @@ int main(int argc, char *argv[])
 				}
 				if (imatch >= 0)
 				{
-					cout << "found match index: " << imatch << ", Etru=" << true_p[imatch].E() << ", Erec=" << prec.E() << endl;
+					// cout << "found match index: " << imatch << ", Etru=" << true_p[imatch].E() << ", Erec=" << prec.E() << endl;
 					ismatched = 1;
 					ixmatched = imatch;
 					idmatched = true_clusters_id[imatch][0];

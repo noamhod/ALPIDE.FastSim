@@ -12,11 +12,13 @@ parser = argparse.ArgumentParser(description='BackgroundGenerator.py...')
 parser.add_argument('-proc', metavar='proc',  required=True,  help='process')
 parser.add_argument('-nevnt', metavar='events',  required=True,  help='N events')
 parser.add_argument('-ntrk', metavar='background tracks',  required=True,  help='N background tracks')
+parser.add_argument('-refsig', metavar='reference signal',  required=True,  help='reference signal path')
 parser.add_argument('-e', metavar='energy',  required=False, help='beam energy')
 argus = parser.parse_args()
 proc  = argus.proc
 Nevt  = int(argus.nevnt)
 Ntracks = int(argus.ntrk) ## tracks to generate
+Refsig = argus.refsig ## tracks to generate
 
 ROOT.gROOT.SetBatch(1)
 ROOT.gStyle.SetOptFit(0)
@@ -39,15 +41,21 @@ um2cm = 1.e-4
 Emin = 1
 Emax = 16.5
 
-tIn    = TFile( storage+"/data/root/raw/glaser/phase0/gpc/7.0/hist_"+proc+".root")
-tIn.cd()
 
-h_vx   = tIn.Get("h_vx")
-h_vy   = tIn.Get("h_vy")
-h_vz   = tIn.Get("h_vz")
-h_Px   = tIn.Get("h_Px")
-h_Py   = tIn.Get("h_Py")
-h_Pz   = tIn.Get("h_Pz")
+h_Px = TH1D("h_Px",";Px;Tracks",200,-0.002,0.002)
+h_Py = TH1D("h_Py",";Py;Tracks",200,-0.002,0.002)
+h_vx = TH1D("h_vx",";vx;Tracks",200,-0.008,0.008)
+h_vy = TH1D("h_vy",";vy;Tracks",200,-0.0025,0.0025)
+h_vz = TH1D("h_vz",";vz;Tracks",200,-0.0015,0.0015)
+tfreal = TFile( storage+"/data/root/raw/"+Refsig+"/raw_"+proc+".root", "READ")
+ttreal = tfreal.Get("tt")
+for event in ttreal:
+   for j in range(event.px.size()):
+      h_Px.Fill(event.px[j])
+      h_Py.Fill(event.py[j])
+      h_vx.Fill(event.vx[j])
+      h_vy.Fill(event.vy[j])
+      h_vz.Fill(event.vz[j])
 
 tf    = TFile( storage+"/data/root/raw/flat/raw_"+proc+".root", 'recreate' )
 tt    = TTree( 'tt','tt' )
@@ -99,6 +107,21 @@ for n in range(Nevt):
       vz0  = h_vz.GetRandom()  ## should be random
       Px   = h_Px.GetRandom()  ## should be random
       Py   = h_Py.GetRandom()  ## should be random
+
+      # Px = -999
+      # Py = -999
+      # ievt = rnd.Integer(nttreal)
+      # while ttreal.GetEntry(ievt):
+      #    ntrkreal = rnd.Integer(ttreal.px.size())
+      #    Px = ttreal.px[ntrkreal]
+      #    Py = ttreal.py[ntrkreal]
+      #    vx0 = ttreal.vx[ntrkreal]
+      #    vy0 = ttreal.vy[ntrkreal]
+      #    vz0 = ttreal.vz[ntrkreal]
+      #    break
+
+      
+      
       Pz   = rnd.Uniform(Emin,Emax)
       E0   = math.sqrt(Px*Px+Py*Py+Pz*Pz+me2)
       p4   = TLorentzVector()
@@ -119,7 +142,12 @@ for n in range(Nevt):
       
    if(n%100==0): print("done %g out of %g" % (n,Nevt))
    tt.Fill()
-   
+
+h_Px.Write()
+h_Py.Write()
+h_vx.Write()
+h_vy.Write()
+h_vz.Write()
 tf.Write()
 tf.Write()
 tf.Close()
