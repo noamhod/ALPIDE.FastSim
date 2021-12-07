@@ -1430,20 +1430,13 @@ bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, T
 TString FormatEventID(int evnt)
 {
 	TString sevnt = "";
-	if (evnt < 10)
-		sevnt = Form("000000%d", evnt);
-	if (evnt >= 10 && evnt < 100)
-		sevnt = Form("00000%d", evnt);
-	if (evnt >= 100 && evnt < 1000)
-		sevnt = Form("0000%d", evnt);
-	if (evnt >= 1000 && evnt < 10000)
-		sevnt = Form("000%d", evnt);
-	if (evnt >= 10000 && evnt < 100000)
-		sevnt = Form("00%d", evnt);
-	if (evnt >= 100000 && evnt < 1000000)
-		sevnt = Form("0%d", evnt);
-	if (evnt >= 1000000 && evnt < 10000000)
-		sevnt = Form("%d", evnt); // assume no more than 9,999,999 events...
+	if (evnt < 10)                          sevnt = Form("000000%d", evnt);
+	if (evnt >= 10 && evnt < 100)           sevnt = Form("00000%d", evnt);
+	if (evnt >= 100 && evnt < 1000)         sevnt = Form("0000%d", evnt);
+	if (evnt >= 1000 && evnt < 10000)       sevnt = Form("000%d", evnt);
+	if (evnt >= 10000 && evnt < 100000)     sevnt = Form("00%d", evnt);
+	if (evnt >= 100000 && evnt < 1000000)   sevnt = Form("0%d", evnt);
+	if (evnt >= 1000000 && evnt < 10000000) sevnt = Form("%d", evnt); // assume no more than 9,999,999 events...
 	return sevnt;
 }
 
@@ -1465,8 +1458,7 @@ int main(int argc, char *argv[])
 		// gInterpreter->GenerateDictionary("vector<vector<TVector3> >",    "vector");
 		printf("\nNumber Of Arguments Passed: %d", argc);
 		printf("\n----Following Are The Command Line Arguments Passed----");
-		for (argcounter = 0; argcounter < argc; argcounter++)
-			printf("\nargv[%d]: %s", argcounter, argv[argcounter]);
+		for (argcounter = 0; argcounter < argc; argcounter++) printf("\nargv[%d]: %s", argcounter, argv[argcounter]);
 		printf("\n");
 	}
 	//// minimum requirements
@@ -1545,11 +1537,10 @@ int main(int argc, char *argv[])
 
 	cout << "setup fits from files" << endl;
 
-	int outN = (process == "elaser") ? 10 : 10;
+	int outN = (process=="elaser") ? 10 : 10;
 
-	if (process == "elaser")
+	if(process=="elaser")
 	{
-		// resetToTridentGeometry();
 		cout << "Doing only Pside!" << endl;
 		sides.clear();
 		sides.push_back("Pside"); /// do not reconstruct the Eside
@@ -2490,13 +2481,13 @@ int main(int argc, char *argv[])
 			/// summarize
 			int mateff = (int)((float)n_trumt / (float)n_truth * 100.);
 			cout << "Event #" << iev << ", " << side << ": n_truth=" << n_truth
-				 << ", n_seeds=" << n_seeds
-				 << ", n_sedmt=" << n_sedmt
-				 << ", n_solve=" << n_solve
-				 << ", n_recos=" << n_recos
-				 << ", n_match=" << n_match
-				 << ", n_trumt=" << n_trumt
-				 << ", eff(rec,mat)=" << mateff << "%" << endl;
+				  << ", n_seeds=" << n_seeds
+					  << ", n_sedmt=" << n_sedmt
+						  << ", n_solve=" << n_solve
+							  << ", n_recos=" << n_recos
+								  << ", n_match=" << n_match
+									  << ", n_trumt=" << n_trumt
+										  << ", eff(rec,mat)=" << mateff << "%" << endl;
 
 			fOut->cd();
 			tOut->Fill();
@@ -2507,8 +2498,7 @@ int main(int argc, char *argv[])
 			av_cputime += cputime;
 			av_realtime += realtime;
 			cout << "Event #" << iev << ": CPU time=" << cputime << ", Real time=" << realtime << endl;
-			if ((iev % outN) == 0)
-				printf("Done %d out of %d --> CPUav=%g, REAL=%g\n", iev, nsigevents, av_cputime / (iev + 1), av_realtime / (iev + 1));
+			if((iev%outN)==0) printf("Done %d out of %d --> CPUav=%g, REAL=%g\n", iev, nsigevents, av_cputime / (iev + 1), av_realtime / (iev + 1));
 		} // end of loop on events
 
 		histos["h_E_eff_sed_Eside"]->Divide(histos["h_E_tru_sed_mat_Eside"], histos["h_E_tru_all_Eside"]);
