@@ -99,8 +99,8 @@ bool doMisalignmentY = false;
 
 //// seed energies
 double EseedMin = 1.0;		  // GeV
-double EseedMaxBPPP = 16.0;	  // GeV
-double EseedMaxTRIDENT = 5.0; // GeV
+double EseedMaxGLaser = 16.5;	  // GeV
+double EseedMaxELaser = 5.0; // GeV
 
 // double yDipoleExitMin = -0.05; ## cm --> TODO: need tuning
 // double yDipoleExitMax = +0.05; ## cm --> TODO: need tuning
@@ -1421,9 +1421,8 @@ bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, T
 	p.SetPxPyPzE(px, py, pz, E);
 	// if(i4==0 and side=="Eside") cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
 	// cout << "side=" << side << ", px=" << px << ", py=" << py << ", pz=" << pz << endl;
-	float EseedMax = (process == "glaser") ? EseedMaxBPPP : EseedMaxTRIDENT; // GeV
-	if (p.E() < EseedMin or p.E() > EseedMax)
-		return false;
+	float EseedMax = (process == "glaser") ? EseedMaxGLaser : EseedMaxElaser; // GeV
+	if(p.E()<EseedMin or p.E()>EseedMax) return false;
 
 	return true;
 }
