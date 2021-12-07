@@ -82,6 +82,7 @@ void KMCLayerFwd::Print(Option_t *opt) const
 KMCProbeFwd* KMCLayerFwd::GetWinnerMCTrack()  
 {
   if (!fTrMC.IsSorted()) fTrMC.Sort();
+  
   //if(fTrMC.GetEntries())
   // if(0)
   // {
