@@ -36,8 +36,8 @@
 
 using namespace std;
 
-bool debug = true;
-bool debug2 = true;
+bool debug = false;
+bool debug2 = false;
 
 struct Cluster
 {
@@ -1420,7 +1420,7 @@ bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, T
 	p.SetPxPyPzE(px, py, pz, E);
 	// if(i4==0 and side=="Eside") cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
 	// cout << "side=" << side << ", px=" << px << ", py=" << py << ", pz=" << pz << endl;
-	float EseedMax = (process == "glaser") ? EseedMaxGLaser : EseedMaxElaser; // GeV
+	float EseedMax = (process == "glaser") ? EseedMaxGLaser : EseedMaxELaser; // GeV
 	if(p.E()<EseedMin or p.E()>EseedMax) return false;
 
 	return true;
