@@ -1008,6 +1008,13 @@ int main(int argc, char *argv[])
 		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
 		hname = "h2_dx14_vs_x_L4X_" + side;
 		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
+		
+		hname = "h2_dx14_vs_x_L1I_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
+		hname = "h2_dx14_vs_x_L1O_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
+		hname = "h2_dx14_vs_x_L1X_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
 
 		/// loop on events
 		// for(int iev=0;iev<nev;iev++)
@@ -1178,6 +1185,19 @@ int main(int argc, char *argv[])
 						histos2["h2_dx14_vs_x_L4O_" + side]->Fill(x4O, abs(x4O - x1O));
 					else if ((x1I > xMinI && x1I < xMaxI))
 						histos2["h2_dx14_vs_x_L4X_" + side]->Fill(x4O, abs(x4O - x1I));
+				}
+				
+				if (x1I > xMinI && x1I < xMaxI)
+				{
+					if ((x4I > xMinI && x4I < xMaxI))
+						histos2["h2_dx14_vs_x_L1I_" + side]->Fill(x1I, abs(x4I - x1I));
+					else if ((x4O > xMinO && x4O < xMaxO))
+						histos2["h2_dx14_vs_x_L1X_" + side]->Fill(x1O, abs(x4O - x1I));
+				}
+				if (x1O > xMinO && x1O < xMaxO)
+				{
+					if ((x4O > xMinO && x4O < xMaxO))
+						histos2["h2_dx14_vs_x_L1O_" + side]->Fill(x1O, abs(x4O - x1O));
 				}
 
 				clusters_id.push_back(vtmp);
