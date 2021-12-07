@@ -918,7 +918,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   }
   else { // ITS SA: randomize the starting point
     // double r = currTr->GetR();
-    double R = currTr->GetR();
+    double r = currTr->GetR();
     currTr->ResetCovariance( fErrScale*TMath::Sqrt(lr->GetXRes(r)*lr->GetYRes(r)) ); // RS: this is the coeff to play with
   }
   //

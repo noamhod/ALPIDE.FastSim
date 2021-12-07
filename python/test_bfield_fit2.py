@@ -90,7 +90,7 @@ def band(name,h2,tf1,xmin,xmax,width=0.1):
    
 
 process = "glaser"
-isflat  = ""#_flat" ## "_flat" or ""
+isflat  = "_flat" #_flat" ## "_flat" or ""
 
 tfile = TFile("../data/root/dig/dig_"+process+"_"+isflat+".root","READ")
 

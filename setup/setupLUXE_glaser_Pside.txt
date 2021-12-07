@@ -20,8 +20,8 @@ vertex:		      		0.	25e-4	1e-5	1e-5
 # If one of values is specified, the others should also be set
 # note: layer with thickness DZ is positioned such that it extends in Z from Zc-DZ/2 to Zc+DZ/2
 # type			name			material	Zc			DZ			resX	resY	eff	XMin		XMax    YMin	YMax
-#dummy:			VACWIN		AL2O3		393.0		300e-4
-#dummy:			Air			AIR		410.015	34
+dummy:			VACWIN		AL2O3		393.0		300e-4
+dummy:			Air		AIR		410.015	34
 activelayer:vt	PL1I			SILICON	396.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75	0.75
 dummy:			PL1IPlane	CARBON	396.23	300e-4
 activelayer:vt	PL1O			SILICON	395.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75	0.75
