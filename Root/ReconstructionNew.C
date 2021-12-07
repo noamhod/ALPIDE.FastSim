@@ -107,7 +107,8 @@ double EseedMaxTRIDENT = 5.0; // GeV
 // double xAbsMargins = 0.025; # cm --> TODO: need tuning
 // double yAbsMargins = 0.025 if(proc=="glaser") else 0.1 # cm --> TODO: need tuning
 
-vector<TString> sides{"Eside", "Pside"};
+// vector<TString> sides{"Eside", "Pside"};
+vector<TString> sides{"Pside", "Eside"};
 vector<TString> layersnames;
 vector<double> layersz;
 vector<double> zlayer;
@@ -1112,56 +1113,56 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 
 	/// II: if x4 and x1 are in the inner layer
 	double dxabs1I = fDx14vsXMap["L4I_" + side]->Eval(x4);
-	double z1I = zEL1I; // electron or positron, both side has same Z
+	double z1I = (side == "Pside") ? zPL1I : zEL1I; // electron or positron, both side has same Z
 	double x1IPivot = (side == "Pside") ? (x4 - dxabs1I) : (x4 + dxabs1I);
 
 	/// OO: if x4 and x1 are in the outer layer
 	double dxabs1O = fDx14vsXMap["L4O_" + side]->Eval(x4);
-	double z1O = zEL1O; // electron or positron, both side has same Z
+	double z1O = (side == "Pside") ? zPL1O : zEL1O; // electron or positron, both side has same Z
 	double x1OPivot = (side == "Pside") ? (x4 - dxabs1O) : (x4 + dxabs1O);
 
 	/// OI: if x4 is in the outer layer and x1 is in the inner layer
 	double dxabs1X = fDx14vsXMap["L4X_" + side]->Eval(x4);
-	double z1X = zEL1I; // electron or positron, both side has same Z
+	double z1X = (side == "Pside") ? zPL1I : zEL1I; // electron or positron, both side has same Z
 	double x1XPivot = (side == "Pside") ? (x4 - dxabs1X) : (x4 + dxabs1X);
 
 	/// II: find the x along layer 2 and 3
-	double x2IPivotII = xofz(x1IPivot, x4, z1I, z4, zEL2I);
-	double x2OPivotII = xofz(x1IPivot, x4, z1I, z4, zEL2O);
-	double x3IPivotII = xofz(x1IPivot, x4, z1I, z4, zEL3I);
-	double x3OPivotII = xofz(x1IPivot, x4, z1I, z4, zEL3O);
+	double x2IPivotII = xofz(x1IPivot, x4, z1I, z4, (side == "Pside") ? zPL2I : zEL2I);
+	double x2OPivotII = xofz(x1IPivot, x4, z1I, z4, (side == "Pside") ? zPL2O : zEL2O);
+	double x3IPivotII = xofz(x1IPivot, x4, z1I, z4, (side == "Pside") ? zPL3I : zEL3I);
+	double x3OPivotII = xofz(x1IPivot, x4, z1I, z4, (side == "Pside") ? zPL3O : zEL3O);
 	// if (debug) std::cout << "x2IPivotII: " << x2IPivotII << " x2OPivotII: " << x2OPivotII << " x3IPivotII: " << x3IPivotII << " x3OPivotII: " << x3OPivotII << std::endl;
 
 	/// OO: find the x along layer 2 and 3
-	double x2IPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL2I);
-	double x2OPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL2O);
-	double x3IPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL3I);
-	double x3OPivotOO = xofz(x1OPivot, x4, z1O, z4, zEL3O);
+	double x2IPivotOO = xofz(x1OPivot, x4, z1O, z4, (side == "Pside") ? zPL2I : zEL2I);
+	double x2OPivotOO = xofz(x1OPivot, x4, z1O, z4, (side == "Pside") ? zPL2O : zEL2O);
+	double x3IPivotOO = xofz(x1OPivot, x4, z1O, z4, (side == "Pside") ? zPL3I : zEL3I);
+	double x3OPivotOO = xofz(x1OPivot, x4, z1O, z4, (side == "Pside") ? zPL3O : zEL3O);
 	// if (debug) std::cout << "x2IPivotOO: " << x2IPivotOO << " x2OPivotOO: " << x2OPivotOO << " x3IPivotOO: " << x3IPivotOO << " x3OPivotOO: " << x3OPivotOO << std::endl;
 
 	/// OI: find the x along layer 2 and 3
-	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2I);
-	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL2O);
-	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3I);
-	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, zEL3O);
+	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL2I : zEL2I);
+	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL2O : zEL2O);
+	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL3I : zEL3I);
+	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL3O : zEL3O);
 	// if (debug) std::cout << "x2IPivotOI: " << x2IPivotOI << " x2OPivotOI: " << x2OPivotOI << " x3IPivotOI: " << x3IPivotOI << " x3OPivotOI: " << x3OPivotOI << std::endl;
 
-	bool isL1I = (side == "Pside") ? ((x1IPivot - rw) < xMaxPI) : ((x1IPivot + rw) > xMinEI);
-	bool isL1O = (side == "Pside") ? ((x1OPivot - rw) < xMaxPO) : ((x1OPivot + rw) > xMinEO);
-
-	bool isIIL2I = (side == "Pside") ? ((x2IPivotII - rw) < xMaxPI) : ((x2IPivotII + rw) > xMinEI);
-	bool isIIL2O = (side == "Pside") ? ((x2OPivotII - rw) < xMaxPO) : ((x2OPivotII + rw) > xMinEO);
-	bool isOOL2I = (side == "Pside") ? ((x2IPivotOO - rw) < xMaxPI) : ((x2IPivotOO + rw) > xMinEI);
-	bool isOOL2O = (side == "Pside") ? ((x2OPivotOO - rw) < xMaxPO) : ((x2OPivotOO + rw) > xMinEO);
-	bool isOIL2I = (side == "Pside") ? ((x2IPivotOI - rw) < xMaxPI) : ((x2IPivotOI + rw) > xMinEI);
-	bool isOIL2O = (side == "Pside") ? ((x2OPivotOI - rw) < xMaxPO) : ((x2OPivotOI + rw) > xMinEO);
-
-	bool isIIL3I = (side == "Pside") ? ((x3IPivotII - rw) < xMaxPI) : ((x3IPivotII + rw) > xMinEI);
-	bool isIIL3O = (side == "Pside") ? ((x3OPivotII - rw) < xMaxPO) : ((x3OPivotII + rw) > xMinEO);
-	bool isOOL3I = (side == "Pside") ? ((x3IPivotOO - rw) < xMaxPI) : ((x3IPivotOO + rw) > xMinEI);
-	bool isOOL3O = (side == "Pside") ? ((x3OPivotOO - rw) < xMaxPO) : ((x3OPivotOO + rw) > xMinEO);
-	bool isOIL3I = (side == "Pside") ? ((x3IPivotOI - rw) < xMaxPI) : ((x3IPivotOI + rw) > xMinEI);
-	bool isOIL3O = (side == "Pside") ? ((x3OPivotOI - rw) < xMaxPO) : ((x3OPivotOI + rw) > xMinEO);
+	// bool isL1I = (side == "Pside") ? ((x1IPivot - rw) < xMaxPI) : ((x1IPivot + rw) > xMinEI);
+	// bool isL1O = (side == "Pside") ? ((x1OPivot - rw) < xMaxPO) : ((x1OPivot + rw) > xMinEO);
+	//
+	// bool isIIL2I = (side == "Pside") ? ((x2IPivotII - rw) < xMaxPI) : ((x2IPivotII + rw) > xMinEI);
+	// bool isIIL2O = (side == "Pside") ? ((x2OPivotII - rw) < xMaxPO) : ((x2OPivotII + rw) > xMinEO);
+	// bool isOOL2I = (side == "Pside") ? ((x2IPivotOO - rw) < xMaxPI) : ((x2IPivotOO + rw) > xMinEI);
+	// bool isOOL2O = (side == "Pside") ? ((x2OPivotOO - rw) < xMaxPO) : ((x2OPivotOO + rw) > xMinEO);
+	// bool isOIL2I = (side == "Pside") ? ((x2IPivotOI - rw) < xMaxPI) : ((x2IPivotOI + rw) > xMinEI);
+	// bool isOIL2O = (side == "Pside") ? ((x2OPivotOI - rw) < xMaxPO) : ((x2OPivotOI + rw) > xMinEO);
+	//
+	// bool isIIL3I = (side == "Pside") ? ((x3IPivotII - rw) < xMaxPI) : ((x3IPivotII + rw) > xMinEI);
+	// bool isIIL3O = (side == "Pside") ? ((x3OPivotII - rw) < xMaxPO) : ((x3OPivotII + rw) > xMinEO);
+	// bool isOOL3I = (side == "Pside") ? ((x3IPivotOO - rw) < xMaxPI) : ((x3IPivotOO + rw) > xMinEI);
+	// bool isOOL3O = (side == "Pside") ? ((x3OPivotOO - rw) < xMaxPO) : ((x3OPivotOO + rw) > xMinEO);
+	// bool isOIL3I = (side == "Pside") ? ((x3IPivotOI - rw) < xMaxPI) : ((x3IPivotOI + rw) > xMinEI);
+	// bool isOIL3O = (side == "Pside") ? ((x3OPivotOI - rw) < xMaxPO) : ((x3OPivotOI + rw) > xMinEO);
 
 	// if (debug)
 	// {
@@ -1170,26 +1171,47 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 	// 	std::cout << " isOOL3O: " << isOOL3O << " isOIL3I " << isOIL3I << " isOIL3O " << isOIL3O << std::endl;
 	// }
 
+	// /// II: find the bins in layer 1 where the x values lie
+	// if(isL1I)   embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
+	// if(isIIL2I) embed_selective(side, "2", "I", x2IPivotII, embedded_clusters);
+	// if(isIIL2O) embed_selective(side, "2", "O", x2OPivotII, embedded_clusters);
+	// if(isIIL3I) embed_selective(side, "3", "I", x3IPivotII, embedded_clusters);
+	// if(isIIL3O) embed_selective(side, "3", "O", x3OPivotII, embedded_clusters);
+	//
+	// /// OO: find the bins in layer 1 where the x values lie
+	// if(isL1O)   embed_selective(side, "1", "O", x1OPivot, embedded_clusters, allL1OClsIx);
+	// if(isOOL2I) embed_selective(side, "2", "I", x2IPivotOO, embedded_clusters);
+	// if(isOOL2O) embed_selective(side, "2", "O", x2OPivotOO, embedded_clusters);
+	// if(isOOL3I) embed_selective(side, "3", "I", x3IPivotOO, embedded_clusters);
+	// if(isOOL3O) embed_selective(side, "3", "O", x3OPivotOO, embedded_clusters);
+	//
+	// /// OI: find the bins in layer 1 where the x values lie
+	// if(isL1I)   embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
+	// if(isOIL2I) embed_selective(side, "2", "I", x2IPivotOI, embedded_clusters);
+	// if(isOIL2O) embed_selective(side, "2", "O", x2OPivotOI, embedded_clusters);
+	// if(isOIL3I) embed_selective(side, "3", "I", x3IPivotOI, embedded_clusters);
+	// if(isOIL3O) embed_selective(side, "3", "O", x3OPivotOI, embedded_clusters);
+	
 	/// II: find the bins in layer 1 where the x values lie
-	if(isL1I)   embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
-	if(isIIL2I) embed_selective(side, "2", "I", x2IPivotII, embedded_clusters);
-	if(isIIL2O) embed_selective(side, "2", "O", x2OPivotII, embedded_clusters);
-	if(isIIL3I) embed_selective(side, "3", "I", x3IPivotII, embedded_clusters);
-	if(isIIL3O) embed_selective(side, "3", "O", x3OPivotII, embedded_clusters);
+	embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
+	embed_selective(side, "2", "I", x2IPivotII, embedded_clusters);
+	embed_selective(side, "2", "O", x2OPivotII, embedded_clusters);
+	embed_selective(side, "3", "I", x3IPivotII, embedded_clusters);
+	embed_selective(side, "3", "O", x3OPivotII, embedded_clusters);
 
 	/// OO: find the bins in layer 1 where the x values lie
-	if(isL1O)   embed_selective(side, "1", "O", x1OPivot, embedded_clusters, allL1OClsIx);
-	if(isOOL2I) embed_selective(side, "2", "I", x2IPivotOO, embedded_clusters);
-	if(isOOL2O) embed_selective(side, "2", "O", x2OPivotOO, embedded_clusters);
-	if(isOOL3I) embed_selective(side, "3", "I", x3IPivotOO, embedded_clusters);
-	if(isOOL3O) embed_selective(side, "3", "O", x3OPivotOO, embedded_clusters);
+	embed_selective(side, "1", "O", x1OPivot, embedded_clusters, allL1OClsIx);
+	embed_selective(side, "2", "I", x2IPivotOO, embedded_clusters);
+	embed_selective(side, "2", "O", x2OPivotOO, embedded_clusters);
+	embed_selective(side, "3", "I", x3IPivotOO, embedded_clusters);
+	embed_selective(side, "3", "O", x3OPivotOO, embedded_clusters);
 
 	/// OI: find the bins in layer 1 where the x values lie
-	if(isL1I)   embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
-	if(isOIL2I) embed_selective(side, "2", "I", x2IPivotOI, embedded_clusters);
-	if(isOIL2O) embed_selective(side, "2", "O", x2OPivotOI, embedded_clusters);
-	if(isOIL3I) embed_selective(side, "3", "I", x3IPivotOI, embedded_clusters);
-	if(isOIL3O) embed_selective(side, "3", "O", x3OPivotOI, embedded_clusters);
+	embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
+	embed_selective(side, "2", "I", x2IPivotOI, embedded_clusters);
+	embed_selective(side, "2", "O", x2OPivotOI, embedded_clusters);
+	embed_selective(side, "3", "I", x3IPivotOI, embedded_clusters);
+	embed_selective(side, "3", "O", x3OPivotOI, embedded_clusters);
 
 	/// must sort clusters
 	for (TMapiTS::iterator it = layers.begin(); it != layers.end(); ++it)
