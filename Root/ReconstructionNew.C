@@ -1599,7 +1599,8 @@ int main(int argc, char *argv[])
 		vector<TPolyMarker3D *> *sig_trkpts = 0;
 		vector<TPolyLine3D *> *sig_trklin = 0;
 		cout << "Getting signal clusters from tree" << endl;
-		TString digdir = recdir.ReplaceAll("rec","dig");
+		TString digdir = recdir;
+		digdir = digdir.ReplaceAll("rec","dig");
 		TFile *fSig = new TFile(digdir+"/dig_"+process+"_"+eventid+".root", "READ"); /// remove _flat when working with real signal samples;
 		TTree *tSig = (TTree *)fSig->Get("dig_" + side);
 		tSig->SetBranchAddress("ngen", &sig_ngen);

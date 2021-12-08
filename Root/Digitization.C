@@ -898,7 +898,7 @@ int main(int argc, char *argv[])
 	gInterpreter->GenerateDictionary("vector<vector<TPolyLine3D> >", "vector");
 	
 	TString isflat = (signame.Contains("flat")) ? "_flat" : "";
-	TString fOutName = digdir+"/dig_" + process + "_" + eventid + isflat + ".root";
+	TString fOutName = digdir+"/dig_"+process+"_"+eventid+isflat+".root";
 	fOut = new TFile(fOutName, "RECREATE");
 
 	if(process=="elaser")
@@ -945,7 +945,8 @@ int main(int argc, char *argv[])
 
 		/// get the particles from a ttree
 		// TFile* fIn = new TFile(storage+"/data/root/raw_"+process+".root","READ");
-		TString rawdir = digdir.ReplaceAll("dig","raw");
+		TString rawdir = digdir;
+		rawdir = rawdir.ReplaceAll("dig","raw");
 		TFile *fIn = new TFile(rawdir+"/raw_"+process+".root", "READ");
 		TTree *tIn = (TTree *)fIn->Get("tt");
 		int nev = tIn->GetEntries();
