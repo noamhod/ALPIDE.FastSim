@@ -916,6 +916,13 @@ int main(int argc, char *argv[])
 	TString fOutName = storage + "/data/root/dig/dig_" + process + "_" + eventid + isflat + ".root";
 	fOut = new TFile(fOutName, "RECREATE");
 
+	if(process=="elaser")
+	{
+		cout << "Doing only Pside!" << endl;
+		sides.clear();
+		sides.push_back("Pside"); /// do not reconstruct the Eside
+	}
+
 	/// stuff which depend on the side
 	for (int s = 0; s < sides.size(); s++)
 	{
@@ -1029,22 +1036,14 @@ int main(int argc, char *argv[])
 			ngen = 0;
 			nslv = 0;
 			nacc = 0;
-			for (int i = 0; i < (int)clusters_id.size(); ++i)
-				clusters_id[i].clear();
-			for (int i = 0; i < (int)clusters_layerid.size(); ++i)
-				clusters_layerid[i].clear();
-			for (int i = 0; i < (int)clusters_type.size(); ++i)
-				clusters_type[i].clear();
-			for (int i = 0; i < (int)clusters_xyz.size(); ++i)
-				delete clusters_xyz[i];
-			for (int i = 0; i < (int)clusters_r.size(); ++i)
-				clusters_r[i].clear();
-			for (int i = 0; i < (int)trkpts_fullrange.size(); ++i)
-				delete trkpts_fullrange[i];
-			for (int i = 0; i < (int)trkpts.size(); ++i)
-				delete trkpts[i];
-			for (int i = 0; i < (int)trklin.size(); ++i)
-				delete trklin[i];
+			for (int i = 0; i < (int)clusters_id.size(); ++i) clusters_id[i].clear();
+			for (int i = 0; i < (int)clusters_layerid.size(); ++i) clusters_layerid[i].clear();
+			for (int i = 0; i < (int)clusters_type.size(); ++i) clusters_type[i].clear();
+			for (int i = 0; i < (int)clusters_xyz.size(); ++i) delete clusters_xyz[i];
+			for (int i = 0; i < (int)clusters_r.size(); ++i) clusters_r[i].clear();
+			for (int i = 0; i < (int)trkpts_fullrange.size(); ++i) delete trkpts_fullrange[i];
+			for (int i = 0; i < (int)trkpts.size(); ++i) delete trkpts[i];
+			for (int i = 0; i < (int)trklin.size(); ++i) delete trklin[i];
 			wgt.clear();
 			xvtx.clear();
 			yvtx.clear();
@@ -1063,8 +1062,7 @@ int main(int argc, char *argv[])
 
 			//// get the next entry
 			tIn->GetEntry(iev);
-			if ((iev % outN) == 0)
-				printf("Done %d out of %d\n", iev, nev);
+			if ((iev % outN) == 0) printf("Done %d out of %d\n", iev, nev);
 			// int nfakeHits = 0;
 			TLorentzVector ptmp;
 			int ngenall = pdgId->size();
@@ -1080,10 +1078,8 @@ int main(int argc, char *argv[])
 
 				//////////////////////////////////////////////////////
 				// saving one tree per side!!! ///////////////////////
-				if (pdgId->at(igen) < 0 && side == "Eside")
-					continue; /////
-				if (pdgId->at(igen) > 0 && side == "Pside")
-					continue; 
+				if (pdgId->at(igen) < 0 && side == "Eside") continue; /////
+				if (pdgId->at(igen) > 0 && side == "Pside") continue; 
 				///////////////////////////////////////////////////////////
 
 				//// all the rest
@@ -1102,8 +1098,7 @@ int main(int argc, char *argv[])
 				double vY = (process.Contains("bkg")) ? vy->at(igen) : 0.;
 				double vZ = (process.Contains("bkg")) ? vz->at(igen) : 0.;
 				bool slv = det->SolveSingleTrack(ptmp.Pt(), ptmp.Rapidity(), ptmp.Phi(), meGeV, q, vX, vY, vZ, 0, 1, 99);
-				if (!slv)
-					continue; // reconstruction failed
+				if (!slv) continue; // reconstruction failed
 				nslv++;
 
 				// get the truth trajectory in the B-field
@@ -1118,8 +1113,7 @@ int main(int argc, char *argv[])
 				zvtx.push_back(vz->at(igen));
 				crg.push_back(q);
 				trkp4.push_back(ptmp);
-				if (!process.Contains("bkg"))
-					trkpts_fullrange.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E()), false, true));
+				if (!process.Contains("bkg")) trkpts_fullrange.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E()), false, true));
 				trkpts.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E())));
 				trklin.push_back(TrackLine3d(trutrk, zLastLayer + 15, 1, trkcol(ptmp.E())));
 
@@ -1144,60 +1138,41 @@ int main(int argc, char *argv[])
 					// histos2["h2_z_vs_y"]->Fill(yp,zp);
 					bool isInnerX = (xp > xMinI && xp < xMaxI);
 					bool isOuterX = (xp > xMinO && xp < xMaxO);
-					if (zp == z2dipole)
-						histos2["h2_y_vs_x_exit_" + side]->Fill(xp, yp);
+					if (zp == z2dipole) histos2["h2_y_vs_x_exit_" + side]->Fill(xp, yp);
 
-					if (zp == zfirstinner && isInnerX)
-						histos2["h2_y_vs_x_L1I_" + side]->Fill(xp, yp);
-					if (zp == zlastinner && isInnerX)
-						histos2["h2_y_vs_x_L4I_" + side]->Fill(xp, yp);
-					if (zp == zfirstouter && isOuterX)
-						histos2["h2_y_vs_x_L1O_" + side]->Fill(xp, yp);
-					if (zp == zlastouter && isOuterX)
-						histos2["h2_y_vs_x_L4O_" + side]->Fill(xp, yp);
+					if (zp == zfirstinner && isInnerX) histos2["h2_y_vs_x_L1I_" + side]->Fill(xp, yp);
+					if (zp == zlastinner && isInnerX)  histos2["h2_y_vs_x_L4I_" + side]->Fill(xp, yp);
+					if (zp == zfirstouter && isOuterX) histos2["h2_y_vs_x_L1O_" + side]->Fill(xp, yp);
+					if (zp == zlastouter && isOuterX)  histos2["h2_y_vs_x_L4O_" + side]->Fill(xp, yp);
 
-					if (zp == zfirstinner && isInnerX)
-						histos2["h2_E_vs_x_L1I_" + side]->Fill(xp, trkp4[slvidx].E());
-					if (zp == zlastinner && isInnerX)
-						histos2["h2_E_vs_x_L4I_" + side]->Fill(xp, trkp4[slvidx].E());
-					if (zp == zfirstouter && isOuterX)
-						histos2["h2_E_vs_x_L1O_" + side]->Fill(xp, trkp4[slvidx].E());
-					if (zp == zlastouter && isOuterX)
-						histos2["h2_E_vs_x_L4O_" + side]->Fill(xp, trkp4[slvidx].E());
+					if (zp == zfirstinner && isInnerX) histos2["h2_E_vs_x_L1I_" + side]->Fill(xp, trkp4[slvidx].E());
+					if (zp == zlastinner && isInnerX)  histos2["h2_E_vs_x_L4I_" + side]->Fill(xp, trkp4[slvidx].E());
+					if (zp == zfirstouter && isOuterX) histos2["h2_E_vs_x_L1O_" + side]->Fill(xp, trkp4[slvidx].E());
+					if (zp == zlastouter && isOuterX)  histos2["h2_E_vs_x_L4O_" + side]->Fill(xp, trkp4[slvidx].E());
 
-					if (zp == zfirstinner && isInnerX)
-						x1I = xp;
-					if (zp == zlastinner && isInnerX)
-						x4I = xp;
-					if (zp == zfirstouter && isOuterX)
-						x1O = xp;
-					if (zp == zlastouter && isOuterX)
-						x4O = xp;
+					if (zp == zfirstinner && isInnerX) x1I = xp;
+					if (zp == zlastinner && isInnerX)  x4I = xp;
+					if (zp == zfirstouter && isOuterX) x1O = xp;
+					if (zp == zlastouter && isOuterX)  x4O = xp;
 				}
 				if (x4I > xMinI && x4I < xMaxI)
 				{
-					if ((x1I > xMinI && x1I < xMaxI))
-						histos2["h2_dx14_vs_x_L4I_" + side]->Fill(x4I, abs(x4I - x1I));
+					if ((x1I > xMinI && x1I < xMaxI)) histos2["h2_dx14_vs_x_L4I_" + side]->Fill(x4I, abs(x4I - x1I));
 				}
 				if (x4O > xMinO && x4O < xMaxO)
 				{
-					if ((x1O > xMinO && x1O < xMaxO))
-						histos2["h2_dx14_vs_x_L4O_" + side]->Fill(x4O, abs(x4O - x1O));
-					else if ((x1I > xMinI && x1I < xMaxI))
-						histos2["h2_dx14_vs_x_L4X_" + side]->Fill(x4O, abs(x4O - x1I));
+					if ((x1O > xMinO && x1O < xMaxO)) histos2["h2_dx14_vs_x_L4O_" + side]->Fill(x4O, abs(x4O - x1O));
+					else if ((x1I > xMinI && x1I < xMaxI)) histos2["h2_dx14_vs_x_L4X_" + side]->Fill(x4O, abs(x4O - x1I));
 				}
 				
 				if (x1I > xMinI && x1I < xMaxI)
 				{
-					if ((x4I > xMinI && x4I < xMaxI))
-						histos2["h2_dx14_vs_x_L1I_" + side]->Fill(x1I, abs(x4I - x1I));
-					else if ((x4O > xMinO && x4O < xMaxO))
-						histos2["h2_dx14_vs_x_L1X_" + side]->Fill(x1O, abs(x4O - x1I));
+					if ((x4I > xMinI && x4I < xMaxI)) histos2["h2_dx14_vs_x_L1I_" + side]->Fill(x1I, abs(x4I - x1I));
+					else if ((x4O > xMinO && x4O < xMaxO)) histos2["h2_dx14_vs_x_L1X_" + side]->Fill(x1O, abs(x4O - x1I));
 				}
 				if (x1O > xMinO && x1O < xMaxO)
 				{
-					if ((x4O > xMinO && x4O < xMaxO))
-						histos2["h2_dx14_vs_x_L1O_" + side]->Fill(x1O, abs(x4O - x1O));
+					if ((x4O > xMinO && x4O < xMaxO)) histos2["h2_dx14_vs_x_L1O_" + side]->Fill(x1O, abs(x4O - x1O));
 				}
 
 				clusters_id.push_back(vtmp);
@@ -1211,12 +1186,9 @@ int main(int argc, char *argv[])
 				for (unsigned int k = 0; k < layersnames.size(); k++)
 				{
 					TString LYR = layersnames[k];
-					if (!det->GetLayer(LYR)->IsITS())
-						continue;
-					if (crg[slvidx] < 0 && LYR.Contains("P"))
-						continue;
-					if (crg[slvidx] > 0 && LYR.Contains("E"))
-						continue;
+					if (!det->GetLayer(LYR)->IsITS()) continue;
+					if (crg[slvidx] < 0 && LYR.Contains("P")) continue;
+					if (crg[slvidx] > 0 && LYR.Contains("E")) continue;
 					AddCluster(slvidx, index_offset, process, LYR);
 				}
 
@@ -1236,15 +1208,12 @@ int main(int argc, char *argv[])
 
 				/// check acceptance
 				acc[slvidx] = (accepttrk(clusters_r[slvidx], false));
-				if (acc[slvidx])
-					nacc++;
+				if (acc[slvidx]) nacc++;
 			}
 			if (iev == 0)
 				WriteGeometry(trkpts, trklin, process, acc, clusters_xyz, "_truth");
-			if (iev % 1 == 0)
-				cout << "iev=" << iev << " --> ngen=" << ngen << ", nslv=" << nslv << ", nacc=" << nacc << endl;
-			if (nslv != ngen and !process.Contains("bkg"))
-				cout << "Warning: nslv=" << nslv << ", ngen=" << ngen << " --> problem" << endl;
+			if (iev % 1 == 0) cout << "iev=" << iev << " --> ngen=" << ngen << ", nslv=" << nslv << ", nacc=" << nacc << endl;
+			if (nslv != ngen and !process.Contains("bkg")) cout << "Warning: nslv=" << nslv << ", ngen=" << ngen << " --> problem" << endl;
 
 			/// fill the tree
 			fOut->cd();
@@ -1269,8 +1238,7 @@ int main(int argc, char *argv[])
 			// }
 		}
 		KillOutTree();
-		if (process.Contains("bkg") and eventid == "")
-			RenameOutTree(fOutName, nFiles);
+		if (process.Contains("bkg") and eventid == "") RenameOutTree(fOutName, nFiles);
 	}
 	return 0;
 }
