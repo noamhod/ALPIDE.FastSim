@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import os
 import math, time
 import h5py
@@ -44,15 +43,21 @@ def main():
         
     
     
-    ### for running on DESY
-    #path      =  "/nfs/dust/luxe/group/MCProduction/Signal/ptarmigan-v0.8.1/"+indir+"/"+phase+"/"+polarization+"/"+xiStr
-    #storage   = "TomPtarmiganFiles"
-    
-    
+    #### for running on DESY
+    path      =  "/nfs/dust/luxe/group/MCProduction/Signal/ptarmigan-v0.8.1/"+indir+"/"+phase+"/"+polarization+"/"+xiStr
     #### for running locally
-    path      = storage+"/data/h5/"+process+"/"+phase+"/"+polarization+"/"+xiStr+"/"
-    
+    # path      = storage+"/data/h5/"+process+"/"+phase+"/"+polarization+"/"+xiStr+"
+
+    if not os.path.exists(path):
+        print("could not locate h5 files for process: "+process+" phase "+phase+ " polarization "+polarization+" xi "+xiStr)
+        print("exiting")
+        quit()
+
+    print("running on ",path)
+
+    storage   = "TomPtarmiganFiles"
     targetdir = storage+"/data/root/raw/"+process+"/"+phase+"/"+polarization+"/"+xiStr+"/"
+
     p         = subprocess.Popen("mkdir -p "+targetdir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err  = p.communicate()
 
@@ -90,7 +95,6 @@ def main():
     fIns = glob.glob(path+"/*.h5")
     print(fIns)   
  
-    counter  = 0
     for name in fIns:
         ### clear output tree branches
         mpid_out.clear()
@@ -109,53 +113,53 @@ def main():
         #### input file
         fIn = h5py.File(name, 'r')
         print("reading: ",name)
-        
-        ### electrons
-        id_value_electron       = fIn['final-state/electron']['id'][()]
-        parentid_value_electron = fIn['final-state/electron']['parent_id'][()]
-        momentum_value_electron = fIn['final-state/electron']['momentum'][()]
-        position_value_electron = fIn['final-state/electron']['position'][()]
-        weight_value_electron   = fIn['final-state/electron']['weight'][()]
-        
-        for j in range(0, len(id_value_electron)):
-            if(counter%1000==0): print("Processed: ", counter)
-            vx0    = position_value_electron[j][0]*1.e-1 ## mm to cm
-            vy0    = position_value_electron[j][1]*1.e-1 ## mm to cm
-            vz0    = position_value_electron[j][2]*1.e-1 ## mm to cm
-            t0     = position_value_electron[j][3]
-            Energy = momentum_value_electron[j][0]
-            px0    = momentum_value_electron[j][1]
-            py0    = momentum_value_electron[j][2]
-            pz0    = momentum_value_electron[j][3]
-            pdgId0 = 11
-            wgt0   = weight_value_electron[j]
-            MP_ID  = str(id_value_electron[j])+"_"+str(pdgId0)
-            xi0    = xiInput
-            mpid_out.push_back(str(MP_ID))
-            wgt_out.push_back(wgt0)  
-            pdgId_out.push_back(int(pdgId0))  
-            vx_out.push_back(vx0)
-            vy_out.push_back(vy0)
-            vz_out.push_back(vz0)
-            px_out.push_back(px0)
-            py_out.push_back(py0)
-            pz_out.push_back(pz0)
-            E_out.push_back(Energy)
-            time_out.push_back(t0)
-            xi_out.push_back(xi0)
-            counter += 1
+        electronNumber = 0
+        if(photon):
+            ### electrons are only collected for g+laser
+            id_value_electron       = fIn['final-state/electron']['id'][()]
+            print("this file has ",len(id_value_electron)," electrons")
+            parentid_value_electron = fIn['final-state/electron']['parent_id'][()]
+            momentum_value_electron = fIn['final-state/electron']['momentum'][()]
+            position_value_electron = fIn['final-state/electron']['position'][()]
+            weight_value_electron   = fIn['final-state/electron']['weight'][()]
+            for j in range(0, len(id_value_electron)):
+                vx0    = position_value_electron[j][0]*1.e-1 ## mm to cm
+                vy0    = position_value_electron[j][1]*1.e-1 ## mm to cm
+                vz0    = position_value_electron[j][2]*1.e-1 ## mm to cm
+                t0     = position_value_electron[j][3]
+                Energy = momentum_value_electron[j][0]
+                px0    = momentum_value_electron[j][1]
+                py0    = momentum_value_electron[j][2]
+                pz0    = momentum_value_electron[j][3]
+                pdgId0 = 11
+                wgt0   = weight_value_electron[j]
+                MP_ID  = str(id_value_electron[j])+"_"+str(pdgId0)
+                xi0    = xiInput
+                mpid_out.push_back(str(MP_ID))
+                wgt_out.push_back(wgt0)  
+                pdgId_out.push_back(int(pdgId0))  
+                vx_out.push_back(vx0)
+                vy_out.push_back(vy0)
+                vz_out.push_back(vz0)
+                px_out.push_back(px0)
+                py_out.push_back(py0)
+                pz_out.push_back(pz0)
+                E_out.push_back(Energy)
+                time_out.push_back(t0)
+                xi_out.push_back(xi0)
+                electronNumber += 1
                 
 
                 
         ### positrons
+        positronNumber = 0
         id_value_positron       = fIn['final-state/positron']['id'][()]
         parentid_value_positron = fIn['final-state/positron']['parent_id'][()]
         momentum_value_positron = fIn['final-state/positron']['momentum'][()]
         position_value_positron = fIn['final-state/positron']['position'][()]
         weight_value_positron   = fIn['final-state/positron']['weight'][()]
-            
+        print("this file has ",len(id_value_positron)," positrons")
         for j in range(0, len(id_value_positron)):
-            if(counter%1000==0): print("Processed: ", counter)
             vx0    = position_value_positron[j][0]*1.e-1 ## mm to cm
             vy0    = position_value_positron[j][1]*1.e-1 ## mm to cm
             vz0    = position_value_positron[j][2]*1.e-1 ## mm to cm
@@ -180,11 +184,12 @@ def main():
             E_out.push_back(Energy)
             time_out.push_back(t0)
             xi_out.push_back(xi0)
-            counter += 1
+            positronNumber += 1
             
+
         tt_out.Fill()
+        print("electrons ", electronNumber, " positrons ", positronNumber, " in file ", name)
         
-    
     tt_out.Write()
     tf.Write()
     tf.Write()
