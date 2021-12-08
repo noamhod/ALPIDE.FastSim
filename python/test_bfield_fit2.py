@@ -117,7 +117,7 @@ tf1s      = {}
 for hname in hnames:
    name = hname
    h2 = tfile.Get(hname+"_Pside").Clone(hname)
-   if(process=="elaser"): h2.Add(tfile.Get(hname+"_Eside"))
+   if(process=="glaser"): h2.Add(tfile.Get(hname+"_Eside"))
    histos.update( {name:h2} )
    histos[name].SetDirectory(0)
    histos[name].SetTitle(hname.replace("h2_","").replace("_"," "))
@@ -158,16 +158,16 @@ for name,h in histos.items():
       graphs[name+"_gr"].Draw("ps")
       if("y_vs_x" in name and isflat==""): continue
       sfunc = fits["E_vs_x"] if("E_vs_x" in name) else fits["dx14_vs_x"]
-      if(process=="elaser"): tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,xmins["Eside"],xmaxs["Eside"])})
+      if(process=="glaser"): tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,xmins["Eside"],xmaxs["Eside"])})
       tf1s.update({name+"_Pside":fit(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,xmins["Pside"],xmaxs["Pside"])})
-      tf1s[name+"_Eside"].Draw("same")
-      if(process=="elaser"): tf1s[name+"_Pside"].Draw("same")
+      if(process=="glaser"): tf1s[name+"_Eside"].Draw("same")
+      tf1s[name+"_Pside"].Draw("same")
       if("dx14_vs_x" in name):
-         bUp_Eside,bDn_Eside = band(name+"_band_Eside",h,tf1s[name+"_Eside"],xmins["Eside"],xmaxs["Eside"]) if(process=="elaser") else 0,0
+         bUp_Eside,bDn_Eside = band(name+"_band_Eside",h,tf1s[name+"_Eside"],xmins["Eside"],xmaxs["Eside"]) if(process=="glaser") else 0,0
          bUp_Pside,bDn_Pside = band(name+"_band_Pside",h,tf1s[name+"_Pside"],xmins["Pside"],xmaxs["Pside"])
-         if(process=="elaser"): bUp_Eside.Draw("l")
+         if(process=="glaser"): bUp_Eside.Draw("l")
          bUp_Pside.Draw("l")
-         if(process=="elaser"): bDn_Eside.Draw("l")
+         if(process=="glaser"): bDn_Eside.Draw("l")
          bDn_Pside.Draw("l")
       
    cnv.SaveAs(outname+".pdf")

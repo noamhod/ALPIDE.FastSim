@@ -51,7 +51,7 @@ struct Cluster
 	TVector3 r;
 };
 
-typedef std::numeric_limits< double > dbl;
+typedef std::numeric_limits< double>dbl;
 typedef map<int, int> TMapii;
 typedef map<TString, int> TMapTSi;
 typedef map<TString, float> TMapTSf;
@@ -98,9 +98,10 @@ bool doMisalignmentX = false;
 bool doMisalignmentY = false;
 
 //// seed energies
-double EseedMin = 1.0;		  // GeV
-double EseedMaxGLaser = 16.5;	  // GeV
-double EseedMaxELaser = 5.0; // GeV
+double EseedMinGLaser = 1.0;  // GeV
+double EseedMinELaser = 0.5;  // GeV
+double EseedMaxGLaser = 16.5; // GeV
+double EseedMaxELaser = 12.0; // GeV
 
 // double yDipoleExitMin = -0.05; ## cm --> TODO: need tuning
 // double yDipoleExitMax = +0.05; ## cm --> TODO: need tuning
@@ -125,7 +126,7 @@ TMapTSMapii cached_clusters_id2ix;
 /// lookup table for cluster id's bin
 TMapTSMapivi lookupTable;
 TMapTSAxis axisMap;
-int nAxisBins = 500;
+int nAxisBins = 2000;
 double rw = 0.05; // in cm, road width along the possible cluster where we embed the clusters
 
 //// staves geometry
@@ -211,29 +212,29 @@ void setParametersFromDet(TString side)
 	cout << "====================================" << endl;
 	cout << "============DEFINITIONS=============" << endl;
 	cout << "====================================" << endl;
-	KMCLayerFwd *layer_outer = (side == "Eside") ? det->GetLayer("EL1O") : det->GetLayer("PL1O");
-	KMCLayerFwd *layer_inner = (side == "Eside") ? det->GetLayer("EL1I") : det->GetLayer("PL1I");
+	KMCLayerFwd *layer_outer = (side=="Eside") ? det->GetLayer("EL1O") : det->GetLayer("PL1O");
+	KMCLayerFwd *layer_inner = (side=="Eside") ? det->GetLayer("EL1I") : det->GetLayer("PL1I");
 
 	Hstave = layer_outer->GetYMax() - layer_outer->GetYMin();
 	Lstave = layer_outer->GetXMax() - layer_outer->GetXMin();
 	cout << "Hstave=" << Hstave << ", Lstave=" << Lstave << endl;
 
-	xMinEI = (side == "Eside") ? layer_inner->GetXMin() : -999;
-	xMinEO = (side == "Eside") ? layer_outer->GetXMin() : -999;
-	xMinPI = (side == "Pside") ? layer_inner->GetXMin() : -999;
-	xMinPO = (side == "Pside") ? layer_outer->GetXMin() : -999;
+	xMinEI = (side=="Eside") ? layer_inner->GetXMin() : -999;
+	xMinEO = (side=="Eside") ? layer_outer->GetXMin() : -999;
+	xMinPI = (side=="Pside") ? layer_inner->GetXMin() : -999;
+	xMinPO = (side=="Pside") ? layer_outer->GetXMin() : -999;
 	cout << "xMinEI=" << xMinEI << ", xMinEO=" << xMinEO << ", xMinPI=" << xMinPI << ", xMinPO=" << xMinPO << endl;
 
-	xMaxEI = (side == "Eside") ? layer_inner->GetXMax() : -999;
-	xMaxEO = (side == "Eside") ? layer_outer->GetXMax() : -999;
-	xMaxPI = (side == "Pside") ? layer_inner->GetXMax() : -999;
-	xMaxPO = (side == "Pside") ? layer_outer->GetXMax() : -999;
+	xMaxEI = (side=="Eside") ? layer_inner->GetXMax() : -999;
+	xMaxEO = (side=="Eside") ? layer_outer->GetXMax() : -999;
+	xMaxPI = (side=="Pside") ? layer_inner->GetXMax() : -999;
+	xMaxPO = (side=="Pside") ? layer_outer->GetXMax() : -999;
 	cout << "xMaxEI=" << xMaxEI << ", xMaxEO=" << xMaxEO << ", xMaxPI=" << xMaxPI << ", xMaxPO=" << xMaxPO << endl;
 
-	xPsideL = (side == "Eside") ? layer_outer->GetXMin() : -999;
-	xPsideR = (side == "Eside") ? layer_inner->GetXMax() : -999;
-	xEsideL = (side == "Pside") ? layer_inner->GetXMin() : -999;
-	xEsideR = (side == "Pside") ? layer_outer->GetXMax() : -999;
+	xPsideL = (side=="Eside") ? layer_outer->GetXMin() : -999;
+	xPsideR = (side=="Eside") ? layer_inner->GetXMax() : -999;
+	xEsideL = (side=="Pside") ? layer_inner->GetXMin() : -999;
+	xEsideR = (side=="Pside") ? layer_outer->GetXMax() : -999;
 	cout << "xPsideL=" << xPsideL << ", xPsideR=" << xPsideR << ", xEsideL=" << xEsideL << ", xEsideR=" << xEsideR << endl;
 
 	yUp = +Hstave / 2.;
@@ -269,47 +270,47 @@ void setParametersFromDet(TString side)
 	LB = z2dipole - z1dipole;
 	cout << "xWdipole=" << xWdipole << ", yHdipole=" << yHdipole << ", z1dipole=" << z1dipole << ", z2dipole=" << z2dipole << endl;
 
-	zEL1I = (side == "Eside") ? det->GetLayer("EL1I")->GetZ() : -999;
-	iEL1I = (side == "Eside") ? det->GetLayer("EL1I")->GetID() : -999;
-	zEL1O = (side == "Eside") ? det->GetLayer("EL1O")->GetZ() : -999;
-	iEL1O = (side == "Eside") ? det->GetLayer("EL1O")->GetID() : -999;
-	zPL1I = (side == "Pside") ? det->GetLayer("PL1I")->GetZ() : -999;
-	iPL1I = (side == "Pside") ? det->GetLayer("PL1I")->GetID() : -999;
-	zPL1O = (side == "Pside") ? det->GetLayer("PL1O")->GetZ() : -999;
-	iPL1O = (side == "Pside") ? det->GetLayer("PL1O")->GetID() : -999;
+	zEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetZ() : -999;
+	iEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetID() : -999;
+	zEL1O = (side=="Eside") ? det->GetLayer("EL1O")->GetZ() : -999;
+	iEL1O = (side=="Eside") ? det->GetLayer("EL1O")->GetID() : -999;
+	zPL1I = (side=="Pside") ? det->GetLayer("PL1I")->GetZ() : -999;
+	iPL1I = (side=="Pside") ? det->GetLayer("PL1I")->GetID() : -999;
+	zPL1O = (side=="Pside") ? det->GetLayer("PL1O")->GetZ() : -999;
+	iPL1O = (side=="Pside") ? det->GetLayer("PL1O")->GetID() : -999;
 	cout << "zEL1I=" << zEL1I << ", zEL1O=" << zEL1O << ", zPL1I=" << zPL1I << ", zPL1O=" << zPL1O << endl;
 
-	zEL2I = (side == "Eside") ? det->GetLayer("EL2I")->GetZ() : -999;
-	iEL2I = (side == "Eside") ? det->GetLayer("EL2I")->GetID() : -999;
-	zEL2O = (side == "Eside") ? det->GetLayer("EL2O")->GetZ() : -999;
-	iEL2O = (side == "Eside") ? det->GetLayer("EL2O")->GetID() : -999;
-	zPL2I = (side == "Pside") ? det->GetLayer("PL2I")->GetZ() : -999;
-	iPL2I = (side == "Pside") ? det->GetLayer("PL2I")->GetID() : -999;
-	zPL2O = (side == "Pside") ? det->GetLayer("PL2O")->GetZ() : -999;
-	iPL2O = (side == "Pside") ? det->GetLayer("PL2O")->GetID() : -999;
+	zEL2I = (side=="Eside") ? det->GetLayer("EL2I")->GetZ() : -999;
+	iEL2I = (side=="Eside") ? det->GetLayer("EL2I")->GetID() : -999;
+	zEL2O = (side=="Eside") ? det->GetLayer("EL2O")->GetZ() : -999;
+	iEL2O = (side=="Eside") ? det->GetLayer("EL2O")->GetID() : -999;
+	zPL2I = (side=="Pside") ? det->GetLayer("PL2I")->GetZ() : -999;
+	iPL2I = (side=="Pside") ? det->GetLayer("PL2I")->GetID() : -999;
+	zPL2O = (side=="Pside") ? det->GetLayer("PL2O")->GetZ() : -999;
+	iPL2O = (side=="Pside") ? det->GetLayer("PL2O")->GetID() : -999;
 	cout << "zEL2I=" << zEL2I << ", zEL2O=" << zEL2O << ", zPL2I=" << zPL2I << ", zPL2O=" << zPL2O << endl;
 
-	zEL3I = (side == "Eside") ? det->GetLayer("EL3I")->GetZ() : -999;
-	iEL3I = (side == "Eside") ? det->GetLayer("EL3I")->GetID() : -999;
-	zEL3O = (side == "Eside") ? det->GetLayer("EL3O")->GetZ() : -999;
-	iEL3O = (side == "Eside") ? det->GetLayer("EL3O")->GetID() : -999;
-	zPL3I = (side == "Pside") ? det->GetLayer("PL3I")->GetZ() : -999;
-	iPL3I = (side == "Pside") ? det->GetLayer("PL3I")->GetID() : -999;
-	zPL3O = (side == "Pside") ? det->GetLayer("PL3O")->GetZ() : -999;
-	iPL3O = (side == "Pside") ? det->GetLayer("PL3O")->GetID() : -999;
+	zEL3I = (side=="Eside") ? det->GetLayer("EL3I")->GetZ() : -999;
+	iEL3I = (side=="Eside") ? det->GetLayer("EL3I")->GetID() : -999;
+	zEL3O = (side=="Eside") ? det->GetLayer("EL3O")->GetZ() : -999;
+	iEL3O = (side=="Eside") ? det->GetLayer("EL3O")->GetID() : -999;
+	zPL3I = (side=="Pside") ? det->GetLayer("PL3I")->GetZ() : -999;
+	iPL3I = (side=="Pside") ? det->GetLayer("PL3I")->GetID() : -999;
+	zPL3O = (side=="Pside") ? det->GetLayer("PL3O")->GetZ() : -999;
+	iPL3O = (side=="Pside") ? det->GetLayer("PL3O")->GetID() : -999;
 	cout << "zEL3I=" << zEL3I << ", zEL3O=" << zEL3O << ", zPL3I=" << zPL3I << ", zPL3O=" << zPL3O << endl;
 
-	zEL4I = (side == "Eside") ? det->GetLayer("EL4I")->GetZ() : -999;
-	iEL4I = (side == "Eside") ? det->GetLayer("EL4I")->GetID() : -999;
-	zEL4O = (side == "Eside") ? det->GetLayer("EL4O")->GetZ() : -999;
-	iEL4O = (side == "Eside") ? det->GetLayer("EL4O")->GetID() : -999;
-	zPL4I = (side == "Pside") ? det->GetLayer("PL4I")->GetZ() : -999;
-	iPL4I = (side == "Pside") ? det->GetLayer("PL4I")->GetID() : -999;
-	zPL4O = (side == "Pside") ? det->GetLayer("PL4O")->GetZ() : -999;
-	iPL4O = (side == "Pside") ? det->GetLayer("PL4O")->GetID() : -999;
+	zEL4I = (side=="Eside") ? det->GetLayer("EL4I")->GetZ() : -999;
+	iEL4I = (side=="Eside") ? det->GetLayer("EL4I")->GetID() : -999;
+	zEL4O = (side=="Eside") ? det->GetLayer("EL4O")->GetZ() : -999;
+	iEL4O = (side=="Eside") ? det->GetLayer("EL4O")->GetID() : -999;
+	zPL4I = (side=="Pside") ? det->GetLayer("PL4I")->GetZ() : -999;
+	iPL4I = (side=="Pside") ? det->GetLayer("PL4I")->GetID() : -999;
+	zPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetZ() : -999;
+	iPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetID() : -999;
 	cout << "zEL4I=" << zEL4I << ", zEL4O=" << zEL4O << ", zPL4I=" << zPL4I << ", zPL4O=" << zPL4O << endl;
 
-	if (side == "Eside")
+	if(side=="Eside")
 	{
 		layersnames = {"EL1I", "EL1O", "EL2I", "EL2O", "EL3I", "EL3O", "EL4I", "EL4O"};
 		zlayer = {0, z1dipole, z2dipole, zEL1I, zEL1O, zEL2I, zEL2O, zEL3I, zEL3O, zEL4I, zEL4O};
@@ -319,7 +320,7 @@ void setParametersFromDet(TString side)
 		silayers = {{"EL1I", iEL1I}, {"EL1O", iEL1O}, {"EL2I", iEL2I}, {"EL2O", iEL2O}, {"EL3I", iEL3I}, {"EL3O", iEL3O}, {"EL4I", iEL4I}, {"EL4O", iEL4O}};
 		islayers = {{iEL1I, "EL1I"}, {iEL1O, "EL1O"}, {iEL2I, "EL2I"}, {iEL2O, "EL2O"}, {iEL3I, "EL3I"}, {iEL3O, "EL3O"}, {iEL4I, "EL4I"}, {iEL4O, "EL4O"}};
 	}
-	if (side == "Pside")
+	if(side=="Pside")
 	{
 		layersnames = {"PL1I", "PL1O", "PL2I", "PL2O", "PL3I", "PL3O", "PL4I", "PL4O"};
 		zlayer = {0, z1dipole, z2dipole, zPL1I, zPL1O, zPL2I, zPL2O, zPL3I, zPL3O, zPL4I, zPL4O};
@@ -330,30 +331,26 @@ void setParametersFromDet(TString side)
 		islayers = {{iPL1I, "PL1I"}, {iPL1O, "PL1O"}, {iPL2I, "PL2I"}, {iPL2O, "PL2O"}, {iPL3I, "PL3I"}, {iPL3O, "PL3O"}, {iPL4I, "PL4I"}, {iPL4O, "PL4O"}};
 	}
 
-	zLastLayer = (side == "Eside") ? zEL4I : zPL4I;
-	zFirstLayer = (side == "Eside") ? zEL1O : zPL1O;
-	LastLayer = (side == "Eside") ? "EL4I" : "PL4I";
-	FirstLayer = (side == "Eside") ? "EL1O" : "PL1O";
+	zLastLayer = (side=="Eside") ? zEL4I : zPL4I;
+	zFirstLayer = (side=="Eside") ? zEL1O : zPL1O;
+	LastLayer = (side=="Eside") ? "EL4I" : "PL4I";
+	FirstLayer = (side=="Eside") ? "EL1O" : "PL1O";
 	cout << "zLastLayer=" << zLastLayer << " (" << LastLayer << "), zFirstLayer=" << zFirstLayer << " (" << FirstLayer << ")" << endl;
 	cout << "====================================" << endl;
 
 	/// initialize the lookup table
-	for (size_t i = 0; i < layersnames.size(); i++)
+	for (size_t i = 0; i<layersnames.size(); i++)
 	{
 		TString lname = layersnames.at(i);
-		if (lname.Contains("P") && lname.Contains("I"))
-			axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinPI, xMaxPI)));
-		else if (lname.Contains("P") && lname.Contains("O"))
-			axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinPO, xMaxPO)));
-		else if (lname.Contains("E") && lname.Contains("I"))
-			axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinEI, xMaxEI)));
-		else if (lname.Contains("E") && lname.Contains("O"))
-			axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinEO, xMaxEO)));
+		if(lname.Contains("P") && lname.Contains("I"))      axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinPI, xMaxPI)));
+		else if(lname.Contains("P") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinPO, xMaxPO)));
+		else if(lname.Contains("E") && lname.Contains("I")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinEI, xMaxEI)));
+		else if(lname.Contains("E") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinEO, xMaxEO)));
 
 		// If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true. Otherwise, return 0 or fNbins+1.
 		axisMap[lname]->SetCanExtend(0);
 		vector<int> temp1;
-		for (int b = 1; b < axisMap[lname]->GetNbins() + 1; ++b)
+		for (int b = 1; b<axisMap[lname]->GetNbins() + 1; ++b)
 		{
 			lookupTable[lname].insert(make_pair(b, temp1));
 		}
@@ -363,9 +360,9 @@ void setParametersFromDet(TString side)
 
 bool accept(double x, double y)
 {
-	bool failx = (x < xPsideL || (x > xPsideR && x < xEsideL) || x > xEsideR);
-	bool faily = (y > yUp || y < yDn);
-	if (failx || faily)
+	bool failx = (x<xPsideL || (x>xPsideR && x<xEsideL) || x>xEsideR);
+	bool faily = (y>yUp || y<yDn);
+	if(failx || faily)
 		return false;
 	return true;
 }
@@ -390,7 +387,7 @@ float xofz(float *r1, float *r2, float z)
 {
 	float dz = r2[2] - r1[2];
 	float dx = r2[0] - r1[0];
-	if (dz == 0)
+	if(dz==0)
 	{
 		cout << "ERROR in xofz: dz=0" << endl;
 		exit(-1);
@@ -413,7 +410,7 @@ float yofz(float *r1, float *r2, float z)
 {
 	float dz = r2[2] - r1[2];
 	float dy = r2[1] - r1[1];
-	if (dz == 0)
+	if(dz==0)
 	{
 		cout << "ERROR in yofz: dz=0" << endl;
 		exit(-1);
@@ -435,7 +432,7 @@ float zofx(float *r1, float *r2, float x)
 {
 	float dz = r2[2] - r1[2];
 	float dx = r2[0] - r1[0];
-	if (dx == 0)
+	if(dx==0)
 	{
 		cout << "ERROR in zofx: dx=0" << endl;
 		exit(-1);
@@ -455,28 +452,17 @@ float zofx(float x1, float x2, float z1, float z2, float x)
 
 Color_t trkcol(double E)
 {
-	if (E >= 14)
-		return kBlack;
-	else if (E < 14. and E >= 12)
-		return kRed;
-	else if (E < 12. and E >= 10)
-		return 95;
-	else if (E < 10. and E >= 8.)
-		return 91;
-	else if (E < 8. and E >= 7.)
-		return 80;
-	else if (E < 7. and E >= 6.)
-		return 71;
-	else if (E < 6. and E >= 5.)
-		return 65;
-	else if (E < 5. and E >= 4.)
-		return 60;
-	else if (E < 4. and E >= 3.)
-		return 53;
-	else if (E < 3. and E >= 2.)
-		return 51;
-	else
-		return 6;
+	if(E >= 14)                  return kBlack;
+	else if(E<14. and E >= 12) return kRed;
+	else if(E<12. and E >= 10) return 95;
+	else if(E<10. and E >= 8.) return 91;
+	else if(E<8. and E >= 7.)  return 80;
+	else if(E<7. and E >= 6.)  return 71;
+	else if(E<6. and E >= 5.)  return 65;
+	else if(E<5. and E >= 4.)  return 60;
+	else if(E<4. and E >= 3.)  return 53;
+	else if(E<3. and E >= 2.)  return 51;
+	else return 6;
 	return kRed;
 }
 
@@ -529,7 +515,7 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 	source->GetXYZ(xyz);
 	double zCurr = xyz[2]; // source->GetZ();
 	int nZ = (zMax - zCurr) / step + 1;
-	if (nZ < 2)
+	if(nZ<2)
 	{
 		printf("bad limits\n");
 		return 0;
@@ -540,10 +526,9 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 	yp[0] = xyz[1];
 	zp[0] = xyz[2];
 	int nz = 0;
-	for (int iz = 1; iz < nZ; iz++)
+	for (int iz = 1; iz<nZ; iz++)
 	{
-		if (!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ() + step, zMax), step))
-			break; // propagation may fail..
+		if(!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ() + step, zMax), step)) break; // propagation may fail..
 		tmp.GetXYZ(xyz);
 		xp[iz] = xyz[0];
 		yp[iz] = xyz[1];
@@ -552,7 +537,7 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 	}
 	TPolyLine3D *polyline = new TPolyLine3D(nz + 1);
 	polyline->SetLineColor(col);
-	for (int i = 0; i < nz + 1; i++)
+	for (int i = 0; i<nz + 1; i++)
 	{
 		polyline->SetPoint(i, xp[i], yp[i], zp[i]);
 	}
@@ -561,18 +546,17 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 
 bool islayer(double z, int layerindex = -1, double stepsize = 1)
 {
-	if (layerindex >= 0)
+	if(layerindex >= 0)
 	{
 		double dz = abs(zlayer[layerindex] - z);
-		if (dz < stepsize)
-			return true;
+		if(dz<stepsize) return true;
 	}
 	else
 	{
-		for (int j = 0; j < (int)zlayer.size(); ++j)
+		for (int j = 0; j<(int)zlayer.size(); ++j)
 		{
 			double dz = abs(zlayer[j] - z);
-			if (dz < stepsize / 2.)
+			if(dz<stepsize / 2.)
 			{
 				return true;
 			}
@@ -592,10 +576,9 @@ TPolyMarker3D *TrackMarker3d(const KMCProbeFwd *source, double zmin, double zmax
 	yp[0] = xyz[1];
 	zp[0] = xyz[2];
 	int nz = 0;
-	for (int iz = 1; iz < nZ; iz++)
+	for (int iz = 1; iz<nZ; iz++)
 	{
-		if (!det->PropagateToZBxByBz(&tmp, tmp.GetZ() + zstep, zstep))
-			break; // propagation may fail...
+		if(!det->PropagateToZBxByBz(&tmp, tmp.GetZ() + zstep, zstep)) break; // propagation may fail...
 		tmp.GetXYZ(xyz);
 		xp[iz] = xyz[0];
 		yp[iz] = xyz[1];
@@ -605,10 +588,9 @@ TPolyMarker3D *TrackMarker3d(const KMCProbeFwd *source, double zmin, double zmax
 	TPolyMarker3D *polymarker = new TPolyMarker3D(zlayer.size());
 	polymarker->SetMarkerColor(col);
 	int n = 0;
-	for (int i = 0; i < nz + 1; i++)
+	for (int i = 0; i<nz + 1; i++)
 	{
-		if (!islayer(zp[i]))
-			continue;
+		if(!islayer(zp[i])) continue;
 		polymarker->SetPoint(n, xp[i], yp[i], zp[i]);
 		n++;
 	}
@@ -630,14 +612,10 @@ TPolyLine3D *GetLayer(TString side, TString io, double z, Color_t col)
 	Double_t zC[] = {z, z, z, z, z};
 
 	TPolyLine3D *polyline = 0;
-	if (side == "P" && io == "I")
-		polyline = new TPolyLine3D(n, xIP, y, zC);
-	if (side == "E" && io == "I")
-		polyline = new TPolyLine3D(n, xIE, y, zC);
-	if (side == "P" && io == "O")
-		polyline = new TPolyLine3D(n, xOP, y, zC);
-	if (side == "E" && io == "O")
-		polyline = new TPolyLine3D(n, xOE, y, zC);
+	if(side=="P" && io=="I") polyline = new TPolyLine3D(n, xIP, y, zC);
+	if(side=="E" && io=="I") polyline = new TPolyLine3D(n, xIE, y, zC);
+	if(side=="P" && io=="O") polyline = new TPolyLine3D(n, xOP, y, zC);
+	if(side=="E" && io=="O") polyline = new TPolyLine3D(n, xOE, y, zC);
 	polyline->SetLineColor(col);
 	return polyline;
 }
@@ -657,14 +635,10 @@ TPolyLine3D *GetLayerFront(TString side, TString io, double z, Color_t col)
 	Double_t zC[] = {z, z, z, z};
 
 	TPolyLine3D *polyline = 0;
-	if (side == "P" && io == "I")
-		polyline = new TPolyLine3D(n, xIP, y, zC);
-	if (side == "E" && io == "I")
-		polyline = new TPolyLine3D(n, xIE, y, zC);
-	if (side == "P" && io == "O")
-		polyline = new TPolyLine3D(n, xOP, y, zC);
-	if (side == "E" && io == "O")
-		polyline = new TPolyLine3D(n, xOE, y, zC);
+	if(side=="P" && io=="I") polyline = new TPolyLine3D(n, xIP, y, zC);
+	if(side=="E" && io=="I") polyline = new TPolyLine3D(n, xIE, y, zC);
+	if(side=="P" && io=="O") polyline = new TPolyLine3D(n, xOP, y, zC);
+	if(side=="E" && io=="O") polyline = new TPolyLine3D(n, xOE, y, zC);
 	polyline->SetLineColor(col);
 	return polyline;
 }
@@ -715,11 +689,10 @@ TPolyLine3D *GetDipoleFront(Color_t col)
 bool skipglitches(TPolyMarker3D *points)
 {
 	Double_t x, y, z;
-	for (int n = 0; n < points->GetN(); ++n)
+	for (int n = 0; n<points->GetN(); ++n)
 	{
 		points->GetPoint(n, x, y, z);
-		if (abs(x) > 40 || abs(y) > 5)
-			return true;
+		if(abs(x)>40 || abs(y)>5) return true;
 	}
 	return false;
 }
@@ -738,7 +711,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 
 	vector<TPolyLine3D *> staves;
 	vector<TPolyLine3D *> fstaves;
-	for (unsigned int l = 0; l < layersz.size(); ++l)
+	for (unsigned int l = 0; l<layersz.size(); ++l)
 	{
 		double z = layersz[l];
 		TString io = (layersnames[l].Contains("I")) ? "I" : "O";
@@ -752,22 +725,18 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 
 	cnv_pl3d->cd();
 	dipole->Draw();
-	for (unsigned int l = 0; l < staves.size(); l++)
-		staves[l]->Draw();
+	for (unsigned int l = 0; l<staves.size(); l++) staves[l]->Draw();
 
 	cnv_pm3d->cd();
 	dipole->Draw();
-	for (unsigned int l = 0; l < staves.size(); l++)
-		staves[l]->Draw();
+	for (unsigned int l = 0; l<staves.size(); l++) staves[l]->Draw();
 
-	for (int i = 0; i < (int)poll.size(); ++i)
+	for (int i = 0; i<(int)poll.size(); ++i)
 	{
 		/// check acceptance
-		if (!inacc[i])
-			continue;
+		if(!inacc[i]) continue;
 		/// check for glitches
-		if (skipglitches(polm[i]))
-			continue;
+		if(skipglitches(polm[i])) continue;
 
 		cnv_pl3d->cd();
 		poll[i]->Draw();
@@ -780,8 +749,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 	TLegend *leg = trkcolleg();
 	cnv_pl3d->cd();
 	fdipole->Draw();
-	for (unsigned int l = 0; l < fstaves.size(); l++)
-		fstaves[l]->Draw();
+	for (unsigned int l = 0; l<fstaves.size(); l++) fstaves[l]->Draw();
 	leg->Draw("same");
 
 	cnv_pm3d->cd();
@@ -796,7 +764,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 	flines->cd();
 	dipole->Write();
 	fdipole->Write();
-	for (unsigned int l = 0; l < staves.size(); l++)
+	for (unsigned int l = 0; l<staves.size(); l++)
 	{
 		staves[l]->Write();
 		fstaves[l]->Write();
@@ -810,16 +778,15 @@ bool accepttrk(vector<TPolyMarker3D *> &polm, int itrk)
 	/// in acceptance?
 	int nlayers = 4;
 	int acctrk = 0;
-	for (int i = 0; i < polm[itrk]->GetN(); i++)
+	for (int i = 0; i<polm[itrk]->GetN(); i++)
 	{
 		Double_t xr, yr, zr;
 		polm[itrk]->GetPoint(i, xr, yr, zr);
-		if (zr < zLastLayer + 15)
-			continue; //// count only the active layers
+		if(zr<zLastLayer + 15) continue; //// count only the active layers
 		int inacclayer = accept(xr, yr);
 		acctrk += inacclayer;
 	}
-	return (acctrk == nlayers);
+	return (acctrk==nlayers);
 }
 
 bool foundinvec(int x, vector<int> &v)
@@ -837,8 +804,7 @@ int getvecindex(int x, vector<int> &v)
 void prepare_cached_clusters()
 {
 	/// clear first
-	for (TMapTSvCls::iterator it = cached_clusters.begin(); it != cached_clusters.end(); ++it)
-		it->second.clear();
+	for (TMapTSvCls::iterator it = cached_clusters.begin(); it != cached_clusters.end(); ++it) it->second.clear();
 	cached_clusters.clear();
 	
 	/// then rebuild
@@ -855,11 +821,9 @@ void prepare_cached_clusters()
 void clear_cached_clusters()
 {
 	cached_clusters_id2lyr.clear();
-	for (TMapTSvCls::iterator it = cached_clusters.begin(); it != cached_clusters.end(); ++it)
-		it->second.clear();
+	for (TMapTSvCls::iterator it = cached_clusters.begin(); it != cached_clusters.end(); ++it) it->second.clear();
 	cached_clusters.clear();
-	for (TMapTSMapii::iterator it = cached_clusters_id2ix.begin(); it != cached_clusters_id2ix.end(); ++it)
-		it->second.clear();
+	for (TMapTSMapii::iterator it = cached_clusters_id2ix.begin(); it != cached_clusters_id2ix.end(); ++it) it->second.clear();
 	cached_clusters_id2ix.clear();
 }
 
@@ -868,23 +832,23 @@ int cache_clusters(vector<vector<TVector3>> *clusters_r, vector<vector<int>> *cl
 	// if(debug) cout << "1. Inside cache_clusters function " << endl;
 	int ncached = 0;
 	int ntrks = (int)clusters_r->size();
-	int ntrkmax = (nMaxToCache > 0 && nMaxToCache < ntrks) ? nMaxToCache : ntrks;
+	int ntrkmax = (nMaxToCache>0 && nMaxToCache<ntrks) ? nMaxToCache : ntrks;
 	// if(debug) cout << "2. Inside cache_clusters function " << endl;
-	for (int i = 0; i < ntrkmax; i++)
+	for (int i = 0; i<ntrkmax; i++)
 	{
 		// if(acc) // if the vector is provided (for background only)
 		// {
 		// 	if(!acc->at(i)) continue; // check acceptnce
 		// }
 		// if(debug) cout << "3. i: " << i << endl;
-		for (Int_t j = 0; j < clusters_r->at(i).size(); ++j)
+		for (Int_t j = 0; j<clusters_r->at(i).size(); ++j)
 		{
 			// if(debug) cout << "4. j: " << j << endl;
 			double x = clusters_r->at(i)[j].X();
 			double y = clusters_r->at(i)[j].Y();
 			double z = clusters_r->at(i)[j].Z();
-			if (x < 0 and side == "Pside") continue;
-			if (x > 0 and side == "Eside") continue;
+			if(x<0 and side=="Pside") continue;
+			if(x>0 and side=="Eside") continue;
 			int lyrid = clusters_layerid->at(i)[j];
 
 			// if(debug){
@@ -943,7 +907,7 @@ int cache_clusters(vector<vector<TVector3>> *clusters_r, vector<vector<int>> *cl
 
 void reset_layers_all()
 {
-	for (Int_t l = 0; l < det->GetLayers()->GetEntries(); l++)
+	for (Int_t l = 0; l<det->GetLayers()->GetEntries(); l++)
 	{
 		det->GetLayer(l)->ResetBgClusters();
 		det->GetLayer(l)->ResetMCTracks();
@@ -954,7 +918,7 @@ void reset_layers_all()
 void reset_layers_tracks(Int_t skip = -1)
 {
 	Int_t l0 = (skip >= 0) ? skip : 0;
-	for (Int_t l = l0; l < det->GetLayers()->GetEntries(); l++)
+	for (Int_t l = l0; l<det->GetLayers()->GetEntries(); l++)
 	{
 		det->GetLayer(l)->ResetMCTracks();
 	}
@@ -963,20 +927,19 @@ void reset_layers_tracks(Int_t skip = -1)
 /// clear the lookup table after each event
 void clear_lookup_table()
 {
-	for (size_t i = 0; i < layersnames.size(); i++)
+	for (size_t i = 0; i<layersnames.size(); i++)
 	{
 		TString lname = layersnames.at(i);
 		{
-			for (int b = 1; b < axisMap[lname]->GetNbins() + 1; ++b)
+			for (int b = 1; b<axisMap[lname]->GetNbins() + 1; ++b)
 				lookupTable[lname][b].clear();
 		}
 	}
 }
 
-///
 void remove_from_lookup_table(vector<Cluster> wincls)
 {
-   for(size_t i=0; i < wincls.size(); ++i)
+   for(size_t i=0; i<wincls.size(); ++i)
    {
 	   int clsid = wincls[i].clsid;
 	   TString lyrname = layers[wincls[i].lyrid];
@@ -984,7 +947,7 @@ void remove_from_lookup_table(vector<Cluster> wincls)
 	   double x = wincls[i].r.X();
 	   int bin = axisMap[lyrname]->FindBin(x);
 	   int clsix = getvecindex(clsid, lookupTable[lyrname][bin]);
-	   if(clsix < 0) continue;
+	   if(clsix<0) continue;
 	   // if(debug2) cout << " before erasing lookupTable, index " << clsix << " vector size" << lookupTable[lyrname][bin].size() << endl;
 	   lookupTable[lyrname][bin].erase(lookupTable[lyrname][bin].begin()+clsix);
 	   // if(debug2) cout << " after erasing lookupTable" << endl;
@@ -1022,7 +985,7 @@ void add_all_clusters(TString side)
 	{
 		int lid = it->first;
 		TString slr = it->second;
-		for (unsigned int j = 0; j < cached_clusters[slr].size(); ++j)
+		for (unsigned int j = 0; j<cached_clusters[slr].size(); ++j)
 		{
 			float x = cached_clusters[slr][j].r.X();
 			float y = cached_clusters[slr][j].r.Y();
@@ -1038,7 +1001,7 @@ void add_all_clusters(TString side)
 		det->GetLayer(lid)->GetMCCluster()->Kill();
 		det->GetLayer(lid)->SortBGClusters(); /// sort!!!
 		/// after sorting, need to map the cluster ids to their indices!!!
-		for (int n = 0; n < det->GetLayer(lid)->GetNBgClusters(); ++n)
+		for (int n = 0; n<det->GetLayer(lid)->GetNBgClusters(); ++n)
 		{
 			int id = det->GetLayer(lid)->GetBgCluster(n)->GetTrID();
 			cached_clusters_all_ids.insert(make_pair(id, n));
@@ -1052,7 +1015,7 @@ void embed_selective(TString side, TString lyrnumber, TString io, double xPivot,
 	TString slyr = side.ReplaceAll("side", "") + "L" + lyrnumber + io;
 	int binUp = axisMap[slyr]->FindBin(xPivot + rw);
 	int binDown = axisMap[slyr]->FindBin(xPivot - rw);
-	if (debug)
+	if(debug)
 	{
 		std::cout << "slyr: " << slyr << " axisMap[slyr] " << axisMap[slyr]->GetNbins() << std::endl;
 		std::cout << "for layer 1: binUp: " << binUp << " binDown " << binDown << std::endl;
@@ -1060,11 +1023,10 @@ void embed_selective(TString side, TString lyrnumber, TString io, double xPivot,
 	}
 	for (int bin = binDown; bin <= binUp; ++bin)
 	{
-		for (size_t k = 0; k < lookupTable[slyr][bin].size(); k++)
+		for (size_t k = 0; k<lookupTable[slyr][bin].size(); k++)
 		{
 			int clsid = lookupTable[slyr][bin][k];
-			if (foundinvec(clsid, embedded_clusters))
-				continue;
+			if(foundinvec(clsid, embedded_clusters)) continue;
 			int index = cached_clusters_id2ix[slyr][clsid];
 			if(debug) cout << "embedding: slyr " << slyr << " index " << index << endl;
 			embed_cluster(cached_clusters[slyr][index]);
@@ -1081,7 +1043,7 @@ void embed_selective(TString side, TString lyrnumber, TString io, double xPivot,
 	TString slyr = side.ReplaceAll("side", "") + "L" + lyrnumber + io;
 	int binUp = axisMap[slyr]->FindBin(xPivot + rw);
 	int binDown = axisMap[slyr]->FindBin(xPivot - rw);
-	// if (debug)
+	// if(debug)
 	// {
 	// 	std::cout << "slyr: " << slyr << " axisMap[slyr] " << axisMap[slyr]->GetNbins() << std::endl;
 	// 	std::cout << "for layer 2 and 3: binUp: " << binUp << " binDown " << binDown << std::endl;
@@ -1089,11 +1051,10 @@ void embed_selective(TString side, TString lyrnumber, TString io, double xPivot,
 	// }
 	for (int bin = binDown; bin <= binUp; ++bin)
 	{
-		for (size_t k = 0; k < lookupTable[slyr][bin].size(); k++)
+		for (size_t k = 0; k<lookupTable[slyr][bin].size(); k++)
 		{
 			int clsid = lookupTable[slyr][bin][k];
-			if (foundinvec(clsid, embedded_clusters))
-				continue;
+			if(foundinvec(clsid, embedded_clusters)) continue;
 			int index = cached_clusters_id2ix[slyr][clsid];
 			if(debug) cout << "embedding: slyr " << slyr << " index " << index << endl;
 			embed_cluster(cached_clusters[slyr][index]);
@@ -1110,86 +1071,43 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 	double x4 = cached_clusters[slyr][i4].r.X();
 	double z4 = cached_clusters[slyr][i4].r.Z();
 	embed_cluster(cached_clusters[slyr][i4]);
-	// if (debug) std::cout << "x4: " << x4 << " z4: " << z4 << " in " << slyr << std::endl;
+	// if(debug) std::cout << "x4: " << x4 << " z4: " << z4 << " in " << slyr << std::endl;
 
 	/// II: if x4 and x1 are in the inner layer
 	double dxabs1I = fDx14vsXMap["L4I_" + side]->Eval(x4);
 	double z1I = (side=="Pside") ? zPL1I : zEL1I; 
-	double x1IPivot = (side == "Pside") ? (x4 - dxabs1I) : (x4 + dxabs1I);
+	double x1IPivot = (side=="Pside") ? (x4 - dxabs1I) : (x4 + dxabs1I);
 
 	/// OO: if x4 and x1 are in the outer layer
 	double dxabs1O = fDx14vsXMap["L4O_" + side]->Eval(x4);
 	double z1O = (side=="Pside") ? zPL1O : zEL1O; 
-	double x1OPivot = (side == "Pside") ? (x4 - dxabs1O) : (x4 + dxabs1O);
+	double x1OPivot = (side=="Pside") ? (x4 - dxabs1O) : (x4 + dxabs1O);
 
 	/// OI: if x4 is in the outer layer and x1 is in the inner layer
 	double dxabs1X = fDx14vsXMap["L4X_" + side]->Eval(x4);
 	double z1X = (side=="Pside") ? zPL1I : zEL1I; 
-	double x1XPivot = (side == "Pside") ? (x4 - dxabs1X) : (x4 + dxabs1X);
+	double x1XPivot = (side=="Pside") ? (x4 - dxabs1X) : (x4 + dxabs1X);
 
 	/// II: find the x along layer 2 and 3
 	double x2IPivotII = xofz(x1IPivot, x4, z1I, z4, (side=="Pside") ? zPL2I : zEL2I);
 	double x2OPivotII = xofz(x1IPivot, x4, z1I, z4, (side=="Pside") ? zPL2O : zEL2O);
 	double x3IPivotII = xofz(x1IPivot, x4, z1I, z4, (side=="Pside") ? zPL3I : zEL3I);
 	double x3OPivotII = xofz(x1IPivot, x4, z1I, z4, (side=="Pside") ? zPL3O : zEL3O);
-	// if (debug) std::cout << "x2IPivotII: " << x2IPivotII << " x2OPivotII: " << x2OPivotII << " x3IPivotII: " << x3IPivotII << " x3OPivotII: " << x3OPivotII << std::endl;
+	// if(debug) std::cout << "x2IPivotII: " << x2IPivotII << " x2OPivotII: " << x2OPivotII << " x3IPivotII: " << x3IPivotII << " x3OPivotII: " << x3OPivotII << std::endl;
 
 	/// OO: find the x along layer 2 and 3
 	double x2IPivotOO = xofz(x1OPivot, x4, z1O, z4, (side=="Pside") ? zPL2I : zEL2I);
 	double x2OPivotOO = xofz(x1OPivot, x4, z1O, z4, (side=="Pside") ? zPL2O : zEL2O);
 	double x3IPivotOO = xofz(x1OPivot, x4, z1O, z4, (side=="Pside") ? zPL3I : zEL3I);
 	double x3OPivotOO = xofz(x1OPivot, x4, z1O, z4, (side=="Pside") ? zPL3O : zEL3O);
-	// if (debug) std::cout << "x2IPivotOO: " << x2IPivotOO << " x2OPivotOO: " << x2OPivotOO << " x3IPivotOO: " << x3IPivotOO << " x3OPivotOO: " << x3OPivotOO << std::endl;
+	// if(debug) std::cout << "x2IPivotOO: " << x2IPivotOO << " x2OPivotOO: " << x2OPivotOO << " x3IPivotOO: " << x3IPivotOO << " x3OPivotOO: " << x3OPivotOO << std::endl;
 
 	/// OI: find the x along layer 2 and 3
-	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL2I : zEL2I);
-	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL2O : zEL2O);
-	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL3I : zEL3I);
-	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side == "Pside") ? zPL3O : zEL3O);
-	// if (debug) std::cout << "x2IPivotOI: " << x2IPivotOI << " x2OPivotOI: " << x2OPivotOI << " x3IPivotOI: " << x3IPivotOI << " x3OPivotOI: " << x3OPivotOI << std::endl;
-
-	// bool isL1I = (side == "Pside") ? ((x1IPivot - rw) < xMaxPI) : ((x1IPivot + rw) > xMinEI);
-	// bool isL1O = (side == "Pside") ? ((x1OPivot - rw) < xMaxPO) : ((x1OPivot + rw) > xMinEO);
-	//
-	// bool isIIL2I = (side == "Pside") ? ((x2IPivotII - rw) < xMaxPI) : ((x2IPivotII + rw) > xMinEI);
-	// bool isIIL2O = (side == "Pside") ? ((x2OPivotII - rw) < xMaxPO) : ((x2OPivotII + rw) > xMinEO);
-	// bool isOOL2I = (side == "Pside") ? ((x2IPivotOO - rw) < xMaxPI) : ((x2IPivotOO + rw) > xMinEI);
-	// bool isOOL2O = (side == "Pside") ? ((x2OPivotOO - rw) < xMaxPO) : ((x2OPivotOO + rw) > xMinEO);
-	// bool isOIL2I = (side == "Pside") ? ((x2IPivotOI - rw) < xMaxPI) : ((x2IPivotOI + rw) > xMinEI);
-	// bool isOIL2O = (side == "Pside") ? ((x2OPivotOI - rw) < xMaxPO) : ((x2OPivotOI + rw) > xMinEO);
-	//
-	// bool isIIL3I = (side == "Pside") ? ((x3IPivotII - rw) < xMaxPI) : ((x3IPivotII + rw) > xMinEI);
-	// bool isIIL3O = (side == "Pside") ? ((x3OPivotII - rw) < xMaxPO) : ((x3OPivotII + rw) > xMinEO);
-	// bool isOOL3I = (side == "Pside") ? ((x3IPivotOO - rw) < xMaxPI) : ((x3IPivotOO + rw) > xMinEI);
-	// bool isOOL3O = (side == "Pside") ? ((x3OPivotOO - rw) < xMaxPO) : ((x3OPivotOO + rw) > xMinEO);
-	// bool isOIL3I = (side == "Pside") ? ((x3IPivotOI - rw) < xMaxPI) : ((x3IPivotOI + rw) > xMinEI);
-	// bool isOIL3O = (side == "Pside") ? ((x3OPivotOI - rw) < xMaxPO) : ((x3OPivotOI + rw) > xMinEO);
-
-	// if (debug)
-	// {
-	// 	std::cout << " isL1I: " << isL1I << " isIIL2I " << isIIL2I << " isIIL2O " << isIIL2O << " isOOL2I " << isOOL2I << " isOOL2O " << isOOL2O << std::endl;
-	// 	std::cout << " isOIL2I: " << isOIL2I << " isOIL2O " << isOIL2O << " isIIL3I " << isIIL3I << " isIIL3O " << isIIL3O << " isOOL3I " << isOOL3I << std::endl;
-	// 	std::cout << " isOOL3O: " << isOOL3O << " isOIL3I " << isOIL3I << " isOIL3O " << isOIL3O << std::endl;
-	// }
-
-	// /// II: find the bins in layer 1 where the x values lie
-	// if(isL1I)   embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
-	// if(isIIL2I) embed_selective(side, "2", "I", x2IPivotII, embedded_clusters);
-	// if(isIIL2O) embed_selective(side, "2", "O", x2OPivotII, embedded_clusters);
-	// if(isIIL3I) embed_selective(side, "3", "I", x3IPivotII, embedded_clusters);
-	// if(isIIL3O) embed_selective(side, "3", "O", x3OPivotII, embedded_clusters);
-	// /// OO: find the bins in layer 1 where the x values lie
-	// if(isL1O)   embed_selective(side, "1", "O", x1OPivot, embedded_clusters, allL1OClsIx);
-	// if(isOOL2I) embed_selective(side, "2", "I", x2IPivotOO, embedded_clusters);
-	// if(isOOL2O) embed_selective(side, "2", "O", x2OPivotOO, embedded_clusters);
-	// if(isOOL3I) embed_selective(side, "3", "I", x3IPivotOO, embedded_clusters);
-	// if(isOOL3O) embed_selective(side, "3", "O", x3OPivotOO, embedded_clusters);
-	// /// OI: find the bins in layer 1 where the x values lie
-	// if(isL1I)   embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
-	// if(isOIL2I) embed_selective(side, "2", "I", x2IPivotOI, embedded_clusters);
-	// if(isOIL2O) embed_selective(side, "2", "O", x2OPivotOI, embedded_clusters);
-	// if(isOIL3I) embed_selective(side, "3", "I", x3IPivotOI, embedded_clusters);
-	// if(isOIL3O) embed_selective(side, "3", "O", x3OPivotOI, embedded_clusters);
+	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side=="Pside") ? zPL2I : zEL2I);
+	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side=="Pside") ? zPL2O : zEL2O);
+	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side=="Pside") ? zPL3I : zEL3I);
+	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side=="Pside") ? zPL3O : zEL3O);
+	// if(debug) std::cout << "x2IPivotOI: " << x2IPivotOI << " x2OPivotOI: " << x2OPivotOI << " x3IPivotOI: " << x3IPivotOI << " x3OPivotOI: " << x3OPivotOI << std::endl;
 	
 	/// II: find the bins in layer 1 where the x values lie
 	embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
@@ -1219,7 +1137,7 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 		det->GetLayer(lid)->GetMCCluster()->Kill();
 		det->GetLayer(lid)->SortBGClusters(); /// sort!!!
 		/// after sorting, need to map the cluster ids to their indices!!!
-		for (int n = 0; n < det->GetLayer(lid)->GetNBgClusters(); ++n)
+		for (int n = 0; n<det->GetLayer(lid)->GetNBgClusters(); ++n)
 		{
 			int id = det->GetLayer(lid)->GetBgCluster(n)->GetTrID();
 			cached_clusters_all_ids.insert(make_pair(id, n));
@@ -1229,13 +1147,12 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 
 void print_all_clusters(TString side, bool doprint = true)
 {
-	if (!doprint)
-		return;
+	if(!doprint) return;
 	for (TMapiTS::iterator it = layers.begin(); it != layers.end(); ++it)
 	{
 		int ilr = it->first;
 		TString slr = it->second;
-		for (int c = 0; c < det->GetLayer(ilr)->GetNBgClusters(); c++)
+		for (int c = 0; c<det->GetLayer(ilr)->GetNBgClusters(); c++)
 		{
 			KMCClusterFwd *cluster = det->GetLayer(ilr)->GetBgCluster(c);
 			int id = cluster->GetTrID();
@@ -1261,7 +1178,7 @@ int fill_output_clusters(TString side, vector<vector<TVector3>> &r, vector<int> 
 		vector<TVector3> v3tmp;
 		r.push_back(v3tmp);
 
-		for (int c = 0; c < cached_clusters[slr].size(); c++)
+		for (int c = 0; c<cached_clusters[slr].size(); c++)
 		{
 			Cluster cluster = cached_clusters[slr][c];
 			int id = cluster.clsid;
@@ -1289,114 +1206,26 @@ int fill_output_clusters(TString side, vector<vector<TVector3>> &r, vector<int> 
 	return nclusters;
 }
 
-/// TODO!!!
-bool check_clusters(unsigned int i1, unsigned int i4, TString side)
-{
-	TString slyr1I = (side == "Eside") ? "EL1I" : "PL1I";
-	TString slyr2 = (side == "Eside") ? "EL2I" : "PL2I";
-	TString slyr3 = (side == "Eside") ? "EL3I" : "PL3I";
-	TString slyr4I = (side == "Eside") ? "EL4I" : "PL4I";
 
-	float yAbsMargins = 0.03; // 0.02; // cm (a "road" of 200 microns around the line between r4 and r1)
-	float xAbsMargins = 0.03; // 0.02; // cm (a "road" of 200 microns around the line between r4 and r1)
-	float r1min[3];
-	r1min[0] = cached_clusters[slyr1I][i1].r.X() - xAbsMargins;
-	r1min[1] = cached_clusters[slyr1I][i1].r.Y() - yAbsMargins;
-	r1min[2] = cached_clusters[slyr1I][i1].r.Z();
-	float r1max[3];
-	r1max[0] = cached_clusters[slyr1I][i1].r.X() + xAbsMargins;
-	r1max[1] = cached_clusters[slyr1I][i1].r.Y() + yAbsMargins;
-	r1max[2] = cached_clusters[slyr1I][i1].r.Z();
-	float r4min[3];
-	r4min[0] = cached_clusters[slyr4I][i4].r.X() - xAbsMargins;
-	r4min[1] = cached_clusters[slyr4I][i4].r.Y() - yAbsMargins;
-	r4min[2] = cached_clusters[slyr4I][i4].r.Z();
-	float r4max[3];
-	r4max[0] = cached_clusters[slyr4I][i4].r.X() + xAbsMargins;
-	r4max[1] = cached_clusters[slyr4I][i4].r.Y() + yAbsMargins;
-	r4max[2] = cached_clusters[slyr4I][i4].r.Z();
-
-	/// check possible clusters in layer 2
-	float y2min = yofz(r1min, r4min, (float)szlayers[slyr2]);
-	float y2max = yofz(r1max, r4max, (float)szlayers[slyr2]);
-	float x2min = xofz(r1min, r4min, (float)szlayers[slyr2]);
-	float x2max = xofz(r1max, r4max, (float)szlayers[slyr2]);
-	bool accept2 = false;
-	for (unsigned int i2 = 0; i2 < cached_clusters[slyr2].size(); ++i2)
-	{
-		bool acceptyz = (cached_clusters[slyr2][i2].r.Y() >= y2min and cached_clusters[slyr2][i2].r.Y() <= y2max);
-		if (!acceptyz)
-			continue;
-		bool acceptxz = (cached_clusters[slyr2][i2].r.X() >= x2min and cached_clusters[slyr2][i2].r.X() <= x2max);
-		if (!acceptxz)
-			continue;
-		accept2 = true;
-		break;
-	}
-	if (!accept2)
-		return false;
-
-	float y3min = yofz(r1min, r4min, (float)szlayers[slyr3]);
-	float y3max = yofz(r1max, r4max, (float)szlayers[slyr3]);
-	float x3min = xofz(r1min, r4min, (float)szlayers[slyr3]);
-	float x3max = xofz(r1max, r4max, (float)szlayers[slyr3]);
-	bool accept3 = false;
-	for (unsigned int i3 = 0; i3 < cached_clusters[slyr3].size(); ++i3)
-	{
-		bool acceptyz = (cached_clusters[slyr3][i3].r.Y() >= y3min and cached_clusters[slyr3][i3].r.Y() <= y3max);
-		if (!acceptyz)
-			continue;
-		bool acceptxz = (cached_clusters[slyr3][i3].r.X() >= x3min and cached_clusters[slyr3][i3].r.X() <= x3max);
-		if (!acceptxz)
-			continue;
-		accept3 = true;
-		break;
-	}
-	if (!accept3)
-		return false;
-
-	return true;
-}
-
-bool adaptive_dx14_vs_x4(double x4, double x1, TF1 *fDxvsX, double width0, int tirals = 3)
-{
-	double dx = abs(x4 - x1);
-	if (dx > 5)
-		return false;
-	double width = width0;
-	double step = width0 / 4.;
-	for (int i = 1; i <= tirals; ++i)
-	{
-		bool passUp = (dx < (fDxvsX->Eval(x4) + width));
-		bool passDn = (dx > (fDxvsX->Eval(x4) - width));
-		// cout << i << ": width=" << width << ", passUp=" << passUp << ", passDn=" << passDn << endl;
-		if (passUp && passDn)
-			return true;
-		width = width0 + i * step; // increase the width by 20% each time
-	}
-	return false;
-}
 
 bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TLorentzVector &p, TF1 *fEvsX, TF1 *fDxvsX)
 {
-	if (abs(r1[0]) >= abs(r4[0])) return false; // |x1| must be smaller than |x4|
-	if (r1[0] * r4[0] < 0) return false; // not on the same side...
-	if (r1[2] == r4[2]) return false; // trivial, make sure z is not the same
-	float yDipoleExitAbsMax = (process == "glaser") ? 0.12 : 0.7; // cm
-	float xDipoleExitAbsMin = (process == "glaser") ? 2. : 4.;	  // cm
-	float xDipoleExitAbsMax = (process == "glaser") ? 15. : 30.;  // cm
+	if(abs(r1[0]) >= abs(r4[0])) return false; // |x1| must be smaller than |x4|
+	if(r1[0] * r4[0]<0) return false; // not on the same side...
+	if(r1[2]==r4[2]) return false; // trivial, make sure z is not the same
+	float yDipoleExitAbsMax = (process=="glaser") ? 0.45 : 0.75; // cm
+	float xDipoleExitAbsMin = (process=="glaser") ? 2.0  : 2.0;  // cm
+	float xDipoleExitAbsMax = (process=="glaser") ? 28.0 : 28.0; // cm
 	float yDipoleExit = yofz(r1, r4, zDipoleExit);
 	float xDipoleExit = xofz(r1, r4, zDipoleExit);
-	if (abs(yDipoleExit) > yDipoleExitAbsMax) return false; // the track should point to |y|<yDipoleExitAbsMax at the dipole exit
-	if (abs(xDipoleExit) < xDipoleExitAbsMin) return false; // the track should point to |x|>xDipoleExitAbsMin at the dipole exit
-	if (abs(xDipoleExit) > xDipoleExitAbsMax) return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
+	if(abs(yDipoleExit)>yDipoleExitAbsMax) return false; // the track should point to |y|<yDipoleExitAbsMax at the dipole exit
+	if(abs(xDipoleExit)<xDipoleExitAbsMin) return false; // the track should point to |x|>xDipoleExitAbsMin at the dipole exit
+	if(abs(xDipoleExit)>xDipoleExitAbsMax) return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
 	// if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])*(1+0.1))) return false; // new cut!!
 	// if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])*(1-0.1))) return false; // new cut!!
-	if (abs(r4[0] - r1[0]) > 7.5 || abs(r4[0] - r1[0]) < 0.5) return false; // new cut!!
-	if (abs(r4[0] - r1[0]) > (fDxvsX->Eval(r4[0]) + 0.1))     return false; // new cut!!
-	if (abs(r4[0] - r1[0]) < (fDxvsX->Eval(r4[0]) - 0.1))     return false; // new cut!!
-	// if(!adaptive_dx14_vs_x4(r4[0],r1[0],fDxvsX,0.2,4)) return false;
-	// if(!check_clusters(i1,i4,side))        return false; // minimum one cluster at layer 2 and one at layer 3 ///TODO!!!
+	if(abs(r4[0] - r1[0])>7.5 || abs(r4[0] - r1[0])<0.5) return false; // new cut!!
+	if(abs(r4[0] - r1[0])>(fDxvsX->Eval(r4[0]) + 0.1))     return false; // new cut!!
+	if(abs(r4[0] - r1[0])<(fDxvsX->Eval(r4[0]) - 0.1))     return false; // new cut!!
 
 	// TRandom rnd;
 	// rnd.SetSeed();
@@ -1420,7 +1249,8 @@ bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, T
 	p.SetPxPyPzE(px, py, pz, E);
 	// if(i4==0 and side=="Eside") cout << "px=" << px << ", py=" << py << ", pz=" << pz << endl;
 	// cout << "side=" << side << ", px=" << px << ", py=" << py << ", pz=" << pz << endl;
-	float EseedMax = (process == "glaser") ? EseedMaxGLaser : EseedMaxELaser; // GeV
+	float EseedMin = (process=="glaser") ? EseedMinGLaser : EseedMinELaser; // GeV
+	float EseedMax = (process=="glaser") ? EseedMaxGLaser : EseedMaxELaser; // GeV
 	if(p.E()<EseedMin or p.E()>EseedMax) return false;
 
 	return true;
@@ -1429,13 +1259,13 @@ bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, T
 TString FormatEventID(int evnt)
 {
 	TString sevnt = "";
-	if (evnt < 10)                          sevnt = Form("000000%d", evnt);
-	if (evnt >= 10 && evnt < 100)           sevnt = Form("00000%d", evnt);
-	if (evnt >= 100 && evnt < 1000)         sevnt = Form("0000%d", evnt);
-	if (evnt >= 1000 && evnt < 10000)       sevnt = Form("000%d", evnt);
-	if (evnt >= 10000 && evnt < 100000)     sevnt = Form("00%d", evnt);
-	if (evnt >= 100000 && evnt < 1000000)   sevnt = Form("0%d", evnt);
-	if (evnt >= 1000000 && evnt < 10000000) sevnt = Form("%d", evnt); // assume no more than 9,999,999 events...
+	if(evnt<10)                          sevnt = Form("000000%d", evnt);
+	if(evnt >= 10 && evnt<100)           sevnt = Form("00000%d", evnt);
+	if(evnt >= 100 && evnt<1000)         sevnt = Form("0000%d", evnt);
+	if(evnt >= 1000 && evnt<10000)       sevnt = Form("000%d", evnt);
+	if(evnt >= 10000 && evnt<100000)     sevnt = Form("00%d", evnt);
+	if(evnt >= 100000 && evnt<1000000)   sevnt = Form("0%d", evnt);
+	if(evnt >= 1000000 && evnt<10000000) sevnt = Form("%d", evnt); // assume no more than 9,999,999 events...
 	return sevnt;
 }
 
@@ -1452,61 +1282,45 @@ int main(int argc, char *argv[])
 {
 	int argcounter;
 	printf("Program Name Is: %s", argv[0]);
-	if (argc >= 2)
+	if(argc >= 2)
 	{
 		// gInterpreter->GenerateDictionary("vector<vector<TVector3> >",    "vector");
 		printf("\nNumber Of Arguments Passed: %d", argc);
 		printf("\n----Following Are The Command Line Arguments Passed----");
-		for (argcounter = 0; argcounter < argc; argcounter++) printf("\nargv[%d]: %s", argcounter, argv[argcounter]);
+		for (argcounter = 0; argcounter<argc; argcounter++) printf("\nargv[%d]: %s", argcounter, argv[argcounter]);
 		printf("\n");
 	}
 	//// minimum requirements
-	if (argc < 2)
-	{
-		printf("argc<2, exitting now\n");
-		exit(-1);
-	}
+	if(argc<2) { printf("argc<2, exitting now\n"); exit(-1); }
 	//// validate inputs
-	if (argc == 2 and !((TString)argv[1]).Contains("-proc="))
-	{
-		printf("argc=2 but cannot parse %s\n", argv[1]);
-		exit(-1);
-	}
-	if (argc == 3 and !((TString)argv[2]).Contains("-dobg="))
-	{
-		printf("argc=3 but cannot parse %s\n", argv[2]);
-		exit(-1);
-	}
-	if (argc == 4 and !((TString)argv[3]).Contains("-evnt="))
-	{
-		printf("argc=4 but cannot parse %s\n", argv[3]);
-		exit(-1);
-	}
-	if (argc == 5 and !((TString)argv[4]).Contains("-seed="))
-	{
-		printf("argc=5 but cannot parse %s\n", argv[4]);
-		exit(-1);
-	}
-	if (argc == 6 and !((TString)argv[5]).Contains("-ntrk="))
-	{
-		printf("argc=6 but cannot parse %s\n", argv[5]);
-		exit(-1);
-	}
+	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n", argv[1]); exit(-1); }
+	if(argc==3 and !((TString)argv[2]).Contains("-sigl=")) { printf("argc=2 but cannot parse %s\n", argv[2]); exit(-1); }
+	if(argc==4 and !((TString)argv[3]).Contains("-dobg=")) { printf("argc=3 but cannot parse %s\n", argv[3]); exit(-1); }
+	if(argc==5 and !((TString)argv[4]).Contains("-evnt=")) { printf("argc=4 but cannot parse %s\n", argv[4]); exit(-1); }
+	if(argc==6 and !((TString)argv[5]).Contains("-seed=")) { printf("argc=5 but cannot parse %s\n", argv[5]); exit(-1); }
+	if(argc==7 and !((TString)argv[6]).Contains("-ntrk=")) { printf("argc=6 but cannot parse %s\n", argv[6]); exit(-1); }
 	//// assign inputs
-	TString process = ((TString)argv[1]).ReplaceAll("-proc=", "");						 // mandatory
-	int dobg = (argc > 2) ? toint(((TString)argv[2]).ReplaceAll("-dobg=", "")) : 0;		 // job id [optional]
-	int evnt = (argc > 3) ? toint(((TString)argv[3]).ReplaceAll("-evnt=", "")) : -1;	 // job id [optional]
-	int Seed = (argc > 4) ? toint(((TString)argv[4]).ReplaceAll("-seed=", "")) : 12345;	 // seed [optional]
-	int nsigtrks = (argc > 5) ? toint(((TString)argv[5]).ReplaceAll("-ntrk=", "")) : -1; // job id [optional]
+	TString process = ((TString)argv[1]).ReplaceAll("-proc=", "");	// mandatory
+	TString signame = ((TString)argv[2]).ReplaceAll("-sigl=", "");	// signal name
+	int dobg     = (argc>3) ? toint(((TString)argv[3]).ReplaceAll("-dobg=", "")) : 0;		 // job id [optional]
+	int evnt     = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-evnt=", "")) : -1;	 // job id [optional]
+	int Seed     = (argc>5) ? toint(((TString)argv[5]).ReplaceAll("-seed=", "")) : 12345;	 // seed [optional]
+	int nsigtrks = (argc>6) ? toint(((TString)argv[6]).ReplaceAll("-ntrk=", "")) : -1; // job id [optional]
 	//// print assigned inputs
 	cout << "process=" << process << endl;
+	cout << "signame=" << signame << endl;
 	cout << "dobkg?=" << dobg << endl;
 	cout << "evnt=" << evnt << endl;
 	cout << "nsigtrks=" << nsigtrks << endl;
 	cout << "Seed=" << Seed << endl;
+	
+	// making the dir if it is not existing
+	TString recdir = storage+"/data/root/rec/"+process+"/"+signame;
+	cout << "making dir (if not exists already): " << recdir << endl;
+	gSystem->Exec("mkdir -p "+recdir);
 
 	// TString proc = process;
-	TString eventid = (evnt < 0) ? "" : FormatEventID(evnt);
+	TString eventid = (evnt<0) ? "" : FormatEventID(evnt);
 	TStopwatch stopwatch;
 	TStopwatch stopwatch1;
 
@@ -1552,7 +1366,6 @@ int main(int argc, char *argv[])
 	gInterpreter->GenerateDictionary("vector<TPolyLine3D*>", "vector");
 	gInterpreter->GenerateDictionary("vector<vector<int> >", "vector");
 	gInterpreter->GenerateDictionary("vector<vector<TVector3> >", "vector");
-	gSystem->Exec("mkdir -p " + storage + "/data/root/rec");
 
 	/// monitoring histograms
 	Int_t nlogebins = 30;
@@ -1587,11 +1400,11 @@ int main(int argc, char *argv[])
 
 	/////////////////////
 	/// loop on the sides
-	for (unsigned int s = 0; s < sides.size(); ++s)
+	for (unsigned int s = 0; s<sides.size(); ++s)
 	{
 		TString side = sides[s];
 
-		TFile *fOut = new TFile(storage + "/data/root/rec/rec_" + process + "_" + eventid + "_" + side + ".root", "RECREATE");
+		TFile *fOut = new TFile(recdir+"/rec_"+process+"_"+eventid+"_"+side+".root", "RECREATE");
 		TTree *tOut = new TTree("reco", "reco");
 		/// all clusters output branches
 		vector<TPolyMarker3D *> all_clusters_xyz;
@@ -1724,6 +1537,8 @@ int main(int argc, char *argv[])
 		tOut->Branch("reco_sigma1Pt2", &reco_sigma1Pt2);
 		tOut->Branch("reco_invpT", &reco_invpT);
 		tOut->Branch("reco_signedpT", &reco_signedpT);
+		
+		
 
 		TString setup = "../setup/setupLUXE_" + process + "_" + side + ".txt";
 		det = new KMCDetectorFwd();
@@ -1743,7 +1558,7 @@ int main(int argc, char *argv[])
 		// det->SetMaxChi2NDF(3.5); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
-		// det->SetMaxChi2NDF((process == "elaser") ? 15. : 5.); // max total chi2/ndf
+		// det->SetMaxChi2NDF((process=="elaser") ? 15. : 5.); // max total chi2/ndf
 		det->SetMaxChi2NDF(15.); // max total chi2/ndf
 		det->SetMaxChi2Vtx(20e9);							  // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
@@ -1756,8 +1571,8 @@ int main(int argc, char *argv[])
 		// for reconstruction:
 		// det->SetErrorScale(500.);
 		// det->SetErrorScale( (process=="elaser")?500.:200. );
-		// det->SetErrorScale((process == "elaser") ? 500. : 500.); // was 400 earlier, can be also anywhere up to 1000
-		det->SetErrorScale((process == "elaser") ? 10000. : 10000.); // was 400 earlier, can be also anywhere up to 1000
+		// det->SetErrorScale((process=="elaser") ? 500. : 500.); // was 400 earlier, can be also anywhere up to 1000
+		det->SetErrorScale((process=="elaser") ? 10000. : 10000.); // was 400 earlier, can be also anywhere up to 1000
 		det->Print();
 		// det->BookControlHistos();
 
@@ -1784,8 +1599,9 @@ int main(int argc, char *argv[])
 		vector<TPolyMarker3D *> *sig_trkpts = 0;
 		vector<TPolyLine3D *> *sig_trklin = 0;
 		cout << "Getting signal clusters from tree" << endl;
-		TFile* fSig = new TFile(storage+"/data/root/dig/dig_"+process+"_"+eventid+".root","READ");  /// remove _flat when working with real signal samples
-		//TFile *fSig = new TFile(storage + "/data/root/dig/dig_" + process + "_.root", "READ");
+		TString digdir = recdir;
+		digdir = digdir.ReplaceAll("rec","dig");
+		TFile *fSig = new TFile(digdir+"/dig_"+process+"_"+eventid+".root", "READ"); /// remove _flat when working with real signal samples;
 		TTree *tSig = (TTree *)fSig->Get("dig_" + side);
 		tSig->SetBranchAddress("ngen", &sig_ngen);
 		tSig->SetBranchAddress("nslv", &sig_nslv);
@@ -1825,7 +1641,7 @@ int main(int argc, char *argv[])
 		vector<TPolyLine3D *> *bkg_trklin = 0;
 		TFile *fBkg = 0;
 		TTree *tBkg = 0;
-		if (dobg)
+		if(dobg)
 		{
 			/// get the background clusters
 			cout << "Getting background clusters from tree" << endl;
@@ -1865,7 +1681,7 @@ int main(int argc, char *argv[])
 		/// loop on events
 		Int_t nsigevents = tSig->GetEntries();
 		Int_t nbkgevents = (dobg) ? tBkg->GetEntries() : -1;
-		if (dobg && nbkgevents < nsigevents)
+		if(dobg && nbkgevents<nsigevents)
 		{
 			cout << "ERROR: nbkgevents<nsigevents" << endl;
 			cout << "       nsigevents=" << nsigevents << endl;
@@ -1874,7 +1690,7 @@ int main(int argc, char *argv[])
 		}
 		cout << "Starting loop over signal events with nsigevents=" << nsigevents << endl;
 		int counter = 0;
-		for (int iev = 0; iev < nsigevents; iev++)
+		for (int iev = 0; iev<nsigevents; iev++)
 		{
 			stopwatch.Start();
 
@@ -1885,7 +1701,7 @@ int main(int argc, char *argv[])
 
 			////////////////////////////////////////////
 			/// clear output vectors: digitized clusters
-			for (unsigned int x = 0; x < all_clusters_xyz.size(); ++x)
+			for (unsigned int x = 0; x<all_clusters_xyz.size(); ++x)
 			{
 				delete all_clusters_xyz[x];
 				all_clusters_r[x].clear();
@@ -1895,9 +1711,9 @@ int main(int argc, char *argv[])
 			all_clusters_type.clear();
 			all_clusters_id.clear();
 			/// clear output vectors: truth signal physics
-			for (unsigned int x = 0; x < true_rec_imatch.size(); ++x) true_rec_imatch[x].clear();
+			for (unsigned int x = 0; x<true_rec_imatch.size(); ++x) true_rec_imatch[x].clear();
 			true_rec_imatch.clear();
-			for (unsigned int x = 0; x < true_clusters_id.size(); ++x) true_clusters_id[x].clear();
+			for (unsigned int x = 0; x<true_clusters_id.size(); ++x) true_clusters_id[x].clear();
 			true_clusters_id.clear();
 			true_acc.clear();
 			true_wgt.clear();
@@ -1918,11 +1734,11 @@ int main(int argc, char *argv[])
 			bkgr_p.clear();
 			bkgr_trckmar.clear();
 			bkgr_trcklin.clear();
-			for (unsigned int x = 0; x < bkgr_clusters_id.size(); ++x) bkgr_clusters_id[x].clear();
+			for (unsigned int x = 0; x<bkgr_clusters_id.size(); ++x) bkgr_clusters_id[x].clear();
 			bkgr_clusters_id.clear();
 			/// clear output vectors: seeds
 			seed_type.clear();
-			for (unsigned int x = 0; x < seed_clusters_id.size(); ++x) seed_clusters_id[x].clear();
+			for (unsigned int x = 0; x<seed_clusters_id.size(); ++x) seed_clusters_id[x].clear();
 			seed_clusters_id.clear();
 			seed_q.clear();
 			seed_p.clear();
@@ -1932,9 +1748,9 @@ int main(int argc, char *argv[])
 			reco_x.clear();
 			reco_y.clear();
 			reco_z.clear();
-			for (unsigned int x = 0; x < reco_trck_cls_r.size(); ++x) reco_trck_cls_r[x].clear();
-			for (unsigned int x = 0; x < reco_trckmar.size(); ++x) delete reco_trckmar[x];
-			for (unsigned int x = 0; x < reco_trcklin.size(); ++x) delete reco_trcklin[x];
+			for (unsigned int x = 0; x<reco_trck_cls_r.size(); ++x) reco_trck_cls_r[x].clear();
+			for (unsigned int x = 0; x<reco_trckmar.size(); ++x) delete reco_trckmar[x];
+			for (unsigned int x = 0; x<reco_trcklin.size(); ++x) delete reco_trcklin[x];
 			reco_trck_cls_r.clear();
 			reco_trckmar.clear();
 			reco_trcklin.clear();
@@ -1942,7 +1758,7 @@ int main(int argc, char *argv[])
 			reco_ismtchd.clear();
 			reco_ixmtchd.clear();
 			reco_idmtchd.clear();
-			for (unsigned int x = 0; x < reco_clusters_id.size(); ++x)
+			for (unsigned int x = 0; x<reco_clusters_id.size(); ++x)
 			reco_clusters_id[x].clear();
 			reco_clusters_id.clear();
 			reco_Tgl.clear();
@@ -1978,13 +1794,13 @@ int main(int argc, char *argv[])
 
 			/// fill truth signal tracks:
 			vector<int> vitmp;
-			for (unsigned int t = 0; t < sig_crg->size(); ++t)
+			for (unsigned int t = 0; t<sig_crg->size(); ++t)
 			{
-				if (side == "Eside" && sig_crg->at(t) > 0) continue;
-				if (side == "Pside" && sig_crg->at(t) < 0) continue;
+				if(side=="Eside" && sig_crg->at(t)>0) continue;
+				if(side=="Pside" && sig_crg->at(t)<0) continue;
 
 				vector<int> vtruid;
-				for (int k = 0; k < sig_clusters_id->at(t).size(); ++k)
+				for (int k = 0; k<sig_clusters_id->at(t).size(); ++k)
 				vtruid.push_back(sig_clusters_id->at(t)[k]);
 				true_clusters_id.push_back(vtruid);
 				true_acc.push_back(sig_acc->at(t));
@@ -2002,14 +1818,14 @@ int main(int argc, char *argv[])
 			/// fill truth background tracks:
 			int nbtrks = (dobg) ? (int)bkg_crg->size() : -1;
 			int nbmax = nbtrks; //(nMaxBkgTrks>0 && nMaxBkgTrks<nbtrks) ? nMaxBkgTrks : nbtrks;
-			if (dobg)
+			if(dobg)
 			{
-				for (int b = 0; b < nbmax; ++b)
+				for (int b = 0; b<nbmax; ++b)
 				{
-					if (!bkg_acc->at(b)) continue; // ignore tracks out of acceptance!
+					if(!bkg_acc->at(b)) continue; // ignore tracks out of acceptance!
 
 					vector<int> vbkgid;
-					for (int k = 0; k < bkg_clusters_id->at(b).size(); ++k) vbkgid.push_back(bkg_clusters_id->at(b)[k]);
+					for (int k = 0; k<bkg_clusters_id->at(b).size(); ++k) vbkgid.push_back(bkg_clusters_id->at(b)[k]);
 					bkgr_clusters_id.push_back(vbkgid);
 					bkgr_acc.push_back(bkg_acc->at(b));
 					bkgr_wgt.push_back(bkg_wgt->at(b));
@@ -2027,7 +1843,7 @@ int main(int argc, char *argv[])
 			cached_clusters_all_ids.clear();
 
 			/// set the charge
-			float crg = (side == "Eside") ? -1 : +1;
+			float crg = (side=="Eside") ? -1 : +1;
 
 			/// globals (per side)
 			unsigned int n_truth = 0;
@@ -2039,10 +1855,10 @@ int main(int argc, char *argv[])
 			unsigned int n_trumt = 0;
 
 			/// count truth per side
-			for (unsigned int t = 0; t < true_q.size(); ++t)
+			for (unsigned int t = 0; t<true_q.size(); ++t)
 			{
-				if (side == "Eside" and true_q[t] > 0) continue;
-				if (side == "Pside" and true_q[t] < 0) continue;
+				if(side=="Eside" and true_q[t]>0) continue;
+				if(side=="Pside" and true_q[t]<0) continue;
 				n_truth++;
 			}
 			if(debug) cout << " resetting vectors in the event loop " << endl;
@@ -2059,10 +1875,10 @@ int main(int argc, char *argv[])
 			int index_offset = (process.Contains("bkg")) ? index_offset_bkg : index_offset_sig; // assuming no chance to have >index_offset tracks (and hence clusters) per tracker arm (and hence per layer)
 
 			/// run over all clusters of layer 4 in the pool --> these are the seeds for the KalmanFilter fit
-			TString slyr4I = (side == "Eside") ? "EL4I" : "PL4I";
-			TString slyr1I = (side == "Eside") ? "EL1I" : "PL1I";
-			TString slyr4O = (side == "Eside") ? "EL4O" : "PL4O";
-			TString slyr1O = (side == "Eside") ? "EL1O" : "PL1O";
+			TString slyr4I = (side=="Eside") ? "EL4I" : "PL4I";
+			TString slyr1I = (side=="Eside") ? "EL1I" : "PL1I";
+			TString slyr4O = (side=="Eside") ? "EL4O" : "PL4O";
+			TString slyr1O = (side=="Eside") ? "EL1O" : "PL1O";
 			int ilyr4I = silayers[slyr4I];
 			int ilyr1I = silayers[slyr1I];
 			int ilyr4O = silayers[slyr4O];
@@ -2071,19 +1887,19 @@ int main(int argc, char *argv[])
 			/// loop on seeds
 			unsigned int n4I = cached_clusters[slyr4I].size();
 			unsigned int n4O = cached_clusters[slyr4O].size();
-			if (debug) cout << "before loop over layer 4 clusters" << endl;
-			for (unsigned int i4all = 0; i4all < (n4I + n4O); ++i4all)
+			if(debug) cout << "before loop over layer 4 clusters" << endl;
+			for (unsigned int i4all = 0; i4all<(n4I + n4O); ++i4all)
 			{
 				// if(n_solve>n_recos) exit(-1);
 				
 				counter++;
-				unsigned int i4 = (i4all < n4O) ? i4all : i4all - n4O;
+				unsigned int i4 = (i4all<n4O) ? i4all : i4all - n4O;
 				// if(i4!=16)continue;
 				// if(debug2) cout << "for seed: i4 = " << i4 << endl;
-				TString slyr4 = (i4all < n4O) ? slyr4O : slyr4I;
-				int ilyr4 = (i4all < n4O) ? ilyr4O : ilyr4I;
-				if (slyr4 == slyr4O && (side == "Eside" && cached_clusters[slyr4][i4].r.X() > xMinEI)) continue;
-				if (slyr4 == slyr4O && (side == "Pside" && cached_clusters[slyr4][i4].r.X() < xMaxPI)) continue;
+				TString slyr4 = (i4all<n4O) ? slyr4O : slyr4I;
+				int ilyr4 = (i4all<n4O) ? ilyr4O : ilyr4I;
+				if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
+				if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
 
                 /// rest all the layers of the detector (including inactive if any)
 				reset_layers_all(); // reset both sides
@@ -2103,7 +1919,7 @@ int main(int argc, char *argv[])
 				// 	for(TMapiTS::reverse_iterator it = layers.rbegin(); it != layers.rend();++it)
 				// 	{
 				// 		if(det->GetLayer(it->first)->GetNBgClusters()>0) cout << "all clusters in layer: " << it->second << endl;
-				// 		for (int n = 0; n < det->GetLayer(it->first)->GetNBgClusters(); ++n)
+				// 		for (int n = 0; n<det->GetLayer(it->first)->GetNBgClusters(); ++n)
 				// 		{
 				// 			det->GetLayer(it->first)->GetBgCluster(n)->Print();
 				// 		}
@@ -2113,32 +1929,32 @@ int main(int argc, char *argv[])
 				
 				
 
-				// if (debug) std::cout << "Print L1I_clsix: " << L1I_clsix.size() << std::endl;
+				// if(debug) std::cout << "Print L1I_clsix: " << L1I_clsix.size() << std::endl;
 				// add_all_clusters(side);
 				print_all_clusters(side, false);
 				int all_clusters = fill_output_clusters(side, all_clusters_r, all_clusters_type, all_clusters_id);
 				unsigned int nx1I = L1I_clsix.size();
 				unsigned int nx1O = L1O_clsix.size();
-				// if (debug2) std::cout << "from the selective embedding function: nx1I : " << nx1I << " nx1O: " << nx1O << std::endl;
-				// if (debug) std::cout << "from the cached_cluster size:          n1I  : " << n1I << " n1O: " << n1O << std::endl;
+				// if(debug2) std::cout << "from the selective embedding function: nx1I : " << nx1I << " nx1O: " << nx1O << std::endl;
+				// if(debug) std::cout << "from the cached_cluster size:          n1I  : " << n1I << " n1O: " << n1O << std::endl;
 				// {
 				// if(debug2)
 				// 	cout << "Loop over all elements in L1O_clsix " << endl;
-				// 	for(size_t k=0; k < L1O_clsix.size();++k)
+				// 	for(size_t k=0; k<L1O_clsix.size();++k)
 				// 		cout << "element L1O_clsix[" << k << "]: " << L1O_clsix.at(k) << endl;
 				// 	cout << "Loop over all elements in L1I_clsix " << endl;
-				// 	// for(size_t k=0; k < L1I_clsix.size();++k)
+				// 	// for(size_t k=0; k<L1I_clsix.size();++k)
 				// 	// 	cout << "element L1I_clsix[" << k << "]: " << L1I_clsix.at(k) << endl;
 				// }
 				vector<TLorentzVector> pseeds;
-				for (unsigned int ix1all = 0; ix1all < (nx1I + nx1O); ++ix1all)
+				for (unsigned int ix1all = 0; ix1all<(nx1I + nx1O); ++ix1all)
 				{
-					unsigned int i1 = (ix1all < nx1O) ? L1O_clsix.at(ix1all) : L1I_clsix.at(ix1all - nx1O);
+					unsigned int i1 = (ix1all<nx1O) ? L1O_clsix.at(ix1all) : L1I_clsix.at(ix1all - nx1O);
 					// if(debug2) cout << "for seed: i1=" << i1 << " ix1all=" << ix1all << " nx1O=" << nx1O << endl;
-					TString slyr1 = (ix1all < nx1O) ? slyr1O : slyr1I;
-					int ilyr1 = (ix1all < nx1O) ? ilyr1O : ilyr1I;
-					if (slyr1 == slyr1I && (side == "Eside" && cached_clusters[slyr1][i1].r.X() < xMaxEO)) continue;
-					if (slyr1 == slyr1I && (side == "Pside" && cached_clusters[slyr1][i1].r.X() > xMinPO)) continue;
+					TString slyr1 = (ix1all<nx1O) ? slyr1O : slyr1I;
+					int ilyr1 = (ix1all<nx1O) ? ilyr1O : ilyr1I;
+					if(slyr1==slyr1I && (side=="Eside" && cached_clusters[slyr1][i1].r.X()<xMaxEO)) continue;
+					if(slyr1==slyr1I && (side=="Pside" && cached_clusters[slyr1][i1].r.X()>xMinPO)) continue;
 
 					// reset all tracks from all layers but layer 0
 					reset_layers_tracks(0);
@@ -2158,19 +1974,19 @@ int main(int argc, char *argv[])
 
 					TF1 *fEvsX = 0;
 					TF1 *fDx14vsX = 0;
-					if (slyr1 == slyr1I) fEvsX = (side == "Pside") ? fEvsX_L1I_Pside : fEvsX_L1I_Eside;
-					else fEvsX = (side == "Pside") ? fEvsX_L1O_Pside : fEvsX_L1O_Eside;
+					if(slyr1==slyr1I) fEvsX = (side=="Pside") ? fEvsX_L1I_Pside : fEvsX_L1I_Eside;
+					else fEvsX = (side=="Pside") ? fEvsX_L1O_Pside : fEvsX_L1O_Eside;
 
-					if (slyr4 == slyr4I && slyr1 == slyr1I) fDx14vsX = (side == "Pside") ? fDx14vsX_L4I_Pside : fDx14vsX_L4I_Eside;
-					else if (slyr4 == slyr4O && slyr1 == slyr1O) fDx14vsX = (side == "Pside") ? fDx14vsX_L4O_Pside : fDx14vsX_L4O_Eside;
-					else if (slyr4 == slyr4O && slyr1 == slyr1I) fDx14vsX = (side == "Pside") ? fDx14vsX_L4X_Pside : fDx14vsX_L4X_Eside;
+					if(slyr4==slyr4I && slyr1==slyr1I) fDx14vsX = (side=="Pside") ? fDx14vsX_L4I_Pside : fDx14vsX_L4I_Eside;
+					else if(slyr4==slyr4O && slyr1==slyr1O) fDx14vsX = (side=="Pside") ? fDx14vsX_L4O_Pside : fDx14vsX_L4O_Eside;
+					else if(slyr4==slyr4O && slyr1==slyr1I) fDx14vsX = (side=="Pside") ? fDx14vsX_L4X_Pside : fDx14vsX_L4X_Eside;
 					else continue; // cannot happen!
 
 					bool seed = makeseed_nonuniformB(process, r1, r4, side, pseed, fEvsX, fDx14vsX);
-					if (!seed) continue; // cannot make a meaningful seed
+					if(!seed) continue; // cannot make a meaningful seed
 					pseeds.push_back(pseed);
-					bool issig = (cached_clusters[slyr1][i1].type == 1 && cached_clusters[slyr4][i4].type == 1);
-					bool sameid = ((cached_clusters[slyr1][i1].clsid - ilyr1 * index_offset_sig) == (cached_clusters[slyr4][i4].clsid - ilyr4 * index_offset_sig));
+					bool issig = (cached_clusters[slyr1][i1].type==1 && cached_clusters[slyr4][i4].type==1);
+					bool sameid = ((cached_clusters[slyr1][i1].clsid - ilyr1 * index_offset_sig)==(cached_clusters[slyr4][i4].clsid - ilyr4 * index_offset_sig));
 					seed_type.push_back(issig and sameid);
 					vector<int> vidseed{cached_clusters[slyr1][i1].clsid, -1, -1, cached_clusters[slyr4][i4].clsid};
 					seed_clusters_id.push_back(vidseed);
@@ -2180,16 +1996,16 @@ int main(int argc, char *argv[])
 				} // end of loop on clusters in layer 1
 
 
-				if(n_seeds < 1) continue;
+				if(n_seeds<1) continue;
 				cout << "nseeds=" << n_seeds << " for i4=" << i4 << " out of " << cached_clusters[slyr4].size() << " clusters in layer4 (with " << n_recos << " recos and " << n_match << " reco-matched)" << endl;
-				for(int d = 0; d < seed_type.size(); ++d)
+				for(int d = 0; d<seed_type.size(); ++d)
 				{
 					// if(seed_type[d]) cout << "at least one true seed" << endl;
 					break;
 				}
 				
 				bool doPrint = false;
-				if (doPrint) cout << "\n\n\n########################################## calling SolveSingleTrackViaKalmanMC_Noam_multiseed for i4=" << i4 << " ######################################" << endl;
+				if(doPrint) cout << "\n\n\n########################################## calling SolveSingleTrackViaKalmanMC_Noam_multiseed for i4=" << i4 << " ######################################" << endl;
 				// prepare the probe from the seed and do the KF fit
 
 				stopwatch1.Start();
@@ -2236,7 +2052,7 @@ int main(int argc, char *argv[])
 				// if(debug2) cout << "winner track is found with chi2 =" << trw->GetChi2() << " ITSHits=" << trw->GetNITSHits() << endl;
 				
 				/// FIXME: a dirty fix to kill the tracks with less than minimum hits - this should be killed on the KF side
-				if(trw->GetNITSHits() < nMinHits)
+				if(trw->GetNITSHits()<nMinHits)
 				{
 					int itru = cached_clusters[slyr4][i4].clsid - ilyr4 * index_offset_sig;
 					// if(debug2) cout << "winner track hass too few hits (ITSHits=" << trw->GetNITSHits() << ")" << endl;
@@ -2299,7 +2115,7 @@ int main(int argc, char *argv[])
 				for (int l = 0; l <= nprobeclusters; ++l)
 				{
 					int cid = probeclusters[l];
-					if (cid < 0) continue;
+					if(cid<0) continue;
 					int cix = cached_clusters_all_ids[cid];
 					int ilr = cached_clusters_id2lyr[cid]; /// essential to find the correct layer!
 					TString lname = layers[ilr];
@@ -2308,8 +2124,8 @@ int main(int argc, char *argv[])
 					win_cls_id.push_back(cid); // provide active layer ID, not the physical ones (most are passive)
 					win_cls_inx.push_back(cix);
 					win_cls_id2lr.insert(make_pair(cid, ilr));
-					//if (doPrint)
-					// if (debug2) cout << "going to kill cluster id=" << cid << " in ix=" << cix << ", from " << det->GetLayer(ilr)->GetNBgClusters() << " on layer " << ilr << endl;
+					//if(doPrint)
+					// if(debug2) cout << "going to kill cluster id=" << cid << " in ix=" << cix << ", from " << det->GetLayer(ilr)->GetNBgClusters() << " on layer " << ilr << endl;
 					// cout << "cid=" << cid << " in layer=" << ilr << ": " << lname << endl;
 					double xwin = det->GetLayer(ilr)->GetBgCluster(cix)->GetXLab();
 					double ywin = det->GetLayer(ilr)->GetBgCluster(cix)->GetYLab();
@@ -2330,7 +2146,7 @@ int main(int argc, char *argv[])
 
 				/// save the clusters' id of the winner track
 				reco_clusters_id.push_back(win_cls_id);
-				if (win_cls_id.size() < 4) continue; // exit(-1);
+				if(win_cls_id.size()<4) continue; // exit(-1);
 
 				/// reco kinematics etc
 				TLorentzVector prec;
@@ -2360,16 +2176,16 @@ int main(int argc, char *argv[])
 					int cid = it->first;
 					int lid = it->second;
 					int ix = cid - lid * index_offset_sig;
-					if (it == win_cls_id2lr.begin())
+					if(it==win_cls_id2lr.begin())
 						imatch = ix;
-					if (ix != imatch)
+					if(ix != imatch)
 					{
 						imatch = -1;
 						break;
 					}
 					// cout << "lid=" << lid << " cid=" << cid << endl;
 				}
-				if (imatch >= 0)
+				if(imatch >= 0)
 				{
 					// cout << "found match index: " << imatch << ", Etru=" << true_p[imatch].E() << ", Erec=" << prec.E() << endl;
 					ismatched = 1;
@@ -2421,11 +2237,11 @@ int main(int argc, char *argv[])
 			///////////////////////////////////////////////
 
 			/// seed matching
-			for (unsigned int t = 0; t < true_q.size(); ++t)
+			for (unsigned int t = 0; t<true_q.size(); ++t)
 			{
-				if (side == "Eside" and true_q[t] > 0) continue;
-				if (side == "Pside" and true_q[t] < 0) continue;
-				if (true_rec_imatch[t].size() > 0) n_trumt++;
+				if(side=="Eside" and true_q[t]>0) continue;
+				if(side=="Pside" and true_q[t]<0) continue;
+				if(true_rec_imatch[t].size()>0) n_trumt++;
 				// else
 				// {
 				// 	cout << "This truth track is not matched: Etru[" << t << "]=" << true_p[t].E() << " GeV with bestdistance=" << bestdistance << ", bestmatchtrui=" << bestmatchtrui << ", bestmatchreci=" << bestmatchreci << endl;
@@ -2434,14 +2250,14 @@ int main(int argc, char *argv[])
 				int truid1 = true_clusters_id[t][0];
 				int truid4 = true_clusters_id[t][3];
 				// cout << "truid1=" << truid1 << ", truid4=" << truid4 << endl;
-				for (unsigned int s = 0; s < seed_p.size(); ++s)
+				for (unsigned int s = 0; s<seed_p.size(); ++s)
 				{
-					if (seed_type[s] != 1)
+					if(seed_type[s] != 1)
 						continue; // has to be signal track
 					// cout << "seed_clusters_id["<<s<<"][0]=" << seed_clusters_id[s][0] << ", seed_clusters_id["<<s<<"][3]=" << seed_clusters_id[s][3] << endl;
-					if (seed_clusters_id[s][0] != truid1)
+					if(seed_clusters_id[s][0] != truid1)
 						continue; // match cluster id of layer 1
-					if (seed_clusters_id[s][3] != truid4)
+					if(seed_clusters_id[s][3] != truid4)
 						continue; // match cluster id of layer 4
 					histos["h_dErel_sed_gen_" + side]->Fill((seed_p[s].E() - true_p[t].E()) / true_p[t].E());
 					histos["h_E_tru_sed_mat_" + side]->Fill(seed_p[s].E());
@@ -2453,17 +2269,17 @@ int main(int argc, char *argv[])
 			/// TODO: add a vector for all truth tracks, to have an inner vector of all matched reco tracks.
 			/// TODO: then need to check if the truth track has more than 1 reco track and take the better one when filling.
 			vector<int> ixtrumatched;
-			for (unsigned int k = 0; k < reco_ismtchd.size(); ++k)
+			for (unsigned int k = 0; k<reco_ismtchd.size(); ++k)
 			{
-				if (side == "Eside" and reco_q[k] > 0) continue;
-				if (side == "Pside" and reco_q[k] < 0) continue;
+				if(side=="Eside" and reco_q[k]>0) continue;
+				if(side=="Pside" and reco_q[k]<0) continue;
 
 				histos["h_chi2_" + side]->Fill(reco_chi2dof[k]); // fill regardless of matching
 
 				/// TODO: now I skip if more than one tru track matched (later implement something to take the best one)
 				// if(true_rec_imatch[reco_ixmtchd[k]].size()>1) continue;
 
-				if (reco_ismtchd[k] == 1 and reco_ixmtchd[k] >= 0 and !foundinvec(reco_ixmtchd[k], ixtrumatched))
+				if(reco_ismtchd[k]==1 and reco_ixmtchd[k] >= 0 and !foundinvec(reco_ixmtchd[k], ixtrumatched))
 				{
 					ixtrumatched.push_back(reco_ixmtchd[k]); /// fill and check in next iterations to avoid repetition
 
