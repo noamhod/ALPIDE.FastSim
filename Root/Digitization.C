@@ -139,29 +139,29 @@ void setParametersFromDet(TString side)
 	cout << "====================================" << endl;
 	cout << "============DEFINITIONS=============" << endl;
 	cout << "====================================" << endl;
-	KMCLayerFwd *layer_outer = (side == "Eside") ? det->GetLayer("EL1O") : det->GetLayer("PL1O");
-	KMCLayerFwd *layer_inner = (side == "Eside") ? det->GetLayer("EL1I") : det->GetLayer("PL1I");
+	KMCLayerFwd *layer_outer = (side=="Eside") ? det->GetLayer("EL1O") : det->GetLayer("PL1O");
+	KMCLayerFwd *layer_inner = (side=="Eside") ? det->GetLayer("EL1I") : det->GetLayer("PL1I");
 
 	Hstave = layer_outer->GetYMax() - layer_outer->GetYMin();
 	Lstave = layer_outer->GetXMax() - layer_outer->GetXMin();
 	cout << "Hstave=" << Hstave << ", Lstave=" << Lstave << endl;
 
-	xMinEI = (side == "Eside") ? layer_inner->GetXMin() : -999;
-	xMinEO = (side == "Eside") ? layer_outer->GetXMin() : -999;
-	xMinPI = (side == "Pside") ? layer_inner->GetXMin() : -999;
-	xMinPO = (side == "Pside") ? layer_outer->GetXMin() : -999;
+	xMinEI = (side=="Eside") ? layer_inner->GetXMin() : -999;
+	xMinEO = (side=="Eside") ? layer_outer->GetXMin() : -999;
+	xMinPI = (side=="Pside") ? layer_inner->GetXMin() : -999;
+	xMinPO = (side=="Pside") ? layer_outer->GetXMin() : -999;
 	cout << "xMinEI=" << xMinEI << ", xMinEO=" << xMinEO << ", xMinPI=" << xMinPI << ", xMinPO=" << xMinPO << endl;
 
-	xMaxEI = (side == "Eside") ? layer_inner->GetXMax() : -999;
-	xMaxEO = (side == "Eside") ? layer_outer->GetXMax() : -999;
-	xMaxPI = (side == "Pside") ? layer_inner->GetXMax() : -999;
-	xMaxPO = (side == "Pside") ? layer_outer->GetXMax() : -999;
+	xMaxEI = (side=="Eside") ? layer_inner->GetXMax() : -999;
+	xMaxEO = (side=="Eside") ? layer_outer->GetXMax() : -999;
+	xMaxPI = (side=="Pside") ? layer_inner->GetXMax() : -999;
+	xMaxPO = (side=="Pside") ? layer_outer->GetXMax() : -999;
 	cout << "xMaxEI=" << xMaxEI << ", xMaxEO=" << xMaxEO << ", xMaxPI=" << xMaxPI << ", xMaxPO=" << xMaxPO << endl;
 
-	xPsideL = (side == "Eside") ? layer_outer->GetXMin() : -999;
-	xPsideR = (side == "Eside") ? layer_inner->GetXMax() : -999;
-	xEsideL = (side == "Pside") ? layer_inner->GetXMin() : -999;
-	xEsideR = (side == "Pside") ? layer_outer->GetXMax() : -999;
+	xPsideL = (side=="Eside") ? layer_outer->GetXMin() : -999;
+	xPsideR = (side=="Eside") ? layer_inner->GetXMax() : -999;
+	xEsideL = (side=="Pside") ? layer_inner->GetXMin() : -999;
+	xEsideR = (side=="Pside") ? layer_outer->GetXMax() : -999;
 	cout << "xPsideL=" << xPsideL << ", xPsideR=" << xPsideR << ", xEsideL=" << xEsideL << ", xEsideR=" << xEsideR << endl;
 
 	yUp = +Hstave / 2.;
@@ -197,48 +197,48 @@ void setParametersFromDet(TString side)
 	LB = z2dipole - z1dipole;
 	cout << "xWdipole=" << xWdipole << ", yHdipole=" << yHdipole << ", z1dipole=" << z1dipole << ", z2dipole=" << z2dipole << endl;
 
-	zEL1I = (side == "Eside") ? det->GetLayer("EL1I")->GetZ() : -999;
-	iEL1I = (side == "Eside") ? det->GetLayer("EL1I")->GetID() : -999;
-	zEL1O = (side == "Eside") ? det->GetLayer("EL1O")->GetZ() : -999;
-	iEL1O = (side == "Eside") ? det->GetLayer("EL1O")->GetID() : -999;
-	zPL1I = (side == "Pside") ? det->GetLayer("PL1I")->GetZ() : -999;
-	iPL1I = (side == "Pside") ? det->GetLayer("PL1I")->GetID() : -999;
-	zPL1O = (side == "Pside") ? det->GetLayer("PL1O")->GetZ() : -999;
-	iPL1O = (side == "Pside") ? det->GetLayer("PL1O")->GetID() : -999;
+	zEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetZ() : -999;
+	iEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetID() : -999;
+	zEL1O = (side=="Eside") ? det->GetLayer("EL1O")->GetZ() : -999;
+	iEL1O = (side=="Eside") ? det->GetLayer("EL1O")->GetID() : -999;
+	zPL1I = (side=="Pside") ? det->GetLayer("PL1I")->GetZ() : -999;
+	iPL1I = (side=="Pside") ? det->GetLayer("PL1I")->GetID() : -999;
+	zPL1O = (side=="Pside") ? det->GetLayer("PL1O")->GetZ() : -999;
+	iPL1O = (side=="Pside") ? det->GetLayer("PL1O")->GetID() : -999;
 	cout << "zEL1I=" << zEL1I << ", zEL1O=" << zEL1O << ", zPL1I=" << zPL1I << ", zPL1O=" << zPL1O << endl;
 
-	zEL2I = (side == "Eside") ? det->GetLayer("EL2I")->GetZ() : -999;
-	iEL2I = (side == "Eside") ? det->GetLayer("EL2I")->GetID() : -999;
-	zEL2O = (side == "Eside") ? det->GetLayer("EL2O")->GetZ() : -999;
-	iEL2O = (side == "Eside") ? det->GetLayer("EL2O")->GetID() : -999;
-	zPL2I = (side == "Pside") ? det->GetLayer("PL2I")->GetZ() : -999;
-	iPL2I = (side == "Pside") ? det->GetLayer("PL2I")->GetID() : -999;
-	zPL2O = (side == "Pside") ? det->GetLayer("PL2O")->GetZ() : -999;
-	iPL2O = (side == "Pside") ? det->GetLayer("PL2O")->GetID() : -999;
+	zEL2I = (side=="Eside") ? det->GetLayer("EL2I")->GetZ() : -999;
+	iEL2I = (side=="Eside") ? det->GetLayer("EL2I")->GetID() : -999;
+	zEL2O = (side=="Eside") ? det->GetLayer("EL2O")->GetZ() : -999;
+	iEL2O = (side=="Eside") ? det->GetLayer("EL2O")->GetID() : -999;
+	zPL2I = (side=="Pside") ? det->GetLayer("PL2I")->GetZ() : -999;
+	iPL2I = (side=="Pside") ? det->GetLayer("PL2I")->GetID() : -999;
+	zPL2O = (side=="Pside") ? det->GetLayer("PL2O")->GetZ() : -999;
+	iPL2O = (side=="Pside") ? det->GetLayer("PL2O")->GetID() : -999;
 	cout << "zEL2I=" << zEL2I << ", zEL2O=" << zEL2O << ", zPL2I=" << zPL2I << ", zPL2O=" << zPL2O << endl;
 
-	zEL3I = (side == "Eside") ? det->GetLayer("EL3I")->GetZ() : -999;
-	iEL3I = (side == "Eside") ? det->GetLayer("EL3I")->GetID() : -999;
-	zEL3O = (side == "Eside") ? det->GetLayer("EL3O")->GetZ() : -999;
-	iEL3O = (side == "Eside") ? det->GetLayer("EL3O")->GetID() : -999;
-	zPL3I = (side == "Pside") ? det->GetLayer("PL3I")->GetZ() : -999;
-	iPL3I = (side == "Pside") ? det->GetLayer("PL3I")->GetID() : -999;
-	zPL3O = (side == "Pside") ? det->GetLayer("PL3O")->GetZ() : -999;
-	iPL3O = (side == "Pside") ? det->GetLayer("PL3O")->GetID() : -999;
+	zEL3I = (side=="Eside") ? det->GetLayer("EL3I")->GetZ() : -999;
+	iEL3I = (side=="Eside") ? det->GetLayer("EL3I")->GetID() : -999;
+	zEL3O = (side=="Eside") ? det->GetLayer("EL3O")->GetZ() : -999;
+	iEL3O = (side=="Eside") ? det->GetLayer("EL3O")->GetID() : -999;
+	zPL3I = (side=="Pside") ? det->GetLayer("PL3I")->GetZ() : -999;
+	iPL3I = (side=="Pside") ? det->GetLayer("PL3I")->GetID() : -999;
+	zPL3O = (side=="Pside") ? det->GetLayer("PL3O")->GetZ() : -999;
+	iPL3O = (side=="Pside") ? det->GetLayer("PL3O")->GetID() : -999;
 	cout << "zEL3I=" << zEL3I << ", zEL3O=" << zEL3O << ", zPL3I=" << zPL3I << ", zPL3O=" << zPL3O << endl;
 
-	zEL4I = (side == "Eside") ? det->GetLayer("EL4I")->GetZ() : -999;
-	iEL4I = (side == "Eside") ? det->GetLayer("EL4I")->GetID() : -999;
-	zEL4O = (side == "Eside") ? det->GetLayer("EL4O")->GetZ() : -999;
-	iEL4O = (side == "Eside") ? det->GetLayer("EL4O")->GetID() : -999;
-	zPL4I = (side == "Pside") ? det->GetLayer("PL4I")->GetZ() : -999;
-	iPL4I = (side == "Pside") ? det->GetLayer("PL4I")->GetID() : -999;
-	zPL4O = (side == "Pside") ? det->GetLayer("PL4O")->GetZ() : -999;
-	iPL4O = (side == "Pside") ? det->GetLayer("PL4O")->GetID() : -999;
+	zEL4I = (side=="Eside") ? det->GetLayer("EL4I")->GetZ() : -999;
+	iEL4I = (side=="Eside") ? det->GetLayer("EL4I")->GetID() : -999;
+	zEL4O = (side=="Eside") ? det->GetLayer("EL4O")->GetZ() : -999;
+	iEL4O = (side=="Eside") ? det->GetLayer("EL4O")->GetID() : -999;
+	zPL4I = (side=="Pside") ? det->GetLayer("PL4I")->GetZ() : -999;
+	iPL4I = (side=="Pside") ? det->GetLayer("PL4I")->GetID() : -999;
+	zPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetZ() : -999;
+	iPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetID() : -999;
 	cout << "zEL4I=" << zEL4I << ", zEL4O=" << zEL4O << ", zPL4I=" << zPL4I << ", zPL4O=" << zPL4O << endl;
 
 	// IP (vertex) --> start of dipol --> end of dipole and then the layers
-	if (side == "Eside")
+	if(side=="Eside")
 	{
 		layersnames = {"EL1I", "EL1O", "EL2I", "EL2O", "EL3I", "EL3O", "EL4I", "EL4O"};
 		zlayer = {0, z1dipole, z2dipole, zEL1I, zEL1O, zEL2I, zEL2O, zEL3I, zEL3O, zEL4I, zEL4O};
@@ -248,7 +248,7 @@ void setParametersFromDet(TString side)
 		silayers = {{"EL1I", iEL1I}, {"EL1O", iEL1O}, {"EL2I", iEL2I}, {"EL2O", iEL2O}, {"EL3I", iEL3I}, {"EL3O", iEL3O}, {"EL4I", iEL4I}, {"EL4O", iEL4O}};
 		islayers = {{iEL1I, "EL1I"}, {iEL1O, "EL1O"}, {iEL2I, "EL2I"}, {iEL2O, "EL2O"}, {iEL3I, "EL3I"}, {iEL3O, "EL3O"}, {iEL4I, "EL4I"}, {iEL4O, "EL4O"}};
 	}
-	if (side == "Pside")
+	if(side=="Pside")
 	{
 		layersnames = {"PL1I", "PL1O", "PL2I", "PL2O", "PL3I", "PL3O", "PL4I", "PL4O"};
 		zlayer = {0, z1dipole, z2dipole, zPL1I, zPL1O, zPL2I, zPL2O, zPL3I, zPL3O, zPL4I, zPL4O};
@@ -259,10 +259,10 @@ void setParametersFromDet(TString side)
 		islayers = {{iPL1I, "PL1I"}, {iPL1O, "PL1O"}, {iPL2I, "PL2I"}, {iPL2O, "PL2O"}, {iPL3I, "PL3I"}, {iPL3O, "PL3O"}, {iPL4I, "PL4I"}, {iPL4O, "PL4O"}};
 	}
 
-	zLastLayer = (side == "Eside") ? zEL4I : zPL4I;
-	zFirstLayer = (side == "Eside") ? zPL1O : zPL1O;
-	LastLayer = (side == "Eside") ? "EL4I" : "PL4I";
-	FirstLayer = (side == "Eside") ? "PL1O" : "PL1O";
+	zLastLayer = (side=="Eside") ? zEL4I : zPL4I;
+	zFirstLayer = (side=="Eside") ? zPL1O : zPL1O;
+	LastLayer = (side=="Eside") ? "EL4I" : "PL4I";
+	FirstLayer = (side=="Eside") ? "PL1O" : "PL1O";
 	cout << "zLastLayer=" << zLastLayer << " (" << LastLayer << "), zFirstLayer=" << zFirstLayer << " (" << FirstLayer << ")" << endl;
 
 	cout << "====================================" << endl;
@@ -271,44 +271,44 @@ void setParametersFromDet(TString side)
 
 int acceptcls(double x, double y, double z, double step = 0.1)
 {
-	if (x < 0 && (abs(z - zEL1I) > step && abs(z - zEL1O) > step) && (abs(z - zEL2I) > step && abs(z - zEL2O) > step) && (abs(z - zEL3I) > step && abs(z - zEL3O) > step) && (abs(z - zEL4I) > step && abs(z - zEL4O) > step))
+	if(x<0 && (abs(z - zEL1I)>step && abs(z - zEL1O)>step) && (abs(z - zEL2I)>step && abs(z - zEL2O)>step) && (abs(z - zEL3I)>step && abs(z - zEL3O)>step) && (abs(z - zEL4I)>step && abs(z - zEL4O)>step))
 		return 0;
-	if (x > 0 && (abs(z - zPL1I) > step && abs(z - zPL1O) > step) && (abs(z - zPL2I) > step && abs(z - zPL2O) > step) && (abs(z - zPL3I) > step && abs(z - zPL3O) > step) && (abs(z - zPL4I) > step && abs(z - zPL4O) > step))
+	if(x>0 && (abs(z - zPL1I)>step && abs(z - zPL1O)>step) && (abs(z - zPL2I)>step && abs(z - zPL2O)>step) && (abs(z - zPL3I)>step && abs(z - zPL3O)>step) && (abs(z - zPL4I)>step && abs(z - zPL4O)>step))
 		return 0;
-	if (x < 0 && (x < xMinEO || x > xMaxEI))
+	if(x<0 && (x<xMinEO || x>xMaxEI))
 		return 0;
-	if (x > 0 && (x < xMinPI || x > xMaxPO))
+	if(x>0 && (x<xMinPI || x>xMaxPO))
 		return 0;
-	if (y > yUp || y < yDn)
+	if(y>yUp || y<yDn)
 		return 0;
 	return 1;
 }
 
 Color_t trkcol(double E)
 {
-	if (E >= 14)
+	if(E >= 14)
 		return kBlack;
-	else if (E >= 12 and E < 14.)
+	else if(E >= 12 and E<14.)
 		return kRed;
-	else if (E >= 10 and E < 12.)
+	else if(E >= 10 and E<12.)
 		return 95;
-	else if (E >= 8. and E < 10.)
+	else if(E >= 8. and E<10.)
 		return 91;
-	else if (E >= 7. and E < 8.)
+	else if(E >= 7. and E<8.)
 		return 80;
-	else if (E >= 6. and E < 7.)
+	else if(E >= 6. and E<7.)
 		return 71;
-	else if (E >= 5. and E < 6.)
+	else if(E >= 5. and E<6.)
 		return 65;
-	else if (E >= 4. and E < 5.)
+	else if(E >= 4. and E<5.)
 		return 60;
-	else if (E >= 3. and E < 4.)
+	else if(E >= 3. and E<4.)
 		return 53;
-	else if (E >= 2. and E < 3.)
+	else if(E >= 2. and E<3.)
 		return 51;
-	else if (E >= 1. and E < 2.)
+	else if(E >= 1. and E<2.)
 		return 223;
-	else if (E >= .5 and E < 1.)
+	else if(E >= .5 and E<1.)
 		return 224;
 	else
 		return kGray;
@@ -370,7 +370,7 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 	source->GetXYZ(xyz);
 	double zCurr = round(xyz[2]); // source->GetZ();
 	int nZ = (zMax - zCurr) / step + 1;
-	if (nZ < 2)
+	if(nZ<2)
 	{
 		printf("bad limits\n");
 		return 0;
@@ -381,9 +381,9 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 	yp[0] = xyz[1]; // y-vertex
 	zp[0] = xyz[2]; // z-vertex
 	int nz = 0;
-	for (int iz = 1; iz < nZ; iz++)
+	for (int iz = 1; iz<nZ; iz++)
 	{
-		if (!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ() + step, zMax), step))
+		if(!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ() + step, zMax), step))
 			break;
 		tmp.GetXYZ(xyz);
 		xp[iz] = xyz[0];
@@ -393,25 +393,25 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 	}
 	TPolyLine3D *polyline = new TPolyLine3D(nz + 1);
 	polyline->SetLineColor(col);
-	for (int i = 0; i < nz + 1; i++)
+	for (int i = 0; i<nz + 1; i++)
 		polyline->SetPoint(i, xp[i], yp[i], zp[i]);
 	return polyline;
 }
 
 bool islayer(double z, int layerindex = -1, double stepsize = 1)
 {
-	if (layerindex >= 0)
+	if(layerindex >= 0)
 	{
 		double dz = abs(zlayer[layerindex] - z);
-		if (dz < stepsize)
+		if(dz<stepsize)
 			return true;
 	}
 	else
 	{
-		for (int j = 0; j < (int)zlayer.size(); ++j)
+		for (int j = 0; j<(int)zlayer.size(); ++j)
 		{
 			double dz = abs(zlayer[j] - z);
-			if (dz < stepsize / 2.)
+			if(dz<stepsize / 2.)
 			{
 				return true;
 			}
@@ -431,9 +431,9 @@ TPolyMarker3D *TrackMarker3d(const KMCProbeFwd *source, double zmin, double zmax
 	yp[0] = xyz[1];
 	zp[0] = xyz[2];
 	int nz = 0;
-	for (int iz = 1; iz < nZ; iz++)
+	for (int iz = 1; iz<nZ; iz++)
 	{
-		if (!det->PropagateToZBxByBz(&tmp, tmp.GetZ() + zstep, zstep))
+		if(!det->PropagateToZBxByBz(&tmp, tmp.GetZ() + zstep, zstep))
 			break;
 		tmp.GetXYZ(xyz);
 		xp[iz] = xyz[0];
@@ -444,15 +444,15 @@ TPolyMarker3D *TrackMarker3d(const KMCProbeFwd *source, double zmin, double zmax
 	TPolyMarker3D *polymarker = new TPolyMarker3D(zlayer.size());
 	polymarker->SetMarkerColor(col);
 	int n = 0;
-	for (int i = 0; i < nz + 1; i++)
+	for (int i = 0; i<nz + 1; i++)
 	{
-		if (!fullrange && !islayer(zp[i], -1, zstep))
+		if(!fullrange && !islayer(zp[i], -1, zstep))
 			continue;
 		polymarker->SetPoint(n, xp[i], yp[i], zp[i]);
 		n++;
 	}
 
-	if (doPrint)
+	if(doPrint)
 	{
 		/// in acceptance of layer 4?
 		double xr, yr, zr;
@@ -481,13 +481,13 @@ TPolyLine3D *GetLayer(TString side, TString io, double z, Color_t col)
 	Double_t zC[] = {z, z, z, z, z};
 
 	TPolyLine3D *polyline = 0;
-	if (side == "P" && io == "I")
+	if(side=="P" && io=="I")
 		polyline = new TPolyLine3D(n, xIP, y, zC);
-	if (side == "E" && io == "I")
+	if(side=="E" && io=="I")
 		polyline = new TPolyLine3D(n, xIE, y, zC);
-	if (side == "P" && io == "O")
+	if(side=="P" && io=="O")
 		polyline = new TPolyLine3D(n, xOP, y, zC);
-	if (side == "E" && io == "O")
+	if(side=="E" && io=="O")
 		polyline = new TPolyLine3D(n, xOE, y, zC);
 	polyline->SetLineColor(col);
 	return polyline;
@@ -508,13 +508,13 @@ TPolyLine3D *GetLayerFront(TString side, TString io, double z, Color_t col)
 	Double_t zC[] = {z, z, z, z};
 
 	TPolyLine3D *polyline = 0;
-	if (side == "P" && io == "I")
+	if(side=="P" && io=="I")
 		polyline = new TPolyLine3D(n, xIP, y, zC);
-	if (side == "E" && io == "I")
+	if(side=="E" && io=="I")
 		polyline = new TPolyLine3D(n, xIE, y, zC);
-	if (side == "P" && io == "O")
+	if(side=="P" && io=="O")
 		polyline = new TPolyLine3D(n, xOP, y, zC);
-	if (side == "E" && io == "O")
+	if(side=="E" && io=="O")
 		polyline = new TPolyLine3D(n, xOE, y, zC);
 	polyline->SetLineColor(col);
 	return polyline;
@@ -566,10 +566,10 @@ TPolyLine3D *GetDipoleFront(Color_t col)
 bool skipglitches(TPolyMarker3D *points)
 {
 	Double_t x, y, z;
-	for (int n = 0; n < points->GetN(); ++n)
+	for (int n = 0; n<points->GetN(); ++n)
 	{
 		points->GetPoint(n, x, y, z);
-		if (abs(x) > 40 || abs(y) > 5)
+		if(abs(x)>40 || abs(y)>5)
 			return true;
 	}
 	return false;
@@ -589,7 +589,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 
 	vector<TPolyLine3D *> staves;
 	vector<TPolyLine3D *> fstaves;
-	for (unsigned int l = 0; l < layersz.size(); ++l)
+	for (unsigned int l = 0; l<layersz.size(); ++l)
 	{
 		double z = layersz[l];
 		TString io = (layersnames[l].Contains("I")) ? "I" : "O";
@@ -603,21 +603,21 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 
 	cnv_pl3d->cd();
 	dipole->Draw();
-	for (unsigned int l = 0; l < staves.size(); l++)
+	for (unsigned int l = 0; l<staves.size(); l++)
 		staves[l]->Draw();
 
 	cnv_pm3d->cd();
 	dipole->Draw();
-	for (unsigned int l = 0; l < staves.size(); l++)
+	for (unsigned int l = 0; l<staves.size(); l++)
 		staves[l]->Draw();
 
-	for (int i = 0; i < (int)poll.size(); ++i)
+	for (int i = 0; i<(int)poll.size(); ++i)
 	{
 		/// check acceptance
-		if (!inacc[i])
+		if(!inacc[i])
 			continue;
 		/// check for glitches
-		if (skipglitches(polm[i]))
+		if(skipglitches(polm[i]))
 			continue;
 
 		cnv_pl3d->cd();
@@ -631,7 +631,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 	TLegend *leg = trkcolleg();
 	cnv_pl3d->cd();
 	fdipole->Draw();
-	for (unsigned int l = 0; l < fstaves.size(); l++)
+	for (unsigned int l = 0; l<fstaves.size(); l++)
 		fstaves[l]->Draw();
 	leg->Draw("same");
 
@@ -647,7 +647,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 	flines->cd();
 	dipole->Write();
 	fdipole->Write();
-	for (unsigned int l = 0; l < staves.size(); l++)
+	for (unsigned int l = 0; l<staves.size(); l++)
 	{
 		staves[l]->Write();
 		fstaves[l]->Write();
@@ -661,14 +661,14 @@ bool accepttrk(vector<TVector3> &clusters, bool fullacc, double step = 0.1, int 
 	/// in acceptance?
 	int acc = 0;
 	Double_t x, y, z;
-	for (unsigned int j = 0; j < clusters.size(); ++j)
+	for (unsigned int j = 0; j<clusters.size(); ++j)
 	{
 		x = clusters[j].X();
 		y = clusters[j].Y();
 		z = clusters[j].Z();
 		acc += acceptcls(x, y, z, step);
 	}
-	return (fullacc) ? (acc >= nMinLayers) : (acc > 0);
+	return (fullacc) ? (acc >= nMinLayers) : (acc>0);
 }
 
 /// for the output tree
@@ -734,15 +734,15 @@ void KillOutTree()
 void RenameOutTree(TString fOutName, int nFiles)
 {
 	TString sf = "";
-	if (nFiles < 10)
+	if(nFiles<10)
 		sf = Form("0000%d", nFiles);
-	if (nFiles >= 10 && nFiles < 100)
+	if(nFiles >= 10 && nFiles<100)
 		sf = Form("000%d", nFiles);
-	if (nFiles >= 100 && nFiles < 1000)
+	if(nFiles >= 100 && nFiles<1000)
 		sf = Form("00%d", nFiles);
-	if (nFiles >= 1000 && nFiles < 10000)
+	if(nFiles >= 1000 && nFiles<10000)
 		sf = Form("0%d", nFiles);
-	if (nFiles >= 10000 && nFiles < 100000)
+	if(nFiles >= 10000 && nFiles<100000)
 		sf = Form("%d", nFiles); // assume no more than 99,999 files...
 	TString fOutNameNew = fOutName;
 	fOutNameNew = fOutNameNew.ReplaceAll(".root", "_" + sf + ".root");
@@ -752,19 +752,19 @@ void RenameOutTree(TString fOutName, int nFiles)
 TString FormatEventID(int evnt)
 {
 	TString sevnt = "";
-	if (evnt < 10)
+	if(evnt<10)
 		sevnt = Form("000000%d", evnt);
-	if (evnt >= 10 && evnt < 100)
+	if(evnt >= 10 && evnt<100)
 		sevnt = Form("00000%d", evnt);
-	if (evnt >= 100 && evnt < 1000)
+	if(evnt >= 100 && evnt<1000)
 		sevnt = Form("0000%d", evnt);
-	if (evnt >= 1000 && evnt < 10000)
+	if(evnt >= 1000 && evnt<10000)
 		sevnt = Form("000%d", evnt);
-	if (evnt >= 10000 && evnt < 100000)
+	if(evnt >= 10000 && evnt<100000)
 		sevnt = Form("00%d", evnt);
-	if (evnt >= 100000 && evnt < 1000000)
+	if(evnt >= 100000 && evnt<1000000)
 		sevnt = Form("0%d", evnt);
-	if (evnt >= 1000000 && evnt < 10000000)
+	if(evnt >= 1000000 && evnt<10000000)
 		sevnt = Form("%d", evnt); // assume no more than 9,999,999 events...
 	return sevnt;
 }
@@ -780,16 +780,16 @@ int toint(TString str)
 
 void AddCluster(int slvidx, int index_offset, TString process, TString LYR, double dxMax = 5)
 {
-	if (!det->GetLayer(LYR)->IsITS())
+	if(!det->GetLayer(LYR)->IsITS())
 		return;
 
 	// get the reconstructed propagated to the vertex
 	int layerid = det->GetLayer(LYR)->GetID();
 	KMCClusterFwd *cluster = det->GetLayer(LYR)->GetMCCluster();
 
-	if (!cluster)
+	if(!cluster)
 		return;
-	if (cluster->GetZLab() == 0)
+	if(cluster->GetZLab()==0)
 		return;
 
 	Double_t x, y, z;
@@ -803,10 +803,10 @@ void AddCluster(int slvidx, int index_offset, TString process, TString LYR, doub
 	/// !!! dirty fix !!! /// //TODO
 	/////////////////////////
 	unsigned int ncls = clusters_r[slvidx].size();
-	double xprev = (ncls > 0) ? clusters_r[slvidx][ncls - 1].X() : x;
-	if (abs(x - xprev) > dxMax)
+	double xprev = (ncls>0) ? clusters_r[slvidx][ncls - 1].X() : x;
+	if(abs(x - xprev)>dxMax)
 		return;
-	if (x * xprev < 0)
+	if(x * xprev<0)
 		return;
 
 	clusters_xyz[slvidx]->SetNextPoint(x, y, z);
@@ -824,7 +824,7 @@ void AddCluster(int slvidx, int index_offset, TString process, TString LYR, doub
 void reset_layers_all()
 {
 	// cout << "Nlayers=" << det->GetLayers()->GetEntries() << endl;
-	for (Int_t l = 0; l < det->GetLayers()->GetEntries(); l++)
+	for (Int_t l = 0; l<det->GetLayers()->GetEntries(); l++)
 	{
 		det->GetLayer(l)->ResetMCClusters();
 		det->GetLayer(l)->ResetBgClusters();
@@ -837,7 +837,7 @@ void reset_layers_all()
 void reset_layers_tracks(Int_t skip = -1)
 {
 	Int_t l0 = (skip >= 0) ? skip : 0;
-	for (Int_t l = l0; l < det->GetLayers()->GetEntries(); l++)
+	for (Int_t l = l0; l<det->GetLayers()->GetEntries(); l++)
 	{
 		det->GetLayer(l)->ResetMCTracks();
 	}
@@ -847,54 +847,39 @@ int main(int argc, char *argv[])
 {
 	int argcounter;
 	printf("Program Name Is: %s", argv[0]);
-	if (argc >= 2)
+	if(argc >= 2)
 	{
 		printf("\nNumber Of Arguments Passed: %d", argc);
 		printf("\n----Following Are The Command Line Arguments Passed----");
-		for (argcounter = 0; argcounter < argc; argcounter++)
+		for (argcounter = 0; argcounter<argc; argcounter++)
 			printf("\nargv[%d]: %s", argcounter, argv[argcounter]);
 		printf("\n");
 	}
 	//// minimum requirements
-	if (argc < 2)
-	{
-		printf("argc<2, exitting now\n");
-		exit(-1);
-	}
+	if(argc<2) { printf("argc<2, exitting now\n"); exit(-1); }
 	//// validate inputs
-	if (argc == 2 and !((TString)argv[1]).Contains("-proc="))
-	{
-		printf("argc=2 but cannot parse %s\n", argv[1]);
-		exit(-1);
-	}
-	if (argc == 3 and !((TString)argv[2]).Contains("-path="))
-	{
-		printf("argc=4 but cannot parse %s\n", argv[3]);
-		exit(-1);
-	}
-	if (argc == 4 and !((TString)argv[3]).Contains("-evnt="))
-	{
-		printf("argc=3 but cannot parse %s\n", argv[2]);
-		exit(-1);
-	}
-	if (argc == 5 and !((TString)argv[4]).Contains("-seed="))
-	{
-		printf("argc=5 but cannot parse %s\n", argv[4]);
-		exit(-1);
-	}
+	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n", argv[1]); exit(-1); }
+	if(argc==3 and !((TString)argv[2]).Contains("-sigl=")) { printf("argc=4 but cannot parse %s\n", argv[3]); exit(-1); }
+	if(argc==4 and !((TString)argv[3]).Contains("-evnt=")) { printf("argc=3 but cannot parse %s\n", argv[2]); exit(-1); }
+	if(argc==5 and !((TString)argv[4]).Contains("-seed=")) { printf("argc=5 but cannot parse %s\n", argv[4]); exit(-1); }
 	//// assign inputs
-	TString process = ((TString)argv[1]).ReplaceAll("-proc=", "");						// mandatory
-	TString path = ((TString)argv[2]).ReplaceAll("-path=", "");							// mandatory
-	int evnt = (argc > 3) ? toint(((TString)argv[3]).ReplaceAll("-evnt=", "")) : -1;	// job id [optional]
-	int Seed = (argc > 4) ? toint(((TString)argv[4]).ReplaceAll("-seed=", "")) : 12345; // seed [optional]
+	TString process = ((TString)argv[1]).ReplaceAll("-proc=", ""); // mandatory
+	TString signame = ((TString)argv[2]).ReplaceAll("-sigl=", "");	// mandatory
+	int evnt = (argc>3) ? toint(((TString)argv[3]).ReplaceAll("-evnt=", "")) : -1;	// job id [optional]
+	int Seed = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-seed=", "")) : 12345; // seed [optional]
 	//// print assigned inputs
 	cout << "process=" << process << endl;
-	cout << "path=" << path << endl;
+	cout << "signame=" << signame << endl;
 	cout << "evnt=" << evnt << endl;
 	cout << "Seed=" << Seed << endl;
+	
+	// making the dir if it is not existing
+	TString digdir = storage+"/data/root/dig/"+process+"/"+signame;
+	cout << "making dir (if not exists already): " << digdir << endl;
+	gSystem->Exec("mkdir -p "+digdir);
 
 	/// common stuff
-	TString eventid = (evnt < 0) ? "" : FormatEventID(evnt);
+	TString eventid = (evnt<0) ? "" : FormatEventID(evnt);
 	TString proc = process;
 	proc.ReplaceAll("_bkg", "");
 
@@ -911,9 +896,9 @@ int main(int argc, char *argv[])
 	gInterpreter->GenerateDictionary("vector<vector<int> >", "vector");
 	gInterpreter->GenerateDictionary("vector<vector<TVector3> >", "vector");
 	gInterpreter->GenerateDictionary("vector<vector<TPolyLine3D> >", "vector");
-	gSystem->Exec("mkdir -p " + storage + "/data/root/dig");
-	TString isflat = (path.Contains("flat")) ? "_flat" : "";
-	TString fOutName = storage + "/data/root/dig/dig_" + process + "_" + eventid + isflat + ".root";
+	
+	TString isflat = (signame.Contains("flat")) ? "_flat" : "";
+	TString fOutName = digdir+"/dig_" + process + "_" + eventid + isflat + ".root";
 	fOut = new TFile(fOutName, "RECREATE");
 
 	if(process=="elaser")
@@ -924,7 +909,7 @@ int main(int argc, char *argv[])
 	}
 
 	/// stuff which depend on the side
-	for (int s = 0; s < sides.size(); s++)
+	for(int s = 0; s<sides.size(); s++)
 	{
 		TString side = sides[s];
 
@@ -960,7 +945,8 @@ int main(int argc, char *argv[])
 
 		/// get the particles from a ttree
 		// TFile* fIn = new TFile(storage+"/data/root/raw_"+process+".root","READ");
-		TFile *fIn = new TFile(path + "/raw_" + process + ".root", "READ");
+		TString rawdir = digdir.ReplaceAll("dig","raw");
+		TFile *fIn = new TFile(rawdir+"/raw_"+process+".root", "READ");
 		TTree *tIn = (TTree *)fIn->Get("tt");
 		int nev = tIn->GetEntries();
 		vector<double> *vx = 0;
@@ -989,16 +975,16 @@ int main(int argc, char *argv[])
 		// hname = "h2_z_vs_x_"+side; histos2.insert( make_pair(hname, new TH2D(hname,";x [cm];z [cm];Tracks",1000,-100,+100, 2000,0,+400)) );
 		// hname = "h2_z_vs_y_"+side; histos2.insert( make_pair(hname, new TH2D(hname,";y [cm];z [cm];Tracks",1000,-100,+100, 2000,0,+400)) );
 		hname = "h2_y_vs_x_exit_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{exit} [cm];y_{exit} [cm];Tracks", 200, -15, +15, 200, -0.2, +0.2)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{exit} [cm];y_{exit} [cm];Tracks", 200, -30, +30, 200, -0.75, +0.75)));
 
 		hname = "h2_y_vs_x_L1I_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];y [cm];Tracks", 300, -55, +55, 200, -0.5, +0.5)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];y [cm];Tracks", 300, -55, +55, 300, -0.75, +0.75)));
 		hname = "h2_y_vs_x_L1O_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];y [cm];Tracks", 300, -55, +55, 200, -0.5, +0.5)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];y [cm];Tracks", 300, -55, +55, 300, -0.75, +0.75)));
 		hname = "h2_y_vs_x_L4I_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];y [cm];Tracks", 300, -55, +55, 200, -0.5, +0.5)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];y [cm];Tracks", 300, -55, +55, 300, -0.75, +0.75)));
 		hname = "h2_y_vs_x_L4O_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];y [cm];Tracks", 300, -55, +55, 200, -0.5, +0.5)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];y [cm];Tracks", 300, -55, +55, 300, -0.75, +0.75)));
 
 		hname = "h2_E_vs_x_L1I_" + side;
 		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];E [GeV];Tracks", 500, -55, +55, 340, 0, +17)));
@@ -1025,8 +1011,8 @@ int main(int argc, char *argv[])
 
 		/// loop on events
 		// for(int iev=0;iev<nev;iev++)
-		bool fullloop = (evnt < 0);
-		for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev < nev : iev == evnt; iev++)
+		bool fullloop = (evnt<0);
+		for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<nev : iev==evnt; iev++)
 		{
 			/// reset the layers
 			reset_layers_all();
@@ -1036,14 +1022,14 @@ int main(int argc, char *argv[])
 			ngen = 0;
 			nslv = 0;
 			nacc = 0;
-			for (int i = 0; i < (int)clusters_id.size(); ++i) clusters_id[i].clear();
-			for (int i = 0; i < (int)clusters_layerid.size(); ++i) clusters_layerid[i].clear();
-			for (int i = 0; i < (int)clusters_type.size(); ++i) clusters_type[i].clear();
-			for (int i = 0; i < (int)clusters_xyz.size(); ++i) delete clusters_xyz[i];
-			for (int i = 0; i < (int)clusters_r.size(); ++i) clusters_r[i].clear();
-			for (int i = 0; i < (int)trkpts_fullrange.size(); ++i) delete trkpts_fullrange[i];
-			for (int i = 0; i < (int)trkpts.size(); ++i) delete trkpts[i];
-			for (int i = 0; i < (int)trklin.size(); ++i) delete trklin[i];
+			for (int i = 0; i<(int)clusters_id.size(); ++i) clusters_id[i].clear();
+			for (int i = 0; i<(int)clusters_layerid.size(); ++i) clusters_layerid[i].clear();
+			for (int i = 0; i<(int)clusters_type.size(); ++i) clusters_type[i].clear();
+			for (int i = 0; i<(int)clusters_xyz.size(); ++i) delete clusters_xyz[i];
+			for (int i = 0; i<(int)clusters_r.size(); ++i) clusters_r[i].clear();
+			for (int i = 0; i<(int)trkpts_fullrange.size(); ++i) delete trkpts_fullrange[i];
+			for (int i = 0; i<(int)trkpts.size(); ++i) delete trkpts[i];
+			for (int i = 0; i<(int)trklin.size(); ++i) delete trklin[i];
 			wgt.clear();
 			xvtx.clear();
 			yvtx.clear();
@@ -1062,31 +1048,40 @@ int main(int argc, char *argv[])
 
 			//// get the next entry
 			tIn->GetEntry(iev);
-			if ((iev % outN) == 0) printf("Done %d out of %d\n", iev, nev);
+			if((iev % outN)==0) printf("Done %d out of %d\n", iev, nev);
 			// int nfakeHits = 0;
 			TLorentzVector ptmp;
 			int ngenall = pdgId->size();
 
+			int nGenMax = 10000;
+			int nGen = 0;
+
 			/// start looping on truth particles
-			for (int igen = 0; igen < ngenall; igen++)
+			for(int igen = 0; igen<ngenall; igen++)
 			{
-				if (abs(pdgId->at(igen)) != 11)
+				if(abs(pdgId->at(igen))!=11)
 				{
 					cout << "illegal pdgId: " << pdgId->at(igen) << endl;
 					break;
 				}
 
-				//////////////////////////////////////////////////////
-				// saving one tree per side!!! ///////////////////////
-				if (pdgId->at(igen) < 0 && side == "Eside") continue; /////
-				if (pdgId->at(igen) > 0 && side == "Pside") continue; 
-				///////////////////////////////////////////////////////////
+				/////////////////////////////////////////////////////
+				// saving one tree per side!!! //////////////////////
+				if(pdgId->at(igen)<0 && side=="Eside") continue;
+				if(pdgId->at(igen)>0 && side=="Pside") continue; 
+				/////////////////////////////////////////////////////
+				
+				// /////////////////////////////////////////////////////
+				// /// break if I want to limit number of tracks to read
+				// if(nGen>=nGenMax) break; ////////////////////////////
+				// nGen++; /////////////////////////////////////////////
+				// /////////////////////////////////////////////////////
 
 				//// all the rest
 				ngen++;
 				vector<int> vtmp;
 				vector<TVector3> vtmpTVector3d;
-				int q = (pdgId->at(igen) == 11) ? -1 : +1;
+				int q = (pdgId->at(igen)==11) ? -1 : +1;
 				ptmp.SetXYZM(px->at(igen), py->at(igen), pz->at(igen), meGeV);
 
 				/// reset the layers
@@ -1098,7 +1093,7 @@ int main(int argc, char *argv[])
 				double vY = (process.Contains("bkg")) ? vy->at(igen) : 0.;
 				double vZ = (process.Contains("bkg")) ? vz->at(igen) : 0.;
 				bool slv = det->SolveSingleTrack(ptmp.Pt(), ptmp.Rapidity(), ptmp.Phi(), meGeV, q, vX, vY, vZ, 0, 1, 99);
-				if (!slv) continue; // reconstruction failed
+				if(!slv) continue; // reconstruction failed
 				nslv++;
 
 				// get the truth trajectory in the B-field
@@ -1113,66 +1108,66 @@ int main(int argc, char *argv[])
 				zvtx.push_back(vz->at(igen));
 				crg.push_back(q);
 				trkp4.push_back(ptmp);
-				if (!process.Contains("bkg")) trkpts_fullrange.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E()), false, true));
+				if(!process.Contains("bkg")) trkpts_fullrange.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E()), false, true));
 				trkpts.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E())));
 				trklin.push_back(TrackLine3d(trutrk, zLastLayer + 15, 1, trkcol(ptmp.E())));
 
 				/// fill some histos
-				double zfirstinner = (side == "Eside") ? szlayers["EL1I"] : szlayers["PL1I"];
-				double zlastinner = (side == "Eside") ? szlayers["EL4I"] : szlayers["PL4I"];
-				double zfirstouter = (side == "Eside") ? szlayers["EL1O"] : szlayers["PL1O"];
-				double zlastouter = (side == "Eside") ? szlayers["EL4O"] : szlayers["PL4O"];
-				double xMinI = (side == "Eside") ? xMinEI : xMinPI;
-				double xMaxI = (side == "Eside") ? xMaxEI : xMaxPI;
-				double xMinO = (side == "Eside") ? xMinEO : xMinPO;
-				double xMaxO = (side == "Eside") ? xMaxEO : xMaxPO;
+				double zfirstinner = (side=="Eside") ? szlayers["EL1I"] : szlayers["PL1I"];
+				double zlastinner = (side=="Eside") ? szlayers["EL4I"] : szlayers["PL4I"];
+				double zfirstouter = (side=="Eside") ? szlayers["EL1O"] : szlayers["PL1O"];
+				double zlastouter = (side=="Eside") ? szlayers["EL4O"] : szlayers["PL4O"];
+				double xMinI = (side=="Eside") ? xMinEI : xMinPI;
+				double xMaxI = (side=="Eside") ? xMaxEI : xMaxPI;
+				double xMinO = (side=="Eside") ? xMinEO : xMinPO;
+				double xMaxO = (side=="Eside") ? xMaxEO : xMaxPO;
 				double x1I = 0;
 				double x4I = 0;
 				double x1O = 0;
 				double x4O = 0;
-				for (Int_t n = 0; n < trkpts_fullrange[slvidx]->GetN(); ++n)
+				for (Int_t n = 0; n<trkpts_fullrange[slvidx]->GetN(); ++n)
 				{
 					Double_t xp, yp, zp;
 					trkpts_fullrange[slvidx]->GetPoint(n, xp, yp, zp);
 					// histos2["h2_z_vs_x"]->Fill(xp,zp);
 					// histos2["h2_z_vs_y"]->Fill(yp,zp);
-					bool isInnerX = (xp > xMinI && xp < xMaxI);
-					bool isOuterX = (xp > xMinO && xp < xMaxO);
-					if (zp == z2dipole) histos2["h2_y_vs_x_exit_" + side]->Fill(xp, yp);
+					bool isInnerX = (xp>xMinI && xp<xMaxI);
+					bool isOuterX = (xp>xMinO && xp<xMaxO);
+					if(zp==z2dipole) histos2["h2_y_vs_x_exit_" + side]->Fill(xp, yp);
 
-					if (zp == zfirstinner && isInnerX) histos2["h2_y_vs_x_L1I_" + side]->Fill(xp, yp);
-					if (zp == zlastinner && isInnerX)  histos2["h2_y_vs_x_L4I_" + side]->Fill(xp, yp);
-					if (zp == zfirstouter && isOuterX) histos2["h2_y_vs_x_L1O_" + side]->Fill(xp, yp);
-					if (zp == zlastouter && isOuterX)  histos2["h2_y_vs_x_L4O_" + side]->Fill(xp, yp);
+					if(zp==zfirstinner && isInnerX) histos2["h2_y_vs_x_L1I_" + side]->Fill(xp, yp);
+					if(zp==zlastinner && isInnerX)  histos2["h2_y_vs_x_L4I_" + side]->Fill(xp, yp);
+					if(zp==zfirstouter && isOuterX) histos2["h2_y_vs_x_L1O_" + side]->Fill(xp, yp);
+					if(zp==zlastouter && isOuterX)  histos2["h2_y_vs_x_L4O_" + side]->Fill(xp, yp);
 
-					if (zp == zfirstinner && isInnerX) histos2["h2_E_vs_x_L1I_" + side]->Fill(xp, trkp4[slvidx].E());
-					if (zp == zlastinner && isInnerX)  histos2["h2_E_vs_x_L4I_" + side]->Fill(xp, trkp4[slvidx].E());
-					if (zp == zfirstouter && isOuterX) histos2["h2_E_vs_x_L1O_" + side]->Fill(xp, trkp4[slvidx].E());
-					if (zp == zlastouter && isOuterX)  histos2["h2_E_vs_x_L4O_" + side]->Fill(xp, trkp4[slvidx].E());
+					if(zp==zfirstinner && isInnerX) histos2["h2_E_vs_x_L1I_" + side]->Fill(xp, trkp4[slvidx].E());
+					if(zp==zlastinner && isInnerX)  histos2["h2_E_vs_x_L4I_" + side]->Fill(xp, trkp4[slvidx].E());
+					if(zp==zfirstouter && isOuterX) histos2["h2_E_vs_x_L1O_" + side]->Fill(xp, trkp4[slvidx].E());
+					if(zp==zlastouter && isOuterX)  histos2["h2_E_vs_x_L4O_" + side]->Fill(xp, trkp4[slvidx].E());
 
-					if (zp == zfirstinner && isInnerX) x1I = xp;
-					if (zp == zlastinner && isInnerX)  x4I = xp;
-					if (zp == zfirstouter && isOuterX) x1O = xp;
-					if (zp == zlastouter && isOuterX)  x4O = xp;
+					if(zp==zfirstinner && isInnerX) x1I = xp;
+					if(zp==zlastinner && isInnerX)  x4I = xp;
+					if(zp==zfirstouter && isOuterX) x1O = xp;
+					if(zp==zlastouter && isOuterX)  x4O = xp;
 				}
-				if (x4I > xMinI && x4I < xMaxI)
+				if(x4I>xMinI && x4I<xMaxI)
 				{
-					if ((x1I > xMinI && x1I < xMaxI)) histos2["h2_dx14_vs_x_L4I_" + side]->Fill(x4I, abs(x4I - x1I));
+					if((x1I>xMinI && x1I<xMaxI)) histos2["h2_dx14_vs_x_L4I_" + side]->Fill(x4I, abs(x4I - x1I));
 				}
-				if (x4O > xMinO && x4O < xMaxO)
+				if(x4O>xMinO && x4O<xMaxO)
 				{
-					if ((x1O > xMinO && x1O < xMaxO)) histos2["h2_dx14_vs_x_L4O_" + side]->Fill(x4O, abs(x4O - x1O));
-					else if ((x1I > xMinI && x1I < xMaxI)) histos2["h2_dx14_vs_x_L4X_" + side]->Fill(x4O, abs(x4O - x1I));
+					if((x1O>xMinO && x1O<xMaxO)) histos2["h2_dx14_vs_x_L4O_" + side]->Fill(x4O, abs(x4O - x1O));
+					else if((x1I>xMinI && x1I<xMaxI)) histos2["h2_dx14_vs_x_L4X_" + side]->Fill(x4O, abs(x4O - x1I));
 				}
 				
-				if (x1I > xMinI && x1I < xMaxI)
+				if(x1I>xMinI && x1I<xMaxI)
 				{
-					if ((x4I > xMinI && x4I < xMaxI)) histos2["h2_dx14_vs_x_L1I_" + side]->Fill(x1I, abs(x4I - x1I));
-					else if ((x4O > xMinO && x4O < xMaxO)) histos2["h2_dx14_vs_x_L1X_" + side]->Fill(x1O, abs(x4O - x1I));
+					if((x4I>xMinI && x4I<xMaxI)) histos2["h2_dx14_vs_x_L1I_" + side]->Fill(x1I, abs(x4I - x1I));
+					else if((x4O>xMinO && x4O<xMaxO)) histos2["h2_dx14_vs_x_L1X_" + side]->Fill(x1O, abs(x4O - x1I));
 				}
-				if (x1O > xMinO && x1O < xMaxO)
+				if(x1O>xMinO && x1O<xMaxO)
 				{
-					if ((x4O > xMinO && x4O < xMaxO)) histos2["h2_dx14_vs_x_L1O_" + side]->Fill(x1O, abs(x4O - x1O));
+					if((x4O>xMinO && x4O<xMaxO)) histos2["h2_dx14_vs_x_L1O_" + side]->Fill(x1O, abs(x4O - x1O));
 				}
 
 				clusters_id.push_back(vtmp);
@@ -1183,18 +1178,18 @@ int main(int argc, char *argv[])
 				acc.push_back(0);
 
 				// get the reconstructed propagated to the vertex
-				for (unsigned int k = 0; k < layersnames.size(); k++)
+				for (unsigned int k = 0; k<layersnames.size(); k++)
 				{
 					TString LYR = layersnames[k];
-					if (!det->GetLayer(LYR)->IsITS()) continue;
-					if (crg[slvidx] < 0 && LYR.Contains("P")) continue;
-					if (crg[slvidx] > 0 && LYR.Contains("E")) continue;
+					if(!det->GetLayer(LYR)->IsITS()) continue;
+					if(crg[slvidx]<0 && LYR.Contains("P")) continue;
+					if(crg[slvidx]>0 && LYR.Contains("E")) continue;
 					AddCluster(slvidx, index_offset, process, LYR);
 				}
 
 				int nclusters = clusters_layerid[slvidx].size(); // same as layers hit by the track
 				// cout << "slvidx=" << slvidx << ", E=" << trkp4[slvidx].E() << ", Q=" << crg[slvidx] << " --> Nclusters=" << nclusters << endl;
-				for (int j = 0; j < nclusters; ++j)
+				for (int j = 0; j<nclusters; ++j)
 				{
 					Double_t x, y, z;
 					// clusters_xyz[slvidx]->GetPoint(j,x,y,z);
@@ -1208,12 +1203,12 @@ int main(int argc, char *argv[])
 
 				/// check acceptance
 				acc[slvidx] = (accepttrk(clusters_r[slvidx], false));
-				if (acc[slvidx]) nacc++;
+				if(acc[slvidx]) nacc++;
 			}
-			if (iev == 0)
+			if(iev==0)
 				WriteGeometry(trkpts, trklin, process, acc, clusters_xyz, "_truth");
-			if (iev % 1 == 0) cout << "iev=" << iev << " --> ngen=" << ngen << ", nslv=" << nslv << ", nacc=" << nacc << endl;
-			if (nslv != ngen and !process.Contains("bkg")) cout << "Warning: nslv=" << nslv << ", ngen=" << ngen << " --> problem" << endl;
+			if(iev % 1==0) cout << "iev=" << iev << " --> ngen=" << ngen << ", nslv=" << nslv << ", nacc=" << nacc << endl;
+			if(nslv != ngen and !process.Contains("bkg")) cout << "Warning: nslv=" << nslv << ", ngen=" << ngen << " --> problem" << endl;
 
 			/// fill the tree
 			fOut->cd();
@@ -1238,7 +1233,7 @@ int main(int argc, char *argv[])
 			// }
 		}
 		KillOutTree();
-		if (process.Contains("bkg") and eventid == "") RenameOutTree(fOutName, nFiles);
+		if(process.Contains("bkg") and eventid=="") RenameOutTree(fOutName, nFiles);
 	}
 	return 0;
 }
