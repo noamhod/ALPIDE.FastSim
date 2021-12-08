@@ -4,10 +4,10 @@ import subprocess
 from subprocess import call
 from random import seed, randint
 import argparse
-parser = argparse.ArgumentParser(description='send_qsub.py...')
-parser.add_argument('-p', metavar='process', required=True,  help='physics process [trident or bppp]')
+parser = argparse.ArgumentParser(description='submit to torch batch...')
+parser.add_argument('-p', metavar='process', required=True,  help='physics process [elaser or glaser]')
 parser.add_argument('-c', metavar='clean',   required=True,  help='y/n')
-parser.add_argument('-n', metavar='nevents', required=True,  help='980')
+parser.add_argument('-n', metavar='nevents', required=True,  help='5')
 parser.add_argument('-r', metavar='resubmit',required=False, help='"[1,2,6,99,134,...]"')
 argus = parser.parse_args()
 proc  = argus.p
@@ -37,7 +37,7 @@ out, err = p.communicate()
 
 ## clean all dirs?
 if(clean):
-   reallyclean = raw_input("Are you sure you really want to clean ??? [yes/no]")
+   reallyclean = ("Are you sure you really want to clean ??? [yes/no]")
    print("OK, your choice is: "+reallyclean)
    if(reallyclean!="yes" and reallyclean!="no"):
       print("cannot understand your choice: "+reallyclean)
@@ -66,16 +66,18 @@ failed = []
 for ievnt in ievents:
    sievnt = str(ievnt)
    randseed = str(randint(0,1000000))
-   command = 'qsub -F "'+sievnt+' '+randseed+'" job_qsub.sh -q N  -o $STORAGEDIR/logs/log_'+sievnt+'.out -e $STORAGEDIR/logs/log_'+sievnt+'.err'
-   print command
+   # command = 'qsub -F "'+sievnt+' '+randseed+'" job_qsub.sh -q N  -o $STORAGEDIR/logs/log_'+sievnt+'.out -e $STORAGEDIR/logs/log_'+sievnt+'.err'
+   #### submit jobs to the PBS system
+   command = 'qsub  -l ncpus=1,mem=6gb -v parname1='+sievnt+',parname2='+randseed+',parname3='+proc+' -q N -N "rundigireco_'+sievnt+'" -o $STORAGEDIR/logs/log_'+sievnt+'.out -e $STORAGEDIR/logs/log_'+sievnt+'.err  job_qsub.sh'
+   print(command)
    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    out, err = p.communicate()
-   print("out=",out.replace("\n",""))
+   print("out=",out)
    if(out==""): failed.append(ievnt)
-   if(err!=""): print("err=",err.replace("\n",""))
+   if(err!=""): print("err=",err)
 print("failed:",failed)
 
 print("Check with:        qstat -u user")
 print("List logs with:    ls -lrth $STORAGEDIR/logs/")
 print("Check output with: python check_submission.py")
-print("kill all jobs:     qselect -u nhod | xargs qdel")
+print("kill all jobs:     qselect -u <username> | xargs qdel")
