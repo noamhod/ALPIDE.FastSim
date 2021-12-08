@@ -978,49 +978,20 @@ void embed_cluster(Cluster &cls)
 	det->GetLayer(cls.lyrid)->AddBgCluster(clxyzTrk[0], clxyzTrk[1], clxyzTrk[2], cls.clsid);
 }
 
-/// function to embed all cluster at one go, superslow
-void add_all_clusters(TString side)
-{
-	for (TMapiTS::iterator it = layers.begin(); it != layers.end(); ++it)
-	{
-		int lid = it->first;
-		TString slr = it->second;
-		for (unsigned int j = 0; j<cached_clusters[slr].size(); ++j)
-		{
-			float x = cached_clusters[slr][j].r.X();
-			float y = cached_clusters[slr][j].r.Y();
-			float z = cached_clusters[slr][j].r.Z();
-			int cid = cached_clusters[slr][j].clsid;
-			embed_cluster(lid, x, y, z, cid);
-		}
-	}
-	/// must sort clusters
-	for (TMapiTS::iterator it = layers.begin(); it != layers.end(); ++it)
-	{
-		int lid = it->first;
-		det->GetLayer(lid)->GetMCCluster()->Kill();
-		det->GetLayer(lid)->SortBGClusters(); /// sort!!!
-		/// after sorting, need to map the cluster ids to their indices!!!
-		for (int n = 0; n<det->GetLayer(lid)->GetNBgClusters(); ++n)
-		{
-			int id = det->GetLayer(lid)->GetBgCluster(n)->GetTrID();
-			cached_clusters_all_ids.insert(make_pair(id, n));
-		}
-	}
-}
 
 /// layer 1 clusters embedding
-void embed_selective(TString side, TString lyrnumber, TString io, double xPivot, vector<int> &embedded_clusters, vector<int> &allL1ClsIx)
+int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, vector<int> &embedded_clusters, vector<int> &allL1ClsIx)
 {
 	TString slyr = side.ReplaceAll("side", "") + "L" + lyrnumber + io;
 	int binUp = axisMap[slyr]->FindBin(xPivot + rw);
 	int binDown = axisMap[slyr]->FindBin(xPivot - rw);
-	if(debug)
-	{
-		std::cout << "slyr: " << slyr << " axisMap[slyr] " << axisMap[slyr]->GetNbins() << std::endl;
-		std::cout << "for layer 1: binUp: " << binUp << " binDown " << binDown << std::endl;
-		std::cout << "for layer 1: xPivot+rw: " << (xPivot + rw) << " xPivot-rw " << (xPivot - rw) << std::endl;
-	}
+	// if(debug)
+	// {
+	// 	std::cout << "slyr: " << slyr << " axisMap[slyr] " << axisMap[slyr]->GetNbins() << std::endl;
+	// 	std::cout << "for layer 1: binUp: " << binUp << " binDown " << binDown << std::endl;
+	// 	std::cout << "for layer 1: xPivot+rw: " << (xPivot + rw) << " xPivot-rw " << (xPivot - rw) << std::endl;
+	// }
+	int nembedded = 0;
 	for (int bin = binDown; bin <= binUp; ++bin)
 	{
 		for (size_t k = 0; k<lookupTable[slyr][bin].size(); k++)
@@ -1033,12 +1004,14 @@ void embed_selective(TString side, TString lyrnumber, TString io, double xPivot,
 			allL1ClsIx.push_back(index);
 			// if(debug)cout << "in embed_selective::: bin: " << bin << " k: " << k << " index: " << index << " allL1ClsIx.size: " << allL1ClsIx.size() << endl;
 			embedded_clusters.push_back(clsid);
+			nembedded++;
 		}
 	}
+	return nembedded;
 }
 
 /// layer 2 and 3 clusters embedding
-void embed_selective(TString side, TString lyrnumber, TString io, double xPivot, vector<int> &embedded_clusters)
+int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, vector<int> &embedded_clusters)
 {
 	TString slyr = side.ReplaceAll("side", "") + "L" + lyrnumber + io;
 	int binUp = axisMap[slyr]->FindBin(xPivot + rw);
@@ -1049,6 +1022,7 @@ void embed_selective(TString side, TString lyrnumber, TString io, double xPivot,
 	// 	std::cout << "for layer 2 and 3: binUp: " << binUp << " binDown " << binDown << std::endl;
 	// 	std::cout << "for layer 2 and 3: xPivot+rw: " << (xPivot + rw) << " xPivot-rw " << (xPivot - rw) << std::endl;
 	// }
+	int nembedded = 0;
 	for (int bin = binDown; bin <= binUp; ++bin)
 	{
 		for (size_t k = 0; k<lookupTable[slyr][bin].size(); k++)
@@ -1059,12 +1033,14 @@ void embed_selective(TString side, TString lyrnumber, TString io, double xPivot,
 			if(debug) cout << "embedding: slyr " << slyr << " index " << index << endl;
 			embed_cluster(cached_clusters[slyr][index]);
 			embedded_clusters.push_back(clsid);
+			nembedded++;
 		}
 	}
+	return nembedded;
 }
 
 /// turning on only those clusters which are in a specific bin along the rw
-void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap, vector<int> &allL1IClsIx, vector<int> &allL1OClsIx)
+void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap, vector<int> &allL1IClsIx, vector<int> &allL1OClsIx, int& n1,int& n2,int& n3)
 {
 	vector<int> embedded_clusters;
 	/// first embed the fourth layer pivot cluter
@@ -1110,25 +1086,29 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1 fDx14vsXMap,
 	// if(debug) std::cout << "x2IPivotOI: " << x2IPivotOI << " x2OPivotOI: " << x2OPivotOI << " x3IPivotOI: " << x3IPivotOI << " x3OPivotOI: " << x3OPivotOI << std::endl;
 	
 	/// II: find the bins in layer 1 where the x values lie
-	embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
-	embed_selective(side, "2", "I", x2IPivotII, embedded_clusters);
-	embed_selective(side, "2", "O", x2OPivotII, embedded_clusters);
-	embed_selective(side, "3", "I", x3IPivotII, embedded_clusters);
-	embed_selective(side, "3", "O", x3OPivotII, embedded_clusters);
+	int n1I_II = embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
+	int n2I_II = embed_selective(side, "2", "I", x2IPivotII, embedded_clusters);
+	int n2O_II = embed_selective(side, "2", "O", x2OPivotII, embedded_clusters);
+	int n3I_II = embed_selective(side, "3", "I", x3IPivotII, embedded_clusters);
+	int n3O_II = embed_selective(side, "3", "O", x3OPivotII, embedded_clusters);
 
 	/// OO: find the bins in layer 1 where the x values lie
-	embed_selective(side, "1", "O", x1OPivot, embedded_clusters, allL1OClsIx);
-	embed_selective(side, "2", "I", x2IPivotOO, embedded_clusters);
-	embed_selective(side, "2", "O", x2OPivotOO, embedded_clusters);
-	embed_selective(side, "3", "I", x3IPivotOO, embedded_clusters);
-	embed_selective(side, "3", "O", x3OPivotOO, embedded_clusters);
+	int n1I_OO = embed_selective(side, "1", "O", x1OPivot, embedded_clusters, allL1OClsIx);
+	int n2I_OO = embed_selective(side, "2", "I", x2IPivotOO, embedded_clusters);
+	int n2O_OO = embed_selective(side, "2", "O", x2OPivotOO, embedded_clusters);
+	int n3I_OO = embed_selective(side, "3", "I", x3IPivotOO, embedded_clusters);
+	int n3O_OO = embed_selective(side, "3", "O", x3OPivotOO, embedded_clusters);
 
 	/// OI: find the bins in layer 1 where the x values lie
-	embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
-	embed_selective(side, "2", "I", x2IPivotOI, embedded_clusters);
-	embed_selective(side, "2", "O", x2OPivotOI, embedded_clusters);
-	embed_selective(side, "3", "I", x3IPivotOI, embedded_clusters);
-	embed_selective(side, "3", "O", x3OPivotOI, embedded_clusters);
+	int n1I_OI = embed_selective(side, "1", "I", x1IPivot, embedded_clusters, allL1IClsIx);
+	int n2I_OI = embed_selective(side, "2", "I", x2IPivotOI, embedded_clusters);
+	int n2O_OI = embed_selective(side, "2", "O", x2OPivotOI, embedded_clusters);
+	int n3I_OI = embed_selective(side, "3", "I", x3IPivotOI, embedded_clusters);
+	int n3O_OI = embed_selective(side, "3", "O", x3OPivotOI, embedded_clusters);
+	
+	n1 = n1I_II+n1I_OO+n1I_OI;
+	n2 = n2I_II+n2O_II+n2I_OO+n2O_OO+n2I_OI+n2O_OI;
+	n3 = n3I_II+n3O_II+n3I_OO+n3O_OO+n3I_OI+n3O_OI;
 
 	/// must sort clusters
 	for (TMapiTS::iterator it = layers.begin(); it != layers.end(); ++it)
@@ -1208,7 +1188,7 @@ int fill_output_clusters(TString side, vector<vector<TVector3>> &r, vector<int> 
 
 
 
-bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TLorentzVector &p, TF1 *fEvsX, TF1 *fDxvsX)
+bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TLorentzVector &p, TF1 *fEvsX, TF1 *fDxvsX, int n2, int n3)
 {
 	if(abs(r1[0]) >= abs(r4[0])) return false; // |x1| must be smaller than |x4|
 	if(r1[0] * r4[0]<0) return false; // not on the same side...
@@ -1221,11 +1201,12 @@ bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, T
 	if(abs(yDipoleExit)>yDipoleExitAbsMax) return false; // the track should point to |y|<yDipoleExitAbsMax at the dipole exit
 	if(abs(xDipoleExit)<xDipoleExitAbsMin) return false; // the track should point to |x|>xDipoleExitAbsMin at the dipole exit
 	if(abs(xDipoleExit)>xDipoleExitAbsMax) return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
-	// if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])*(1+0.1))) return false; // new cut!!
-	// if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])*(1-0.1))) return false; // new cut!!
-	if(abs(r4[0] - r1[0])>7.5 || abs(r4[0] - r1[0])<0.5) return false; // new cut!!
-	if(abs(r4[0] - r1[0])>(fDxvsX->Eval(r4[0]) + 0.1))     return false; // new cut!!
-	if(abs(r4[0] - r1[0])<(fDxvsX->Eval(r4[0]) - 0.1))     return false; // new cut!!
+	float absdx41max = (process=="glaser") ? 6 : 6; //7.6; // cm, similar for elaser and glaser - derived from flat signal
+	float absdx41min = (process=="glaser") ? 1 : 1; //0.8; // cm, similar for elaser and glaser - derived from flat signal
+	if(abs(r4[0]-r1[0])>absdx41max || abs(r4[0]-r1[0])<absdx41min) return false; // new cut!!
+	if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])+rw))                  return false; // new cut!!
+	if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])-rw))                  return false; // new cut!!
+	if(n2<1 || n3<1)                                               return false; // new cut!! (not very useful for large signals)
 
 	// TRandom rnd;
 	// rnd.SetSeed();
@@ -1912,7 +1893,8 @@ int main(int argc, char *argv[])
 
 				/// add all clusters to the detector
 				vector<int> L1I_clsix, L1O_clsix;
-				add_all_clusters(side, slyr4, i4, fDx14vsXMap, L1I_clsix, L1O_clsix); /// this is embedding clusters along predicted points
+				int n1inroad,n2inroad,n3inroad;
+				add_all_clusters(side,slyr4,i4,fDx14vsXMap,L1I_clsix,L1O_clsix,n1inroad,n2inroad,n3inroad); /// this is embedding clusters along predicted points
 
 				// if(debug2)
 				// {
@@ -1930,7 +1912,6 @@ int main(int argc, char *argv[])
 				
 
 				// if(debug) std::cout << "Print L1I_clsix: " << L1I_clsix.size() << std::endl;
-				// add_all_clusters(side);
 				print_all_clusters(side, false);
 				int all_clusters = fill_output_clusters(side, all_clusters_r, all_clusters_type, all_clusters_id);
 				unsigned int nx1I = L1I_clsix.size();
@@ -1982,7 +1963,7 @@ int main(int argc, char *argv[])
 					else if(slyr4==slyr4O && slyr1==slyr1I) fDx14vsX = (side=="Pside") ? fDx14vsX_L4X_Pside : fDx14vsX_L4X_Eside;
 					else continue; // cannot happen!
 
-					bool seed = makeseed_nonuniformB(process, r1, r4, side, pseed, fEvsX, fDx14vsX);
+					bool seed = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsX,fDx14vsX,n2inroad,n3inroad);
 					if(!seed) continue; // cannot make a meaningful seed
 					pseeds.push_back(pseed);
 					bool issig = (cached_clusters[slyr1][i1].type==1 && cached_clusters[slyr4][i4].type==1);
