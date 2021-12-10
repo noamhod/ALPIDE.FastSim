@@ -603,22 +603,18 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 
 	cnv_pl3d->cd();
 	dipole->Draw();
-	for (unsigned int l = 0; l<staves.size(); l++)
-		staves[l]->Draw();
+	for (unsigned int l = 0; l<staves.size(); l++) staves[l]->Draw();
 
 	cnv_pm3d->cd();
 	dipole->Draw();
-	for (unsigned int l = 0; l<staves.size(); l++)
-		staves[l]->Draw();
+	for (unsigned int l = 0; l<staves.size(); l++) staves[l]->Draw();
 
 	for (int i = 0; i<(int)poll.size(); ++i)
 	{
 		/// check acceptance
-		if(!inacc[i])
-			continue;
+		if(!inacc[i]) continue;
 		/// check for glitches
-		if(skipglitches(polm[i]))
-			continue;
+		if(skipglitches(polm[i])) continue;
 
 		cnv_pl3d->cd();
 		poll[i]->Draw();
@@ -631,8 +627,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 	TLegend *leg = trkcolleg();
 	cnv_pl3d->cd();
 	fdipole->Draw();
-	for (unsigned int l = 0; l<fstaves.size(); l++)
-		fstaves[l]->Draw();
+	for (unsigned int l = 0; l<fstaves.size(); l++) fstaves[l]->Draw();
 	leg->Draw("same");
 
 	cnv_pm3d->cd();
@@ -947,6 +942,7 @@ int main(int argc, char *argv[])
 		// TFile* fIn = new TFile(storage+"/data/root/raw_"+process+".root","READ");
 		TString rawdir = digdir;
 		rawdir = rawdir.ReplaceAll("dig","raw");
+		if(signame.Contains("flat")) rawdir.ReplaceAll(process+"/raw/","");
 		TFile *fIn = new TFile(rawdir+"/raw_"+process+".root", "READ");
 		TTree *tIn = (TTree *)fIn->Get("tt");
 		int nev = tIn->GetEntries();
@@ -1009,6 +1005,21 @@ int main(int argc, char *argv[])
 		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
 		hname = "h2_dx14_vs_x_L1X_" + side;
 		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
+
+		hname = "h2_dy14_vs_y_L4I_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];|y_{4}-y_{1}| [cm];Tracks", 600, -0.75, +0.75, 400, 0, +0.1)));
+		hname = "h2_dy14_vs_y_L4O_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];|y_{4}-y_{1}| [cm];Tracks", 600, -0.75, +0.75, 400, 0, +0.1)));
+		hname = "h2_dy14_vs_y_L4X_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];|y_{4}-y_{1}| [cm];Tracks", 600, -0.75, +0.75, 400, 0, +0.1)));
+		
+		hname = "h2_dy14_vs_y_L1I_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];|y_{4}-y_{1}| [cm];Tracks", 600, -0.75, +0.75, 400, 0, +0.1)));
+		hname = "h2_dy14_vs_y_L1O_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];|y_{4}-y_{1}| [cm];Tracks", 600, -0.75, +0.75, 400, 0, +0.1)));
+		hname = "h2_dy14_vs_y_L1X_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];|y_{4}-y_{1}| [cm];Tracks", 600, -0.75, +0.75, 400, 0, +0.1)));
+		
 
 		/// loop on events
 		// for(int iev=0;iev<nev;iev++)
@@ -1126,6 +1137,10 @@ int main(int argc, char *argv[])
 				double x4I = 0;
 				double x1O = 0;
 				double x4O = 0;
+				double y1I = 0;
+				double y4I = 0;
+				double y1O = 0;
+				double y4O = 0;
 				for (Int_t n = 0; n<trkpts_fullrange[slvidx]->GetN(); ++n)
 				{
 					Double_t xp, yp, zp;
@@ -1150,25 +1165,54 @@ int main(int argc, char *argv[])
 					if(zp==zlastinner && isInnerX)  x4I = xp;
 					if(zp==zfirstouter && isOuterX) x1O = xp;
 					if(zp==zlastouter && isOuterX)  x4O = xp;
+					
+					if(zp==zfirstinner && isInnerX) y1I = yp;
+					if(zp==zlastinner && isInnerX)  y4I = yp;
+					if(zp==zfirstouter && isOuterX) y1O = yp;
+					if(zp==zlastouter && isOuterX)  y4O = yp;
 				}
 				if(x4I>xMinI && x4I<xMaxI)
 				{
-					if((x1I>xMinI && x1I<xMaxI)) histos2["h2_dx14_vs_x_L4I_" + side]->Fill(x4I, abs(x4I - x1I));
+					if((x1I>xMinI && x1I<xMaxI))
+					{
+						histos2["h2_dx14_vs_x_L4I_" + side]->Fill(x4I, abs(x4I - x1I));
+						histos2["h2_dy14_vs_y_L4I_" + side]->Fill(y4I, abs(y4I - y1I));
+					}
 				}
 				if(x4O>xMinO && x4O<xMaxO)
 				{
-					if((x1O>xMinO && x1O<xMaxO)) histos2["h2_dx14_vs_x_L4O_" + side]->Fill(x4O, abs(x4O - x1O));
-					else if((x1I>xMinI && x1I<xMaxI)) histos2["h2_dx14_vs_x_L4X_" + side]->Fill(x4O, abs(x4O - x1I));
+					if((x1O>xMinO && x1O<xMaxO))
+					{
+						histos2["h2_dx14_vs_x_L4O_" + side]->Fill(x4O, abs(x4O - x1O));
+						histos2["h2_dy14_vs_y_L4O_" + side]->Fill(y4O, abs(y4O - y1O));
+					}
+					else if((x1I>xMinI && x1I<xMaxI))
+					{
+						histos2["h2_dx14_vs_x_L4X_" + side]->Fill(x4O, abs(x4O - x1I));
+						histos2["h2_dy14_vs_y_L4X_" + side]->Fill(y4O, abs(y4O - y1I));
+					}
 				}
 				
 				if(x1I>xMinI && x1I<xMaxI)
 				{
-					if((x4I>xMinI && x4I<xMaxI)) histos2["h2_dx14_vs_x_L1I_" + side]->Fill(x1I, abs(x4I - x1I));
-					else if((x4O>xMinO && x4O<xMaxO)) histos2["h2_dx14_vs_x_L1X_" + side]->Fill(x1O, abs(x4O - x1I));
+					if((x4I>xMinI && x4I<xMaxI))
+					{
+						histos2["h2_dx14_vs_x_L1I_" + side]->Fill(x1I, abs(x4I - x1I));
+						histos2["h2_dy14_vs_y_L1I_" + side]->Fill(y1I, abs(y4I - y1I));
+					}
+					else if((x4O>xMinO && x4O<xMaxO))
+					{
+						histos2["h2_dx14_vs_x_L1X_" + side]->Fill(x1O, abs(x4O - x1I));
+						histos2["h2_dy14_vs_y_L1X_" + side]->Fill(y1O, abs(y4O - y1I));
+					}
 				}
 				if(x1O>xMinO && x1O<xMaxO)
 				{
-					if((x4O>xMinO && x4O<xMaxO)) histos2["h2_dx14_vs_x_L1O_" + side]->Fill(x1O, abs(x4O - x1O));
+					if((x4O>xMinO && x4O<xMaxO))
+					{
+						histos2["h2_dx14_vs_x_L1O_" + side]->Fill(x1O, abs(x4O - x1O));
+						histos2["h2_dy14_vs_y_L1O_" + side]->Fill(y1O, abs(y4O - y1O));
+					}
 				}
 
 				clusters_id.push_back(vtmp);
