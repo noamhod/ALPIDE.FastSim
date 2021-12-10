@@ -1238,22 +1238,22 @@ bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, T
 	if(abs(r1[0]) >= abs(r4[0])) return false; // |x1| must be smaller than |x4|
 	if(r1[0] * r4[0]<0) return false; // not on the same side...
 	if(r1[2]==r4[2]) return false; // trivial, make sure z is not the same
-	// float yDipoleExitAbsMax = (process=="glaser") ? 0.10 : 0.15; // cm
-	// float xDipoleExitAbsMin = (process=="glaser") ? 2.0  : 2.0;  // cm
-	// float xDipoleExitAbsMax = (process=="glaser") ? 14.0 : 16.0; // cm
-	// float yDipoleExit = yofz(r1, r4, zDipoleExit);
-	// float xDipoleExit = xofz(r1, r4, zDipoleExit);
-	// if(abs(yDipoleExit)>yDipoleExitAbsMax) return false; // the track should point to |y|<yDipoleExitAbsMax at the dipole exit
-	// if(abs(xDipoleExit)<xDipoleExitAbsMin) return false; // the track should point to |x|>xDipoleExitAbsMin at the dipole exit
-	// if(abs(xDipoleExit)>xDipoleExitAbsMax) return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
-	// float absdx41max = (process=="glaser") ? 6 : 6; //7.6; // cm, similar for elaser and glaser - derived from flat signal
-	// float absdx41min = (process=="glaser") ? 1 : 1; //0.8; // cm, similar for elaser and glaser - derived from flat signal
-	// if(abs(r4[0]-r1[0])>absdx41max || abs(r4[0]-r1[0])<absdx41min) return false; // new cut!!
-	// if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])+rwL1))                return false; // new cut!!
-	// if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])-rwL1))                return false; // new cut!!
-	// if(abs(r4[1]-r1[1])>(fDyvsY->Eval(r4[1])+rwL1))                return false; // new cut!!
-	// if(abs(r4[1]-r1[1])<(fDyvsY->Eval(r4[1])-rwL1))                return false; // new cut!!
-	// if(n2<1 || n3<1)                                             return false; // new cut!! (not very useful for large signals)
+	float yDipoleExitAbsMax = (process=="glaser") ? 0.2 : 0.25; // cm
+	float xDipoleExitAbsMin = (process=="glaser") ? 2.0  : 2.0;  // cm
+	float xDipoleExitAbsMax = (process=="glaser") ? 15.0 : 17.0; // cm
+	float yDipoleExit = yofz(r1, r4, zDipoleExit);
+	float xDipoleExit = xofz(r1, r4, zDipoleExit);
+	if(abs(yDipoleExit)>yDipoleExitAbsMax) return false; // the track should point to |y|<yDipoleExitAbsMax at the dipole exit
+	if(abs(xDipoleExit)<xDipoleExitAbsMin) return false; // the track should point to |x|>xDipoleExitAbsMin at the dipole exit
+	if(abs(xDipoleExit)>xDipoleExitAbsMax) return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
+	float absdx41max = (process=="glaser") ? 6 : 6; //7.6; // cm, similar for elaser and glaser - derived from flat signal
+	float absdx41min = (process=="glaser") ? 1 : 1; //0.8; // cm, similar for elaser and glaser - derived from flat signal
+	if(abs(r4[0]-r1[0])>absdx41max || abs(r4[0]-r1[0])<absdx41min) return false; // new cut!!
+	if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])+rwL1))                return false; // new cut!!
+	if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])-rwL1))                return false; // new cut!!
+	if(abs(r4[1]-r1[1])>(fDyvsY->Eval(r4[1])+rwL1))                return false; // new cut!!
+	if(abs(r4[1]-r1[1])<(fDyvsY->Eval(r4[1])-rwL1))                return false; // new cut!!
+	if(n2<1 || n3<1)                                             return false; // new cut!! (not very useful for large signals)
 
 	double E1 = fEvsXL1->Eval(r1[0]); // in GeV
 	double E4 = fEvsXL4->Eval(r4[0]); // in GeV
