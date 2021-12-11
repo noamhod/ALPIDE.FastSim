@@ -157,24 +157,24 @@ Bool_t KMCProbeFwd::PropagateToZBxByBz(double z, double maxDZ, Double_t xOverX0,
 {
   // propagate the track to position Z in uniform material with xOverX0 rad lgt and xTimesRho lgt*density
   double zCurr = GetZ();
-  double dz = z - zCurr;
+  double dz    = z - zCurr;
   if (TMath::Abs(dz)<kAlmost0) return kTRUE;
   int nz = TMath::Abs(dz)/maxDZ + 1;
   double zstep = dz/nz;
   double xyz[3],bxyz[3],bxyzFwd[3];
   // AliDebug(2,Form("from Z=%f to Z=%f, X/X0: %f X*rho:%f, max step:%f Mode:%d (%d steps)", GetZ(),z,xOverX0,xTimesRho,maxDZ,modeMC,nz));
-  for (int iz=0;iz<nz;iz++) {
+  for (int iz=0;iz<nz;iz++)
+  {
     GetXYZ(xyz);              // coordinates in Lab frame
     TGeoGlobalMagField::Instance()->Field(xyz,bxyz);
     Lab2Trk(bxyz,bxyzFwd);  // field in Fwd frame
-    //    printf("z = %f Field: %f %f %f\n",zCurr,bxyzFwd[0],bxyzFwd[1],bxyzFwd[2]);
+    // printf("z = %f Field: %f %f %f\n",zCurr,bxyzFwd[0],bxyzFwd[1],bxyzFwd[2]);
     zCurr += zstep;
-    if (!PropagateToZBxByBz(zCurr,bxyzFwd)) {/*printf("Fail1\n");*/ return kFALSE;}
+    if(!PropagateToZBxByBz(zCurr,bxyzFwd)) {/*printf("Fail1\n");*/ return kFALSE;}
     //if (!PropagateToZBxByBz(zCurr,bxyz)) return kFALSE;
-    if (TMath::Abs(xTimesRho)>1e-6 && 
-	!CorrectForMeanMaterial(xOverX0/nz, xTimesRho/nz, modeMC)) {/*printf("Fail2\n");*/ return kFALSE;}
-    //	!fTrack.CorrectForMeanMaterial(xOverX0/nz, xTimesRho/nz, fMass, modeMC)) return kFALSE;
-    //    fTrack.Print();
+    if(TMath::Abs(xTimesRho)>1e-6 && !CorrectForMeanMaterial(xOverX0/nz,xTimesRho/nz,modeMC)) {/*printf("Fail2\n");*/ return kFALSE;}
+    // !fTrack.CorrectForMeanMaterial(xOverX0/nz, xTimesRho/nz, fMass, modeMC)) return kFALSE;
+    // fTrack.Print();
   }
   return kTRUE;
 }

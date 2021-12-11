@@ -62,11 +62,6 @@ def fit(message,name,graph,sfunc,xmin,xmax):
    print(name+": chi2/Ndof=",chi2dof)
    return f
 
-def fitY(message,name,graph,sfunc,ymin,ymax):
-   fN = fit(message,name+"_N",graph,sfunc,ymin,0)
-   fP = fit(message,name+"_P",graph,sfunc,0,ymax)
-   return fN,fP
-
 
 
 def band(name,h2,tf1,xmin,xmax,width=0.1):
@@ -96,7 +91,7 @@ def band(name,h2,tf1,xmin,xmax,width=0.1):
    
 
 process = "elaser"
-isflat  = "" ## "_flat" or ""
+isflat  = "_flat" ## "_flat" or ""
 
 tfname = "../data/root/dig/"+process+"/phase0/gpc/2.0/dig_"+process+"_"+isflat+".root"
 if("flat" in isflat): tfname = "../data/root/dig/"+process+"/raw/flat/dig_"+process+"_"+isflat+".root"
@@ -174,25 +169,20 @@ for name,h in histos.items():
          if("dy" not in name):
             tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,xmins["Eside"],xmaxs["Eside"])})
          else:
-            fN,fP = fitY(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,ymin,ymax)
-            tf1s.update({name+"_Eside_N":fN})
-            tf1s.update({name+"_Eside_P":fP})
+            tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,ymin,ymax)})
       if("dy" not in name):
          tf1s.update({name+"_Pside":fit(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,xmins["Pside"],xmaxs["Pside"])})
       else:
-         fN,fP = fitY(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,ymin,ymax)
-         tf1s.update({name+"_Pside_N":fN})
-         tf1s.update({name+"_Pside_P":fP})
+         tf1s.update({name+"_Pside":fit(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,ymin,ymax)})
       if(process=="glaser"):
-         if("dy" not in name): tf1s[name+"_Eside"].Draw("same")
+         if("dy" not in name):
+            tf1s[name+"_Eside"].Draw("same")
          else:
-            tf1s[name+"_Eside_N"].Draw("same")
-            tf1s[name+"_Eside_P"].Draw("same")
+            tf1s[name+"_Eside"].Draw("same")
       if("dy" not in name):
          tf1s[name+"_Pside"].Draw("same")
       else:
-         tf1s[name+"_Pside_N"].Draw("same")
-         tf1s[name+"_Pside_P"].Draw("same")
+         tf1s[name+"_Pside"].Draw("same")
       # if("dx14_vs_x" in name):
       #    bUp_Eside,bDn_Eside = band(name+"_band_Eside",h,tf1s[name+"_Eside"],xmins["Eside"],xmaxs["Eside"]) if(process=="glaser") else 0,0
       #    bUp_Pside,bDn_Pside = band(name+"_band_Pside",h,tf1s[name+"_Pside"],xmins["Pside"],xmaxs["Pside"])
