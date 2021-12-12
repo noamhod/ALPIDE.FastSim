@@ -7,7 +7,7 @@ INCLUDE = -I$(ROOTSYS)/include -I/usr/include -I./../src/ -I./
 src = $(wildcard *.C)
 obj = $(src:.c=.o)
 
-all: src load link digi reco recoNew
+all: src load link digi digiNew reco recoNew
 
 src:
 	cd ../src; make; cd -
@@ -22,6 +22,10 @@ link:
 digi: Digitization.C
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(INCLUDE)
 	chmod 755 digi
+
+digiNew: DigitizationNew.C
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(INCLUDE)
+	chmod 755 digiNew
 
 reco: Reconstruction.C
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(INCLUDE)
