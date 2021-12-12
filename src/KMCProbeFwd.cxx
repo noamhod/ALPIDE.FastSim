@@ -158,7 +158,7 @@ Bool_t KMCProbeFwd::PropagateToZBxByBz(double z, double maxDZ, Double_t xOverX0,
   // propagate the track to position Z in uniform material with xOverX0 rad lgt and xTimesRho lgt*density
   double zCurr = GetZ();
   double dz    = z - zCurr;
-  if (TMath::Abs(dz)<kAlmost0) return kTRUE;
+  if(TMath::Abs(dz)<kAlmost0) return kTRUE;
   int nz = TMath::Abs(dz)/maxDZ + 1;
   double zstep = dz/nz;
   double xyz[3],bxyz[3],bxyzFwd[3];

@@ -1076,8 +1076,7 @@ TrackPar::Propagate(Double_t alpha, Double_t x, Double_t b) {
   return kFALSE;
 }
 
-Bool_t TrackPar::PropagateBxByBz
-(Double_t alpha, Double_t x, Double_t b[3]) {
+Bool_t TrackPar::PropagateBxByBz(Double_t alpha, Double_t x, Double_t b[3]) {
   //------------------------------------------------------------------
   // Transform this track to the local coord. system rotated
   // by angle "alpha" (rad) with respect to the global coord. system, 

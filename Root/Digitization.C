@@ -923,8 +923,7 @@ int main(int argc, char *argv[])
 		det->SetMaxChi2Cl(10.);	  // max track to cluster chi2
 		det->SetMaxChi2NDF(3.5);  // max total chi2/ndf
 		det->SetMaxChi2Vtx(20e9); // fiducial cut on chi2 of convergence to vtx
-		// IMPORTANT FOR NON-UNIFORM FIELDS
-		det->SetDefStepAir(1);
+		det->SetDefStepAir(1);    // IMPORTANT FOR NON-UNIFORM FIELDS
 		det->SetMinP2Propagate(0.3);		 // NA60+
 		det->SetIncludeVertex(kTRUE);		 // count vertex as an extra measured point
 		det->ImposeVertex(0., 0., 0.);		 // the vertex position is imposed NOAM
@@ -1024,7 +1023,8 @@ int main(int argc, char *argv[])
 		/// loop on events
 		// for(int iev=0;iev<nev;iev++)
 		bool fullloop = (evnt<0);
-		for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<nev : iev==evnt; iev++)
+		// for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<nev : iev==evnt; iev++)
+		for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<10 : iev==evnt; iev++)
 		{
 			/// reset the layers
 			reset_layers_all();
