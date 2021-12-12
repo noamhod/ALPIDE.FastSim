@@ -63,6 +63,7 @@ def fit(message,name,graph,sfunc,xmin,xmax):
    return f
 
 
+
 def band(name,h2,tf1,xmin,xmax,width=0.1):
    xup,yup = array('d'), array('d')
    xdn,ydn = array('d'), array('d')
@@ -90,20 +91,25 @@ def band(name,h2,tf1,xmin,xmax,width=0.1):
    
 
 process = "elaser"
-isflat  = "_flat" #_flat" ## "_flat" or ""
+isflat  = "_flat" ## "_flat" or ""
 
-tfile = TFile("../data/root/dig/dig_"+process+"_"+isflat+".root","READ")
+tfname = "../data/root/dig/"+process+"/phase0/gpc/2.0/dig_"+process+"_"+isflat+".root"
+if("flat" in isflat): tfname = "../data/root/dig/"+process+"/raw/flat/dig_"+process+"_"+isflat+".root"
+tfile = TFile(tfname,"READ")
 
 hnames = ["h2_y_vs_x_exit",
           "h2_y_vs_x_L1I","h2_y_vs_x_L4I","h2_y_vs_x_L1O","h2_y_vs_x_L4O",
           "h2_E_vs_x_L1I","h2_E_vs_x_L4I","h2_E_vs_x_L1O","h2_E_vs_x_L4O",
-          "h2_dx14_vs_x_L4I","h2_dx14_vs_x_L4O","h2_dx14_vs_x_L4X"]
+          "h2_dx14_vs_x_L4I","h2_dx14_vs_x_L4O","h2_dx14_vs_x_L4X",
+          "h2_dy14_vs_y_L4I","h2_dy14_vs_y_L4O","h2_dy14_vs_y_L4X"]
    
 
 # fits = {"E_vs_x":"[0]+[1]/([2]+x)", "dx14_vs_x":"pol1"}
 fits = {"E_vs_x":"[0]/([1]+x)", "dx14_vs_x":"pol1"}
 xmins = {"Eside":-50,"Pside":+5}
 xmaxs = {"Eside":-5,"Pside":+50}
+ymin = -0.75
+ymax = +0.75
 qMed = 50
 qUp = 67
 qDn = 33
@@ -144,6 +150,7 @@ outname = "inputs_for_reco_"+process+isflat
 cnv = TCanvas("c","",1200,500)
 cnv.SaveAs(outname+".pdf(")
 for name,h in histos.items():
+   if(h.GetEntries()==0): continue
    cnv = TCanvas("c_"+name,"",1200,500)
    cnv.Divide(2,1)
    cnv.cd(1)
@@ -156,19 +163,33 @@ for name,h in histos.items():
    h.Draw("col")
    if(name+"_gr" in graphs):
       graphs[name+"_gr"].Draw("ps")
-      if("y_vs_x" in name and isflat==""): continue
+      # if("y_vs_x" in name and isflat==""): continue
       sfunc = fits["E_vs_x"] if("E_vs_x" in name) else fits["dx14_vs_x"]
-      if(process=="glaser"): tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,xmins["Eside"],xmaxs["Eside"])})
-      tf1s.update({name+"_Pside":fit(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,xmins["Pside"],xmaxs["Pside"])})
-      if(process=="glaser"): tf1s[name+"_Eside"].Draw("same")
-      tf1s[name+"_Pside"].Draw("same")
-      if("dx14_vs_x" in name):
-         bUp_Eside,bDn_Eside = band(name+"_band_Eside",h,tf1s[name+"_Eside"],xmins["Eside"],xmaxs["Eside"]) if(process=="glaser") else 0,0
-         bUp_Pside,bDn_Pside = band(name+"_band_Pside",h,tf1s[name+"_Pside"],xmins["Pside"],xmaxs["Pside"])
-         if(process=="glaser"): bUp_Eside.Draw("l")
-         bUp_Pside.Draw("l")
-         if(process=="glaser"): bDn_Eside.Draw("l")
-         bDn_Pside.Draw("l")
+      if(process=="glaser"): 
+         if("dy" not in name):
+            tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,xmins["Eside"],xmaxs["Eside"])})
+         else:
+            tf1s.update({name+"_Eside":fit(name+" Eside",name+"_Eside",graphs[name+"_gr"],sfunc,ymin,ymax)})
+      if("dy" not in name):
+         tf1s.update({name+"_Pside":fit(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,xmins["Pside"],xmaxs["Pside"])})
+      else:
+         tf1s.update({name+"_Pside":fit(name+" Pside",name+"_Pside",graphs[name+"_gr"],sfunc,ymin,ymax)})
+      if(process=="glaser"):
+         if("dy" not in name):
+            tf1s[name+"_Eside"].Draw("same")
+         else:
+            tf1s[name+"_Eside"].Draw("same")
+      if("dy" not in name):
+         tf1s[name+"_Pside"].Draw("same")
+      else:
+         tf1s[name+"_Pside"].Draw("same")
+      # if("dx14_vs_x" in name):
+      #    bUp_Eside,bDn_Eside = band(name+"_band_Eside",h,tf1s[name+"_Eside"],xmins["Eside"],xmaxs["Eside"]) if(process=="glaser") else 0,0
+      #    bUp_Pside,bDn_Pside = band(name+"_band_Pside",h,tf1s[name+"_Pside"],xmins["Pside"],xmaxs["Pside"])
+      #    if(process=="glaser"): bUp_Eside.Draw("l")
+      #    bUp_Pside.Draw("l")
+      #    if(process=="glaser"): bDn_Eside.Draw("l")
+      #    bDn_Pside.Draw("l")
       
    cnv.SaveAs(outname+".pdf")
 cnv = TCanvas("c","",1200,500)

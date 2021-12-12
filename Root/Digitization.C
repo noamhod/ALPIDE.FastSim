@@ -61,7 +61,7 @@ double Hstave = 1.5;		// cm
 double Lstave = 50;			// 27.12;   // cm
 double Rbeampipe = 2.413;	// cm
 double RoffsetBfield = 5.7; // cm
-double xPsideL = -RoffsetBfield - Lstave;
+double xPsideL = -RoffsetBfield-Lstave;
 double xPsideR = -RoffsetBfield;
 double xEsideL = +RoffsetBfield;
 double xEsideR = +RoffsetBfield + Lstave;
@@ -142,8 +142,8 @@ void setParametersFromDet(TString side)
 	KMCLayerFwd *layer_outer = (side=="Eside") ? det->GetLayer("EL1O") : det->GetLayer("PL1O");
 	KMCLayerFwd *layer_inner = (side=="Eside") ? det->GetLayer("EL1I") : det->GetLayer("PL1I");
 
-	Hstave = layer_outer->GetYMax() - layer_outer->GetYMin();
-	Lstave = layer_outer->GetXMax() - layer_outer->GetXMin();
+	Hstave = layer_outer->GetYMax()-layer_outer->GetYMin();
+	Lstave = layer_outer->GetXMax()-layer_outer->GetXMin();
 	cout << "Hstave=" << Hstave << ", Lstave=" << Lstave << endl;
 
 	xMinEI = (side=="Eside") ? layer_inner->GetXMin() : -999;
@@ -188,13 +188,13 @@ void setParametersFromDet(TString side)
 	double BfieldZmax = BfieldZmaxObj[0];					   // region 0
 	cout << "BfieldValTesla=" << BfieldValTesla << ", BfieldXmin=" << BfieldXmin << ", BfieldXmax=" << BfieldXmax << ", BfieldYmin=" << BfieldYmin << ", BfieldYmax=" << BfieldYmax << ", BfieldZmin=" << BfieldZmin << ", BfieldZmax=" << BfieldZmax << endl;
 	cout << "Bfunction: " << BFunction << std::endl;
-	xWdipole = BfieldXmax - BfieldXmin;
-	yHdipole = BfieldYmax - BfieldYmin;
+	xWdipole = BfieldXmax-BfieldXmin;
+	yHdipole = BfieldYmax-BfieldYmin;
 	z1dipole = BfieldZmin;
 	z2dipole = BfieldZmax;
 	zDipoleExit = z2dipole;
 	B = BfieldValTesla;
-	LB = z2dipole - z1dipole;
+	LB = z2dipole-z1dipole;
 	cout << "xWdipole=" << xWdipole << ", yHdipole=" << yHdipole << ", z1dipole=" << z1dipole << ", z2dipole=" << z2dipole << endl;
 
 	zEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetZ() : -999;
@@ -271,9 +271,9 @@ void setParametersFromDet(TString side)
 
 int acceptcls(double x, double y, double z, double step = 0.1)
 {
-	if(x<0 && (abs(z - zEL1I)>step && abs(z - zEL1O)>step) && (abs(z - zEL2I)>step && abs(z - zEL2O)>step) && (abs(z - zEL3I)>step && abs(z - zEL3O)>step) && (abs(z - zEL4I)>step && abs(z - zEL4O)>step))
+	if(x<0 && (abs(z-zEL1I)>step && abs(z-zEL1O)>step) && (abs(z-zEL2I)>step && abs(z-zEL2O)>step) && (abs(z-zEL3I)>step && abs(z-zEL3O)>step) && (abs(z-zEL4I)>step && abs(z-zEL4O)>step))
 		return 0;
-	if(x>0 && (abs(z - zPL1I)>step && abs(z - zPL1O)>step) && (abs(z - zPL2I)>step && abs(z - zPL2O)>step) && (abs(z - zPL3I)>step && abs(z - zPL3O)>step) && (abs(z - zPL4I)>step && abs(z - zPL4O)>step))
+	if(x>0 && (abs(z-zPL1I)>step && abs(z-zPL1O)>step) && (abs(z-zPL2I)>step && abs(z-zPL2O)>step) && (abs(z-zPL3I)>step && abs(z-zPL3O)>step) && (abs(z-zPL4I)>step && abs(z-zPL4O)>step))
 		return 0;
 	if(x<0 && (x<xMinEO || x>xMaxEI))
 		return 0;
@@ -369,7 +369,7 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 	double xyz[3];
 	source->GetXYZ(xyz);
 	double zCurr = round(xyz[2]); // source->GetZ();
-	int nZ = (zMax - zCurr) / step + 1;
+	int nZ = (zMax-zCurr) / step + 1;
 	if(nZ<2)
 	{
 		printf("bad limits\n");
@@ -402,7 +402,7 @@ bool islayer(double z, int layerindex = -1, double stepsize = 1)
 {
 	if(layerindex >= 0)
 	{
-		double dz = abs(zlayer[layerindex] - z);
+		double dz = abs(zlayer[layerindex]-z);
 		if(dz<stepsize)
 			return true;
 	}
@@ -410,7 +410,7 @@ bool islayer(double z, int layerindex = -1, double stepsize = 1)
 	{
 		for (int j = 0; j<(int)zlayer.size(); ++j)
 		{
-			double dz = abs(zlayer[j] - z);
+			double dz = abs(zlayer[j]-z);
 			if(dz<stepsize / 2.)
 			{
 				return true;
@@ -423,7 +423,7 @@ bool islayer(double z, int layerindex = -1, double stepsize = 1)
 TPolyMarker3D *TrackMarker3d(const KMCProbeFwd *source, double zmin, double zmax, double zstep, Color_t col, bool doPrint = false, bool fullrange = false)
 {
 	KMCProbeFwd tmp(*source);
-	int nZ = (int)(zmax - zmin) / zstep;
+	int nZ = (int)(zmax-zmin) / zstep;
 	double xp[nZ], yp[nZ], zp[nZ];
 	double xyz[3];
 	tmp.GetXYZ(xyz);
@@ -456,7 +456,7 @@ TPolyMarker3D *TrackMarker3d(const KMCProbeFwd *source, double zmin, double zmax
 	{
 		/// in acceptance of layer 4?
 		double xr, yr, zr;
-		for (int i = polymarker->GetN() - 1; i >= 0; --i)
+		for (int i = polymarker->GetN()-1; i >= 0; --i)
 		{
 			polymarker->GetPoint(i, xr, yr, zr);
 			cout << "in TrackMarker3d: r[" << i << "]={" << xr << "," << yr << "," << zr << "}" << endl;
@@ -603,22 +603,18 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 
 	cnv_pl3d->cd();
 	dipole->Draw();
-	for (unsigned int l = 0; l<staves.size(); l++)
-		staves[l]->Draw();
+	for (unsigned int l = 0; l<staves.size(); l++) staves[l]->Draw();
 
 	cnv_pm3d->cd();
 	dipole->Draw();
-	for (unsigned int l = 0; l<staves.size(); l++)
-		staves[l]->Draw();
+	for (unsigned int l = 0; l<staves.size(); l++) staves[l]->Draw();
 
 	for (int i = 0; i<(int)poll.size(); ++i)
 	{
 		/// check acceptance
-		if(!inacc[i])
-			continue;
+		if(!inacc[i]) continue;
 		/// check for glitches
-		if(skipglitches(polm[i]))
-			continue;
+		if(skipglitches(polm[i])) continue;
 
 		cnv_pl3d->cd();
 		poll[i]->Draw();
@@ -631,8 +627,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 	TLegend *leg = trkcolleg();
 	cnv_pl3d->cd();
 	fdipole->Draw();
-	for (unsigned int l = 0; l<fstaves.size(); l++)
-		fstaves[l]->Draw();
+	for (unsigned int l = 0; l<fstaves.size(); l++) fstaves[l]->Draw();
 	leg->Draw("same");
 
 	cnv_pm3d->cd();
@@ -803,8 +798,8 @@ void AddCluster(int slvidx, int index_offset, TString process, TString LYR, doub
 	/// !!! dirty fix !!! /// //TODO
 	/////////////////////////
 	unsigned int ncls = clusters_r[slvidx].size();
-	double xprev = (ncls>0) ? clusters_r[slvidx][ncls - 1].X() : x;
-	if(abs(x - xprev)>dxMax)
+	double xprev = (ncls>0) ? clusters_r[slvidx][ncls-1].X() : x;
+	if(abs(x-xprev)>dxMax)
 		return;
 	if(x * xprev<0)
 		return;
@@ -947,6 +942,7 @@ int main(int argc, char *argv[])
 		// TFile* fIn = new TFile(storage+"/data/root/raw_"+process+".root","READ");
 		TString rawdir = digdir;
 		rawdir = rawdir.ReplaceAll("dig","raw");
+		if(signame.Contains("flat")) rawdir.ReplaceAll(process+"/raw/","");
 		TFile *fIn = new TFile(rawdir+"/raw_"+process+".root", "READ");
 		TTree *tIn = (TTree *)fIn->Get("tt");
 		int nev = tIn->GetEntries();
@@ -1009,6 +1005,21 @@ int main(int argc, char *argv[])
 		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
 		hname = "h2_dx14_vs_x_L1X_" + side;
 		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
+
+		hname = "h2_dy14_vs_y_L4I_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		hname = "h2_dy14_vs_y_L4O_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		hname = "h2_dy14_vs_y_L4X_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		
+		hname = "h2_dy14_vs_y_L1I_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		hname = "h2_dy14_vs_y_L1O_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		hname = "h2_dy14_vs_y_L1X_" + side;
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		
 
 		/// loop on events
 		// for(int iev=0;iev<nev;iev++)
@@ -1102,7 +1113,7 @@ int main(int argc, char *argv[])
 				// double pxyztmp[3];
 				// trutrk->GetPXYZ(pxyztmp);
 
-				int slvidx = nslv - 1;
+				int slvidx = nslv-1;
 				wgt.push_back(wgt0->at(igen));
 				xvtx.push_back(vx->at(igen));
 				yvtx.push_back(vy->at(igen));
@@ -1126,6 +1137,10 @@ int main(int argc, char *argv[])
 				double x4I = 0;
 				double x1O = 0;
 				double x4O = 0;
+				double y1I = 0;
+				double y4I = 0;
+				double y1O = 0;
+				double y4O = 0;
 				for (Int_t n = 0; n<trkpts_fullrange[slvidx]->GetN(); ++n)
 				{
 					Double_t xp, yp, zp;
@@ -1150,25 +1165,54 @@ int main(int argc, char *argv[])
 					if(zp==zlastinner && isInnerX)  x4I = xp;
 					if(zp==zfirstouter && isOuterX) x1O = xp;
 					if(zp==zlastouter && isOuterX)  x4O = xp;
+					
+					if(zp==zfirstinner && isInnerX) y1I = yp;
+					if(zp==zlastinner && isInnerX)  y4I = yp;
+					if(zp==zfirstouter && isOuterX) y1O = yp;
+					if(zp==zlastouter && isOuterX)  y4O = yp;
 				}
 				if(x4I>xMinI && x4I<xMaxI)
 				{
-					if((x1I>xMinI && x1I<xMaxI)) histos2["h2_dx14_vs_x_L4I_" + side]->Fill(x4I, abs(x4I - x1I));
+					if((x1I>xMinI && x1I<xMaxI))
+					{
+						histos2["h2_dx14_vs_x_L4I_" + side]->Fill(x4I, abs(x4I-x1I));
+						histos2["h2_dy14_vs_y_L4I_" + side]->Fill(y4I, y4I-y1I);
+					}
 				}
 				if(x4O>xMinO && x4O<xMaxO)
 				{
-					if((x1O>xMinO && x1O<xMaxO)) histos2["h2_dx14_vs_x_L4O_" + side]->Fill(x4O, abs(x4O - x1O));
-					else if((x1I>xMinI && x1I<xMaxI)) histos2["h2_dx14_vs_x_L4X_" + side]->Fill(x4O, abs(x4O - x1I));
+					if((x1O>xMinO && x1O<xMaxO))
+					{
+						histos2["h2_dx14_vs_x_L4O_" + side]->Fill(x4O, abs(x4O-x1O));
+						histos2["h2_dy14_vs_y_L4O_" + side]->Fill(y4O, y4O-y1O);
+					}
+					else if((x1I>xMinI && x1I<xMaxI))
+					{
+						histos2["h2_dx14_vs_x_L4X_" + side]->Fill(x4O, abs(x4O-x1I));
+						histos2["h2_dy14_vs_y_L4X_" + side]->Fill(y4O, y4O-y1I);
+					}
 				}
 				
 				if(x1I>xMinI && x1I<xMaxI)
 				{
-					if((x4I>xMinI && x4I<xMaxI)) histos2["h2_dx14_vs_x_L1I_" + side]->Fill(x1I, abs(x4I - x1I));
-					else if((x4O>xMinO && x4O<xMaxO)) histos2["h2_dx14_vs_x_L1X_" + side]->Fill(x1O, abs(x4O - x1I));
+					if((x4I>xMinI && x4I<xMaxI))
+					{
+						histos2["h2_dx14_vs_x_L1I_" + side]->Fill(x1I, abs(x4I-x1I));
+						histos2["h2_dy14_vs_y_L1I_" + side]->Fill(y1I, y4I-y1I);
+					}
+					else if((x4O>xMinO && x4O<xMaxO))
+					{
+						histos2["h2_dx14_vs_x_L1X_" + side]->Fill(x1O, abs(x4O-x1I));
+						histos2["h2_dy14_vs_y_L1X_" + side]->Fill(y1O, y4O-y1I);
+					}
 				}
 				if(x1O>xMinO && x1O<xMaxO)
 				{
-					if((x4O>xMinO && x4O<xMaxO)) histos2["h2_dx14_vs_x_L1O_" + side]->Fill(x1O, abs(x4O - x1O));
+					if((x4O>xMinO && x4O<xMaxO))
+					{
+						histos2["h2_dx14_vs_x_L1O_" + side]->Fill(x1O, abs(x4O-x1O));
+						histos2["h2_dy14_vs_y_L1O_" + side]->Fill(y1O, y4O-y1O);
+					}
 				}
 
 				clusters_id.push_back(vtmp);
