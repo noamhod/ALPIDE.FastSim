@@ -122,13 +122,19 @@ TMapTSMapii cached_clusters_id2ix;
 TMapTSMapivi lookupTable;
 TMapTSAxis axisMap;
 int nAxisBins = 10000;
-double rwxL1 = 0.030; // in cm, road width in x along the possible cluster where we embed the clusters
-double rwxL2 = 0.025; // in cm, road width in x along the possible cluster where we embed the clusters
-double rwxL3 = 0.020; // in cm, road width in x along the possible cluster where we embed the clusters
-double rwyL1 = 0.030; // in cm, road width in y along the possible cluster where we embed the clusters
-double rwyL2 = 0.025; // in cm, road width in y along the possible cluster where we embed the clusters
-double rwyL3 = 0.020; // in cm, road width in y along the possible cluster where we embed the clusters
 
+/// road/cone width
+double rwxL1 = 0.040; // in cm, road width in x along the possible cluster where we embed the clusters
+double rwxL2 = 0.035; // in cm, road width in x along the possible cluster where we embed the clusters
+double rwxL3 = 0.025; // in cm, road width in x along the possible cluster where we embed the clusters
+double rwyL1 = 0.040; // in cm, road width in y along the possible cluster where we embed the clusters
+double rwyL2 = 0.035; // in cm, road width in y along the possible cluster where we embed the clusters
+double rwyL3 = 0.025; // in cm, road width in y along the possible cluster where we embed the clusters
+TF2* fRWxPI = 0;
+TF2* fRWxPO = 0;
+TF2* fRWxEI = 0;
+TF2* fRWxEO = 0;
+TF2* fRWy   = 0;
 
 
 //// staves geometry
@@ -208,6 +214,33 @@ double zLastLayer = -999;
 double zFirstLayer = -999;
 TString LastLayer = "";
 TString FirstLayer = "";
+
+int toint(TString str)
+{
+	stringstream strm;
+	int x;
+	strm << str;
+	strm >> x;
+	return x;
+}
+
+int tofloat(TString str)
+{
+	stringstream strm;
+	float x;
+	strm << str;
+	strm >> x;
+	return x;
+}
+
+string tostring(int n)
+{
+	stringstream strm;
+	string str;
+	strm << n;
+	strm >> str;
+	return str;
+}
 
 void setParametersFromDet(TString side)
 {
@@ -357,25 +390,21 @@ void setParametersFromDet(TString side)
 			lookupTable[lname].insert(make_pair(b, temp1));
 		}
 	}
+	
+	/// initialise the road width cuts
+	if(side=="Pside")
+	{
+		fRWxPI = new TF2("fRWxPI","(0.035-0.005*x)/2 * (1+abs(y-"+(TString)tostring(xMinPI)+")/("+(TString)tostring(Lstave)+"))",1.,3.,xMinPI,xMaxPI); /// y is x4
+		fRWxPO = new TF2("fRWxPO","(0.035-0.005*x)/2 * (1+abs(y-"+(TString)tostring(xMinPO)+")/("+(TString)tostring(Lstave)+"))",1.,3.,xMinPO,xMaxPO); /// y is x4
+	}
+	if(side=="Eside")
+	{
+		fRWxEI = new TF2("fRWxEI","(0.035-0.005*x)/2 * (1+abs(y-"+(TString)tostring(xMaxEI)+")/("+(TString)tostring(Lstave)+"))",1.,3.,xMinEI,xMaxEI); /// y is x4
+		fRWxEO = new TF2("fRWxEO","(0.035-0.005*x)/2 * (1+abs(y-"+(TString)tostring(xMaxEO)+")/("+(TString)tostring(Lstave)+"))",1.,3.,xMinEO,xMaxEO); /// y is x4
+	}
+	fRWy = new TF2("fRWy","(0.035-0.005*x)/2 * (1+abs(y)/("+(TString)tostring(Hstave)+"/2))",1.,3.,-Hstave/2,+Hstave/2); /// y is y4
+	
 	cout << "++++++++++++++++++++++++++++++++++++" << endl;
-}
-
-int toint(TString str)
-{
-	stringstream strm;
-	int x;
-	strm << str;
-	strm >> x;
-	return x;
-}
-
-string tostring(int n)
-{
-	stringstream strm;
-	string str;
-	strm << n;
-	strm >> str;
-	return str;
 }
 
 bool accept(double x, double y)
@@ -1003,10 +1032,12 @@ void embed_cluster(Cluster &cls)
 
 
 /// layer 1 clusters embedding
-int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, double y4, TMapTSTF1& fDy14vsYMap, vector<int> &embedded_clusters, vector<int> &allL1ClsIx)
+int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, double x4, double y4, TMapTSTF1& fDy14vsYMap, vector<int> &embedded_clusters, vector<int> &allL1ClsIx)
 {
 	TString slyr = side.ReplaceAll("side", "")+"L"+lyrnumber+io;
 	TString slyr4 = side.ReplaceAll("side", "")+"L4"+io;
+	// double rwxL1 = (io=="I") ? ((side=="P") ? fRWxPI->Eval(1,x4) : fRWxEI->Eval(1,x4)) : ((side=="P") ? fRWxPO->Eval(1,x4) : fRWxEO->Eval(1,x4));
+	// cout << "x4=" << x4 << ", rwxL1=" << rwxL1 << endl;
 	int binUp = axisMap[slyr]->FindBin(xPivot+rwxL1);
 	int binDown = axisMap[slyr]->FindBin(xPivot-rwxL1);
 	// if(debug)
@@ -1023,6 +1054,7 @@ int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, 
 			int clsid = lookupTable[slyr][bin][k];
 			if(foundinvec(clsid, embedded_clusters)) continue;
 			int index = cached_clusters_id2ix[slyr][clsid];
+			// double rwyL1 = fRWy->Eval(1,y4);
 			double dycut = fDy14vsYMap[slyr4]->Eval(y4);
 			double dy14 = y4-cached_clusters[slyr][index].r.Y();
 			if(dy14>(dycut+rwyL1)) continue;
@@ -1039,10 +1071,14 @@ int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, 
 }
 
 /// layer 2 and 3 clusters embedding
-int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, double y4, TMapTSTF1& fDy14vsYMap, vector<int> &embedded_clusters)
+int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, double x4, double y4, TMapTSTF1& fDy14vsYMap, vector<int> &embedded_clusters)
 {
-	TString slyr = side.ReplaceAll("side", "")+"L"+lyrnumber+io;
+	TString slyr  = side.ReplaceAll("side", "")+"L"+lyrnumber+io;
 	TString slyr4 = side.ReplaceAll("side", "")+"L4"+io;
+	// double rwxL2 = (io=="I") ? ((side=="P") ? fRWxPI->Eval(2,x4) : fRWxEI->Eval(2,x4)) : ((side=="P") ? fRWxPO->Eval(2,x4) : fRWxEO->Eval(2,x4));
+	// double rwxL3 = (io=="I") ? ((side=="P") ? fRWxPI->Eval(3,x4) : fRWxEI->Eval(3,x4)) : ((side=="P") ? fRWxPO->Eval(3,x4) : fRWxEO->Eval(3,x4));
+	// double rwyL2 = fRWy->Eval(2,y4);
+	// double rwyL3 = fRWy->Eval(3,y4);
 	double rwxM = (slyr.Contains("2")) ? rwxL2:rwxL3;
 	double rwyM = (slyr.Contains("2")) ? rwyL2:rwyL3;
 	int binUp = axisMap[slyr]->FindBin(xPivot+rwxM);
@@ -1125,25 +1161,25 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1& fDx14vsXMap
 	// if(debug) std::cout << "x2IPivotOI: " << x2IPivotOI << " x2OPivotOI: " << x2OPivotOI << " x3IPivotOI: " << x3IPivotOI << " x3OPivotOI: " << x3OPivotOI << std::endl;
 	
 	/// II: find the bins in layer 1 where the x values lie
-	int n1I_II = embed_selective(side, "1", "I", x1IPivot,   y4, fDy14vsYMap, embedded_clusters, allL1IClsIx);
-	int n2I_II = embed_selective(side, "2", "I", x2IPivotII, y4, fDy14vsYMap, embedded_clusters);
-	int n2O_II = embed_selective(side, "2", "O", x2OPivotII, y4, fDy14vsYMap, embedded_clusters);
-	int n3I_II = embed_selective(side, "3", "I", x3IPivotII, y4, fDy14vsYMap, embedded_clusters);
-	int n3O_II = embed_selective(side, "3", "O", x3OPivotII, y4, fDy14vsYMap, embedded_clusters);
+	int n1I_II = embed_selective(side, "1", "I", x1IPivot,   x4, y4, fDy14vsYMap, embedded_clusters, allL1IClsIx);
+	int n2I_II = embed_selective(side, "2", "I", x2IPivotII, x4, y4, fDy14vsYMap, embedded_clusters);
+	int n2O_II = embed_selective(side, "2", "O", x2OPivotII, x4, y4, fDy14vsYMap, embedded_clusters);
+	int n3I_II = embed_selective(side, "3", "I", x3IPivotII, x4, y4, fDy14vsYMap, embedded_clusters);
+	int n3O_II = embed_selective(side, "3", "O", x3OPivotII, x4, y4, fDy14vsYMap, embedded_clusters);
 
 	/// OO: find the bins in layer 1 where the x values lie
-	int n1I_OO = embed_selective(side, "1", "O", x1OPivot,   y4, fDy14vsYMap, embedded_clusters, allL1OClsIx);
-	int n2I_OO = embed_selective(side, "2", "I", x2IPivotOO, y4, fDy14vsYMap, embedded_clusters);
-	int n2O_OO = embed_selective(side, "2", "O", x2OPivotOO, y4, fDy14vsYMap, embedded_clusters);
-	int n3I_OO = embed_selective(side, "3", "I", x3IPivotOO, y4, fDy14vsYMap, embedded_clusters);
-	int n3O_OO = embed_selective(side, "3", "O", x3OPivotOO, y4, fDy14vsYMap, embedded_clusters);
+	int n1I_OO = embed_selective(side, "1", "O", x1OPivot,   x4, y4, fDy14vsYMap, embedded_clusters, allL1OClsIx);
+	int n2I_OO = embed_selective(side, "2", "I", x2IPivotOO, x4, y4, fDy14vsYMap, embedded_clusters);
+	int n2O_OO = embed_selective(side, "2", "O", x2OPivotOO, x4, y4, fDy14vsYMap, embedded_clusters);
+	int n3I_OO = embed_selective(side, "3", "I", x3IPivotOO, x4, y4, fDy14vsYMap, embedded_clusters);
+	int n3O_OO = embed_selective(side, "3", "O", x3OPivotOO, x4, y4, fDy14vsYMap, embedded_clusters);
 
 	/// OI: find the bins in layer 1 where the x values lie
-	int n1I_OI = embed_selective(side, "1", "I", x1IPivot,   y4, fDy14vsYMap, embedded_clusters, allL1IClsIx);
-	int n2I_OI = embed_selective(side, "2", "I", x2IPivotOI, y4, fDy14vsYMap, embedded_clusters);
-	int n2O_OI = embed_selective(side, "2", "O", x2OPivotOI, y4, fDy14vsYMap, embedded_clusters);
-	int n3I_OI = embed_selective(side, "3", "I", x3IPivotOI, y4, fDy14vsYMap, embedded_clusters);
-	int n3O_OI = embed_selective(side, "3", "O", x3OPivotOI, y4, fDy14vsYMap, embedded_clusters);
+	int n1I_OI = embed_selective(side, "1", "I", x1IPivot,   x4, y4, fDy14vsYMap, embedded_clusters, allL1IClsIx);
+	int n2I_OI = embed_selective(side, "2", "I", x2IPivotOI, x4, y4, fDy14vsYMap, embedded_clusters);
+	int n2O_OI = embed_selective(side, "2", "O", x2OPivotOI, x4, y4, fDy14vsYMap, embedded_clusters);
+	int n3I_OI = embed_selective(side, "3", "I", x3IPivotOI, x4, y4, fDy14vsYMap, embedded_clusters);
+	int n3O_OI = embed_selective(side, "3", "O", x3OPivotOI, x4, y4, fDy14vsYMap, embedded_clusters);
 	
 	n1 = n1I_II+n1I_OO+n1I_OI;
 	n2 = n2I_II+n2O_II+n2I_OO+n2O_OO+n2I_OI+n2O_OI;
@@ -1238,12 +1274,12 @@ int fill_output_clusters(TString side, vector<vector<TVector3>> &r, vector<int> 
 
 
 
-bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TLorentzVector &p, TF1* fEvsXL4, TF1 *fDxvsX, TF1 *fDyvsY, int n1, int n2, int n3, double scale=1)
+bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TLorentzVector &p, TF1* fEvsXL4, TF1 *fDxvsX, TF1 *fDyvsY, int n1, int n2, int n3)
 {
 	if(abs(r1[0]) >= abs(r4[0])) return false; // |x1| must be smaller than |x4|
 	if(r1[0] * r4[0]<0) return false; // not on the same side...
 	if(r1[2]==r4[2]) return false; // trivial, make sure z is not the same
-	float yDipoleExitAbsMax = (process=="glaser") ? 0.2 : 0.25; // cm
+	float yDipoleExitAbsMax = (process=="glaser") ? 0.2  : 0.25; // cm
 	float xDipoleExitAbsMin = (process=="glaser") ? 2.0  : 2.0;  // cm
 	float xDipoleExitAbsMax = (process=="glaser") ? 15.0 : 17.0; // cm
 	float yDipoleExit = yofz(r1, r4, zDipoleExit);
@@ -1253,14 +1289,20 @@ bool makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, T
 	if(abs(xDipoleExit)>xDipoleExitAbsMax) return false; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
 	float absdx41max = (process=="glaser") ? 6 : 6; //7.6; // cm, similar for elaser and glaser-derived from flat signal
 	float absdx41min = (process=="glaser") ? 1 : 1; //0.8; // cm, similar for elaser and glaser-derived from flat signal
+	// double rwxL1 = 0;
+	// if(side=="Pside" && r4[0]>xMinPI && r4[0]<xMaxPI) rwxL1 = fRWxPI->Eval(1,r4[0]);
+	// if(side=="Eside" && r4[0]>xMinEI && r4[0]<xMaxEI) rwxL1 = fRWxEI->Eval(1,r4[0]);
+	// if(side=="Pside" && r4[0]>xMinPO && r4[0]<xMaxPO) rwxL1 = fRWxPO->Eval(1,r4[0]);
+	// if(side=="Eside" && r4[0]>xMinEO && r4[0]<xMaxEO) rwxL1 = fRWxEO->Eval(1,r4[0]);
+	// double rwyL1 = fRWy->Eval(1,r4[1]);
 	if(abs(r4[0]-r1[0])>absdx41max || abs(r4[0]-r1[0])<absdx41min) return false; // new cut!!
 	if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])+rwxL1))               return false; // new cut!!
 	if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])-rwxL1))               return false; // new cut!!
 	if((r4[1]-r1[1])>(fDyvsY->Eval(r4[1])+rwyL1))                  return false; // new cut!!
 	if((r4[1]-r1[1])<(fDyvsY->Eval(r4[1])-rwyL1))                  return false; // new cut!!
-	if(n2<1 || n3<1)                                               return false; // new cut!! (not very useful for large signals)
+	if(n1<1 || n2<1 || n3<1)                                       return false; // new cut!! (not very useful for large signals)
 
-	double E = fEvsXL4->Eval(r4[0])*scale; // in GeV
+	double E = fEvsXL4->Eval(r4[0]); // in GeV
 	// cout << "  E=" << E << endl;
 	double P = sqrt(E*E-meGeV2);
 
@@ -1617,12 +1659,12 @@ int main(int argc, char *argv[])
 		// set chi2 cuts
 		// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
 		// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
-		det->SetMaxChi2Cl(20.); // max track to cluster chi2
+		det->SetMaxChi2Cl(30.); // max track to cluster chi2
 		// det->SetMaxChi2NDF(3.5); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser") ? 15. : 5.); // max total chi2/ndf
-		det->SetMaxChi2NDF(20.); // max total chi2/ndf
+		det->SetMaxChi2NDF(30.); // max total chi2/ndf
 		det->SetMaxChi2Vtx(20e9); // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(50.); // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
@@ -2051,13 +2093,9 @@ int main(int argc, char *argv[])
 						fDx14vsX = fDx14vsXMap["L4I_"+side];
 						fDy14vsY = fDy14vsYMap[sname+"L4I"];
 						fEvsXL4 = (side=="Pside") ? fEvsX_L4I_Pside : fEvsX_L4I_Eside;
-						for(int g=0 ; g<guesses.size() ; g++)
-						{
-							TLorentzVector pseed;
-							double Escale = guesses[g];
-							bool seed = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsXL4,fDx14vsX,fDy14vsY,n1inroad,n2inroad,n3inroad,Escale);
-							if(seed) { n_seeds++; pseeds.push_back(pseed); }
-						}
+						TLorentzVector pseed;
+						bool seed = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsXL4,fDx14vsX,fDy14vsY,n1inroad,n2inroad,n3inroad);
+						if(seed) { n_seeds++; pseeds.push_back(pseed); }
 					}
 				}
 				
@@ -2074,13 +2112,9 @@ int main(int argc, char *argv[])
 						fDx14vsX = fDx14vsXMap["L4O_"+side];
 						fDy14vsY = fDy14vsYMap[sname+"L4O"];
 						fEvsXL4 = (side=="Pside") ? fEvsX_L4O_Pside : fEvsX_L4O_Eside;
-						for(int g=0 ; g<guesses.size() ; g++)
-						{
-							TLorentzVector pseed;
-							double Escale = guesses[g];
-							bool seed = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsXL4,fDx14vsX,fDy14vsY,n1inroad,n2inroad,n3inroad,Escale);
-							if(seed) { n_seeds++; pseeds.push_back(pseed); }
-						}
+						TLorentzVector pseed;
+						bool seed = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsXL4,fDx14vsX,fDy14vsY,n1inroad,n2inroad,n3inroad);
+						if(seed) { n_seeds++; pseeds.push_back(pseed); }
 					}
 				}
 				
@@ -2097,13 +2131,9 @@ int main(int argc, char *argv[])
 						fDx14vsX = fDx14vsXMap["L4X_"+side];
 						fDy14vsY = fDy14vsYMap[sname+"L4X"];
 						fEvsXL4 = (side=="Pside") ? fEvsX_L4O_Pside : fEvsX_L4O_Eside;
-						for(int g=0 ; g<guesses.size() ; g++)
-						{
-							TLorentzVector pseed;
-							double Escale = guesses[g];
-							bool seed = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsXL4,fDx14vsX,fDy14vsY,n1inroad,n2inroad,n3inroad,Escale);
-							if(seed) { n_seeds++; pseeds.push_back(pseed); }
-						}
+						TLorentzVector pseed;
+						bool seed = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsXL4,fDx14vsX,fDy14vsY,n1inroad,n2inroad,n3inroad);
+						if(seed) { n_seeds++; pseeds.push_back(pseed); }
 					}
 				}
 				
@@ -2223,7 +2253,7 @@ int main(int argc, char *argv[])
 
 				if(!solved)
 				{
-					if(nIterations_slv<3)
+					if(nIterations_slv<nMaxIterations)
 					{
 						nIterations_slv++;
 						goto reco;
@@ -2488,7 +2518,9 @@ int main(int argc, char *argv[])
 
 					histos["h_chi2_matched_"+side]->Fill(reco_chi2dof[k]);
 
-					bool accept = (reco_p[k].E()>1. and reco_p[k].E()<16.5);
+					float EMin = (process=="glaser") ? EseedMinGLaser : EseedMinELaser; // GeV
+					float EMax = (process=="glaser") ? EseedMaxGLaser : EseedMaxELaser; // GeV
+					bool accept = (reco_p[k].E()>EMin and reco_p[k].E()<EMax);
 					if(!accept) continue;
 					histos["h_E_tru_rec_mat_"+side]->Fill(sig_trkp4->at(reco_ixmtchd[k]).E());
 					histos["h_dErel_rec_gen_"+side]->Fill((reco_p[k].E()-sig_trkp4->at(reco_ixmtchd[k]).E()) / sig_trkp4->at(reco_ixmtchd[k]).E());

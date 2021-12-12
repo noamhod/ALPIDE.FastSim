@@ -90,7 +90,7 @@ def band(name,h2,tf1,xmin,xmax,width=0.1):
    return grUp,grDn
    
 
-process = "elaser"
+process = "glaser"
 isflat  = "_flat" ## "_flat" or ""
 
 tfname = "../data/root/dig/"+process+"/phase0/gpc/2.0/dig_"+process+"_"+isflat+".root"
