@@ -93,8 +93,21 @@ def main():
     print("path=",path)
     print("targetdir=",targetdir)
     fIns = glob.glob(path+"/*.h5")
-    print(fIns)   
- 
+    #print(fIns)   
+    positronNumberList = []
+    ##### work only on the events having same order of tracks as that of the highest tracked event
+    for name in fIns:
+        #### input file
+        fIn = h5py.File(name, 'r')
+        id_value_positron = fIn['final-state/positron']['id'][()]
+        positronNumberList.append(len(id_value_positron))
+
+    #### sort the list in maximum to minimum
+    positronNumberList.sort(reverse=True)
+    
+    ### take the first 10 highest positron events
+    highestPositronEvents = float(positronNumberList[0])
+
     for name in fIns:
         ### clear output tree branches
         mpid_out.clear()
@@ -113,11 +126,56 @@ def main():
         #### input file
         fIn = h5py.File(name, 'r')
         print("reading: ",name)
+                
+        ### positrons
+        positronNumber = 0
+        id_value_positron       = fIn['final-state/positron']['id'][()]
+        parentid_value_positron = fIn['final-state/positron']['parent_id'][()]
+        momentum_value_positron = fIn['final-state/positron']['momentum'][()]
+        position_value_positron = fIn['final-state/positron']['position'][()]
+        weight_value_positron   = fIn['final-state/positron']['weight'][()]
+        # print("this file has ",len(id_value_positron)," positrons")
+        if(highestPositronEvents>50):
+            if len(id_value_positron) < highestPositronEvents/2.0: 
+                print("This file ",name," has very few positrons ",len(id_value_positron), " ---- NOT PROCESSING")
+                continue
+        else:
+            if len(id_value_positron) < highestPositronEvents/10.0: 
+                print("This file ",name," has very few positrons ",len(id_value_positron), " ---- NOT PROCESSING")
+                continue
+
+        for j in range(0, len(id_value_positron)):
+            vx0    = position_value_positron[j][0]*1.e-1 ## mm to cm
+            vy0    = position_value_positron[j][1]*1.e-1 ## mm to cm
+            vz0    = position_value_positron[j][2]*1.e-1 ## mm to cm
+            t0     = position_value_positron[j][3]
+            Energy = momentum_value_positron[j][0]
+            px0    = momentum_value_positron[j][1]
+            py0    = momentum_value_positron[j][2]
+            pz0    = momentum_value_positron[j][3]
+            pdgId0 = -11
+            wgt0   = weight_value_positron[j]
+            MP_ID  = str(id_value_positron[j])+"_"+str(pdgId0)
+            xi0    = xiInput
+            mpid_out.push_back(str(MP_ID))
+            wgt_out.push_back(wgt0)  
+            pdgId_out.push_back(int(pdgId0))  
+            vx_out.push_back(vx0)
+            vy_out.push_back(vy0)
+            vz_out.push_back(vz0)
+            px_out.push_back(px0)
+            py_out.push_back(py0)
+            pz_out.push_back(pz0)
+            E_out.push_back(Energy)
+            time_out.push_back(t0)
+            xi_out.push_back(xi0)
+            positronNumber += 1
+
         electronNumber = 0
         if(photon):
             ### electrons are only collected for g+laser
             id_value_electron       = fIn['final-state/electron']['id'][()]
-            print("this file has ",len(id_value_electron)," electrons")
+            # print("this file has ",len(id_value_electron)," electrons")
             parentid_value_electron = fIn['final-state/electron']['parent_id'][()]
             momentum_value_electron = fIn['final-state/electron']['momentum'][()]
             position_value_electron = fIn['final-state/electron']['position'][()]
@@ -148,43 +206,6 @@ def main():
                 time_out.push_back(t0)
                 xi_out.push_back(xi0)
                 electronNumber += 1
-                
-
-                
-        ### positrons
-        positronNumber = 0
-        id_value_positron       = fIn['final-state/positron']['id'][()]
-        parentid_value_positron = fIn['final-state/positron']['parent_id'][()]
-        momentum_value_positron = fIn['final-state/positron']['momentum'][()]
-        position_value_positron = fIn['final-state/positron']['position'][()]
-        weight_value_positron   = fIn['final-state/positron']['weight'][()]
-        print("this file has ",len(id_value_positron)," positrons")
-        for j in range(0, len(id_value_positron)):
-            vx0    = position_value_positron[j][0]*1.e-1 ## mm to cm
-            vy0    = position_value_positron[j][1]*1.e-1 ## mm to cm
-            vz0    = position_value_positron[j][2]*1.e-1 ## mm to cm
-            t0     = position_value_positron[j][3]
-            Energy = momentum_value_positron[j][0]
-            px0    = momentum_value_positron[j][1]
-            py0    = momentum_value_positron[j][2]
-            pz0    = momentum_value_positron[j][3]
-            pdgId0 = -11
-            wgt0   = weight_value_positron[j]
-            MP_ID  = str(id_value_positron[j])+"_"+str(pdgId0)
-            xi0    = xiInput
-            mpid_out.push_back(str(MP_ID))
-            wgt_out.push_back(wgt0)  
-            pdgId_out.push_back(int(pdgId0))  
-            vx_out.push_back(vx0)
-            vy_out.push_back(vy0)
-            vz_out.push_back(vz0)
-            px_out.push_back(px0)
-            py_out.push_back(py0)
-            pz_out.push_back(pz0)
-            E_out.push_back(Energy)
-            time_out.push_back(t0)
-            xi_out.push_back(xi0)
-            positronNumber += 1
             
 
         tt_out.Fill()
