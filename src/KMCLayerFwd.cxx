@@ -21,9 +21,9 @@ KMCLayerFwd::KMCLayerFwd(const char *name)
   ,fSig2EstY(999)
   ,fClCorr()
   ,fClMC()
-  ,fClBg("KMCClusterFwd",5)
+  ,fClBg("KMCClusterFwd",10)
   ,fTrCorr()
-  ,fTrMC("KMCProbeFwd",5)
+  ,fTrMC("KMCProbeFwd",10)
   ,fMaterial(0)
 {
   for (int i=0;i<kMaxAccReg;i++) {
@@ -50,7 +50,7 @@ void KMCLayerFwd::Reset()
 //__________________________________________________________________________
 KMCProbeFwd* KMCLayerFwd::AddMCTrack(KMCProbeFwd* src) 
 {
-  int ntr = GetNMCTracks(); 
+  int ntr = GetNMCTracks();
   KMCProbeFwd* prb = 0;
   if (src) prb = new(fTrMC[ntr]) KMCProbeFwd(*src);
   else     prb = new(fTrMC[ntr]) KMCProbeFwd();
@@ -94,7 +94,7 @@ KMCProbeFwd* KMCLayerFwd::GetWinnerMCTrack()
   // }
   KMCProbeFwd* win = fTrMC.GetEntries() ? (KMCProbeFwd*)fTrMC[0]:0;
   // if(!win) std::cout << "win is NULL: " << win << " (out of " << fTrMC.GetEntries() << " good tracks)" << std::endl;
-  // if(win) std::cout << "win is killed: " << win->IsKilled() << std::endl;
+  // if(win)  std::cout << "win is killed: " << win->IsKilled() << std::endl;
   if (!win || win->IsKilled()) return 0;
   return win;
 }
