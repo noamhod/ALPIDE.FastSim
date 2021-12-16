@@ -286,32 +286,19 @@ int acceptcls(double x, double y, double z, double step = 0.1)
 
 Color_t trkcol(double E)
 {
-	if(E >= 14)
-		return kBlack;
-	else if(E >= 12 and E<14.)
-		return kRed;
-	else if(E >= 10 and E<12.)
-		return 95;
-	else if(E >= 8. and E<10.)
-		return 91;
-	else if(E >= 7. and E<8.)
-		return 80;
-	else if(E >= 6. and E<7.)
-		return 71;
-	else if(E >= 5. and E<6.)
-		return 65;
-	else if(E >= 4. and E<5.)
-		return 60;
-	else if(E >= 3. and E<4.)
-		return 53;
-	else if(E >= 2. and E<3.)
-		return 51;
-	else if(E >= 1. and E<2.)
-		return 223;
-	else if(E >= .5 and E<1.)
-		return 224;
-	else
-		return kGray;
+	if(E >= 14)                return kBlack;
+	else if(E >= 12 and E<14.) return kRed;
+	else if(E >= 10 and E<12.) return 95;
+	else if(E >= 8. and E<10.) return 91;
+	else if(E >= 7. and E<8.)  return 80;
+	else if(E >= 6. and E<7.)  return 71;
+	else if(E >= 5. and E<6.)  return 65;
+	else if(E >= 4. and E<5.)  return 60;
+	else if(E >= 3. and E<4.)  return 53;
+	else if(E >= 2. and E<3.)  return 51;
+	else if(E >= 1. and E<2.)  return 223;
+	else if(E >= .5 and E<1.)  return 224;
+	else                       return kGray;
 	return kRed;
 }
 
@@ -383,8 +370,7 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 	int nz = 0;
 	for (int iz = 1; iz<nZ; iz++)
 	{
-		if(!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ() + step, zMax), step))
-			break;
+		if(!det->PropagateToZBxByBz(&tmp, TMath::Min(tmp.GetZ() + step, zMax), step)) break;
 		tmp.GetXYZ(xyz);
 		xp[iz] = xyz[0];
 		yp[iz] = xyz[1];
@@ -393,8 +379,7 @@ TPolyLine3D *TrackLine3d(const KMCProbeFwd *source, Double_t zMax, Double_t step
 	}
 	TPolyLine3D *polyline = new TPolyLine3D(nz + 1);
 	polyline->SetLineColor(col);
-	for (int i = 0; i<nz + 1; i++)
-		polyline->SetPoint(i, xp[i], yp[i], zp[i]);
+	for (int i = 0; i<nz + 1; i++) polyline->SetPoint(i, xp[i], yp[i], zp[i]);
 	return polyline;
 }
 
@@ -403,8 +388,7 @@ bool islayer(double z, int layerindex = -1, double stepsize = 1)
 	if(layerindex >= 0)
 	{
 		double dz = abs(zlayer[layerindex]-z);
-		if(dz<stepsize)
-			return true;
+		if(dz<stepsize) return true;
 	}
 	else
 	{
@@ -433,8 +417,7 @@ TPolyMarker3D *TrackMarker3d(const KMCProbeFwd *source, double zmin, double zmax
 	int nz = 0;
 	for (int iz = 1; iz<nZ; iz++)
 	{
-		if(!det->PropagateToZBxByBz(&tmp, tmp.GetZ() + zstep, zstep))
-			break;
+		if(!det->PropagateToZBxByBz(&tmp, tmp.GetZ() + zstep, zstep)) break;
 		tmp.GetXYZ(xyz);
 		xp[iz] = xyz[0];
 		yp[iz] = xyz[1];
@@ -446,8 +429,7 @@ TPolyMarker3D *TrackMarker3d(const KMCProbeFwd *source, double zmin, double zmax
 	int n = 0;
 	for (int i = 0; i<nz + 1; i++)
 	{
-		if(!fullrange && !islayer(zp[i], -1, zstep))
-			continue;
+		if(!fullrange && !islayer(zp[i], -1, zstep)) continue;
 		polymarker->SetPoint(n, xp[i], yp[i], zp[i]);
 		n++;
 	}
@@ -481,14 +463,10 @@ TPolyLine3D *GetLayer(TString side, TString io, double z, Color_t col)
 	Double_t zC[] = {z, z, z, z, z};
 
 	TPolyLine3D *polyline = 0;
-	if(side=="P" && io=="I")
-		polyline = new TPolyLine3D(n, xIP, y, zC);
-	if(side=="E" && io=="I")
-		polyline = new TPolyLine3D(n, xIE, y, zC);
-	if(side=="P" && io=="O")
-		polyline = new TPolyLine3D(n, xOP, y, zC);
-	if(side=="E" && io=="O")
-		polyline = new TPolyLine3D(n, xOE, y, zC);
+	if(side=="P" && io=="I") polyline = new TPolyLine3D(n, xIP, y, zC);
+	if(side=="E" && io=="I") polyline = new TPolyLine3D(n, xIE, y, zC);
+	if(side=="P" && io=="O") polyline = new TPolyLine3D(n, xOP, y, zC);
+	if(side=="E" && io=="O") polyline = new TPolyLine3D(n, xOE, y, zC);
 	polyline->SetLineColor(col);
 	return polyline;
 }
@@ -508,14 +486,10 @@ TPolyLine3D *GetLayerFront(TString side, TString io, double z, Color_t col)
 	Double_t zC[] = {z, z, z, z};
 
 	TPolyLine3D *polyline = 0;
-	if(side=="P" && io=="I")
-		polyline = new TPolyLine3D(n, xIP, y, zC);
-	if(side=="E" && io=="I")
-		polyline = new TPolyLine3D(n, xIE, y, zC);
-	if(side=="P" && io=="O")
-		polyline = new TPolyLine3D(n, xOP, y, zC);
-	if(side=="E" && io=="O")
-		polyline = new TPolyLine3D(n, xOE, y, zC);
+	if(side=="P" && io=="I") polyline = new TPolyLine3D(n, xIP, y, zC);
+	if(side=="E" && io=="I") polyline = new TPolyLine3D(n, xIE, y, zC);
+	if(side=="P" && io=="O") polyline = new TPolyLine3D(n, xOP, y, zC);
+	if(side=="E" && io=="O") polyline = new TPolyLine3D(n, xOE, y, zC);
 	polyline->SetLineColor(col);
 	return polyline;
 }
@@ -569,13 +543,12 @@ bool skipglitches(TPolyMarker3D *points)
 	for (int n = 0; n<points->GetN(); ++n)
 	{
 		points->GetPoint(n, x, y, z);
-		if(abs(x)>40 || abs(y)>5)
-			return true;
+		if(abs(x)>40 || abs(y)>5) return true;
 	}
 	return false;
 }
 
-void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, TString process, vector<int> &inacc, vector<TPolyMarker3D *> &clusters, TString suff = "")
+void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, TString process, vector<int> &inacc, vector<TPolyMarker3D *> &clusters, TString side, TString pltdir, TString pdfdir, TString suff = "")
 {
 	TCanvas *cnv_pl3d = new TCanvas("cnv_pl3d" + suff, "", 500, 500);
 	TView *view_pl3d = TView::CreateView(1);
@@ -589,7 +562,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 
 	vector<TPolyLine3D *> staves;
 	vector<TPolyLine3D *> fstaves;
-	for (unsigned int l = 0; l<layersz.size(); ++l)
+	for(unsigned int l = 0; l<layersz.size(); ++l)
 	{
 		double z = layersz[l];
 		TString io = (layersnames[l].Contains("I")) ? "I" : "O";
@@ -633,12 +606,12 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 	cnv_pm3d->cd();
 	leg->Draw("same");
 
-	cnv_pl3d->SaveAs(storage + "/output/root/" + process + "_tracks_pl3d" + suff + ".root");
-	cnv_pl3d->SaveAs(storage + "/output/pdf/" + process + "_tracks_pl3d" + suff + ".pdf");
-	cnv_pm3d->SaveAs(storage + "/output/root/" + process + "_tracks_pm3d" + suff + ".root");
-	cnv_pm3d->SaveAs(storage + "/output/pdf/" + process + "_tracks_pm3d" + suff + ".pdf");
+	cnv_pl3d->SaveAs(pltdir+ "/tracks_pl3d_"+side+suff+".root");
+	cnv_pl3d->SaveAs(pdfdir+ "/tracks_pl3d_"+side+suff+".pdf");
+	cnv_pm3d->SaveAs(pltdir+ "/tracks_pm3d_"+side+suff+".root");
+	cnv_pm3d->SaveAs(pdfdir+ "/tracks_pm3d_"+side+suff+".pdf");
 
-	TFile *flines = new TFile(storage + "/data/root/" + process + "_geometry" + suff + ".root", "RECREATE");
+	TFile *flines = new TFile(pltdir+"/geometry_"+side+suff+".root", "RECREATE");
 	flines->cd();
 	dipole->Write();
 	fdipole->Write();
@@ -729,16 +702,11 @@ void KillOutTree()
 void RenameOutTree(TString fOutName, int nFiles)
 {
 	TString sf = "";
-	if(nFiles<10)
-		sf = Form("0000%d", nFiles);
-	if(nFiles >= 10 && nFiles<100)
-		sf = Form("000%d", nFiles);
-	if(nFiles >= 100 && nFiles<1000)
-		sf = Form("00%d", nFiles);
-	if(nFiles >= 1000 && nFiles<10000)
-		sf = Form("0%d", nFiles);
-	if(nFiles >= 10000 && nFiles<100000)
-		sf = Form("%d", nFiles); // assume no more than 99,999 files...
+	if(nFiles<10)                        sf = Form("0000%d", nFiles);
+	if(nFiles >= 10 && nFiles<100)       sf = Form("000%d", nFiles);
+	if(nFiles >= 100 && nFiles<1000)     sf = Form("00%d", nFiles);
+	if(nFiles >= 1000 && nFiles<10000)   sf = Form("0%d", nFiles);
+	if(nFiles >= 10000 && nFiles<100000) sf = Form("%d", nFiles); // assume no more than 99,999 files...
 	TString fOutNameNew = fOutName;
 	fOutNameNew = fOutNameNew.ReplaceAll(".root", "_" + sf + ".root");
 	gSystem->Exec("mv -f " + fOutName + " " + fOutNameNew);
@@ -747,20 +715,13 @@ void RenameOutTree(TString fOutName, int nFiles)
 TString FormatEventID(int evnt)
 {
 	TString sevnt = "";
-	if(evnt<10)
-		sevnt = Form("000000%d", evnt);
-	if(evnt >= 10 && evnt<100)
-		sevnt = Form("00000%d", evnt);
-	if(evnt >= 100 && evnt<1000)
-		sevnt = Form("0000%d", evnt);
-	if(evnt >= 1000 && evnt<10000)
-		sevnt = Form("000%d", evnt);
-	if(evnt >= 10000 && evnt<100000)
-		sevnt = Form("00%d", evnt);
-	if(evnt >= 100000 && evnt<1000000)
-		sevnt = Form("0%d", evnt);
-	if(evnt >= 1000000 && evnt<10000000)
-		sevnt = Form("%d", evnt); // assume no more than 9,999,999 events...
+	if(evnt<10)                          sevnt = Form("000000%d", evnt);
+	if(evnt >= 10 && evnt<100)           sevnt = Form("00000%d", evnt);
+	if(evnt >= 100 && evnt<1000)         sevnt = Form("0000%d", evnt);
+	if(evnt >= 1000 && evnt<10000)       sevnt = Form("000%d", evnt);
+	if(evnt >= 10000 && evnt<100000)     sevnt = Form("00%d", evnt);
+	if(evnt >= 100000 && evnt<1000000)   sevnt = Form("0%d", evnt);
+	if(evnt >= 1000000 && evnt<10000000) sevnt = Form("%d", evnt); // assume no more than 9,999,999 events...
 	return sevnt;
 }
 
@@ -775,17 +736,14 @@ int toint(TString str)
 
 void AddCluster(int slvidx, int index_offset, TString process, TString LYR, double dxMax = 5)
 {
-	if(!det->GetLayer(LYR)->IsITS())
-		return;
+	if(!det->GetLayer(LYR)->IsITS()) return;
 
 	// get the reconstructed propagated to the vertex
 	int layerid = det->GetLayer(LYR)->GetID();
 	KMCClusterFwd *cluster = det->GetLayer(LYR)->GetMCCluster();
 
-	if(!cluster)
-		return;
-	if(cluster->GetZLab()==0)
-		return;
+	if(!cluster)              return;
+	if(cluster->GetZLab()==0) return;
 
 	Double_t x, y, z;
 	x = cluster->GetXLab();
@@ -799,10 +757,8 @@ void AddCluster(int slvidx, int index_offset, TString process, TString LYR, doub
 	/////////////////////////
 	unsigned int ncls = clusters_r[slvidx].size();
 	double xprev = (ncls>0) ? clusters_r[slvidx][ncls-1].X() : x;
-	if(abs(x-xprev)>dxMax)
-		return;
-	if(x * xprev<0)
-		return;
+	if(abs(x-xprev)>dxMax) return;
+	if(x * xprev<0)        return;
 
 	clusters_xyz[slvidx]->SetNextPoint(x, y, z);
 	clusters_r[slvidx].push_back(v);
@@ -846,8 +802,7 @@ int main(int argc, char *argv[])
 	{
 		printf("\nNumber Of Arguments Passed: %d", argc);
 		printf("\n----Following Are The Command Line Arguments Passed----");
-		for (argcounter = 0; argcounter<argc; argcounter++)
-			printf("\nargv[%d]: %s", argcounter, argv[argcounter]);
+		for (argcounter = 0; argcounter<argc; argcounter++) printf("\nargv[%d]: %s", argcounter, argv[argcounter]);
 		printf("\n");
 	}
 	//// minimum requirements
@@ -871,7 +826,14 @@ int main(int argc, char *argv[])
 	// making the dir if it is not existing
 	TString digdir = storage+"/data/root/dig/"+process+"/"+signame;
 	cout << "making dir (if not exists already): " << digdir << endl;
+	TString pltdir = storage+"/output/root/dig/"+process+"/"+signame;
+	cout << "making dir (if not exists already): " << pltdir << endl;
+	TString pdfdir = storage+"/output/pdf/dig/"+process+"/"+signame;
+	cout << "making dir (if not exists already): " << pdfdir << endl;
+	
 	gSystem->Exec("mkdir -p "+digdir);
+	gSystem->Exec("mkdir -p "+pltdir);
+	gSystem->Exec("mkdir -p "+pdfdir);
 
 	/// common stuff
 	TString eventid = (evnt<0) ? "" : FormatEventID(evnt);
@@ -1250,8 +1212,7 @@ int main(int argc, char *argv[])
 				acc[slvidx] = (accepttrk(clusters_r[slvidx], false));
 				if(acc[slvidx]) nacc++;
 			}
-			if(iev==0)
-				WriteGeometry(trkpts, trklin, process, acc, clusters_xyz, "_truth");
+			if(iev==0) WriteGeometry(trkpts, trklin, process, acc, clusters_xyz, side, pltdir, pdfdir, "_truth");
 			if(iev % 1==0) cout << "iev=" << iev << " --> ngen=" << ngen << ", nslv=" << nslv << ", nacc=" << nacc << endl;
 			if(nslv != ngen and !process.Contains("bkg")) cout << "Warning: nslv=" << nslv << ", ngen=" << ngen << " --> problem" << endl;
 

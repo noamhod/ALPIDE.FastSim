@@ -837,6 +837,7 @@ void WriteGeometry(vector<TPolyMarker3D *> &polm, vector<TPolyLine3D *> &poll, T
 	cnv_pm3d->SaveAs(storage+"/output/root/"+process+"_tracks_pm3d"+suff+".root");
 	cnv_pm3d->SaveAs(storage+"/output/pdf/"+process+"_tracks_pm3d"+suff+".pdf");
 
+	
 	TFile *flines = new TFile(storage+"/data/root/"+process+"_geometry"+suff+".root", "RECREATE");
 	flines->cd();
 	dipole->Write();
@@ -1453,11 +1454,6 @@ int main(int argc, char *argv[])
 	gInterpreter->GenerateDictionary("vector<TPolyLine3D*>", "vector");
 	gInterpreter->GenerateDictionary("vector<vector<int> >", "vector");
 	gInterpreter->GenerateDictionary("vector<vector<TVector3> >", "vector");
-
-	/// monitoring histograms
-	TMapTSTH1D histos;
-	TMapTSTH2D histos2;
-	TString hname = "";
 	
 	/// binning
 	Int_t   nlogEbins0 = 10;
@@ -1487,7 +1483,7 @@ int main(int argc, char *argv[])
 	for (unsigned int s = 0; s<sides.size(); ++s)
 	{
 		TString side = sides[s];
-
+		cout << "starting: " << side << endl;
 
 		TFile *fOut = new TFile(recdir+"/rec_"+process+"_"+eventid+"_"+side+".root", "RECREATE");
 		// TTree *tOut = new TTree("reco", "reco");
@@ -1672,6 +1668,11 @@ int main(int argc, char *argv[])
 		///////////////////////////////
 		
 		
+		/// monitoring histograms
+		TMapTSTH1D histos;
+		TMapTSTH2D histos2;
+		TString hname = "";
+		
 		/// for the histos
 		double xMinI = (side=="Eside") ? xMinEI : xMinPI;
 		double xMaxI = (side=="Eside") ? xMaxEI : xMaxPI;
@@ -1739,6 +1740,8 @@ int main(int argc, char *argv[])
 		hname = "h_dErel_tru_rec_mat_"+side; histos.insert(make_pair(hname, new TH1D(hname, "Rec vs Gen;(E_{rec}-E_{gen})/E_{gen};Tracks", 150, -0.05, +0.05)));
 		hname = "h_dErel_tru_rec_non_"+side; histos.insert(make_pair(hname, new TH1D(hname, "Rec vs Gen;(E_{rec}-E_{gen})/E_{gen};Tracks", 150, -0.05, +0.05)));
 		
+		
+		cout << "histograms booked for " << side << endl;
 		
 		
 
@@ -2057,7 +2060,7 @@ int main(int argc, char *argv[])
 			/// loop on seeds
 			unsigned int n4I = cached_clusters[slyr4I].size();
 			unsigned int n4O = cached_clusters[slyr4O].size();
-			if(debug) cout << "before loop over layer 4 clusters" << endl;
+			// cout << "Starting loop over layer 4 clusters" << endl;
 			int n4count = 1;
 			for (unsigned int i4all = 0; i4all<(n4I+n4O); ++i4all)
 			{
@@ -2571,34 +2574,23 @@ int main(int argc, char *argv[])
 		} // end of loop on events
 
 		cout << "nEvntsProcessed=" << nEvntsProcessed << endl;
-		cout << "Now doing some post processing for side: " << side << endl;
+		cout << "Post processing for side: " << side << endl;
 
 		/// file for all histos and tress
 		fOut->cd();
 
-		/// efficiencies
-		for (unsigned int s = 0; s<sides.size(); ++s)
-		{
-			TString side = sides[s];
-			// histos["h_E_eff_sed_"+side]->Divide(histos["h_E_tru_sed_mat_"+side], histos["h_E_tru_all_"+side]);
-			histos["h_E_eff_rec_"+side]->Divide(histos["h_E_tru_rec_mat_"+side], histos["h_E_tru_all_"+side]);
-			histos["h_E_tru_rec_ratio_"+side]->Divide(histos["h_E_rec_all_"+side], histos["h_E_tru_all_"+side]);
-			histos["h_E_tru_rec_ratio_"+side+"_log0"]->Divide(histos["h_E_rec_all_"+side+"_log0"], histos["h_E_tru_all_"+side+"_log0"]);
-			histos["h_E_tru_rec_ratio_"+side+"_log1"]->Divide(histos["h_E_rec_all_"+side+"_log1"], histos["h_E_tru_all_"+side+"_log1"]);
-			histos["h_E_tru_rec_ratio_"+side+"_log2"]->Divide(histos["h_E_rec_all_"+side+"_log2"], histos["h_E_tru_all_"+side+"_log2"]);
-			histos["h_E_tru_rec_ratio_"+side+"_log3"]->Divide(histos["h_E_rec_all_"+side+"_log3"], histos["h_E_tru_all_"+side+"_log3"]);
-		}
+		cout << "...plotting efficiencies for " << side << endl;
+		// histos["h_E_eff_sed_"+side]->Divide(histos["h_E_tru_sed_mat_"+side], histos["h_E_tru_all_"+side]);
+		histos["h_E_eff_rec_"+side]->Divide(histos["h_E_tru_rec_mat_"+side], histos["h_E_tru_all_"+side]);
+		histos["h_E_tru_rec_ratio_"+side]->Divide(histos["h_E_rec_all_"+side], histos["h_E_tru_all_"+side]);
+		histos["h_E_tru_rec_ratio_"+side+"_log0"]->Divide(histos["h_E_rec_all_"+side+"_log0"], histos["h_E_tru_all_"+side+"_log0"]);
+		histos["h_E_tru_rec_ratio_"+side+"_log1"]->Divide(histos["h_E_rec_all_"+side+"_log1"], histos["h_E_tru_all_"+side+"_log1"]);
+		histos["h_E_tru_rec_ratio_"+side+"_log2"]->Divide(histos["h_E_rec_all_"+side+"_log2"], histos["h_E_tru_all_"+side+"_log2"]);
+		histos["h_E_tru_rec_ratio_"+side+"_log3"]->Divide(histos["h_E_rec_all_"+side+"_log3"], histos["h_E_tru_all_"+side+"_log3"]);
 		
-		/// 1D histos
-		for (TMapTSTH1D::iterator it = histos.begin();  it != histos.end();  ++it)
-		{
-			it->second->Write();
-		}
-		
-		/// 2D histos
+		cout << "...normalising occupancies for " << side << endl;
 		for (TMapTSTH2D::iterator it = histos2.begin(); it != histos2.end(); ++it)
 		{
-			/// normalise occupancy plots
 			if(it->first.Contains("_occ_"))
 			{
 				double binareacm2 = (it->second->GetXaxis()->GetBinWidth(1))*(it->second->GetYaxis()->GetBinWidth(1));
@@ -2606,13 +2598,22 @@ int main(int argc, char *argv[])
 				double npixelsperbin = (binareacm2/pixareacm2);
 				it->second->Scale(1./(npixelsperbin*nEvntsProcessed));
 			}
-			it->second->Write();
 		}
 		
+		/// 1D histos
+		cout << "...writing TH1 for " << side << endl;
+		for (TMapTSTH1D::iterator it = histos.begin();  it != histos.end();  ++it) it->second->Write();
+		
+		/// 2D histos
+		cout << "...writing TH2 for " << side << endl;
+		for (TMapTSTH2D::iterator it = histos2.begin(); it != histos2.end(); ++it) it->second->Write();
+		
+		cout << "Closing files for " << side << endl;
 		/// writeout tree and file
 		// tOut->Write();
 		fOut->Write();
 		fOut->Close();
+		cout << "Done! " << side << endl;
 	} // end of loop on sides
 
 	return 0;
