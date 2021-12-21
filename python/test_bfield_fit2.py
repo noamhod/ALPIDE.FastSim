@@ -91,9 +91,9 @@ def band(name,h2,tf1,xmin,xmax,width=0.1):
    
 
 process = "glaser"
-isflat  = "_flat" ## "_flat" or ""
+isflat  = "" ## "_flat" or ""
 
-tfname = "../data/root/dig/"+process+"/phase0/gpc/2.0/dig_"+process+"_"+isflat+".root"
+tfname = "../data/root/dig/"+process+"/phase0/gpc/5.0/dig_"+process+"_"+isflat+".root"
 if("flat" in isflat): tfname = "../data/root/dig/"+process+"/raw/flat/dig_"+process+"_"+isflat+".root"
 tfile = TFile(tfname,"READ")
 
@@ -106,8 +106,8 @@ hnames = ["h2_y_vs_x_exit",
 
 # fits = {"E_vs_x":"[0]+[1]/([2]+x)", "dx14_vs_x":"pol1"}
 fits = {"E_vs_x":"[0]/([1]+x)", "dx14_vs_x":"pol1"}
-xmins = {"Eside":-50,"Pside":+5}
-xmaxs = {"Eside":-5,"Pside":+50}
+xmins = {"Eside":-60,"Pside":+4}
+xmaxs = {"Eside":-4,"Pside":+60}
 ymin = -0.75
 ymax = +0.75
 qMed = 50
