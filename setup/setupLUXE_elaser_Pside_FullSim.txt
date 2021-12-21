@@ -1,0 +1,58 @@
+# keep this if slices are to be ordered in decreasing z
+#define:zinverted
+
+### flash magnet!
+#Ly  = 59.92 mm
+#Lz  = 1440 mm
+#Lx  = 980-2*(202+70) mm
+# Bfied is -0.95 T for trident/elaser and 1.2 T for bppp/glaser
+
+# type				ID	xminDipole	xmaxDipole	yminDipole	ymaxDipole	zminDipole	zmaxDipole	Bdipole(kGauss)   FunctionXComp         FunctionYComp      FunctionZComp
+define:magfield	    0	-21.8	    +21.8		-2.996		+2.996		133.0		277.0		-9.5         NONE    ([0]*(1/((1+exp((-61.6-(z-205))/2.866))*(1+exp(((z-205)-62.2)/2.891))))*(1/((1+exp((-16.5-x)/0.77))*(1+exp((x-16.5)/0.77)))))    NONE
+
+#####. 
+
+
+# dummy layer as a vertex	Zc	DZ	resX	resY
+vertex:		      		0.	25e-4	1e-5	1e-5
+
+# The parameters eff, RMin, RMax are optional (default is 1,0,1e9).
+# If one of values is specified, the others should also be set
+# note: layer with thickness DZ is positioned such that it extends in Z from Zc-DZ/2 to Zc+DZ/2
+# type			name			material	Zc			DZ			resX	resY	eff	XMin		XMax    YMin	YMax
+dummy:			VACWIN		AL2O3		393.0		300e-4
+dummy:			Air		AIR		410.015	34
+activelayer:vt	PL1I			SILICON	396.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.688128	0.811872
+dummy:			PL1IPlane	CARBON	396.23	300e-4
+activelayer:vt	PL1O			SILICON	395.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.688128	0.811872
+dummy:			PL1OPlane	CARBON	395.03	300e-4
+activelayer:vt	PL2I			SILICON	406.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.688128	0.811872
+dummy:			PL2IPlane	CARBON	406.23	300e-4
+activelayer:vt	PL2O			SILICON	405.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.688128	0.811872
+dummy:			PL2OPlane	CARBON	405.03	300e-4
+activelayer:vt	PL3I			SILICON	416.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.688128	0.811872
+dummy:			PL3IPlane	CARBON	416.23	300e-4
+activelayer:vt	PL3O			SILICON	415.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.688128	0.811872
+dummy:			PL3OPlane	CARBON	415.03	300e-4
+activelayer:vt	PL4I			SILICON	426.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.688128	0.811872
+dummy:			PL4IPlane	CARBON	426.23	300e-4
+activelayer:vt	PL4O			SILICON	425.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.688128	0.811872
+dummy:			PL4OPlane	CARBON	425.03	300e-4
+
+############################################################
+######                                                ######
+######                   MATERIALS                    ######
+######                                                ######
+############################################################
+#           Name         A	Z	Density		RadL(g/cm2)	AbsL(g/cm2)	I		PlasmaEnergy
+material:   VACUUM      1.E-16	1.E-16	1.E-16		1.E16		1.E16		1.E16		1.E16 
+material:   AIR         14.61   7.3   	1.205e-3  	36.6 		90.37		85.7e-9   	0.71e-9
+material:   BERYLLIUM   9.012   4.0    	1.848      	65.19    	56.30		63.7e-9   	26.10e-9
+material:   SILICON     28.09 	14.0	2.329		21.82		70.2 		173.0e-9  	31.05e-9
+material:   BEO        	12.510  6.000   2.810  		41.307		100.73   	93.2e-9    	34.63e-9
+material:   IRON        55.85   26.0   	7.87       	13.84		81.7       	286.0e-9   	55.17e-9
+material:   CARBON      12.01   6.0   	2.00      	42.70		59.2       	78.0e-9    	30.28e-9
+material:   CARBON	12.01   6.0	1.93		42.6916		59.2       	78.0e-9    	30.28e-9
+material:   CERAMICS   	22.313  10.855  3.600		27.54		114.84     	145.2e-9   	40.21e-9
+material:   AL2O3      	21.812  10.646  3.520  		27.87  		114.92     	145.2e-9   	40.21e-9
+
