@@ -22,22 +22,22 @@ vertex:		      		0.	25e-4	1e-5	1e-5
 # type			name			material	Zc			DZ			resX	resY	eff	XMin		XMax    YMin	YMax
 dummy:			VACWIN		AL2O3		393.0		300e-4
 dummy:			Air		AIR		410.015	34
-activelayer:vt	PL1I			SILICON	396.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75	0.75
-dummy:			PL1IPlane	CARBON	396.23	300e-4
-activelayer:vt	PL1O			SILICON	395.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75	0.75
-dummy:			PL1OPlane	CARBON	395.03	300e-4
-activelayer:vt	PL2I			SILICON	406.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75	0.75
-dummy:			PL2IPlane	CARBON	406.23	300e-4
-activelayer:vt	PL2O			SILICON	405.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75	0.75
-dummy:			PL2OPlane	CARBON	405.03	300e-4
-activelayer:vt	PL3I			SILICON	416.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75	0.75
-dummy:			PL3IPlane	CARBON	416.23	300e-4
-activelayer:vt	PL3O			SILICON	415.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75	0.75
-dummy:			PL3OPlane	CARBON	415.03	300e-4
-activelayer:vt	PL4I			SILICON	426.21	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.75	0.75
-dummy:			PL4IPlane	CARBON	426.23	300e-4
-activelayer:vt	PL4O			SILICON	425.01	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.75	0.75
-dummy:			PL4OPlane	CARBON	425.03	300e-4
+activelayer:vt	PL1I			SILICON	396.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.688128	0.811872
+dummy:			PL1IPlane	CARBON	396.22125	300e-4
+activelayer:vt	PL1O			SILICON	395.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.688128	0.811872
+dummy:			PL1OPlane	CARBON	395.02125	300e-4
+activelayer:vt	PL2I			SILICON	406.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.688128	0.811872
+dummy:			PL2IPlane	CARBON	406.22125	300e-4
+activelayer:vt	PL2O			SILICON	405.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.688128	0.811872
+dummy:			PL2OPlane	CARBON	405.02125	300e-4
+activelayer:vt	PL3I			SILICON	416.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.688128	0.811872
+dummy:			PL3IPlane	CARBON	416.22125	300e-4
+activelayer:vt	PL3O			SILICON	415.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.688128	0.811872
+dummy:			PL3OPlane	CARBON	415.02125	300e-4
+activelayer:vt	PL4I			SILICON	426.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.688128	0.811872
+dummy:			PL4IPlane	CARBON	426.22125	300e-4
+activelayer:vt	PL4O			SILICON	425.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.688128	0.811872
+dummy:			PL4OPlane	CARBON	425.02125	300e-4
 
 ############################################################
 ######                                                ######

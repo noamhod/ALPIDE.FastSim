@@ -164,8 +164,8 @@ void setParametersFromDet(TString side)
 	xEsideR = (side=="Pside") ? layer_outer->GetXMax() : -999;
 	cout << "xPsideL=" << xPsideL << ", xPsideR=" << xPsideR << ", xEsideL=" << xEsideL << ", xEsideR=" << xEsideR << endl;
 
-	yUp = +Hstave / 2.;
-	yDn = -Hstave / 2.;
+	yUp = layer_outer->GetYMax();
+	yDn = layer_outer->GetYMin();
 	cout << "yUp=" << yUp << ", yDn=" << yDn << endl;
 
 	//// get the Bfield from the setup
@@ -933,16 +933,16 @@ int main(int argc, char *argv[])
 		// hname = "h2_z_vs_x_"+side; histos2.insert( make_pair(hname, new TH2D(hname,";x [cm];z [cm];Tracks",1000,-100,+100, 2000,0,+400)) );
 		// hname = "h2_z_vs_y_"+side; histos2.insert( make_pair(hname, new TH2D(hname,";y [cm];z [cm];Tracks",1000,-100,+100, 2000,0,+400)) );
 		hname = "h2_y_vs_x_exit_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{exit} [cm];y_{exit} [cm];Tracks", 200, -30, +30, 200, -0.75, +0.75)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{exit} [cm];y_{exit} [cm];Tracks", 200, -30, +30, 200, yDn, yUp)));
 
 		hname = "h2_y_vs_x_L1I_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];y [cm];Tracks", 300, -55, +55, 300, -0.75, +0.75)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];y [cm];Tracks", 300, -55, +55, 300, yDn, yUp)));
 		hname = "h2_y_vs_x_L1O_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];y [cm];Tracks", 300, -55, +55, 300, -0.75, +0.75)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];y [cm];Tracks", 300, -55, +55, 300, yDn, yUp)));
 		hname = "h2_y_vs_x_L4I_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];y [cm];Tracks", 300, -55, +55, 300, -0.75, +0.75)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];y [cm];Tracks", 300, -55, +55, 300, yDn, yUp)));
 		hname = "h2_y_vs_x_L4O_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];y [cm];Tracks", 300, -55, +55, 300, -0.75, +0.75)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{4} [cm];y [cm];Tracks", 300, -55, +55, 300, yDn, yUp)));
 
 		hname = "h2_E_vs_x_L1I_" + side;
 		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];E [GeV];Tracks", 500, -55, +55, 340, 0, +17)));
@@ -968,25 +968,25 @@ int main(int argc, char *argv[])
 		histos2.insert(make_pair(hname, new TH2D(hname, ";x_{1} [cm];|x_{4}-x_{1}| [cm];Tracks", 600, -55, +55, 400, 0, +8)));
 
 		hname = "h2_dy14_vs_y_L4I_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];y_{4}-y_{1} [cm];Tracks", 600, yDn, yUp, 400, -0.075, +0.075)));
 		hname = "h2_dy14_vs_y_L4O_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];y_{4}-y_{1} [cm];Tracks", 600, yDn, yUp, 400, -0.075, +0.075)));
 		hname = "h2_dy14_vs_y_L4X_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{4} [cm];y_{4}-y_{1} [cm];Tracks", 600, yDn, yUp, 400, -0.075, +0.075)));
 		
 		hname = "h2_dy14_vs_y_L1I_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];y_{4}-y_{1} [cm];Tracks", 600, yDn, yUp, 400, -0.075, +0.075)));
 		hname = "h2_dy14_vs_y_L1O_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];y_{4}-y_{1} [cm];Tracks", 600, yDn, yUp, 400, -0.075, +0.075)));
 		hname = "h2_dy14_vs_y_L1X_" + side;
-		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];y_{4}-y_{1} [cm];Tracks", 600, -0.75, +0.75, 400, -0.075, +0.075)));
+		histos2.insert(make_pair(hname, new TH2D(hname, ";y_{1} [cm];y_{4}-y_{1} [cm];Tracks", 600, yDn, yUp, 400, -0.075, +0.075)));
 		
 
 		/// loop on events
 		// for(int iev=0;iev<nev;iev++)
 		bool fullloop = (evnt<0);
-		// for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<nev : iev==evnt; iev++)
-		for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<10 : iev==evnt; iev++)
+		for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<nev : iev==evnt; iev++)
+		//for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<10 : iev==evnt; iev++)
 		{
 			/// reset the layers
 			reset_layers_all();
