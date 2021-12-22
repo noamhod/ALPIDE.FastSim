@@ -1279,7 +1279,7 @@ int makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TL
 	if(abs(xDipoleExit)<xDipoleExitAbsMin) return FAIL_DIPEXITXLOW; // the track should point to |x|>xDipoleExitAbsMin at the dipole exit
 	if(abs(xDipoleExit)>xDipoleExitAbsMax) return FAIL_DIPEXITXHIGH; // the track should point to |x|<xDipoleExitAbsMax at the dipole exit
 	float absdx41max = (process=="glaser") ? 8.0 : 8.0; //7.6; // cm, similar for elaser and glaser-derived from flat signal
-	float absdx41min = (process=="glaser") ? 0.8 : 0.8; //0.8; // cm, similar for elaser and glaser-derived from flat signal
+	float absdx41min = (process=="glaser") ? 0.7 : 0.7; //0.8; // cm, similar for elaser and glaser-derived from flat signal
 	double E = fEvsXL4->Eval(r4[0]); // in GeV
 	double rwx = (E>3) ? rwxL1 : rwxL1*2;
 	double rwy = (E>3) ? rwyL1 : rwyL1*2;

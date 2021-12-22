@@ -22,21 +22,21 @@ vertex:		      		0.	25e-4	1e-5	1e-5
 # type			name			material	Zc			DZ			resX	resY	eff	XMin		XMax    YMin	YMax
 dummy:			VACWIN		AL2O3		393.0		300e-4
 dummy:			Air		AIR		410.015	34
-activelayer:vt	EL1I			SILICON	396.20125	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.688128	0.811872
+activelayer:vt	EL1I			SILICON	396.20125	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.626256	0.75
 dummy:			EL1IPlane	CARBON	396.22125	300e-4
-activelayer:vt	EL1O			SILICON	395.00125	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.688128	0.811872
+activelayer:vt	EL1O			SILICON	395.00125	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.626256	0.75
 dummy:			EL1OPlane	CARBON	395.02125	300e-4
-activelayer:vt	EL2I			SILICON	406.20125	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.688128	0.811872
+activelayer:vt	EL2I			SILICON	406.20125	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.626256	0.75
 dummy:			EL2IPlane	CARBON	406.22125	300e-4
-activelayer:vt	EL2O			SILICON	405.00125	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.688128	0.811872
+activelayer:vt	EL2O			SILICON	405.00125	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.626256	0.75
 dummy:			EL2OPlane	CARBON	405.02125	300e-4
-activelayer:vt	EL3I			SILICON	416.20125	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.688128	0.811872
+activelayer:vt	EL3I			SILICON	416.20125	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.626256	0.75
 dummy:			EL3IPlane	CARBON	416.22125	300e-4
-activelayer:vt	EL3O			SILICON	415.00125	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.688128	0.811872
+activelayer:vt	EL3O			SILICON	415.00125	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.626256	0.75
 dummy:			EL3OPlane	CARBON	415.02125	300e-4
-activelayer:vt	EL4I			SILICON	426.20125	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.688128	0.811872
+activelayer:vt	EL4I			SILICON	426.20125	100e-4	4.e-4	4.e-4	0.99	-32.353	-5.273   -0.626256	0.75
 dummy:			EL4IPlane	CARBON	426.22125	300e-4
-activelayer:vt	EL4O			SILICON	425.00125	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.688128	0.811872
+activelayer:vt	EL4O			SILICON	425.00125	100e-4	4.e-4	4.e-4	0.99	-55.433	-28.353  -0.626256	0.75
 dummy:			EL4OPlane	CARBON	425.02125	300e-4
 
 ############################################################
