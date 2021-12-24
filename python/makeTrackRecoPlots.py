@@ -42,10 +42,10 @@ def main():
     process = args.proc             ### "elaser/glaser"
     side    = args.sideNeeded        ### "Pside/Eside"
 
-    tfnameSig = "../data/root/rec/"+process+"/phase0/sig/ppw/3.0/rec_"+process+"__"+side+".root"
+    tfnameSig = "../data/root/rec/"+process+"/phase0/allpix/ppw/3.0s/rec_"+process+"__"+side+".root"
     tfileSig = TFile(tfnameSig,"READ")
     
-    tfnameSigBkg = "../data/root/rec/"+process+"/phase0/sigbkg/ppw/3.0/rec_"+process+"__"+side+".root"
+    tfnameSigBkg = "../data/root/rec/"+process+"/phase0/allpix/ppw/3.0sb/rec_"+process+"__"+side+".root"
     tfileSigBkg = TFile(tfnameSigBkg,"READ")
     
     tfnameBkg = "../data/root/rec/"+process+"/bkg/rec_"+process+"__"+side+".root"

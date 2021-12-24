@@ -1477,31 +1477,32 @@ int main(int argc, char *argv[])
 	if(argc<2) { printf("argc<2, exitting now\n"); exit(-1); }
 	//// validate inputs
 	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n", argv[1]); exit(-1); }
-	if(argc==3 and !((TString)argv[2]).Contains("-sigl=")) { printf("argc=2 but cannot parse %s\n", argv[2]); exit(-1); }
-	if(argc==4 and !((TString)argv[3]).Contains("-dobg=")) { printf("argc=3 but cannot parse %s\n", argv[3]); exit(-1); }
-	if(argc==5 and !((TString)argv[4]).Contains("-evnt=")) { printf("argc=4 but cannot parse %s\n", argv[4]); exit(-1); }
-	if(argc==6 and !((TString)argv[5]).Contains("-seed=")) { printf("argc=5 but cannot parse %s\n", argv[5]); exit(-1); }
-	if(argc==7 and !((TString)argv[6]).Contains("-ntrk=")) { printf("argc=6 but cannot parse %s\n", argv[6]); exit(-1); }
+	if(argc==3 and !((TString)argv[2]).Contains("-smpl=")) { printf("argc=3 but cannot parse %s\n", argv[2]); exit(-1); }
+	if(argc==4 and !((TString)argv[3]).Contains("-evnt=")) { printf("argc=4 but cannot parse %s\n", argv[3]); exit(-1); }
+	if(argc==5 and !((TString)argv[4]).Contains("-seed=")) { printf("argc=5 but cannot parse %s\n", argv[4]); exit(-1); }
+	if(argc==6 and !((TString)argv[5]).Contains("-ntrk=")) { printf("argc=6 but cannot parse %s\n", argv[5]); exit(-1); }
 	//// assign inputs
-	TString process = ((TString)argv[1]).ReplaceAll("-proc=", "");	// mandatory
-	TString signame = ((TString)argv[2]).ReplaceAll("-sigl=", "");	// signal name
-	int dobg     = (argc>3) ? toint(((TString)argv[3]).ReplaceAll("-dobg=", "")) : 0;		 // job id [optional]
-	int evnt     = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-evnt=", "")) : -1;	 // job id [optional]
-	int Seed     = (argc>5) ? toint(((TString)argv[5]).ReplaceAll("-seed=", "")) : 12345;	 // seed [optional]
-	int nsigtrks = (argc>6) ? toint(((TString)argv[6]).ReplaceAll("-ntrk=", "")) : -1; // job id [optional]
+	TString process  = ((TString)argv[1]).ReplaceAll("-proc=", "");	// mandatory
+	TString smplname = ((TString)argv[2]).ReplaceAll("-smpl=", "");	// signal name
+	int evnt     = (argc>3) ? toint(((TString)argv[3]).ReplaceAll("-evnt=", "")) : -1;	 // job id [optional]
+	int Seed     = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-seed=", "")) : 12345;	 // seed [optional]
+	int nsigtrks = (argc>5) ? toint(((TString)argv[5]).ReplaceAll("-ntrk=", "")) : -1; // job id [optional]
+	
+	
 	// string path  = "/Volumes/Study/Weizmann_PostDoc/AllPix2Study/AllPixProceessedOutput/Signal_e0ppw_3.0"; /// this needs to be taken as an argument
-	string path  = "/Volumes/Study/Weizmann_PostDoc/AllPix2Study/AllPixProceessedOutput/Signal_e0ppw_3.0_Background"; /// this needs to be taken as an argument
+	// string path  = "/Volumes/Study/Weizmann_PostDoc/AllPix2Study/AllPixProceessedOutput/Signal_e0ppw_3.0_Background"; /// this needs to be taken as an argument
 	//string path  = "/Volumes/Study/Weizmann_PostDoc/AllPix2Study/AllPixProceessedOutput/ELaserBackground"; /// this needs to be taken as an argument
 	//// print assigned inputs
 	cout << "process=" << process << endl;
-	cout << "signame=" << signame << endl;
-	cout << "dobkg?=" << dobg << endl;
+	cout << "smplname=" << smplname << endl;
 	cout << "evnt=" << evnt << endl;
 	cout << "nsigtrks=" << nsigtrks << endl;
 	cout << "Seed=" << Seed << endl;
 	
+	TString digdir = storage+"/data/root/dig/"+process+"/"+smplname;
+	
 	// making the dir if it is not existing
-	TString recdir = storage+"/data/root/rec/"+process+"/"+signame;
+	TString recdir = storage+"/data/root/rec/"+process+"/"+smplname;
 	cout << "making dir (if not exists already): " << recdir << endl;
 	gSystem->Exec("mkdir -p "+recdir);
 
@@ -1789,7 +1790,7 @@ int main(int argc, char *argv[])
 		/// start event loop here
 		// for(int ibx = 1; ibx<2; ibx++)
 		TMapiTMapTSTS fmap;
-		int nevents = getfiles(path, fmap, side);
+		int nevents = getfiles((string)digdir, fmap, side);
 		int ibx = 0;
 		cout << "Starting loop over nbxs=" << nevents << endl;
 		for(TMapiTMapTSTS::iterator it1=fmap.begin(); it1!=fmap.end(); ++it1)
@@ -2054,7 +2055,7 @@ int main(int argc, char *argv[])
 				// print_all_clusters(side);
 				if(n1inroad<1 || n2inroad<1 || n3inroad<1)
 				{
-					cout << "Insufficient hits n123?=("<<(n1inroad>0)<<","<<(n2inroad>0)<<","<<(n3inroad>0)<<") after " << niterations_n << " iterations for " << "itru=" << itru << " (Etru=" << Etru << ")" << endl;
+					if(itru!=-999) cout << "Insufficient hits n123?=("<<(n1inroad>0)<<","<<(n2inroad>0)<<","<<(n3inroad>0)<<") after " << niterations_n << " iterations for " << "itru=" << itru << " (Etru=" << Etru << ")" << endl;
 					continue;
 				}
 				
@@ -2086,7 +2087,10 @@ int main(int argc, char *argv[])
 					{
 						int seedflag = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsXL4,fDx14vsX,fDy14vsY);
 						if(seedflag==PASS) pseeds.push_back(pseed); 
-						else cout << "II seed fail due to: " << seedcutnames[seedflag] << endl;
+						else
+						{
+							if(itru!=-999) cout << "II seed fail due to: " << seedcutnames[seedflag] << endl;
+						}
 					}
 				}
 				/// OO: if x4 and x1 are in the outer layer
@@ -2103,7 +2107,10 @@ int main(int argc, char *argv[])
 					{
 						int seedflag = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsXL4,fDx14vsX,fDy14vsY);
 						if(seedflag==PASS) pseeds.push_back(pseed);
-						else cout << "OO seed fail due to: " << seedcutnames[seedflag] << endl;
+						else
+						{
+							if(itru!=-999) cout << "OO seed fail due to: " << seedcutnames[seedflag] << endl;
+						}
 					}
 				}
 				/// OI: if x4 is in the outer layer and x1 is in the inner layer
@@ -2120,12 +2127,15 @@ int main(int argc, char *argv[])
 					{
 						int seedflag = makeseed_nonuniformB(process,r1,r4,side,pseed,fEvsXL4,fDx14vsX,fDy14vsY);
 						if(seedflag==PASS) pseeds.push_back(pseed);
-						else cout << "OI seed fail due to: " << seedcutnames[seedflag] << endl;
+						else
+						{
+							if(itru!=-999) cout << "OI seed fail due to: " << seedcutnames[seedflag] << endl;
+						}
 					}
 				}
 				if(pseeds.size()<1)
 				{
-					cout << "clusterid=" << clsid4 << " (itru=" << itru << ", Etru=" << Etru << ")" << " has no seeds!" << endl;
+					if(itru!=-999) cout << "clusterid=" << clsid4 << " (itru=" << itru << ", Etru=" << Etru << ")" << " has no seeds!" << endl;
 					continue;
 				}
 				else n_seeds++;
@@ -2198,7 +2208,7 @@ int main(int argc, char *argv[])
 						det->SetMaxChi2Cl(15.+(10*nIterations_trw));
 						goto reco;
 					}
-					cout << "!trw: clusterid=" << clsid4 << " (itru=" << itru << ", E=" << Etru << ", iteration=" << nIterations_trw << " out of " << nMaxIterations << ")" << endl;
+					if(itru!=-999) cout << "!trw: clusterid=" << clsid4 << " (itru=" << itru << ", E=" << Etru << ", iteration=" << nIterations_trw << " out of " << nMaxIterations << ")" << endl;
 					continue; // track was not reconstructed
 				}
 				
@@ -2210,7 +2220,7 @@ int main(int argc, char *argv[])
 						nIterations_hit++;
 						goto reco;
 					}
-					cout << "trw->GetNITSHits()<nMinHits: clusterid=" << clsid4 << " (E=" << Etru << ")" << endl;
+					if(itru!=-999) cout << "trw->GetNITSHits()<nMinHits: clusterid=" << clsid4 << " (E=" << Etru << ")" << endl;
 					trw->Kill(); // track has too few hits
 					continue; // too few hits
 				}
@@ -2223,7 +2233,7 @@ int main(int argc, char *argv[])
 						nIterations_kil++;
 						goto reco;
 					}
-					cout << "trw->IsKilled(): clusterid=" << clsid4 << " (E=" << Etru << ")" << endl;
+					if(itru!=-999) cout << "trw->IsKilled(): clusterid=" << clsid4 << " (E=" << Etru << ")" << endl;
 					continue; // track was killed
 				}
 				n_recos++;
