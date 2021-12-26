@@ -1501,6 +1501,7 @@ int nmatched(int truid4, vector<Cluster>& vcls)
 }
 
 
+
 int main(int argc, char *argv[])
 {
 	int argcounter;
@@ -1617,17 +1618,17 @@ int main(int argc, char *argv[])
 	Double_t  logEmax0 = 16.5;
 	Double_t logEbins0[nlogEbins0+1];
 	setLogBins(nlogEbins0,logEmin0,logEmax0,logEbins0);
-	Int_t   nlogEbins1 = 20;
+	Int_t   nlogEbins1 = 15;
 	Double_t  logEmin1 = 0.5;
 	Double_t  logEmax1 = 16.5;
 	Double_t logEbins1[nlogEbins1+1];
 	setLogBins(nlogEbins1,logEmin1,logEmax1,logEbins1);
-	Int_t   nlogEbins2 = 50;
+	Int_t   nlogEbins2 = 40;
 	Double_t  logEmin2 = 0.5;
 	Double_t  logEmax2 = 16.5;
 	Double_t logEbins2[nlogEbins2+1];
 	setLogBins(nlogEbins2,logEmin2,logEmax2,logEbins2);
-	Int_t   nlogEbins3 = 100;
+	Int_t   nlogEbins3 = 80;
 	Double_t  logEmin3 = 0.5;
 	Double_t  logEmax3 = 16.5;
 	Double_t logEbins3[nlogEbins3+1];
@@ -1717,6 +1718,11 @@ int main(int argc, char *argv[])
 		double xMaxI = (side=="Eside") ? xMaxEI : xMaxPI;
 		double xMinO = (side=="Eside") ? xMinEO : xMinPO;
 		double xMaxO = (side=="Eside") ? xMaxEO : xMaxPO;
+
+		/// cutflow
+		hname = "h_cutflow_"+side; histos.insert(make_pair(hname, new TH1D()));
+		histos["h_cutflow_"+side]->SetName(hname);
+		histos["h_cutflow_"+side]->GetYaxis()->SetTitle("Entries/BX");
 		
 		/// E tru with various binning
 		hname = "h_tru_E_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", 68, 0, 17)));
@@ -2010,11 +2016,11 @@ int main(int argc, char *argv[])
 					}
 					/// caching is happening here 
 					cache_cluster(rglobal_geo, encodedClsId, isSignal, size, xsize, ysize, charge, tru_trackId, tru_type, tru_p, side, histos, histos2);
-					
 				} // end of loop on clusters
-				// cout << "done caching clusters for chip " << it2->first << endl;
 			} // end loop on staves
-			// cout << "done caching clusters for all chips" << endl;
+			
+			/// fill cutflow in the beginning of the cutflow
+			histos["h_cutflow_"+side]->Fill("Truth", n_truth);
 
 			/// run over all clusters of layer 4 in the pool --> these are the seeds for the KalmanFilter fit
 			TString slyr4I = (side=="Eside") ? "EL4I" : "PL4I";
@@ -2027,6 +2033,7 @@ int main(int argc, char *argv[])
 			unsigned int n4O = cached_clusters[slyr4O].size();
 			int n4count = 1;
 			cout << "Starting loop over layer 4 clusters with " << (n4I+n4O) << " clusters" << endl;
+			histos["h_cutflow_"+side]->Fill("L4 Clusters", (n4I+n4O));
 			for (unsigned int i4all = 0; i4all<(n4I+n4O); ++i4all)
 			{
 				det->SetErrorScale((process=="elaser") ? 500 : 500);
@@ -2113,6 +2120,7 @@ int main(int argc, char *argv[])
 					if(itru!=-999) cout << "Insufficient hits n123?=("<<(n1inroad>0)<<","<<(n2inroad>0)<<","<<(n3inroad>0)<<") after " << niterations_n << " iterations for " << "itru=" << itru << " (Etru=" << Etru << ")" << endl;
 					continue;
 				}
+				histos["h_cutflow_"+side]->Fill("Sufficient hits",1);
 				
 				/// find the momentum of the seeds
 				TLorentzVector pseed;
@@ -2193,11 +2201,16 @@ int main(int argc, char *argv[])
 					if(itru!=-999) cout << "clusterid=" << clsid4 << " (itru=" << itru << ", Etru=" << Etru << ")" << " has no seeds!" << endl;
 					continue;
 				}
-				else n_seeds++;
+				else
+				{
+					n_seeds++;
+					histos["h_cutflow_"+side]->Fill("Seeds",1);
+				}
 				
 				/// instant summary
 				int countmateff = (int)((float)n_match / (float)n4count * 100.);
 				int countreceff = (int)((float)n_recos / (float)n4count * 100.);
+				int countseleff = (int)((float)n_selct / (float)n4count * 100.);
 				if(n4count%100==0)
 				{
 					cout << "ibx=" << ibx
@@ -2208,8 +2221,9 @@ int main(int argc, char *argv[])
 											<< n_recos << " recos with " 
 												<< n_selct << " selected and " 
 													<< n_match << " matched) -> counting: " 
-														<<  countreceff << "%(rec), "  
-															<< countmateff << "%(mat)" << endl;
+														<< countreceff << "%(rec), "  
+															<< countseleff << "%(sel), "  
+																<< countmateff << "%(mat)" << endl;
 				}
 				n4count++;
 				
@@ -2246,6 +2260,7 @@ int main(int argc, char *argv[])
 				if(!wasSolved)
 				{
 					n_solve++;
+					histos["h_cutflow_"+side]->Fill("KF Solved",1);
 					wasSolved = true;
 				}
 
@@ -2292,6 +2307,7 @@ int main(int argc, char *argv[])
 					continue; // track was killed
 				}
 				n_recos++;
+				histos["h_cutflow_"+side]->Fill("KF Tracks",1);
 				
 				stopwatch1.Stop();
 				// Double_t cputime1 = stopwatch1.CpuTime();
@@ -2481,14 +2497,23 @@ int main(int argc, char *argv[])
 				/////////////////////////////////////////////////////////
 				bool pass = true;
 				if(pass && maxclssize>10)                          pass = false;
-				if(pass && maxclssizex>5)                          pass = false; 
+				histos["h_cutflow_"+side]->Fill("Cluster size", (int)pass);
+				if(pass && maxclssizex>5)                          pass = false;
+				histos["h_cutflow_"+side]->Fill("Cluster size x", (int)pass);
 				if(pass && maxclssizey>5)                          pass = false;
-				if(pass && (Px<-0.0020 || Px>+0.0080))             pass = false;
+				histos["h_cutflow_"+side]->Fill("Cluster size y", (int)pass);
+				if(pass && (Px<-0.0015 || Px>+0.0080))             pass = false;
+				histos["h_cutflow_"+side]->Fill("p_{x}", (int)pass); /// this is maybe too tuned
 				if(pass && (Py<-0.0025 || Py>+0.0025))             pass = false;
-				if(pass && reco_chi2dof[irec]>3)                   pass = false;
+				histos["h_cutflow_"+side]->Fill("p_{y}", (int)pass);
+				if(pass && reco_chi2dof[irec]>2)                   pass = false;
+				histos["h_cutflow_"+side]->Fill("#chi^{2}/N_{DoF}", (int)pass);
 				if(pass && SnpSig<-2)                              pass = false;
+				histos["h_cutflow_"+side]->Fill("Snp/#sigma(Snp)", (int)pass);
 				if(pass && abs(TglSig)>400)                        pass = false;
+				histos["h_cutflow_"+side]->Fill("Tgl/#sigma(Tgl)", (int)pass);
 				if(pass && (yVtxSig<-0.00025 || yVtxSig>+0.00025)) pass = false;
+				histos["h_cutflow_"+side]->Fill("y_{vtx}/#sigma(y_{vtx})", (int)pass);
 				if(pass)
 				{
 					n_selct++;
@@ -2517,16 +2542,17 @@ int main(int argc, char *argv[])
 			
 			/// summarize
 			// int mateff = (int)((float)n_trumt / (float)n_truth * 100.);
-			int mateff = (int)((float)n_match / (float)n_truth * 100.);
+			int mateff = (n_truth>0) ? (int)((float)n_match / (float)n_truth * 100.) : 0. ;
+			cout << "<<<<<<<<<< Performance summary for sample: " << smplname << " >>>>>>>>>>" << endl;
 			cout << "Event #" << ibx << ", " << side << ": n_truth=" << n_truth
-				  	<< ", n_cls4=" << (n4I+n4O)
+					<< ", n_cls4=" << (n4I+n4O)
 						<< ", n_seeds=" << n_seeds
-						  << ", n_solve=" << n_solve
-							  << ", n_recos=" << n_recos
-								  << ", n_selct=" << n_selct
-									  << ", n_match=" << n_match
-										  // << ", n_trumt=" << n_trumt
-											  << ", counting eff(rec,mat)=" << mateff << "%" << endl;
+							<< ", n_solve=" << n_solve
+								<< ", n_recos=" << n_recos
+									<< ", n_selct=" << n_selct
+										<< ", n_match=" << n_match
+											<< ", counting eff(rec,mat)=" << mateff << "%" << endl;
+			cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl;
 
 			fOut->cd();
 			// tOut->Fill();
@@ -2545,6 +2571,9 @@ int main(int argc, char *argv[])
 
 		/// file for all histos and tress
 		fOut->cd();
+		
+		cout << "...normalising cutflow by N_BX for " << side << endl;
+		histos["h_cutflow_"+side]->Scale(1./(float)nevents);
 
 		cout << "...plotting efficiencies for " << side << endl;
 		for(size_t h=0; h<htypes.size(); ++h)

@@ -174,6 +174,8 @@ def main():
              "h_sel_yVtxSig_"+side,
              "h_tru_sel_dErel_"+side,
              "h_tru_sel_E_ratio_"+side+"_log0",
+             
+             "h_cutflow_"+side,
           ]
    
    
@@ -230,7 +232,11 @@ def main():
          legend.AddEntry(histos[hname],attr["leg"],"f")
          
       ## set max
-      for hname,h in histos.items(): h.SetMaximum(hmax*1.1)
+      for hname,h in histos.items():
+         h.SetMaximum(hmax*1.1)
+         if("Nhits" in name or "cutflow" in name):
+            h.SetMinimum(0.25)
+            h.SetMaximum(hmax*2)
       
       ## draw truth just on energy plots
       if("_E_" in name and "_tru_" not in name):
