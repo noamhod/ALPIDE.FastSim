@@ -39,15 +39,20 @@ def main():
    
    args    = parser.parse_args()    
    process = args.proc             ### "elaser/glaser"
-   side    = args.sideNeeded        ### "Pside/Eside"
+   side    = args.sideNeeded       ### "Pside/Eside"
    
    fnames = {
       "ss":"../data/root/rec/"+process+"/phase0/allpix/ppw/3.0s/rec_"+process+"__"+side+".root",
       "sb":"../data/root/rec/"+process+"/phase0/allpix/ppw/3.0sb/rec_"+process+"__"+side+".root",
       "bb":"../data/root/rec/"+process+"/bkg/rec_"+process+"__"+side+".root"
    }
+   
    files = {}
-   for ftype,fname in fnames.items(): files.update({ftype:TFile(fname,"READ")})
+   nBXs  = {}
+   for ftype,fname in fnames.items():
+      files.update({ftype:TFile(fname,"READ")})
+      nBXs.update({ftype:files[ftype].Get("h_nBX_"+side).GetBinContent(1)})
+   
    
    hnames = ["h_all_csize_L1I_"+side,
              "h_all_csize_L2I_"+side,
@@ -118,8 +123,8 @@ def main():
              "h_rec_TglSig_"+side,
              "h_rec_xVtxSig_"+side,
              "h_rec_yVtxSig_"+side,
-             "h_tru_rec_dErel_"+side,
-             "h_tru_rec_E_ratio_"+side+"_log0",
+             "h_resol_rec_dErel_"+side,
+             "h_ratio_rec_E_"+side+"_log0",
              
              "h_mat_Nhits_"+side,
              "h_mat_px_"+side,
@@ -136,8 +141,8 @@ def main():
              "h_mat_TglSig_"+side,
              "h_mat_xVtxSig_"+side,
              "h_mat_yVtxSig_"+side,
-             "h_tru_mat_dErel_"+side,
-             "h_tru_mat_E_ratio_"+side+"_log0",
+             "h_resol_mat_dErel_"+side,
+             "h_ratio_mat_E_"+side+"_log0",
              
              "h_non_Nhits_"+side,
              "h_non_px_"+side,
@@ -154,8 +159,8 @@ def main():
              "h_non_TglSig_"+side,
              "h_non_xVtxSig_"+side,
              "h_non_yVtxSig_"+side,
-             "h_tru_non_dErel_"+side,
-             "h_tru_non_E_ratio_"+side+"_log0",
+             # "h_resol_non_dErel_"+side,
+             "h_ratio_non_E_"+side+"_log0",
              
              "h_sel_Nhits_"+side,
              "h_sel_px_"+side,
@@ -172,8 +177,8 @@ def main():
              "h_sel_TglSig_"+side,
              "h_sel_xVtxSig_"+side,
              "h_sel_yVtxSig_"+side,
-             "h_tru_sel_dErel_"+side,
-             "h_tru_sel_E_ratio_"+side+"_log0",
+             "h_resol_sel_dErel_"+side,
+             "h_ratio_sel_E_"+side+"_log0",
              
              "h_cutflow_"+side,
           ]
@@ -185,6 +190,8 @@ def main():
    cnv.SaveAs(outname+".pdf(")
    
    for name in hnames:
+      print(name)
+      
       htypes = {
          "ss":{"col":ROOT.kRed,     "leg":"Sig"},
          "sb":{"col":ROOT.kGreen+3, "leg":"Sig+Bkg"},
@@ -207,10 +214,11 @@ def main():
          hname = name+"_"+htyp
          
          ## draw truth just on energy plots
-         if("_E_" in name and "_tru_" not in name and htyp=="ss"):
+         if("_E_" in name and "_ratio_" not in name and htyp=="ss"):
             name1 = name
             name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
             hname1 = name1+"_"+htyp
+            print("getting",htyp,name1)
             hist = files[htyp].Get(name1).Clone(hname1)
             if(not hist): print(name1,"is null")
             histos.update( {hname1:hist} )
@@ -221,6 +229,7 @@ def main():
             histos[hname1].SetLineStyle(2)
             legend.AddEntry(histos[hname1],"Tru","l")
          
+         print("getting",htyp,name)
          hist = files[htyp].Get(name).Clone(hname)
          if(not hist): print(name,"is null")
          histos.update( {hname:hist} )
@@ -230,16 +239,24 @@ def main():
          histos[hname].SetFillColorAlpha(attr["col"],0.35)
          histos[hname].SetLineWidth(1)
          legend.AddEntry(histos[hname],attr["leg"],"f")
-         
+
+      ## normalise to nBX:
+      for hname,h in histos.items():
+         if("_ratio_" in name): continue
+         nBX = -1
+         if("ss" in hname): nBX = nBXs["ss"]
+         if("sb" in hname): nBX = nBXs["sb"]
+         if("bb" in hname): nBX = nBXs["bb"]
+         h.Scale(1./nBX) 
+
       ## set max
       for hname,h in histos.items():
+         h.SetMinimum(0.1)
          h.SetMaximum(hmax*1.1)
-         if("Nhits" in name or "cutflow" in name):
-            h.SetMinimum(0.25)
-            h.SetMaximum(hmax*2)
+         if("Nhits" in name or "cutflow" in name): h.SetMaximum(hmax*2)
       
       ## draw truth just on energy plots
-      if("_E_" in name and "_tru_" not in name):
+      if("_E_" in name and "_ratio_" not in name):
          name1 = name
          name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
          htmp = histos[name1+"_ss"].Clone(name1+"_ss_tmp")
