@@ -685,19 +685,19 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
       //
       dstZ = lrFrom->GetZ()+0.5*dir*lrFrom->GetThickness(); // go till the end of starting layer applying corrections
       if (dir==1 && trc->GetZ()<=fZDecay && dstZ>fZDecay) { // need to perform or to apply decay
-	double frac = (fZDecay-trc->GetZ())/lrFrom->GetThickness();
-	// account for the difference between real BB and ETP param eloss
-	double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
-	if (!PropagateToZBxByBz(trc,fZDecay, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
-	PerformDecay(trc);
-	frac = 1.-frac;
-	corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
-	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
+			double frac = (fZDecay-trc->GetZ())/lrFrom->GetThickness();
+			// account for the difference between real BB and ETP param eloss
+			double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
+			if (!PropagateToZBxByBz(trc,fZDecay, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
+			PerformDecay(trc);
+			frac = 1.-frac;
+			corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
+			if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
       }
       else {
-	// account for the difference between real BB and ETP param eloss
-	double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
-	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, lrFrom->GetX2X0(), -dir*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
+			// account for the difference between real BB and ETP param eloss
+			double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
+			if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, lrFrom->GetX2X0(), -dir*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
       }
     }
   }
@@ -710,9 +710,10 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
     PerformDecay(trc);
   }
   if (!PropagateToZBxByBz(trc,dstZ, fDefStepAir)) return 0;
+  // double corrELoss = lrTo->GetELoss2ETP(trc->GetP(), trc->GetMass() ); // NOAM TODO
+  // if (!PropagateToZBxByBz(trc,dstZ, fDefStepAir, -dir*lrTo->GetXTimesRho()*corrELoss)) return 0; // NOAM TODO
   //
   // if (AliLog::GetGlobalDebugLevel()>=2) trc->GetTrack()->Print();
-
   return 1;
 }
 
