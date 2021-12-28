@@ -435,9 +435,9 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
     if (fLayers.GetEntries()==0) fLayers.Add(newLayer);
     else {      
       for (Int_t i = 0; i<fLayers.GetEntries(); i++) {
-	KMCLayerFwd *l = GetLayer(i);
-	if (zPos<l->GetZ()) { fLayers.AddBefore(l,newLayer); break; }
-	if (zPos>l->GetZ() && (i+1)==fLayers.GetEntries() ) { fLayers.Add(newLayer); } // even bigger then last one
+			KMCLayerFwd *l = GetLayer(i);
+			if (zPos<l->GetZ()) { fLayers.AddBefore(l,newLayer); break; }
+			if (zPos>l->GetZ() && (i+1)==fLayers.GetEntries() ) { fLayers.Add(newLayer); } // even bigger then last one
       }      
     }
     //

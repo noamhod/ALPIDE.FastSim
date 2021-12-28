@@ -132,6 +132,8 @@ def main():
                 "h_rec_px_zoom_"+side,
                 "h_rec_py_"+side,
                 "h_rec_py_zoom_"+side,
+                "h_rec_pz_"+side,
+                "h_rec_pz_"+side+"_log0",
                 "h_rec_E_"+side,
                 "h_rec_E_"+side+"_log0",
                 # "h_rec_E_"+side+"_log1",
@@ -142,14 +144,20 @@ def main():
                 "h_rec_TglSig_"+side,
                 "h_rec_xVtxSig_"+side,
                 "h_rec_yVtxSig_"+side,
+                "h_resol_rec_dpzrel_"+side,
                 "h_resol_rec_dErel_"+side,
+                "h_ratio_rec_pz_"+side+"_log0",
+                "h_ratio_rec_pz_"+side+"_log1",
                 "h_ratio_rec_E_"+side+"_log0",
+                "h_ratio_rec_E_"+side+"_log1",
                 
                 "h_mat_Nhits_"+side,
                 "h_mat_px_"+side,
                 "h_mat_px_zoom_"+side,
                 "h_mat_py_"+side,
                 "h_mat_py_zoom_"+side,
+                "h_mat_pz_"+side,
+                "h_mat_pz_"+side+"_log0",
                 "h_mat_E_"+side,
                 "h_mat_E_"+side+"_log0",
                 # "h_mat_E_"+side+"_log1",
@@ -160,14 +168,20 @@ def main():
                 "h_mat_TglSig_"+side,
                 "h_mat_xVtxSig_"+side,
                 "h_mat_yVtxSig_"+side,
+                "h_resol_mat_dpzrel_"+side,
                 "h_resol_mat_dErel_"+side,
+                "h_ratio_mat_pz_"+side+"_log0",
+                "h_ratio_mat_pz_"+side+"_log1",
                 "h_ratio_mat_E_"+side+"_log0",
+                "h_ratio_mat_E_"+side+"_log1",
                 
                 "h_non_Nhits_"+side,
                 "h_non_px_"+side,
                 "h_non_px_zoom_"+side,
                 "h_non_py_"+side,
                 "h_non_py_zoom_"+side,
+                "h_non_pz_"+side,
+                "h_non_pz_"+side+"_log0",
                 "h_non_E_"+side,
                 "h_non_E_"+side+"_log0",
                 # "h_non_E_"+side+"_log1",
@@ -178,14 +192,20 @@ def main():
                 "h_non_TglSig_"+side,
                 "h_non_xVtxSig_"+side,
                 "h_non_yVtxSig_"+side,
+                # "h_resol_non_dpzrel_"+side,
                 # "h_resol_non_dErel_"+side,
+                "h_ratio_non_pz_"+side+"_log0",
+                "h_ratio_non_pz_"+side+"_log1",
                 "h_ratio_non_E_"+side+"_log0",
+                "h_ratio_non_E_"+side+"_log1",
                 
                 "h_sel_Nhits_"+side,
                 "h_sel_px_"+side,
                 "h_sel_px_zoom_"+side,
                 "h_sel_py_"+side,
                 "h_sel_py_zoom_"+side,
+                "h_sel_pz_"+side,
+                "h_sel_pz_"+side+"_log0",
                 "h_sel_E_"+side,
                 "h_sel_E_"+side+"_log0",
                 # "h_sel_E_"+side+"_log1",
@@ -196,8 +216,12 @@ def main():
                 "h_sel_TglSig_"+side,
                 "h_sel_xVtxSig_"+side,
                 "h_sel_yVtxSig_"+side,
+                "h_resol_sel_dpzrel_"+side,
                 "h_resol_sel_dErel_"+side,
+                "h_ratio_sel_pz_"+side+"_log0",
+                "h_ratio_sel_pz_"+side+"_log1",
                 "h_ratio_sel_E_"+side+"_log0",
+                "h_ratio_sel_E_"+side+"_log1",
                 
                 "h_cutflow_"+side,
              ]
@@ -231,7 +255,7 @@ def main():
             hname = name+"_"+htyp
             
             ## draw truth just on energy plots
-            if("_E_" in name and "_ratio_" not in name and htyp=="ss"):
+            if(("_E_" in name or "_pz_" in name) and "_ratio_" not in name and htyp=="ss"):
                name1 = name
                name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
                hname1 = name1+"_"+htyp
@@ -273,7 +297,7 @@ def main():
             if("Nhits" in name or "cutflow" in name): h.SetMaximum(hmax*2)
          
          ## draw truth just on energy plots
-         if("_E_" in name and "_ratio_" not in name):
+         if(("_E_" in name or "_pz_" in name) and "_ratio_" not in name):
             name1 = name
             name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
             htmp = histos[name1+"_ss"].Clone(name1+"_ss_tmp")

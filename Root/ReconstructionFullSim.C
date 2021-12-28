@@ -62,74 +62,6 @@ TString storage = gSystem->ExpandPathName("$STORAGEDIR");
 bool debug = false;
 bool debug2 = false;
 
-
-unsigned int EncodeClusterId(unsigned int layer, unsigned int chip, unsigned int cellx, unsigned int celly)
-{
-    // layer should go into the first 4 bits [layer value ranges from 0 to 15]
-    // chip should go into the 4 bits after that [chip value ranges from 0 to 8]
-    // cellx should go into the 10 bits after that [cellx value ranges from 0 to 1023]
-    // celly should go into the 9 bits after that [celly value ranges from 0 to 511]
-    return (static_cast<unsigned int>(layer)<<23) + (static_cast<unsigned int>(chip)<<19) + (static_cast<unsigned int>(cellx)<<9) + (static_cast<unsigned int>(celly)<<0);
-}
-
-unsigned int DecodeLayer(const unsigned int clsid) {
-    // layer is the first 4 bits
-    int check1 = 15;
-    return (clsid>>23)&check1;
-}
-
-unsigned int DecodeChip(const unsigned int clsid) {
-    // chip is the 4 bits after that
-    unsigned int check2 = 15;
-    return (clsid>>19)&check2;
-}
-
-unsigned int DecodeCellX(const unsigned int clsid) {
-    // cellx is the 10 bits after that
-    unsigned int check3 = 1023;
-    return (clsid>>9)&check3;
-}
-
-unsigned int DecodeCellY(const unsigned int clsid) {
-    // celly is the last 9 bits
-    unsigned int check4 = 511;
-    return (clsid>>0)&check4;
-}
-
-unsigned int mapFullSim2KFLayer(TString side, int lyrid)
-{  
-	unsigned int KFLyr = -999;
-	if(side=="Pside")
-	{
-       if(lyrid==0) KFLyr = 4;
-	   if(lyrid==1) KFLyr = 2;
-	   if(lyrid==2) KFLyr = 8;
-	   if(lyrid==3) KFLyr = 6;
-	   if(lyrid==4) KFLyr = 13;
-	   if(lyrid==5) KFLyr = 11;
-	   if(lyrid==6) KFLyr = 17;
-	   if(lyrid==7) KFLyr = 15;
-	}
-	else
-	{
-       if(lyrid==8) KFLyr = 4;
-	   if(lyrid==9) KFLyr = 2;
-	   if(lyrid==10) KFLyr = 8;
-	   if(lyrid==11) KFLyr = 6;
-	   if(lyrid==12) KFLyr = 13;
-	   if(lyrid==13) KFLyr = 11;
-	   if(lyrid==14) KFLyr = 17;
-	   if(lyrid==15) KFLyr = 15;
-	}
-	return KFLyr;
-}
-
-
-
-
-
-
-
 struct Cluster
 {
 	int type;
@@ -439,43 +371,43 @@ void setParametersFromDet(TString side, TString proc)
 	LB = z2dipole-z1dipole;
 	cout << "xWdipole=" << xWdipole << ", yHdipole=" << yHdipole << ", z1dipole=" << z1dipole << ", z2dipole=" << z2dipole << endl;
 
-	zEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetZ() : -999;
+	zEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetZ()  : -999;
 	iEL1I = (side=="Eside") ? det->GetLayer("EL1I")->GetID() : -999;
-	zEL1O = (side=="Eside") ? det->GetLayer("EL1O")->GetZ() : -999;
+	zEL1O = (side=="Eside") ? det->GetLayer("EL1O")->GetZ()  : -999;
 	iEL1O = (side=="Eside") ? det->GetLayer("EL1O")->GetID() : -999;
-	zPL1I = (side=="Pside") ? det->GetLayer("PL1I")->GetZ() : -999;
+	zPL1I = (side=="Pside") ? det->GetLayer("PL1I")->GetZ()  : -999;
 	iPL1I = (side=="Pside") ? det->GetLayer("PL1I")->GetID() : -999;
-	zPL1O = (side=="Pside") ? det->GetLayer("PL1O")->GetZ() : -999;
+	zPL1O = (side=="Pside") ? det->GetLayer("PL1O")->GetZ()  : -999;
 	iPL1O = (side=="Pside") ? det->GetLayer("PL1O")->GetID() : -999;
 	cout << "zEL1I=" << zEL1I << ", zEL1O=" << zEL1O << ", zPL1I=" << zPL1I << ", zPL1O=" << zPL1O << endl;
 
-	zEL2I = (side=="Eside") ? det->GetLayer("EL2I")->GetZ() : -999;
+	zEL2I = (side=="Eside") ? det->GetLayer("EL2I")->GetZ()  : -999;
 	iEL2I = (side=="Eside") ? det->GetLayer("EL2I")->GetID() : -999;
-	zEL2O = (side=="Eside") ? det->GetLayer("EL2O")->GetZ() : -999;
+	zEL2O = (side=="Eside") ? det->GetLayer("EL2O")->GetZ()  : -999;
 	iEL2O = (side=="Eside") ? det->GetLayer("EL2O")->GetID() : -999;
-	zPL2I = (side=="Pside") ? det->GetLayer("PL2I")->GetZ() : -999;
+	zPL2I = (side=="Pside") ? det->GetLayer("PL2I")->GetZ()  : -999;
 	iPL2I = (side=="Pside") ? det->GetLayer("PL2I")->GetID() : -999;
-	zPL2O = (side=="Pside") ? det->GetLayer("PL2O")->GetZ() : -999;
+	zPL2O = (side=="Pside") ? det->GetLayer("PL2O")->GetZ()  : -999;
 	iPL2O = (side=="Pside") ? det->GetLayer("PL2O")->GetID() : -999;
 	cout << "zEL2I=" << zEL2I << ", zEL2O=" << zEL2O << ", zPL2I=" << zPL2I << ", zPL2O=" << zPL2O << endl;
 
-	zEL3I = (side=="Eside") ? det->GetLayer("EL3I")->GetZ() : -999;
+	zEL3I = (side=="Eside") ? det->GetLayer("EL3I")->GetZ()  : -999;
 	iEL3I = (side=="Eside") ? det->GetLayer("EL3I")->GetID() : -999;
-	zEL3O = (side=="Eside") ? det->GetLayer("EL3O")->GetZ() : -999;
+	zEL3O = (side=="Eside") ? det->GetLayer("EL3O")->GetZ()  : -999;
 	iEL3O = (side=="Eside") ? det->GetLayer("EL3O")->GetID() : -999;
-	zPL3I = (side=="Pside") ? det->GetLayer("PL3I")->GetZ() : -999;
+	zPL3I = (side=="Pside") ? det->GetLayer("PL3I")->GetZ()  : -999;
 	iPL3I = (side=="Pside") ? det->GetLayer("PL3I")->GetID() : -999;
-	zPL3O = (side=="Pside") ? det->GetLayer("PL3O")->GetZ() : -999;
+	zPL3O = (side=="Pside") ? det->GetLayer("PL3O")->GetZ()  : -999;
 	iPL3O = (side=="Pside") ? det->GetLayer("PL3O")->GetID() : -999;
 	cout << "zEL3I=" << zEL3I << ", zEL3O=" << zEL3O << ", zPL3I=" << zPL3I << ", zPL3O=" << zPL3O << endl;
 
-	zEL4I = (side=="Eside") ? det->GetLayer("EL4I")->GetZ() : -999;
+	zEL4I = (side=="Eside") ? det->GetLayer("EL4I")->GetZ()  : -999;
 	iEL4I = (side=="Eside") ? det->GetLayer("EL4I")->GetID() : -999;
-	zEL4O = (side=="Eside") ? det->GetLayer("EL4O")->GetZ() : -999;
+	zEL4O = (side=="Eside") ? det->GetLayer("EL4O")->GetZ()  : -999;
 	iEL4O = (side=="Eside") ? det->GetLayer("EL4O")->GetID() : -999;
-	zPL4I = (side=="Pside") ? det->GetLayer("PL4I")->GetZ() : -999;
+	zPL4I = (side=="Pside") ? det->GetLayer("PL4I")->GetZ()  : -999;
 	iPL4I = (side=="Pside") ? det->GetLayer("PL4I")->GetID() : -999;
-	zPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetZ() : -999;
+	zPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetZ()  : -999;
 	iPL4O = (side=="Pside") ? det->GetLayer("PL4O")->GetID() : -999;
 	cout << "zEL4I=" << zEL4I << ", zEL4O=" << zEL4O << ", zPL4I=" << zPL4I << ", zPL4O=" << zPL4O << endl;
 
@@ -545,6 +477,66 @@ void setParametersFromDet(TString side, TString proc)
 	fRWy = new TF2("fRWy","(0.06-0.01*x)/2 * (1+(abs(y)/("+(TString)tostring(Hstave)+"/2))^0.1)",1.,3.,yDn,yUp); /// y is y4
 	
 	cout << "++++++++++++++++++++++++++++++++++++" << endl;
+}
+
+unsigned int EncodeClusterId(unsigned int layer, unsigned int chip, unsigned int cellx, unsigned int celly)
+{
+	// layer should go into the first 4 bits [layer value ranges from 0 to 15]
+	// chip should go into the 4 bits after that [chip value ranges from 0 to 8]
+	// cellx should go into the 10 bits after that [cellx value ranges from 0 to 1023]
+	// celly should go into the 9 bits after that [celly value ranges from 0 to 511]
+	return (static_cast<unsigned int>(layer)<<23) + (static_cast<unsigned int>(chip)<<19) + (static_cast<unsigned int>(cellx)<<9) + (static_cast<unsigned int>(celly)<<0);
+}
+unsigned int DecodeLayer(const unsigned int clsid)
+{
+	// layer is the first 4 bits
+	int check1 = 15;
+	return (clsid>>23)&check1;
+}
+unsigned int DecodeChip(const unsigned int clsid)
+{
+	// chip is the 4 bits after that
+	unsigned int check2 = 15;
+	return (clsid>>19)&check2;
+}
+unsigned int DecodeCellX(const unsigned int clsid)
+{
+	// cellx is the 10 bits after that
+	unsigned int check3 = 1023;
+	return (clsid>>9)&check3;
+}
+unsigned int DecodeCellY(const unsigned int clsid)
+{
+	// celly is the last 9 bits
+	unsigned int check4 = 511;
+	return (clsid>>0)&check4;
+}
+unsigned int mapFullSim2KFLayer(TString side, int lyrid)
+{  
+	unsigned int KFLyr = -999;
+	if(side=="Pside")
+	{
+		if(lyrid==0) KFLyr = silayers["PL1I"]; // 4;
+		if(lyrid==1) KFLyr = silayers["PL1O"]; // 2;
+		if(lyrid==2) KFLyr = silayers["PL2I"]; // 8;
+		if(lyrid==3) KFLyr = silayers["PL2O"]; // 6;
+		if(lyrid==4) KFLyr = silayers["PL3I"]; // 13;
+		if(lyrid==5) KFLyr = silayers["PL3O"]; // 11;
+		if(lyrid==6) KFLyr = silayers["PL4I"]; // 17;
+		if(lyrid==7) KFLyr = silayers["PL4O"]; // 15;
+	}
+	else
+	{
+		if(lyrid==8)  KFLyr = silayers["EL1I"]; // 4;
+		if(lyrid==9)  KFLyr = silayers["EL1O"]; // 2;
+		if(lyrid==10) KFLyr = silayers["EL2I"]; // 8;
+		if(lyrid==11) KFLyr = silayers["EL2O"]; // 6;
+		if(lyrid==12) KFLyr = silayers["EL3I"]; // 13;
+		if(lyrid==13) KFLyr = silayers["EL3O"]; // 11;
+		if(lyrid==14) KFLyr = silayers["EL4I"]; // 17;
+		if(lyrid==15) KFLyr = silayers["EL4O"]; // 15;
+	}
+	return KFLyr;
 }
 
 
@@ -686,7 +678,7 @@ float zofx(float x1, float x2, float z1, float z2, float x)
 
 Color_t trkcol(double E)
 {
-	if(E >= 14)                  return kBlack;
+	if(E >= 14)                return kBlack;
 	else if(E<14. and E >= 12) return kRed;
 	else if(E<12. and E >= 10) return 95;
 	else if(E<10. and E >= 8.) return 91;
@@ -1353,26 +1345,6 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1& fDx14vsXMap
 	if(0) cout << "n3I_OI=" << n3I_OI << endl;
 	if(0) cout << "n3O_OI=" << n3O_OI << endl;
 
-	// int itru = cached_clusters[slyr][i4].clsid-ilyr * index_offset_sig;
-	// if(itru==817)
-	// {
-	// 	cout << "\n\nE(x4)=" << fEvsXL4->Eval(x4) << endl;
-	// 	int nTruEmbedded = 0;
-	// 	for(int k=0 ; k<embedded_clusters.size() ; ++k)
-	// 	{
-	// 		string sIDs = tostring(embedded_clusters[k]);
-	// 		TString sLR = (sIDs.substr(1,1)=="0") ? sIDs.substr(0,1) : sIDs.substr(0,2);
-	// 		TString sID = sIDs.substr(2,sIDs.length());
-	// 		int ID = toint(sID);
-	// 		int LR = toint(sLR);
-	// 		TString sl = islayers[LR];
-	// 		int ix = cached_clusters_id2ix[sl][embedded_clusters[k]];
-	// 		cout << "truix4=" << truix4 << ": " << embedded_clusters[k] << " -->" << " sID=" << sID << ", ID=" << ID << ", r=("<< cached_clusters[sl][ix].r.X() << "," << cached_clusters[sl][ix].r.Y() << "," << cached_clusters[sl][ix].r.Z() << ")" << endl;
-	// 		if(ID==truix4) nTruEmbedded++;
-	// 	}
-	// 	cout << "nTruEmbedded=" << nTruEmbedded << "" << endl;
-	// }
-
 	/// must sort clusters
 	for (TMapiTS::iterator it = layers.begin(); it != layers.end(); ++it)
 	{
@@ -1500,6 +1472,7 @@ int nmatched(int truid4, vector<Cluster>& wincls)
 	}
 	return nmat;
 }
+
 
 
 
@@ -1651,6 +1624,7 @@ int main(int argc, char *argv[])
 		vector<float> reco_q;
 		vector<TLorentzVector> reco_p;
 		vector<float> reco_dErel;
+		vector<float> reco_dpzrel;
 		vector<float> reco_x;
 		vector<float> reco_y;
 		vector<float> reco_z;
@@ -1731,7 +1705,13 @@ int main(int argc, char *argv[])
 		histos[hname]->SetName(hname);
 		histos[hname]->GetYaxis()->SetTitle("Entries/BX");
 		
-		/// E tru with various binning
+		/// E/pz tru with various binning
+		hname = "h_tru_pz_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", 68, 0, 17)));
+		hname = "h_tru_pz_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", nlogEbins0,logEbins0)));
+		hname = "h_tru_pz_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", nlogEbins1,logEbins1)));
+		hname = "h_tru_pz_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", nlogEbins2,logEbins2)));
+		hname = "h_tru_pz_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", nlogEbins3,logEbins3)));		
+		
 		hname = "h_tru_E_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", 68, 0, 17)));
 		hname = "h_tru_E_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", nlogEbins0,logEbins0)));
 		hname = "h_tru_E_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", nlogEbins1,logEbins1)));
@@ -1830,7 +1810,13 @@ int main(int argc, char *argv[])
 			hname = "h_"+htype+"_px_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];"+ytitle, 100,-0.02,+0.02)));
 			hname = "h_"+htype+"_py_"+side;       histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{y}} [GeV];"+ytitle, 200,-0.02,+0.02)));
 			hname = "h_"+htype+"_py_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{y}} [GeV];"+ytitle, 100,-0.01,+0.01)));
-			hname = "h_"+htype+"_pz_"+side;       histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{z}} [GeV];"+ytitle, 165,0,16.5)));
+
+			/// pz reco with various binning
+			hname = "h_"+htype+"_pz_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitle, 68, 0, 17)));
+			hname = "h_"+htype+"_pz_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins0,logEbins0)));
+			hname = "h_"+htype+"_pz_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins1,logEbins1)));
+			hname = "h_"+htype+"_pz_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins2,logEbins2)));
+			hname = "h_"+htype+"_pz_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins3,logEbins3)));
 
 			/// E reco with various binning
 			hname = "h_"+htype+"_E_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitle, 68, 0, 17)));
@@ -1839,10 +1825,17 @@ int main(int argc, char *argv[])
 			hname = "h_"+htype+"_E_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitle, nlogEbins2,logEbins2)));
 			hname = "h_"+htype+"_E_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitle, nlogEbins3,logEbins3)));
 			
-			/// E rec/sel vs truth			
+			/// E/pz rec/sel vs truth			
 			hname = "h_resol_"+htype+"_dErel_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";(E_{tru}-E_{rec})/E_{tru};"+ytitle, 100, -0.05, +0.05)));
+			hname = "h_resol_"+htype+"_dpzrel_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";(pz_{tru}-pz_{rec})/pz_{tru};"+ytitle, 100, -0.05, +0.05)));
 			
 			/// "efficiencies"
+			hname = "h_ratio_"+htype+"_pz_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, 68, 0, 17)));
+			hname = "h_ratio_"+htype+"_pz_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins0,logEbins0)));
+			hname = "h_ratio_"+htype+"_pz_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins1,logEbins1)));
+			hname = "h_ratio_"+htype+"_pz_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins2,logEbins2)));
+			hname = "h_ratio_"+htype+"_pz_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins3,logEbins3)));
+			
 			hname = "h_ratio_"+htype+"_E_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitlerat, 68, 0, 17)));
 			hname = "h_ratio_"+htype+"_E_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitlerat, nlogEbins0,logEbins0)));
 			hname = "h_ratio_"+htype+"_E_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitlerat, nlogEbins1,logEbins1)));
@@ -1886,6 +1879,7 @@ int main(int argc, char *argv[])
 			reco_y.clear();
 			reco_z.clear();
 			reco_dErel.clear();
+			reco_dpzrel.clear();
 			for (unsigned int x = 0; x<reco_trck_cls_r.size(); ++x) reco_trck_cls_r[x].clear();
 			for (unsigned int x = 0; x<reco_trckmar.size(); ++x) delete reco_trckmar[x];
 			for (unsigned int x = 0; x<reco_trcklin.size(); ++x) delete reco_trcklin[x];
@@ -2012,6 +2006,12 @@ int main(int argc, char *argv[])
 						if(tru_type->at(t)!=1) continue;
 						if(!foundinvec(tru_trackId->at(t), vtruid))
 						{
+							histos["h_tru_pz_"+side]->Fill(tru_p->at(t).Pz());
+							histos["h_tru_pz_"+side+"_log0"]->Fill(tru_p->at(t).Pz());
+							histos["h_tru_pz_"+side+"_log1"]->Fill(tru_p->at(t).Pz());
+							histos["h_tru_pz_"+side+"_log2"]->Fill(tru_p->at(t).Pz());
+							histos["h_tru_pz_"+side+"_log3"]->Fill(tru_p->at(t).Pz());
+							
 							histos["h_tru_E_"+side]->Fill(tru_p->at(t).E());
 							histos["h_tru_E_"+side+"_log0"]->Fill(tru_p->at(t).E());
 							histos["h_tru_E_"+side+"_log1"]->Fill(tru_p->at(t).E());
@@ -2065,22 +2065,26 @@ int main(int argc, char *argv[])
 				// if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
 				// if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
 				
-				// cluster id for the pivot 
+				
+				/// cluster id for the pivot 
 				int clsid4 = cached_clusters[slyr4][i4].clsid;
-				int itru   = -999;
-				double Etru = -999;
-				bool issig4 = false;
+				
+				
+				/// is it a cluster associated with a signal track?
+				int itru     = -999;
+				double Etru  = -999;
+				double pztru = -999;
+				bool issig4  = false;
 				if(cached_clusters[slyr4][i4].issig==1)
 				{
 					for(size_t t=0; t<cached_clusters[slyr4][i4].trksid.size(); ++t)
 					{
-						if(cached_clusters[slyr4][i4].trkstype[t]==1)
-						{	
-							itru = cached_clusters[slyr4][i4].trksid[t];
-							Etru = cached_clusters[slyr4][i4].trksp[t].E();
-							issig4 = true;
-							break;
-						}	
+						if(cached_clusters[slyr4][i4].trkstype[t]!=1) continue; // not a signal track
+						itru  = cached_clusters[slyr4][i4].trksid[t];
+						Etru  = cached_clusters[slyr4][i4].trksp[t].E();
+						pztru = cached_clusters[slyr4][i4].trksp[t].Pz();
+						issig4 = true;
+						break;
 					}
 				}
 
@@ -2396,7 +2400,7 @@ int main(int argc, char *argv[])
 				trw->GetXYZ(xyz);
 				TrackPar* trk = trw->GetTrack();
 				prec.SetXYZM(pxyz[0], pxyz[1], pxyz[2], meGeV);
-				// cout << "Erec=" << prec.E() << endl;
+				// if(issig4) cout << "Etru=" << Etru << "  -->  Erec=" << pxyz[2] << " and prec.E()=" << prec.E() << endl;
 				float chi2dof = trw->GetNormChi2();
 				reco_chi2dof.push_back(chi2dof);
 				reco_q.push_back(crg);
@@ -2405,6 +2409,7 @@ int main(int argc, char *argv[])
 				reco_y.push_back(xyz[1]);
 				reco_z.push_back(xyz[2]);
 				reco_dErel.push_back((issig4) ? (Etru-prec.E())/Etru : -999);
+				reco_dpzrel.push_back((issig4) ? (pztru-prec.Pz())/pztru : -999);
 				// reco_trckmar.push_back( TrackMarker3d(trw,0,zLastLayer+1,0.1,trkcol(prec.E())) );
 				reco_trckmar.push_back(TrackMarker3d(trw, 0, zLastLayer+1, 1, trkcol(prec.E())));
 				reco_trcklin.push_back(TrackLine3d(trw, zLastLayer+1, 1, trkcol(prec.E())));
@@ -2441,6 +2446,11 @@ int main(int argc, char *argv[])
 				histos["h_rec_TglSig_"+side]->Fill( TglSig );
 				histos["h_rec_xVtxSig_"+side]->Fill( xVtxSig );
 				histos["h_rec_yVtxSig_"+side]->Fill( yVtxSig );
+				histos["h_rec_pz_"+side]->Fill(reco_p[irec].Pz());
+				histos["h_rec_pz_"+side+"_log0"]->Fill(reco_p[irec].Pz());
+				histos["h_rec_pz_"+side+"_log1"]->Fill(reco_p[irec].Pz());
+				histos["h_rec_pz_"+side+"_log2"]->Fill(reco_p[irec].Pz());
+				histos["h_rec_pz_"+side+"_log3"]->Fill(reco_p[irec].Pz());
 				histos["h_rec_E_"+side]->Fill(reco_p[irec].E());
 				histos["h_rec_E_"+side+"_log0"]->Fill(reco_p[irec].E());
 				histos["h_rec_E_"+side+"_log1"]->Fill(reco_p[irec].E());
@@ -2450,8 +2460,11 @@ int main(int argc, char *argv[])
 				histos["h_rec_px_zoom_"+side]->Fill(reco_p[irec].Px());
 				histos["h_rec_py_"+side]->Fill(reco_p[irec].Py());
 				histos["h_rec_py_zoom_"+side]->Fill(reco_p[irec].Py());
-				histos["h_rec_pz_"+side]->Fill(reco_p[irec].Pz());
-				if(issig4) histos["h_resol_rec_dErel_"+side]->Fill(reco_dErel[irec]);
+				if(issig4)
+				{
+					histos["h_resol_rec_dErel_"+side]->Fill(reco_dErel[irec]);
+					histos["h_resol_rec_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
+				}
 				
 				
 				/// matching
@@ -2466,6 +2479,11 @@ int main(int argc, char *argv[])
 					histos["h_mat_TglSig_"+side]->Fill( TglSig );
 					histos["h_mat_xVtxSig_"+side]->Fill( xVtxSig );
 					histos["h_mat_yVtxSig_"+side]->Fill( yVtxSig );
+					histos["h_mat_pz_"+side]->Fill(reco_p[irec].Pz());
+					histos["h_mat_pz_"+side+"_log0"]->Fill(reco_p[irec].Pz());
+					histos["h_mat_pz_"+side+"_log1"]->Fill(reco_p[irec].Pz());
+					histos["h_mat_pz_"+side+"_log2"]->Fill(reco_p[irec].Pz());
+					histos["h_mat_pz_"+side+"_log3"]->Fill(reco_p[irec].Pz());
 					histos["h_mat_E_"+side]->Fill(reco_p[irec].E());
 					histos["h_mat_E_"+side+"_log0"]->Fill(reco_p[irec].E());
 					histos["h_mat_E_"+side+"_log1"]->Fill(reco_p[irec].E());
@@ -2475,8 +2493,11 @@ int main(int argc, char *argv[])
 					histos["h_mat_px_zoom_"+side]->Fill(reco_p[irec].Px());
 					histos["h_mat_py_"+side]->Fill(reco_p[irec].Py());
 					histos["h_mat_py_zoom_"+side]->Fill(reco_p[irec].Py());
-					histos["h_mat_pz_"+side]->Fill(reco_p[irec].Pz());
-					if(issig4) histos["h_resol_mat_dErel_"+side]->Fill(reco_dErel[irec]);
+					if(issig4)
+					{
+						histos["h_resol_mat_dErel_"+side]->Fill(reco_dErel[irec]);
+						histos["h_resol_mat_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
+					}
 				}
 				else
 				{
@@ -2486,6 +2507,11 @@ int main(int argc, char *argv[])
 					histos["h_non_TglSig_"+side]->Fill( TglSig );
 					histos["h_non_xVtxSig_"+side]->Fill( xVtxSig );
 					histos["h_non_yVtxSig_"+side]->Fill( yVtxSig );
+					histos["h_non_pz_"+side]->Fill(reco_p[irec].Pz());
+					histos["h_non_pz_"+side+"_log0"]->Fill(reco_p[irec].Pz());
+					histos["h_non_pz_"+side+"_log1"]->Fill(reco_p[irec].Pz());
+					histos["h_non_pz_"+side+"_log2"]->Fill(reco_p[irec].Pz());
+					histos["h_non_pz_"+side+"_log3"]->Fill(reco_p[irec].Pz());
 					histos["h_non_E_"+side]->Fill(reco_p[irec].E());
 					histos["h_non_E_"+side+"_log0"]->Fill(reco_p[irec].E());
 					histos["h_non_E_"+side+"_log1"]->Fill(reco_p[irec].E());
@@ -2495,8 +2521,11 @@ int main(int argc, char *argv[])
 					histos["h_non_px_zoom_"+side]->Fill(reco_p[irec].Px());
 					histos["h_non_py_"+side]->Fill(reco_p[irec].Py());
 					histos["h_non_py_zoom_"+side]->Fill(reco_p[irec].Py());
-					histos["h_non_pz_"+side]->Fill(reco_p[irec].Pz());
-					if(issig4) histos["h_resol_non_dErel_"+side]->Fill(reco_dErel[irec]);
+					if(issig4)
+					{
+						histos["h_resol_non_dErel_"+side]->Fill(reco_dErel[irec]);
+						histos["h_resol_non_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
+					}
 				}
 
 
@@ -2532,6 +2561,11 @@ int main(int argc, char *argv[])
 					histos["h_sel_TglSig_"+side]->Fill( TglSig );
 					histos["h_sel_xVtxSig_"+side]->Fill( xVtxSig );
 					histos["h_sel_yVtxSig_"+side]->Fill( yVtxSig );
+					histos["h_sel_pz_"+side]->Fill(reco_p[irec].Pz());
+					histos["h_sel_pz_"+side+"_log0"]->Fill(reco_p[irec].Pz());
+					histos["h_sel_pz_"+side+"_log1"]->Fill(reco_p[irec].Pz());
+					histos["h_sel_pz_"+side+"_log2"]->Fill(reco_p[irec].Pz());
+					histos["h_sel_pz_"+side+"_log3"]->Fill(reco_p[irec].Pz());
 					histos["h_sel_E_"+side]->Fill(reco_p[irec].E());
 					histos["h_sel_E_"+side+"_log0"]->Fill(reco_p[irec].E());
 					histos["h_sel_E_"+side+"_log1"]->Fill(reco_p[irec].E());
@@ -2541,8 +2575,11 @@ int main(int argc, char *argv[])
 					histos["h_sel_px_zoom_"+side]->Fill(reco_p[irec].Px());
 					histos["h_sel_py_"+side]->Fill(reco_p[irec].Py());
 					histos["h_sel_py_zoom_"+side]->Fill(reco_p[irec].Py());
-					histos["h_sel_pz_"+side]->Fill(reco_p[irec].Pz());
-					if(issig4) histos["h_resol_sel_dErel_"+side]->Fill(reco_dErel[irec]);
+					if(issig4)
+					{
+						histos["h_resol_sel_dErel_"+side]->Fill(reco_dErel[irec]);
+						histos["h_resol_sel_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
+					}
 				}
 			} // end of loop on clusters in layer 4
 			
@@ -2588,6 +2625,13 @@ int main(int argc, char *argv[])
 		{
 			TString htype = htypes[h];
 			cout << "......in " << htype << " histos" << endl;
+			
+			histos["h_ratio_"+htype+"_pz_"+side]->Divide(        histos["h_"+htype+"_pz_"+side],         histos["h_tru_pz_"+side]);
+			histos["h_ratio_"+htype+"_pz_"+side+"_log0"]->Divide(histos["h_"+htype+"_pz_"+side+"_log0"], histos["h_tru_pz_"+side+"_log0"]);
+			histos["h_ratio_"+htype+"_pz_"+side+"_log1"]->Divide(histos["h_"+htype+"_pz_"+side+"_log1"], histos["h_tru_pz_"+side+"_log1"]);
+			histos["h_ratio_"+htype+"_pz_"+side+"_log2"]->Divide(histos["h_"+htype+"_pz_"+side+"_log2"], histos["h_tru_pz_"+side+"_log2"]);
+			histos["h_ratio_"+htype+"_pz_"+side+"_log3"]->Divide(histos["h_"+htype+"_pz_"+side+"_log3"], histos["h_tru_pz_"+side+"_log3"]);
+			
 			histos["h_ratio_"+htype+"_E_"+side]->Divide(        histos["h_"+htype+"_E_"+side],         histos["h_tru_E_"+side]);
 			histos["h_ratio_"+htype+"_E_"+side+"_log0"]->Divide(histos["h_"+htype+"_E_"+side+"_log0"], histos["h_tru_E_"+side+"_log0"]);
 			histos["h_ratio_"+htype+"_E_"+side+"_log1"]->Divide(histos["h_"+htype+"_E_"+side+"_log1"], histos["h_tru_E_"+side+"_log1"]);
