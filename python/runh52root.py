@@ -1,9 +1,9 @@
 import os, sys, time
 
-processList      = ["elaser", "glaser"]
-phaseList        = ["phase0", "phase1"]
-xiList           = [10.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 0.5]
-polarizationList = ["gpc", "ppw"]
+processList      = ["elaser"] #'glaser'
+phaseList        = ["phase0"] #"phase1"
+xiList           = [3.0] # [10.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 0.5]
+polarizationList = ["ppw"] # 'gpc'
 
 for proc in processList:
     for phase in phaseList:

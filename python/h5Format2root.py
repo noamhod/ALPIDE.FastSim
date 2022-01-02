@@ -55,7 +55,7 @@ def main():
 
     print("running on ",path)
 
-    storage   = "TomPtarmiganFiles"
+    storage   = "TomPtarmiganFilesELaser"
     targetdir = storage+"/data/root/raw/"+process+"/"+phase+"/"+polarization+"/"+xiStr+"/"
 
     p         = subprocess.Popen("mkdir -p "+targetdir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -73,7 +73,9 @@ def main():
     pz_out    = ROOT.std.vector( float )()
     E_out     = ROOT.std.vector( float )()
     pdgId_out = ROOT.std.vector( int )()
+    trkid_out = ROOT.std.vector( int )()
     mpid_out  = ROOT.std.vector( str )()
+    wgt_out   = ROOT.std.vector( float )()
     wgt_out   = ROOT.std.vector( float )()
     time_out  = ROOT.std.vector( float )()
     xi_out    = ROOT.std.vector( float )()
@@ -87,6 +89,7 @@ def main():
     tt_out.Branch('wgt',  wgt_out)
     tt_out.Branch('pdgId',pdgId_out)
     tt_out.Branch('mpid',mpid_out)
+    tt_out.Branch('trkId',trkid_out)
     tt_out.Branch('time',time_out)
     tt_out.Branch('xi',xi_out)
 
@@ -111,6 +114,7 @@ def main():
     for name in fIns:
         ### clear output tree branches
         mpid_out.clear()
+        trkid_out.clear()
         pdgId_out.clear()
         wgt_out.clear()
         vx_out.clear()
@@ -156,8 +160,10 @@ def main():
             pdgId0 = -11
             wgt0   = weight_value_positron[j]
             MP_ID  = str(id_value_positron[j])+"_"+str(pdgId0)
+            trk_id = id_value_positron[j]
             xi0    = xiInput
             mpid_out.push_back(str(MP_ID))
+            trkid_out.push_back(trk_id)
             wgt_out.push_back(wgt0)  
             pdgId_out.push_back(int(pdgId0))  
             vx_out.push_back(vx0)
@@ -192,8 +198,10 @@ def main():
                 pdgId0 = 11
                 wgt0   = weight_value_electron[j]
                 MP_ID  = str(id_value_electron[j])+"_"+str(pdgId0)
+                trk_id = id_value_electron[j]
                 xi0    = xiInput
                 mpid_out.push_back(str(MP_ID))
+                trkid_out.push_back(trk_id)
                 wgt_out.push_back(wgt0)  
                 pdgId_out.push_back(int(pdgId0))  
                 vx_out.push_back(vx0)
