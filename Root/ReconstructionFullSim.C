@@ -1650,14 +1650,14 @@ int main(int argc, char *argv[])
 		det->SetMaxSeedToPropagate(1000); // relevant only if background is considered
 		// det->SetMaxSeedToPropagate(4000); // relevant only if background is considered
 		// set chi2 cuts
-		// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
-		// det->SetMaxChi2Cl(10.);  // max track to cluster chi2
-		det->SetMaxChi2Cl(15.); // max track to cluster chi2
+		det->SetMaxChi2Cl(10.);  // max track to cluster chi2
+		// det->SetMaxChi2Cl(15.); // max track to cluster chi2
 		// det->SetMaxChi2NDF(3.5); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser") ? 15. : 5.); // max total chi2/ndf
-		det->SetMaxChi2NDF(15.); // max total chi2/ndf
+		// det->SetMaxChi2NDF(15.); // max total chi2/ndf
+		det->SetMaxChi2NDF(10.); // max total chi2/ndf
 		det->SetMaxChi2Vtx(20e9); // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(50.); // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
@@ -1984,8 +1984,7 @@ int main(int argc, char *argv[])
 				tIn->SetBranchAddress("tru_pdgId", &tru_pdgId);
 				tIn->SetBranchAddress("tru_trackId", &tru_trackId);
 				tIn->SetBranchAddress("tru_edep", &tru_edep);
-				if(smplname=="bkg") tIn->SetBranchAddress("true_p", &tru_p);
-				else                tIn->SetBranchAddress("tru_p", &tru_p);
+				tIn->SetBranchAddress("tru_p", &tru_p);
 				tIn->SetBranchAddress("tru_hit", &tru_hit);
 				tIn->SetBranchAddress("tru_vertex", &tru_vertex);
 				tIn->SetBranchAddress("xres", &xres);
@@ -2048,8 +2047,9 @@ int main(int argc, char *argv[])
 			for (unsigned int i4all = 0; i4all<(n4I+n4O); ++i4all)
 			{
 				det->SetErrorScale((process=="elaser") ? 500 : 500);
-				det->SetMaxChi2NDF(15.);
-				det->SetMaxChi2Cl(15.);
+				det->SetMaxChi2NDF(10.);
+				det->SetMaxChi2Cl(10.);
+				det->SetMinITSHits(nMinHits+1); // require hit in at least 4 layers by default
 				
 				/// outer first
 				unsigned int i4 = (i4all<n4O) ? i4all  : i4all-n4O;
@@ -2289,14 +2289,19 @@ int main(int argc, char *argv[])
 						nIterations_trw++;
 						double err = 500;
 						det->SetErrorScale((process=="elaser") ? err*2*nIterations_trw : err*2*nIterations_trw);
-						det->SetMaxChi2NDF(15.+(10*nIterations_trw));
-						det->SetMaxChi2Cl(15.+(10*nIterations_trw));
+						det->SetMaxChi2NDF(10.+(5*nIterations_trw));
+						det->SetMaxChi2Cl(10.+(5*nIterations_trw));
+						// det->SetMinITSHits(nMinHits); // require hit in at least 3 layers instead of 4
+						// det->SetErrorScale((process=="elaser") ? err*3*nIterations_trw : err*3*nIterations_trw);
+						// det->SetMaxChi2NDF(15.+(15*nIterations_trw));
+						// det->SetMaxChi2Cl(15.+(15*nIterations_trw));
 						goto reco;
 					}
 					if(itru!=-999) cout << "!trw: clusterid=" << clsid4 << " (itru=" << itru << ", E=" << Etru << ", iteration=" << nIterations_trw << " out of " << nMaxIterations << ")" << endl;
 					continue; // track was not reconstructed
 				}
 				
+				/// NOAM TODO
 				/// kill the tracks with less than minimum hits-this should be killed on the KF side
 				if(trw->GetNITSHits()<nMinHits)
 				{
@@ -2551,6 +2556,7 @@ int main(int argc, char *argv[])
 				histos["h_cutflow_"+side]->Fill("Tgl/#sigma(Tgl)", (int)pass);
 				if(pass && (yVtxSig<-0.00025 || yVtxSig>+0.00025)) pass = false;
 				histos["h_cutflow_"+side]->Fill("y_{vtx}/#sigma(y_{vtx})", (int)pass);
+				histos["h_cutflow_"+side]->Fill("Matched", (int)(pass && ismatched));
 				if(pass)
 				{
 					n_selct++;
