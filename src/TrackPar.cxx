@@ -575,6 +575,9 @@ Bool_t TrackPar::CorrectForMeanMaterialdEdx
   fC43 += cC43;
   fC44 += cC44;
   fP4  *= cP4;
+  // double pold = GetP();
+  // fP4 *= cP4;
+  // printf("ELoss for dEdX=%e xRho=%e at X=%e: pOld=%e -> pNew=%e, delta=%f\n",  dEdx, xTimesRho, GetX(), pold, GetP(), (GetP()-pold)/pold*100);
 
   CheckCovariance();
 

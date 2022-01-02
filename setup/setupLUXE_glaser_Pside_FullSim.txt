@@ -19,25 +19,32 @@ vertex:		      		0.	25e-4	1e-5	1e-5
 # The parameters eff, RMin, RMax are optional (default is 1,0,1e9).
 # If one of values is specified, the others should also be set
 # note: layer with thickness DZ is positioned such that it extends in Z from Zc-DZ/2 to Zc+DZ/2
-# type			name			material	Zc				DZ			resX	resY	eff	XMin		XMax    YMin	YMax
-dummy:			VACWIN		AL2O3		393.0			300e-4
-dummy:			Air			AIR		410.015		34
-activelayer:vt	PL1I			SILICON	396.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.626256	0.75
-dummy:			PL1IPlane	CARBON	396.22125	300e-4
-activelayer:vt	PL1O			SILICON	395.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.626256	0.75
-dummy:			PL1OPlane	CARBON	395.02125	300e-4
-activelayer:vt	PL2I			SILICON	406.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.626256	0.75
-dummy:			PL2IPlane	CARBON	406.22125	300e-4
-activelayer:vt	PL2O			SILICON	405.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.626256	0.75
-dummy:			PL2OPlane	CARBON	405.02125	300e-4
-activelayer:vt	PL3I			SILICON	416.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.626256	0.75
-dummy:			PL3IPlane	CARBON	416.22125	300e-4
-activelayer:vt	PL3O			SILICON	415.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.626256	0.75
-dummy:			PL3OPlane	CARBON	415.02125	300e-4
-activelayer:vt	PL4I			SILICON	426.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.626256	0.75
-dummy:			PL4IPlane	CARBON	426.22125	300e-4
-activelayer:vt	PL4O			SILICON	425.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.626256	0.75
-dummy:			PL4OPlane	CARBON	425.02125	300e-4
+# type			name			material		Zc				DZ			resX	resY	eff	XMin		XMax    YMin	YMax
+dummy:			VACWIN		ALUMINIUM	393.0			300e-4
+dummy:			Air1O			AIR			394.005625	1.98125
+activelayer:vt	PL1O			SILICON		395.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.626256	0.75
+dummy:			PL1OPlane	CARBON		395.02125	300e-4
+dummy:			Air1I			AIR			395.601250	1.19000
+activelayer:vt	PL1I			SILICON		396.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.626256	0.75
+dummy:			PL1IPlane	CARBON		396.22125	300e-4
+dummy:			Air2O			AIR			400.616250	8.76000
+activelayer:vt	PL2O			SILICON		405.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.626256	0.75
+dummy:			PL2OPlane	CARBON		405.02125	300e-4
+dummy:			Air2I			AIR			405.601250	1.19000
+activelayer:vt	PL2I			SILICON		406.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.626256	0.75
+dummy:			PL2IPlane	CARBON		406.22125	300e-4
+dummy:			Air3O			AIR			410.616250	8.76000
+activelayer:vt	PL3O			SILICON		415.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.626256	0.75
+dummy:			PL3OPlane	CARBON		415.02125	300e-4
+dummy:			Air3I			AIR			415.601250	1.19000
+activelayer:vt	PL3I			SILICON		416.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.626256	0.75
+dummy:			PL3IPlane	CARBON		416.22125	300e-4
+dummy:			Air4O			AIR			420.616250	8.76000
+activelayer:vt	PL4O			SILICON		425.00125	100e-4	4.e-4	4.e-4	0.99	28.353 	55.433   -0.626256	0.75
+dummy:			PL4OPlane	CARBON		425.02125	300e-4
+dummy:			Air4I			AIR			425.601250	1.19000
+activelayer:vt	PL4I			SILICON		426.20125	100e-4	4.e-4	4.e-4	0.99	5.273 	32.353   -0.626256	0.75
+dummy:			PL4IPlane	CARBON		426.22125	300e-4
 
 ############################################################
 ######                                                ######
@@ -52,6 +59,7 @@ material:	SILICON     28.09		14.0		2.329			21.82			70.2			173.0e-9		31.05e-9
 material:	BEO        	12.510	6.000		2.810			41.307		100.73		93.2e-9		34.63e-9
 material:	IRON        55.85		26.0   	7.87			13.84			81.7			286.0e-9		55.17e-9
 material:	CARBON      12.01		6.0   	2.00			42.70			59.2			78.0e-9		30.28e-9
-material:	CARBON		12.01		6.0		1.93			42.6916		59.2			78.0e-9		30.28e-9
+# material:	CARBON		12.01		6.0		1.93			42.6916		59.2			78.0e-9		30.28e-9
 material:	CERAMICS   	22.313	10.855	3.600			27.54			114.84		145.2e-9		40.21e-9
 material:	AL2O3      	21.812	10.646	3.520			27.87			114.92		145.2e-9		40.21e-9
+material:	ALUMINIUM 	26.981	13			2.699			24.01			69.7			166.0e-9		32.86e-9

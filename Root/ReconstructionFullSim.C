@@ -1076,7 +1076,7 @@ void cache_cluster(TVector3*               cls_r,
 						 vector<TLorentzVector>* cls_trksp,
 						 TString side, TMapTSTH1D& histos1, TMapTSTH2D& histos2)
 {
-	double x = cls_r->X()/10.; // mm to cm
+	double x = cls_r->X()/10.; // mm to cm 
 	double y = cls_r->Y()/10.; // mm to cm
 	double z = cls_r->Z()/10.; // mm to cm
 	int lyrid_FS = DecodeLayer(cls_id);
@@ -1662,7 +1662,6 @@ int main(int argc, char *argv[])
 		// det->SetMaxChi2Vtx(50.); // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
-		// det->SetDefStepAir(1);				 // IMPORTANT FOR NON-UNIFORM FIELDS
 		det->SetDefStepAir(1);				 // IMPORTANT FOR NON-UNIFORM FIELDS
 		// det->SetDefStepMat(0.1);			 // NOAM??
 		// det->SetMinP2Propagate(0.3);		 // GeV (NA60+)
@@ -1999,7 +1998,7 @@ int main(int argc, char *argv[])
 				for(size_t clsnmbr=0; clsnmbr < ntotclusnmbr; clsnmbr++)
 				{	
 					tIn->GetEntry(clsnmbr);
-					// /// fill truth signal tracks:
+					/// fill truth signal tracks:
 					for(size_t t=0; t<tru_p->size(); ++t)
 					{
 						if(tru_type->at(t)!=1) continue;
@@ -2016,7 +2015,9 @@ int main(int argc, char *argv[])
 							histos["h_tru_E_"+side+"_log1"]->Fill(tru_p->at(t).E());
 							histos["h_tru_E_"+side+"_log2"]->Fill(tru_p->at(t).E());
 							histos["h_tru_E_"+side+"_log3"]->Fill(tru_p->at(t).E());
+							
 							vtruid.push_back(tru_trackId->at(t));
+							
 							n_truth++;
 						}
 					}

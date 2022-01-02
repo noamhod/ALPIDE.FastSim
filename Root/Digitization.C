@@ -648,6 +648,7 @@ vector<float> xvtx;
 vector<float> yvtx;
 vector<float> zvtx;
 vector<TLorentzVector> trkp4;
+vector<int> trkID;
 vector<int> crg;
 vector<vector<int>> clusters_id;
 vector<vector<int>> clusters_layerid;
@@ -672,6 +673,7 @@ void SetOutTree(TString fOutName, TString side)
 	tOut->Branch("xvtx", &xvtx);
 	tOut->Branch("yvtx", &yvtx);
 	tOut->Branch("zvtx", &zvtx);
+	tOut->Branch("trkID", &trkID);
 	tOut->Branch("crg", &crg);
 	tOut->Branch("trkp4", &trkp4);
 	tOut->Branch("acc", &acc);
@@ -871,7 +873,7 @@ int main(int argc, char *argv[])
 		TString side = sides[s];
 
 		/// setup the detector for one side at a time!!!
-		TString setup = "../setup/setupLUXE_" + process + "_" + side + ".txt";
+		TString setup = "../setup/setupLUXE_" + process + "_" + side + "_FullSim.txt";
 		gRandom->SetSeed(Seed);
 		det = new KMCDetectorFwd();
 		det->ReadSetup(setup, setup);
@@ -915,16 +917,18 @@ int main(int argc, char *argv[])
 		vector<double> *pz = 0;
 		vector<double> *E = 0;
 		vector<double> *wgt0 = 0;
-		vector<int> *pdgId = 0;
-		tIn->SetBranchAddress("vx", &vx);
-		tIn->SetBranchAddress("vy", &vy);
-		tIn->SetBranchAddress("vz", &vz);
-		tIn->SetBranchAddress("px", &px);
-		tIn->SetBranchAddress("py", &py);
-		tIn->SetBranchAddress("pz", &pz);
-		tIn->SetBranchAddress("E", &E);
-		tIn->SetBranchAddress("wgt", &wgt0);
+		vector<int>    *pdgId = 0;
+		vector<int>    *trkId = 0;
+		tIn->SetBranchAddress("vx",    &vx);
+		tIn->SetBranchAddress("vy",    &vy);
+		tIn->SetBranchAddress("vz",    &vz);
+		tIn->SetBranchAddress("px",    &px);
+		tIn->SetBranchAddress("py",    &py);
+		tIn->SetBranchAddress("pz",    &pz);
+		tIn->SetBranchAddress("E",     &E);
+		tIn->SetBranchAddress("wgt",   &wgt0);
 		tIn->SetBranchAddress("pdgId", &pdgId);
+		tIn->SetBranchAddress("trkId", &trkId);
 
 		// output tree
 		SetOutTree(fOutName, side);
@@ -1009,6 +1013,7 @@ int main(int argc, char *argv[])
 			yvtx.clear();
 			zvtx.clear();
 			trkp4.clear();
+			trkID.clear();
 			crg.clear();
 			clusters_id.clear();
 			clusters_layerid.clear();
@@ -1081,6 +1086,7 @@ int main(int argc, char *argv[])
 				yvtx.push_back(vy->at(igen));
 				zvtx.push_back(vz->at(igen));
 				crg.push_back(q);
+				trkID.push_back(trkId->at(igen));
 				trkp4.push_back(ptmp);
 				if(!process.Contains("bkg")) trkpts_fullrange.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E()), false, true));
 				trkpts.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E())));

@@ -710,9 +710,15 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
     PerformDecay(trc);
   }
   if (!PropagateToZBxByBz(trc,dstZ, fDefStepAir)) return 0;
-  // double corrELoss = lrTo->GetELoss2ETP(trc->GetP(), trc->GetMass() ); // NOAM TODO
-  // if (!PropagateToZBxByBz(trc,dstZ, fDefStepAir, -dir*lrTo->GetXTimesRho()*corrELoss)) return 0; // NOAM TODO
-  //
+
+  // air
+  NaMaterial* air = GetMaterial("AIR");
+  double corrELoss = air->GetELoss2ETP(trc->GetP(), trc->GetMass() );
+  double thickness = TMath::Abs(trc->GetZ()-dstZ);
+  double density = air->GetDensity();
+  double radL = air->GetRadLength();
+  if (!PropagateToZBxByBz(trc,dstZ, fDefStepAir,   thickness*density/radL , -dir*thickness*density*corrELoss, modeMC)) return 0;
+  
   // if (AliLog::GetGlobalDebugLevel()>=2) trc->GetTrack()->Print();
   return 1;
 }
