@@ -1074,9 +1074,11 @@ void cache_cluster(TVector3*               cls_r,
 						 vector<int>*            cls_trkids,
 						 vector<int>*            cls_type,
 						 vector<TLorentzVector>* cls_trksp,
-						 TString side, TMapTSTH1D& histos1, TMapTSTH2D& histos2)
+						 TString side,
+						 TMapTSTH1D& histos1, TMapTSTH2D& histos2,
+						 double scalex=1.)
 {
-	double x = cls_r->X()/10.; // mm to cm 
+	double x = scalex*cls_r->X()/10.; // mm to cm 
 	double y = cls_r->Y()/10.; // mm to cm
 	double z = cls_r->Z()/10.; // mm to cm
 	int lyrid_FS = DecodeLayer(cls_id);
@@ -1662,6 +1664,7 @@ int main(int argc, char *argv[])
 		// det->SetMaxChi2Vtx(50.); // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
+		// det->SetDefStepAir(1);				 // IMPORTANT FOR NON-UNIFORM FIELDS
 		det->SetDefStepAir(1);				 // IMPORTANT FOR NON-UNIFORM FIELDS
 		// det->SetDefStepMat(0.1);			 // NOAM??
 		// det->SetMinP2Propagate(0.3);		 // GeV (NA60+)
@@ -1671,16 +1674,24 @@ int main(int argc, char *argv[])
 		// det->ImposeVertex(0.0014, 0., 0.);		 // the vertex position is imposed NOAM
 		det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
 		// for reconstruction:
-		// det->SetErrorScale(500.);
-		// det->SetErrorScale( (process=="elaser")?500.:200. );
-		// det->SetErrorScale((process=="elaser") ? 500. : 500.); // was 400 earlier, can be also anywhere up to 1000
-		det->SetErrorScale((process=="elaser") ? 500. : 500.); // was 400 earlier, can be also anywhere up to 1000
+		det->SetErrorScale(500.); // can be up to 1000
 		det->Print();
 		// det->BookControlHistos();
 
 		////////////////////////////////////////
 		setParametersFromDet(side, process); ///
 		////////////////////////////////////////
+		
+		////////////////////////////////////////////////
+		double scalex = 1.033; /// TODO dirty fix!!! ///
+		if(scalex!=1.)
+		{
+			cout << "<<<<<<<<< !!! NOTE !!! >>>>>>>>" << endl;
+			cout << "scalex is set to " << scalex << endl;
+			cout << "This should be fixed later" << endl;
+			cout << "<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>" << endl;
+		}
+		////////////////////////////////////////////////
 		
 		
 		/// monitoring histograms
@@ -1803,7 +1814,7 @@ int main(int argc, char *argv[])
 			hname = "h_"+htype+"_chi2dof_"+side;  histos.insert(make_pair(hname, new TH1D(hname, ";#chi^{2}/N_{DoF};"+ytitle,150,0,15)));
 			hname = "h_"+htype+"_SnpSig_"+side;   histos.insert(make_pair(hname, new TH1D(hname, ";Snp/#sigma(Snp);"+ytitle,  100,-50,+50)));
 			hname = "h_"+htype+"_TglSig_"+side;   histos.insert(make_pair(hname, new TH1D(hname, ";Tgl/#sigma(Tgl);"+ytitle,  100,-1000,+1000)));
-			hname = "h_"+htype+"_xVtxSig_"+side;  histos.insert(make_pair(hname, new TH1D(hname, ";#it{x}_{vtx}/#sigma(#it{x}_{vtx});"+ytitle,  150,-5e-6,+5e-6)));
+			hname = "h_"+htype+"_xVtxSig_"+side;  histos.insert(make_pair(hname, new TH1D(hname, ";#it{x}_{vtx}/#sigma(#it{x}_{vtx});"+ytitle,  150,-5e-8,+5e-8)));
 			hname = "h_"+htype+"_yVtxSig_"+side;  histos.insert(make_pair(hname, new TH1D(hname, ";#it{y}_{vtx}/#sigma(#it{y}_{vtx});"+ytitle,  150,-0.0015,+0.0015)));
 			hname = "h_"+htype+"_px_"+side;       histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];"+ytitle, 200,-0.04,+0.04)));
 			hname = "h_"+htype+"_px_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];"+ytitle, 100,-0.02,+0.02)));
@@ -2021,8 +2032,8 @@ int main(int argc, char *argv[])
 							n_truth++;
 						}
 					}
-					/// caching is happening here 
-					cache_cluster(rglobal_geo, encodedClsId, isSignal, size, xsize, ysize, charge, tru_trackId, tru_type, tru_p, side, histos, histos2);
+					/// caching is happening here
+					cache_cluster(rglobal_geo, encodedClsId, isSignal, size, xsize, ysize, charge, tru_trackId, tru_type, tru_p, side, histos, histos2, scalex);
 				} // end of loop on clusters
 				fIn->Close(); // must close the file
 			} // end loop on staves
@@ -2289,13 +2300,16 @@ int main(int argc, char *argv[])
 					{
 						nIterations_trw++;
 						double err = 500;
+						
 						det->SetErrorScale((process=="elaser") ? err*2*nIterations_trw : err*2*nIterations_trw);
-						det->SetMaxChi2NDF(10.+(5*nIterations_trw));
-						det->SetMaxChi2Cl(10.+(5*nIterations_trw));
+						// det->SetMaxChi2NDF(10.+(5*nIterations_trw));
+						// det->SetMaxChi2Cl(10.+(5*nIterations_trw));
+						
 						// det->SetMinITSHits(nMinHits); // require hit in at least 3 layers instead of 4
-						// det->SetErrorScale((process=="elaser") ? err*3*nIterations_trw : err*3*nIterations_trw);
-						// det->SetMaxChi2NDF(15.+(15*nIterations_trw));
-						// det->SetMaxChi2Cl(15.+(15*nIterations_trw));
+						// det->SetErrorScale((process=="elaser") ? err*2*nIterations_trw : err*2*nIterations_trw);
+						// det->SetMaxChi2NDF(2.);
+						// det->SetMaxChi2Cl(2.);
+						
 						goto reco;
 					}
 					if(itru!=-999) cout << "!trw: clusterid=" << clsid4 << " (itru=" << itru << ", E=" << Etru << ", iteration=" << nIterations_trw << " out of " << nMaxIterations << ")" << endl;
@@ -2416,6 +2430,7 @@ int main(int argc, char *argv[])
 				reco_z.push_back(xyz[2]);
 				reco_dErel.push_back((issig4) ? (Etru-prec.E())/Etru : -999);
 				reco_dpzrel.push_back((issig4) ? (pztru-prec.Pz())/pztru : -999);
+				// cout << "dErel=" << reco_dErel[irec] << endl;
 				// reco_trckmar.push_back( TrackMarker3d(trw,0,zLastLayer+1,0.1,trkcol(prec.E())) );
 				reco_trckmar.push_back(TrackMarker3d(trw, 0, zLastLayer+1, 1, trkcol(prec.E())));
 				reco_trcklin.push_back(TrackLine3d(trw, zLastLayer+1, 1, trkcol(prec.E())));
@@ -2427,6 +2442,7 @@ int main(int argc, char *argv[])
 				double yVtxSig = (trk->GetSigmaZ2()>0)  ? reco_y[irec]/sqrt(trk->GetSigmaZ2())    : -1e10;
 				double Px = reco_p[irec].Px();
 				double Py = reco_p[irec].Py();
+				double Energy = reco_p[irec].E();
 				
 				
 				/// fill cluster size plots
@@ -2545,18 +2561,22 @@ int main(int argc, char *argv[])
 				histos["h_cutflow_"+side]->Fill("Cluster size x", (int)pass);
 				if(pass && maxclssizey>5)                          pass = false;
 				histos["h_cutflow_"+side]->Fill("Cluster size y", (int)pass);
-				if(pass && (Px<-0.0015 || Px>+0.0080))             pass = false;
+				if(pass && (Px<-0.003 || Px>+0.008))               pass = false;
 				histos["h_cutflow_"+side]->Fill("p_{x}", (int)pass); /// this is maybe too tuned
 				if(pass && (Py<-0.0025 || Py>+0.0025))             pass = false;
 				histos["h_cutflow_"+side]->Fill("p_{y}", (int)pass);
-				if(pass && reco_chi2dof[irec]>3)                   pass = false;
+				if(pass && reco_chi2dof[irec]>5)                   pass = false;
 				histos["h_cutflow_"+side]->Fill("#chi^{2}/N_{DoF}", (int)pass);
-				if(pass && SnpSig<-2)                              pass = false;
+				if(pass && (SnpSig<-3 || SnpSig>7))                pass = false;
 				histos["h_cutflow_"+side]->Fill("Snp/#sigma(Snp)", (int)pass);
-				if(pass && abs(TglSig)>400)                        pass = false;
+				if(pass && abs(TglSig)>350)                        pass = false;
 				histos["h_cutflow_"+side]->Fill("Tgl/#sigma(Tgl)", (int)pass);
+				if(pass && (xVtxSig<-3e-9 || xVtxSig>+18e-9))      pass = false;
+				histos["h_cutflow_"+side]->Fill("x_{vtx}/#sigma(x_{vtx})", (int)pass);
 				if(pass && (yVtxSig<-0.00025 || yVtxSig>+0.00025)) pass = false;
 				histos["h_cutflow_"+side]->Fill("y_{vtx}/#sigma(y_{vtx})", (int)pass);
+				if(pass && Energy<1.5)                             pass = false;
+				histos["h_cutflow_"+side]->Fill("#it{E}>1.5 GeV", (int)pass);
 				histos["h_cutflow_"+side]->Fill("Matched", (int)(pass && ismatched));
 				if(pass)
 				{
@@ -2672,6 +2692,15 @@ int main(int argc, char *argv[])
 		fOut->Write();
 		fOut->Close();
 		cout << "Done! " << side << endl;
+		
+		if(scalex!=1.)
+		{
+			cout << "<<<<<<<<< !!! NOTE !!! >>>>>>>>" << endl;
+			cout << "scalex is set to " << scalex << endl;
+			cout << "This should be fixed later" << endl;
+			cout << "<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>" << endl;
+		}
+		
 	} // end of loop on sides
 
 	return 0;
