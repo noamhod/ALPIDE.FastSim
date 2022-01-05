@@ -2739,7 +2739,7 @@ int main(int argc, char *argv[])
 				histos["h_cutflow_"+side]->Fill("Cluster size y", (int)pass);
 				if(pass && (Px<dcuts["MinPx"] || Px>dcuts["MaxPx"]))                     pass = false;
 				histos["h_cutflow_"+side]->Fill("p_{x}", (int)pass);
-				if(pass && (Py<dcuts["MinPy"] || Py>dcuts["MinPy"]))                     pass = false;
+				if(pass && (Py<dcuts["MinPy"] || Py>dcuts["MaxPy"]))                     pass = false;
 				histos["h_cutflow_"+side]->Fill("p_{y}", (int)pass);
 				if(pass && reco_chi2dof[irec]>dcuts["MaxChi2DoF"])                       pass = false;
 				histos["h_cutflow_"+side]->Fill("#chi^{2}/N_{DoF}", (int)pass);
