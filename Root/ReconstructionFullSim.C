@@ -540,16 +540,16 @@ void setCuts(TString process, int sigmult)
 		}
 		else if(sigmult>=2000 && sigmult<10000)
 		{
-			
+			;
 		}
 		else
 		{
-			
+			;
 		}
 	}
 	else if(process=="glaser")
 	{
-		
+		;	
 	}
 }
 
