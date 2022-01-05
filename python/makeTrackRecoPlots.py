@@ -31,15 +31,59 @@ def LegendMaker():
    legend1.SetFillStyle(0);
    return legend1;
 
+
+def hChopperUp(h, binstochop):
+   nbinsorig = h.GetNbinsX()
+   nbins = nbinsorig-binstochop
+   print("nbins=",nbins)
+   xbins = []
+   xaxis = h.GetXaxis()
+   yaxis = h.GetYaxis()
+   for b in range(1,nbins+1): xbins.append( xaxis.GetBinLowEdge(b) )
+   xbins.append( xaxis.GetBinUpEdge(nbins) )
+   arrxbins = array("d", xbins)
+   print(arrxbins)
+   name   = h.GetName()
+   title  = h.GetTitle()
+   xtitle = xaxis.GetTitle()
+   ytitle = yaxis.GetTitle()
+   hChopped = TH1D(name+"_chop",";"+xtitle+";"+ytitle,nbins,arrxbins)
+   for b in range(1,nbins+1):
+      hChopped.SetBinContent(b, h.GetBinContent(b))
+      hChopped.SetBinError(b, h.GetBinError(b))
+      hChopped.GetXaxis().SetBinLabel(b, h.GetXaxis().GetBinLabel(b))
+   hChopped.SetLineColor(h.GetLineColor())
+   hChopped.SetFillColor(h.GetFillColor())
+   hChopped.SetLineStyle(h.GetLineStyle())
+   hChopped.SetLineWidth(h.GetLineWidth())
+   return hChopped
+
+# def hChopperUp(h,binstokeep=-1):
+#    hChopped = TH1D()
+#    hChopped.SetName(h.GetName()+"_chop")
+#    for b in range(1,h.GetNbinsX()):
+#       label = h.GetXaxis().GetBinLabel(b)
+#       print(b,label)
+#       if(label==""): break
+#       hChopped.Fill(label,h.GetBinContent(b))
+#    hChopped.SetTitle(";"+h.GetXaxis().GetTitle()+";"+h.GetYaxis().GetTitle())
+#    hChopped.SetLineColor(h.GetLineColor())
+#    hChopped.SetFillColor(h.GetFillColor())
+#    hChopped.SetLineStyle(h.GetLineStyle())
+#    hChopped.SetLineWidth(h.GetLineWidth())
+#    return hChopped
+
+def isTruth(name,truthvars):
+   for var in truthvars:
+      if(var in name): return True
+   return False
+
 def main():   
    gROOT.LoadMacro("LuxeStyle.C")
    gROOT.LoadMacro("LuxeLabels.C")
    gROOT.SetBatch()
    SetLuxeStyle()
    
-   # parser = argparse.ArgumentParser(description='Code to make track reco plots')
-   # parser.add_argument('-p', action="store", dest="proc", type=str, default="elaser") ### default is phase 2 signal
-   # parser.add_argument('-s', action="store", dest="sideNeeded", type=str, default="Pside")
    parser = argparse.ArgumentParser(description='makeTrackRecoPlots.py...')
    parser.add_argument('-proc', metavar='process', required=True,  help='process [elaser,glaser]')
    parser.add_argument('-smpl', metavar='sample',  required=True,  help='sample [phase0/allpix/ppw/3.0]')
@@ -54,7 +98,7 @@ def main():
    pdfsdir = storage+"/output/pdf/rec/"+process+"/"+sample+"/"
    os.makedirs(pdfsdir, exist_ok=True)
    
-   outname = "signal_and_background_tracking_variable_"+process
+   outname = "signal_and_background_tracking_variable_"+process+"_"+sample.replace("/","_")
    
    sides = ["Eside","Pside"] if(sidepe==None) else [sidepe]
    
@@ -63,7 +107,7 @@ def main():
       fnames = {
          "ss":"../data/root/rec/"+process+"/"+sample+"s/rec_"+process+"__"+side+".root",
          "sb":"../data/root/rec/"+process+"/"+sample+"sb/rec_"+process+"__"+side+".root",
-         "bb":"../data/root/rec/"+process+"/bkg/rec_"+process+"__"+side+".root"
+         "bb":"../data/root/rec/"+process+"/"+sample+"b/rec_"+process+"__"+side+".root"
       }
       
       files = {}
@@ -72,6 +116,7 @@ def main():
          files.update({ftype:TFile(fname,"READ")})
          nBXs.update({ftype:files[ftype].Get("h_nBX_"+side).GetBinContent(1)})
       
+      plottruth = ["_E_", "_pz_", "_px_", "_py_"]
       
       hnames = ["h_all_csize_L1I_"+side,
                 "h_all_csize_L2I_"+side,
@@ -242,6 +287,7 @@ def main():
          histos = {}
          
          cnv = TCanvas("c_"+name,"",700,500)
+         if("cutflow" in name): cnv = TCanvas("c_"+name,"",900,500)
          cnv.cd()
          ROOT.gPad.SetTicks(1,1)
          ROOT.gPad.SetGrid()
@@ -255,11 +301,12 @@ def main():
             hname = name+"_"+htyp
             
             ## draw truth just on energy plots
-            if(("_E_" in name or "_pz_" in name) and "_ratio_" not in name and htyp=="ss"):
+            istruth = isTruth(name,plottruth)
+            if(istruth and "_ratio_" not in name and htyp=="ss"):
                name1 = name
                name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
                hname1 = name1+"_"+htyp
-               print("getting",htyp,name1)
+               # print("getting",htyp,name1)
                hist = files[htyp].Get(name1).Clone(hname1)
                if(not hist): print(name1,"is null")
                histos.update( {hname1:hist} )
@@ -270,7 +317,7 @@ def main():
                histos[hname1].SetLineStyle(2)
                legend.AddEntry(histos[hname1],"Tru","l")
             
-            print("getting",htyp,name)
+            # print("getting",htyp,name)
             hist = files[htyp].Get(name).Clone(hname)
             if(not hist): print(name,"is null")
             histos.update( {hname:hist} )
@@ -280,6 +327,11 @@ def main():
             histos[hname].SetFillColorAlpha(attr["col"],0.35)
             histos[hname].SetLineWidth(1)
             legend.AddEntry(histos[hname],attr["leg"],"f")
+            if("cutflow" in name):
+               hchop = hChopperUp(histos[hname],14)
+               # hchop = hChopperUp(histos[hname])
+               histos.update( {hname+"_chop":hchop} )
+               
       
          ## normalise to nBX:
          for hname,h in histos.items():
@@ -297,7 +349,7 @@ def main():
             if("Nhits" in name or "cutflow" in name): h.SetMaximum(hmax*2)
          
          ## draw truth just on energy plots
-         if(("_E_" in name or "_pz_" in name) and "_ratio_" not in name):
+         if(istruth and "_ratio_" not in name):
             name1 = name
             name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
             htmp = histos[name1+"_ss"].Clone(name1+"_ss_tmp")
@@ -305,9 +357,14 @@ def main():
             htmp.GetYaxis().SetTitle( histos[name+"_sb"].GetYaxis().GetTitle() )
             htmp.Draw("hist")
             histos[name+"_sb"].Draw("hist same")
-         else: histos[name+"_sb"].Draw("hist")
-         if("mat" not in name and "non" not in name): histos[name+"_bb"].Draw("hist same")
-         histos[name+"_ss"].Draw("hist same")
+         else:
+            if("cutflow" in name): histos[name+"_sb_chop"].Draw("hist")
+            else:                  histos[name+"_sb"].Draw("hist")
+         if("mat" not in name and "non" not in name):
+            if("cutflow" in name): histos[name+"_bb_chop"].Draw("hist same")
+            else:                  histos[name+"_bb"].Draw("hist same")
+         if("cutflow" in name): histos[name+"_ss_chop"].Draw("hist same")
+         else:                  histos[name+"_ss"].Draw("hist same")
          legend.Draw("sames")
          
          cnv.RedrawAxis()
