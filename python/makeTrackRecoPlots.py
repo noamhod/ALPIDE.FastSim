@@ -195,6 +195,10 @@ def main():
                 "h_ratio_rec_pz_"+side+"_log1",
                 "h_ratio_rec_E_"+side+"_log0",
                 "h_ratio_rec_E_"+side+"_log1",
+                "h_eff_rec_pztru_"+side+"_log0",
+                "h_eff_rec_pztru_"+side+"_log1",
+                "h_eff_rec_Etru_"+side+"_log0",
+                "h_eff_rec_Etru_"+side+"_log1",
                 
                 "h_mat_Nhits_"+side,
                 "h_mat_px_"+side,
@@ -219,6 +223,10 @@ def main():
                 "h_ratio_mat_pz_"+side+"_log1",
                 "h_ratio_mat_E_"+side+"_log0",
                 "h_ratio_mat_E_"+side+"_log1",
+                "h_eff_mat_pztru_"+side+"_log0",
+                "h_eff_mat_pztru_"+side+"_log1",
+                "h_eff_mat_Etru_"+side+"_log0",
+                "h_eff_mat_Etru_"+side+"_log1",
                 
                 "h_non_Nhits_"+side,
                 "h_non_px_"+side,
@@ -243,6 +251,10 @@ def main():
                 "h_ratio_non_pz_"+side+"_log1",
                 "h_ratio_non_E_"+side+"_log0",
                 "h_ratio_non_E_"+side+"_log1",
+                "h_eff_non_pztru_"+side+"_log0",
+                "h_eff_non_pztru_"+side+"_log1",
+                "h_eff_non_Etru_"+side+"_log0",
+                "h_eff_non_Etru_"+side+"_log1",
                 
                 "h_sel_Nhits_"+side,
                 "h_sel_px_"+side,
@@ -267,6 +279,10 @@ def main():
                 "h_ratio_sel_pz_"+side+"_log1",
                 "h_ratio_sel_E_"+side+"_log0",
                 "h_ratio_sel_E_"+side+"_log1",
+                "h_eff_sel_pztru_"+side+"_log0",
+                "h_eff_sel_pztru_"+side+"_log1",
+                "h_eff_sel_Etru_"+side+"_log0",
+                "h_eff_sel_Etru_"+side+"_log1",
                 
                 "h_cutflow_"+side,
              ]
@@ -302,7 +318,7 @@ def main():
             
             ## draw truth just on energy plots
             istruth = isTruth(name,plottruth)
-            if(istruth and "_ratio_" not in name and htyp=="ss"):
+            if(istruth and "_ratio_" not in name and "_eff_" not in name and htyp=="ss"):
                name1 = name
                name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
                hname1 = name1+"_"+htyp
@@ -335,7 +351,7 @@ def main():
       
          ## normalise to nBX:
          for hname,h in histos.items():
-            if("_ratio_" in name): continue
+            if("_ratio_" in name or "_eff_" in name): continue
             nBX = -1
             if("ss" in hname): nBX = nBXs["ss"]
             if("sb" in hname): nBX = nBXs["sb"]
@@ -349,7 +365,7 @@ def main():
             if("Nhits" in name or "cutflow" in name): h.SetMaximum(hmax*2)
          
          ## draw truth just on energy plots
-         if(istruth and "_ratio_" not in name):
+         if(istruth and "_ratio_" not in name and "_eff_" not in name):
             name1 = name
             name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
             htmp = histos[name1+"_ss"].Clone(name1+"_ss_tmp")
