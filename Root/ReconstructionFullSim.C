@@ -134,7 +134,10 @@ TMapiTS seedcutnames = {{FAIL_SLOPE,"slope"}, {FAIL_SIDE,"side"}, {FAIL_SAMEZ,"s
 								{FAIL_E,"energy"},{PASS,"pass"}};
 
 
-int nMinHits = 4;
+/// some hardcoded provisional stuff								
+int    nMinHits = 4;
+double PX0      = 0.; ///0.343; // TODO this is a dirty fix to account for the fixed x momentum from GEANT
+double scalex   = 1.033; /// TODO dirty fix!!! ///
 
 double vX = 0, vY = 0, vZ = 0; // event vertex
 KMCDetectorFwd *det = 0;
@@ -144,15 +147,6 @@ double meGeV  = meMeV / 1000.;
 double meGeV2 = meGeV * meGeV;
 double cm2m   = 0.01;
 double um2cm  = 0.0001;
-
-// for matching these must be the same as in digitisation
-int index_offset_bkg = 100000;
-int index_offset_sig = 10000000;
-
-//// temp stuff:
-double bestdistance = -1;
-int bestmatchtrui = -1;
-int bestmatchreci = -1;
 
 //// uncertainties
 float dxAlignmentXFEL = 0.005; // 0.005; // cm
@@ -165,8 +159,8 @@ bool doMisalignmentX = false;
 bool doMisalignmentY = false;
 
 //// seed energies
-double EseedMinGLaser = 0.5;  // GeV
-double EseedMinELaser = 0.5;  // GeV
+double EseedMinGLaser = 1.5;  // GeV
+double EseedMinELaser = 1.5;  // GeV
 double EseedMaxGLaser = 14.0; // GeV
 double EseedMaxELaser = 12.0; // GeV
 
@@ -191,18 +185,21 @@ TMapTSAxis axisMap;
 int nAxisBins = 10000;
 
 /// road/cone width
-double rwxL1 = 0.030; // in cm, road width in x along the possible cluster where we embed the clusters
-double rwxL2 = 0.025; // in cm, road width in x along the possible cluster where we embed the clusters
-double rwxL3 = 0.020; // in cm, road width in x along the possible cluster where we embed the clus2s
-double rwyL1 = 0.030; // in cm, road width in y along the possible cluster where we embed the clusters
-double rwyL2 = 0.025; // in cm, road width in y along the possible cluster where we embed the clusters
-double rwyL3 = 0.020; // in cm, road width in y along the possible cluster where we embed the clusters
+double rwxL1 = -999;
+double rwxL2 = -999;
+double rwxL3 = -999;
+double rwyL1 = -999;
+double rwyL2 = -999;
+double rwyL3 = -999;
 TF2* fRWxPI = 0;
 TF2* fRWxPO = 0;
 TF2* fRWxEI = 0;
 TF2* fRWxEO = 0;
 TF2* fRWy   = 0;
 
+/// cuts
+TMapTSi icuts;
+TMapTSd dcuts;
 
 //// staves geometry
 double Hstave = -999;		
@@ -479,6 +476,84 @@ void setParametersFromDet(TString side, TString proc)
 	cout << "++++++++++++++++++++++++++++++++++++" << endl;
 }
 
+void setCuts(TString process, int sigmult)
+{
+	if(process=="elaser")
+	{
+		if(sigmult<200)
+		{
+			// in cm, road width in x along the possible cluster where we embed the clusters
+			rwxL1 = 0.030;
+			rwxL2 = 0.025;
+			rwxL3 = 0.020;
+			rwyL1 = 0.030;
+			rwyL2 = 0.025;
+			rwyL3 = 0.020;
+			/// integers
+			icuts.insert(make_pair("MaxClsSize",10));
+			icuts.insert(make_pair("MaxClsSizeX",5));
+			icuts.insert(make_pair("MaxClsSizeY",5));
+			/// doubles
+			dcuts.insert(make_pair("MinPx",-0.003));
+			dcuts.insert(make_pair("MaxPx",+0.008));
+			dcuts.insert(make_pair("MinPy",-0.025));
+			dcuts.insert(make_pair("MaxPy",+0.025));
+			dcuts.insert(make_pair("MaxChi2DoF",5));
+			dcuts.insert(make_pair("MinSnpSig",-3));
+			dcuts.insert(make_pair("MaxSnpSig",+7));
+			dcuts.insert(make_pair("MinTglSig",-350));
+			dcuts.insert(make_pair("MaxTglSig",+350));
+			dcuts.insert(make_pair("MinxVtxSig",-3e-9));
+			dcuts.insert(make_pair("MaxxVtxSig",+18e-9));
+			dcuts.insert(make_pair("MinyVtxSig",-0.00025));
+			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
+			dcuts.insert(make_pair("MinE",1.5));
+		}
+		else if(sigmult>=200 && sigmult<2000)
+		{
+			// in cm, road width in x along the possible cluster where we embed the clusters
+			rwxL1 = 0.050;
+			rwxL2 = 0.050;
+			rwxL3 = 0.050;
+			rwyL1 = 0.050;
+			rwyL2 = 0.050;
+			rwyL3 = 0.050;
+			/// integers
+			icuts.insert(make_pair("MaxClsSize",10));
+			icuts.insert(make_pair("MaxClsSizeX",5));
+			icuts.insert(make_pair("MaxClsSizeY",5));
+			/// doubles
+			dcuts.insert(make_pair("MinPx",-0.004)); /// Px -0.003 and +0.008 for low multiplicity
+			dcuts.insert(make_pair("MaxPx",+0.009)); /// Px -0.003 and +0.008 for low multiplicity
+			dcuts.insert(make_pair("MinPy",-0.005)); /// Py -0.0025 for low multiplicity
+			dcuts.insert(make_pair("MaxPy",+0.005)); /// Py +0.0025 for low multiplicity
+			dcuts.insert(make_pair("MaxChi2DoF",5));
+			dcuts.insert(make_pair("MinSnpSig",-3));
+			dcuts.insert(make_pair("MaxSnpSig",+7));
+			dcuts.insert(make_pair("MinTglSig",-850)); // -350 for low multiplicity
+			dcuts.insert(make_pair("MaxTglSig",+850)); // +350 for low multiplicity
+			dcuts.insert(make_pair("MinxVtxSig",-3e-9));
+			dcuts.insert(make_pair("MaxxVtxSig",+18e-9));
+			dcuts.insert(make_pair("MinyVtxSig",-0.00025));
+			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
+			dcuts.insert(make_pair("MinE",1.5));
+		}
+		else if(sigmult>=2000 && sigmult<10000)
+		{
+			
+		}
+		else
+		{
+			
+		}
+	}
+	else if(process=="glaser")
+	{
+		
+	}
+}
+
+
 unsigned int EncodeClusterId(unsigned int layer, unsigned int chip, unsigned int cellx, unsigned int celly)
 {
 	// layer should go into the first 4 bits [layer value ranges from 0 to 15]
@@ -606,6 +681,12 @@ bool accept(double x, double y)
 TVector2 rUnit2(TVector2 r1, TVector2 r2)
 {
 	TVector2 r = (r2-r1).Unit();
+	return r;
+}
+
+TVector3 rUnit3(TVector3 r1, TVector3 r2)
+{
+	TVector3 r = (r2-r1).Unit();
 	return r;
 }
 
@@ -1075,8 +1156,7 @@ void cache_cluster(TVector3*               cls_r,
 						 vector<int>*            cls_type,
 						 vector<TLorentzVector>* cls_trksp,
 						 TString side,
-						 TMapTSTH1D& histos1, TMapTSTH2D& histos2,
-						 double scalex=1.)
+						 TMapTSTH1D& histos1, TMapTSTH2D& histos2)
 {
 	double x = scalex*cls_r->X()/10.; // mm to cm 
 	double y = cls_r->Y()/10.; // mm to cm
@@ -1256,7 +1336,6 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1& fDx14vsXMap
 {
 	/// first embed the fourth layer pivot cluter
 	// int ilyr = silayers[slyr];
-	// int truix4 = cached_clusters[slyr][i4].clsid-ilyr*index_offset_sig;
 	double x4 = cached_clusters[slyr][i4].r.X();
 	double y4 = cached_clusters[slyr][i4].r.Y();
 	double z4 = cached_clusters[slyr][i4].r.Z();
@@ -1412,15 +1491,17 @@ int makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TL
 	if((r4[1]-r1[1])>(fDyvsY->Eval(r4[1])+rwy))                    return FAIL_RWYHIGH; // new cut!!
 	if((r4[1]-r1[1])<(fDyvsY->Eval(r4[1])-rwy))                    return FAIL_RWYLOW; // new cut!!
 
-	double P = sqrt(E*E-meGeV2);
-	TVector2 v1(r1[2], r1[1]);
-	TVector2 v4(r4[2], r4[1]);
-	TVector2 u = rUnit2(v1, v4);
+	double px = PX0;
+	// double P = sqrt(E*E-meGeV2); /// this was wrong
+	double Pyz = sqrt(E*E-meGeV2-px*px);
+	TVector2 v1(r1[2],r1[1]);
+	TVector2 v4(r4[2],r4[1]);
+	TVector2 u = rUnit2(v1,v4);
 	double uz = u.X();
 	double uy = u.Y();
-	double px = 0;
-	double py = P * uy;
-	double pz = P * uz;
+	double py = Pyz*uy;
+	double pz = Pyz*uz;
+	// cout << "px=" << px << ", py=" << py << ", pz=" << pz << ", E=" << E << endl;
 	
 	p.SetPxPyPzE(px, py, pz, E);
 	float EseedMin = (process=="glaser") ? EseedMinGLaser : EseedMinELaser; // GeV
@@ -1494,23 +1575,23 @@ int main(int argc, char *argv[])
 	//// validate inputs
 	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n", argv[1]); exit(-1); }
 	if(argc==3 and !((TString)argv[2]).Contains("-smpl=")) { printf("argc=3 but cannot parse %s\n", argv[2]); exit(-1); }
-	if(argc==4 and !((TString)argv[3]).Contains("-evnt=")) { printf("argc=4 but cannot parse %s\n", argv[3]); exit(-1); }
-	if(argc==5 and !((TString)argv[4]).Contains("-seed=")) { printf("argc=5 but cannot parse %s\n", argv[4]); exit(-1); }
-	if(argc==6 and !((TString)argv[5]).Contains("-ntrk=")) { printf("argc=6 but cannot parse %s\n", argv[5]); exit(-1); }
+	if(argc==4 and !((TString)argv[3]).Contains("-mult=")) { printf("argc=4 but cannot parse %s\n", argv[3]); exit(-1); }
+	if(argc==5 and !((TString)argv[4]).Contains("-evnt=")) { printf("argc=5 but cannot parse %s\n", argv[4]); exit(-1); }
+	if(argc==6 and !((TString)argv[5]).Contains("-seed=")) { printf("argc=6 but cannot parse %s\n", argv[5]); exit(-1); }
+	if(argc==7 and !((TString)argv[6]).Contains("-ntrk=")) { printf("argc=7 but cannot parse %s\n", argv[6]); exit(-1); }
 	//// assign inputs
-	TString process  = ((TString)argv[1]).ReplaceAll("-proc=", "");	// mandatory
-	TString smplname = ((TString)argv[2]).ReplaceAll("-smpl=", "");	// signal name
-	int evnt     = (argc>3) ? toint(((TString)argv[3]).ReplaceAll("-evnt=", "")) : -1;	 // job id [optional]
-	int Seed     = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-seed=", "")) : 12345;	 // seed [optional]
-	int nsigtrks = (argc>5) ? toint(((TString)argv[5]).ReplaceAll("-ntrk=", "")) : -1; // job id [optional]
+	TString process  = ((TString)argv[1]).ReplaceAll("-proc=", "");	     // mandatory
+	TString smplname = ((TString)argv[2]).ReplaceAll("-smpl=", "");	     // mandatory
+	int sigmult      = toint(((TString)argv[3]).ReplaceAll("-mult=", "")); // mandatory
+	int evnt         = (argc>4) ? toint(((TString)argv[4]).ReplaceAll("-evnt=", "")) : -1;	   // job id [optional]
+	int Seed         = (argc>5) ? toint(((TString)argv[5]).ReplaceAll("-seed=", "")) : 12345; // seed [optional]
+	int nsigtrks     = (argc>6) ? toint(((TString)argv[6]).ReplaceAll("-ntrk=", "")) : -1;    // job id [optional]
 	
 	
-	// string path  = "/Volumes/Study/Weizmann_PostDoc/AllPix2Study/AllPixProceessedOutput/Signal_e0ppw_3.0"; /// this needs to be taken as an argument
-	// string path  = "/Volumes/Study/Weizmann_PostDoc/AllPix2Study/AllPixProceessedOutput/Signal_e0ppw_3.0_Background"; /// this needs to be taken as an argument
-	//string path  = "/Volumes/Study/Weizmann_PostDoc/AllPix2Study/AllPixProceessedOutput/ELaserBackground"; /// this needs to be taken as an argument
 	//// print assigned inputs
 	cout << "process=" << process << endl;
 	cout << "smplname=" << smplname << endl;
+	cout << "sigmult=" << sigmult << endl;
 	cout << "evnt=" << evnt << endl;
 	cout << "nsigtrks=" << nsigtrks << endl;
 	cout << "Seed=" << Seed << endl;
@@ -1667,11 +1748,10 @@ int main(int argc, char *argv[])
 		// det->SetDefStepAir(1);				 // IMPORTANT FOR NON-UNIFORM FIELDS
 		det->SetDefStepAir(1);				 // IMPORTANT FOR NON-UNIFORM FIELDS
 		// det->SetDefStepMat(0.1);			 // NOAM??
-		// det->SetMinP2Propagate(0.3);		 // GeV (NA60+)
 		det->SetMinP2Propagate(0.1); /// GeV
 		det->SetIncludeVertex(kTRUE);		 // count vertex as an extra measured point
 		det->ImposeVertex(0., 0., 0.);		 // the vertex position is imposed NOAM
-		// det->ImposeVertex(0.0014, 0., 0.);		 // the vertex position is imposed NOAM
+		// det->ImposeVertex(0., 0., 0.0125);		 // the vertex position is imposed according to the elaser/phase0/ppw/xi=3 sample
 		det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
 		// for reconstruction:
 		det->SetErrorScale(500.); // can be up to 1000
@@ -1680,15 +1760,16 @@ int main(int argc, char *argv[])
 
 		////////////////////////////////////////
 		setParametersFromDet(side, process); ///
+		setCuts(process, sigmult); /////////////
 		////////////////////////////////////////
 		
 		////////////////////////////////////////////////
-		double scalex = 1.033; /// TODO dirty fix!!! ///
-		if(scalex!=1.)
+		if(scalex!=1. || PX0!=0.)
 		{
 			cout << "<<<<<<<<< !!! NOTE !!! >>>>>>>>" << endl;
-			cout << "scalex is set to " << scalex << endl;
-			cout << "This should be fixed later" << endl;
+			if(scalex!=1.) cout << "scalex is set to " << scalex << endl;
+			if(PX0!=0.)    cout << "PX0 is set to " << PX0 << " GeV" << endl;
+			cout << "These must be fixed later" << endl;
 			cout << "<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>" << endl;
 		}
 		////////////////////////////////////////////////
@@ -1714,6 +1795,17 @@ int main(int argc, char *argv[])
 		hname = "h_cutflow_"+side; histos.insert(make_pair(hname, new TH1D()));
 		histos[hname]->SetName(hname);
 		histos[hname]->GetYaxis()->SetTitle("Entries/BX");
+		
+		/// vtx x/y tru
+		hname = "h_tru_xvtx_"+side; histos.insert(make_pair(hname, new TH1D(hname,";#it{x}_{vtx} [cm];Tracks", 200,-0.05,+0.05)));
+		hname = "h_tru_yvtx_"+side; histos.insert(make_pair(hname, new TH1D(hname,";#it{y}_{vtx} [cm];Tracks", 200,-0.05,+0.05)));
+		hname = "h_tru_zvtx_"+side; histos.insert(make_pair(hname, new TH1D(hname,";#it{z}_{vtx} [cm];Tracks", 200,-0.1,+0.1)));
+		
+		/// px/py tru
+		hname = "h_tru_px_"+side;       histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];Tracks", 200,-1,+1)));
+		hname = "h_tru_px_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];Tracks", 100,-0.5,+0.5)));
+		hname = "h_tru_py_"+side;       histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{y}} [GeV];Tracks", 200,-0.02,+0.02)));
+		hname = "h_tru_py_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{y}} [GeV];Tracks", 100,-0.01,+0.01)));
 		
 		/// E/pz tru with various binning
 		hname = "h_tru_pz_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", 68, 0, 17)));
@@ -1781,45 +1873,48 @@ int main(int argc, char *argv[])
 			/// reconstructed clustering info
 			if(htype=="rec")
 			{
-				hname = "h_"+htype+"_csize_L1I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L1I", 40, 0, 40)));
-				hname = "h_"+htype+"_csize_L2I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L2I", 40, 0, 40)));
-				hname = "h_"+htype+"_csize_L3I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L3I", 40, 0, 40)));
-				hname = "h_"+htype+"_csize_L4I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L4I", 40, 0, 40)));
-				hname = "h_"+htype+"_csize_L1O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L1O", 40, 0, 40)));
-				hname = "h_"+htype+"_csize_L2O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L2O", 40, 0, 40)));
-				hname = "h_"+htype+"_csize_L3O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L3O", 40, 0, 40)));
-				hname = "h_"+htype+"_csize_L4O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L4O", 40, 0, 40)));
+				hname = "h_"+htype+"_csize_L1I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L1I", 40, 0, 40)));
+				hname = "h_"+htype+"_csize_L2I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L2I", 40, 0, 40)));
+				hname = "h_"+htype+"_csize_L3I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L3I", 40, 0, 40)));
+				hname = "h_"+htype+"_csize_L4I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L4I", 40, 0, 40)));
+				hname = "h_"+htype+"_csize_L1O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L1O", 40, 0, 40)));
+				hname = "h_"+htype+"_csize_L2O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L2O", 40, 0, 40)));
+				hname = "h_"+htype+"_csize_L3O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L3O", 40, 0, 40)));
+				hname = "h_"+htype+"_csize_L4O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;"+ytitle+" clusters in L4O", 40, 0, 40)));
          	
-				hname = "h_"+htype+"_csizex_L1I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L1I", 20, 0, 20)));
-				hname = "h_"+htype+"_csizex_L2I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L2I", 20, 0, 20)));
-				hname = "h_"+htype+"_csizex_L3I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L3I", 20, 0, 20)));
-				hname = "h_"+htype+"_csizex_L4I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L4I", 20, 0, 20)));
-				hname = "h_"+htype+"_csizex_L1O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L1O", 20, 0, 20)));
-				hname = "h_"+htype+"_csizex_L2O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L2O", 20, 0, 20)));
-				hname = "h_"+htype+"_csizex_L3O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L3O", 20, 0, 20)));
-				hname = "h_"+htype+"_csizex_L4O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L4O", 20, 0, 20)));
+				hname = "h_"+htype+"_csizex_L1I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L1I", 20, 0, 20)));
+				hname = "h_"+htype+"_csizex_L2I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L2I", 20, 0, 20)));
+				hname = "h_"+htype+"_csizex_L3I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L3I", 20, 0, 20)));
+				hname = "h_"+htype+"_csizex_L4I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L4I", 20, 0, 20)));
+				hname = "h_"+htype+"_csizex_L1O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L1O", 20, 0, 20)));
+				hname = "h_"+htype+"_csizex_L2O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L2O", 20, 0, 20)));
+				hname = "h_"+htype+"_csizex_L3O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L3O", 20, 0, 20)));
+				hname = "h_"+htype+"_csizex_L4O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{x}} in cluster;"+ytitle+" clusters in L4O", 20, 0, 20)));
          	
-				hname = "h_"+htype+"_csizey_L1I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L1I", 20, 0, 20)));
-				hname = "h_"+htype+"_csizey_L2I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L2I", 20, 0, 20)));
-				hname = "h_"+htype+"_csizey_L3I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L3I", 20, 0, 20)));
-				hname = "h_"+htype+"_csizey_L4I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L4I", 20, 0, 20)));
-				hname = "h_"+htype+"_csizey_L1O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L1O", 20, 0, 20)));
-				hname = "h_"+htype+"_csizey_L2O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L2O", 20, 0, 20)));
-				hname = "h_"+htype+"_csizey_L3O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L3O", 20, 0, 20)));
-				hname = "h_"+htype+"_csizey_L4O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L4O", 20, 0, 20)));
+				hname = "h_"+htype+"_csizey_L1I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L1I", 20, 0, 20)));
+				hname = "h_"+htype+"_csizey_L2I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L2I", 20, 0, 20)));
+				hname = "h_"+htype+"_csizey_L3I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L3I", 20, 0, 20)));
+				hname = "h_"+htype+"_csizey_L4I_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L4I", 20, 0, 20)));
+				hname = "h_"+htype+"_csizey_L1O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L1O", 20, 0, 20)));
+				hname = "h_"+htype+"_csizey_L2O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L2O", 20, 0, 20)));
+				hname = "h_"+htype+"_csizey_L3O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L3O", 20, 0, 20)));
+				hname = "h_"+htype+"_csizey_L4O_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;"+ytitle+" clusters in L4O", 20, 0, 20)));
 			}
 			
 			/// KF reconstructed outputs
 			hname = "h_"+htype+"_Nhits_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{hits} on track;"+ytitle, 5, 3, 8)));
 			hname = "h_"+htype+"_chi2dof_"+side;  histos.insert(make_pair(hname, new TH1D(hname, ";#chi^{2}/N_{DoF};"+ytitle,150,0,15)));
-			hname = "h_"+htype+"_SnpSig_"+side;   histos.insert(make_pair(hname, new TH1D(hname, ";Snp/#sigma(Snp);"+ytitle,  100,-50,+50)));
-			hname = "h_"+htype+"_TglSig_"+side;   histos.insert(make_pair(hname, new TH1D(hname, ";Tgl/#sigma(Tgl);"+ytitle,  100,-1000,+1000)));
-			hname = "h_"+htype+"_xVtxSig_"+side;  histos.insert(make_pair(hname, new TH1D(hname, ";#it{x}_{vtx}/#sigma(#it{x}_{vtx});"+ytitle,  150,-5e-8,+5e-8)));
-			hname = "h_"+htype+"_yVtxSig_"+side;  histos.insert(make_pair(hname, new TH1D(hname, ";#it{y}_{vtx}/#sigma(#it{y}_{vtx});"+ytitle,  150,-0.0015,+0.0015)));
+			hname = "h_"+htype+"_SnpSig_"+side;   histos.insert(make_pair(hname, new TH1D(hname, ";Snp/#sigma(Snp);"+ytitle, 100,-50,+50)));
+			hname = "h_"+htype+"_TglSig_"+side;   histos.insert(make_pair(hname, new TH1D(hname, ";Tgl/#sigma(Tgl);"+ytitle, 100,-1000,+1000)));
+			hname = "h_"+htype+"_xVtxSig_"+side;  histos.insert(make_pair(hname, new TH1D(hname, ";#it{x}_{vtx}/#sigma(#it{x}_{vtx});"+ytitle, 150,-5e-8,+5e-8)));
+			hname = "h_"+htype+"_yVtxSig_"+side;  histos.insert(make_pair(hname, new TH1D(hname, ";#it{y}_{vtx}/#sigma(#it{y}_{vtx});"+ytitle, 150,-0.0015,+0.0015)));
 			hname = "h_"+htype+"_px_"+side;       histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];"+ytitle, 200,-0.04,+0.04)));
 			hname = "h_"+htype+"_px_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];"+ytitle, 100,-0.02,+0.02)));
 			hname = "h_"+htype+"_py_"+side;       histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{y}} [GeV];"+ytitle, 200,-0.02,+0.02)));
 			hname = "h_"+htype+"_py_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{y}} [GeV];"+ytitle, 100,-0.01,+0.01)));
+			hname = "h_"+htype+"_xvtx_"+side;     histos.insert(make_pair(hname, new TH1D(hname,";#it{x}_{vtx} [cm];"+ytitle, 200,-0.05,+0.05)));
+			hname = "h_"+htype+"_yvtx_"+side;     histos.insert(make_pair(hname, new TH1D(hname,";#it{y}_{vtx} [cm];"+ytitle, 200,-0.05,+0.05)));
+			hname = "h_"+htype+"_zvtx_"+side;     histos.insert(make_pair(hname, new TH1D(hname,";#it{z}_{vtx} [cm];"+ytitle, 200,-0.1,+0.1)));
 
 			/// pz reco with various binning
 			hname = "h_"+htype+"_pz_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitle, 68, 0, 17)));
@@ -1827,30 +1922,53 @@ int main(int argc, char *argv[])
 			hname = "h_"+htype+"_pz_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins1,logEbins1)));
 			hname = "h_"+htype+"_pz_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins2,logEbins2)));
 			hname = "h_"+htype+"_pz_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins3,logEbins3)));
-
 			/// E reco with various binning
 			hname = "h_"+htype+"_E_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitle, 68, 0, 17)));
 			hname = "h_"+htype+"_E_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitle, nlogEbins0,logEbins0)));
 			hname = "h_"+htype+"_E_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitle, nlogEbins1,logEbins1)));
 			hname = "h_"+htype+"_E_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitle, nlogEbins2,logEbins2)));
 			hname = "h_"+htype+"_E_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitle, nlogEbins3,logEbins3)));
+
+			/// pz truth with various binning
+			hname = "h_"+htype+"_pztru_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";True #it{p}_{#it{z}} [GeV];"+ytitle, 68, 0, 17)));
+			hname = "h_"+htype+"_pztru_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";True #it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins0,logEbins0)));
+			hname = "h_"+htype+"_pztru_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";True #it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins1,logEbins1)));
+			hname = "h_"+htype+"_pztru_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";True #it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins2,logEbins2)));
+			hname = "h_"+htype+"_pztru_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";True #it{p}_{#it{z}} [GeV];"+ytitle, nlogEbins3,logEbins3)));
+			/// E truth with various binning
+			hname = "h_"+htype+"_Etru_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";True #it{E} [GeV];"+ytitle, 68, 0, 17)));
+			hname = "h_"+htype+"_Etru_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";True #it{E} [GeV];"+ytitle, nlogEbins0,logEbins0)));
+			hname = "h_"+htype+"_Etru_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";True #it{E} [GeV];"+ytitle, nlogEbins1,logEbins1)));
+			hname = "h_"+htype+"_Etru_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";True #it{E} [GeV];"+ytitle, nlogEbins2,logEbins2)));
+			hname = "h_"+htype+"_Etru_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";True #it{E} [GeV];"+ytitle, nlogEbins3,logEbins3)));
 			
 			/// E/pz rec/sel vs truth			
 			hname = "h_resol_"+htype+"_dErel_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";(E_{tru}-E_{rec})/E_{tru};"+ytitle, 100, -0.05, +0.05)));
 			hname = "h_resol_"+htype+"_dpzrel_"+side; histos.insert(make_pair(hname, new TH1D(hname, ";(pz_{tru}-pz_{rec})/pz_{tru};"+ytitle, 100, -0.05, +0.05)));
 			
-			/// "efficiencies"
+			/// ratios
 			hname = "h_ratio_"+htype+"_pz_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, 68, 0, 17)));
 			hname = "h_ratio_"+htype+"_pz_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins0,logEbins0)));
 			hname = "h_ratio_"+htype+"_pz_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins1,logEbins1)));
 			hname = "h_ratio_"+htype+"_pz_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins2,logEbins2)));
 			hname = "h_ratio_"+htype+"_pz_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins3,logEbins3)));
-			
 			hname = "h_ratio_"+htype+"_E_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitlerat, 68, 0, 17)));
 			hname = "h_ratio_"+htype+"_E_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitlerat, nlogEbins0,logEbins0)));
 			hname = "h_ratio_"+htype+"_E_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitlerat, nlogEbins1,logEbins1)));
 			hname = "h_ratio_"+htype+"_E_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitlerat, nlogEbins2,logEbins2)));
 			hname = "h_ratio_"+htype+"_E_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];"+ytitlerat, nlogEbins3,logEbins3)));
+			
+			/// efficiencies
+			hname = "h_eff_"+htype+"_pz_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{p}_{#it{z}} [GeV];"+ytitlerat, 68, 0, 17)));
+			hname = "h_eff_"+htype+"_pz_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins0,logEbins0)));
+			hname = "h_eff_"+htype+"_pz_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins1,logEbins1)));
+			hname = "h_eff_"+htype+"_pz_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins2,logEbins2)));
+			hname = "h_eff_"+htype+"_pz_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{p}_{#it{z}} [GeV];"+ytitlerat, nlogEbins3,logEbins3)));
+			hname = "h_eff_"+htype+"_E_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{E} [GeV];"+ytitlerat, 68, 0, 17)));
+			hname = "h_eff_"+htype+"_E_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{E} [GeV];"+ytitlerat, nlogEbins0,logEbins0)));
+			hname = "h_eff_"+htype+"_E_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{E} [GeV];"+ytitlerat, nlogEbins1,logEbins1)));
+			hname = "h_eff_"+htype+"_E_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{E} [GeV];"+ytitlerat, nlogEbins2,logEbins2)));
+			hname = "h_eff_"+htype+"_E_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{E} [GeV];"+ytitlerat, nlogEbins3,logEbins3)));
 		}		
 		cout << "histograms booked for " << side << endl;
 		
@@ -2015,6 +2133,16 @@ int main(int argc, char *argv[])
 						if(tru_type->at(t)!=1) continue;
 						if(!foundinvec(tru_trackId->at(t), vtruid))
 						{
+							histos["h_tru_xvtx_"+side]->Fill(tru_vertex->at(t).X());
+							histos["h_tru_yvtx_"+side]->Fill(tru_vertex->at(t).Y());
+							histos["h_tru_zvtx_"+side]->Fill(tru_vertex->at(t).Z());
+							
+							histos["h_tru_px_"+side]->Fill(tru_p->at(t).Px());
+							// cout << "tru_p=(" << tru_p->at(t).Px() << "," << tru_p->at(t).Py() << "," << tru_p->at(t).Pz() << ")" << endl;
+							histos["h_tru_px_zoom_"+side]->Fill(tru_p->at(t).Px());
+							histos["h_tru_py_"+side]->Fill(tru_p->at(t).Py());
+							histos["h_tru_py_zoom_"+side]->Fill(tru_p->at(t).Py());
+							
 							histos["h_tru_pz_"+side]->Fill(tru_p->at(t).Pz());
 							histos["h_tru_pz_"+side+"_log0"]->Fill(tru_p->at(t).Pz());
 							histos["h_tru_pz_"+side+"_log1"]->Fill(tru_p->at(t).Pz());
@@ -2033,7 +2161,7 @@ int main(int argc, char *argv[])
 						}
 					}
 					/// caching is happening here
-					cache_cluster(rglobal_geo, encodedClsId, isSignal, size, xsize, ysize, charge, tru_trackId, tru_type, tru_p, side, histos, histos2, scalex);
+					cache_cluster(rglobal_geo, encodedClsId, isSignal, size, xsize, ysize, charge, tru_trackId, tru_type, tru_p, side, histos, histos2);
 				} // end of loop on clusters
 				fIn->Close(); // must close the file
 			} // end loop on staves
@@ -2302,8 +2430,8 @@ int main(int argc, char *argv[])
 						double err = 500;
 						
 						det->SetErrorScale((process=="elaser") ? err*2*nIterations_trw : err*2*nIterations_trw);
-						// det->SetMaxChi2NDF(10.+(5*nIterations_trw));
-						// det->SetMaxChi2Cl(10.+(5*nIterations_trw));
+						det->SetMaxChi2NDF(10.+(5*nIterations_trw));
+						det->SetMaxChi2Cl(10.+(5*nIterations_trw));
 						
 						// det->SetMinITSHits(nMinHits); // require hit in at least 3 layers instead of 4
 						// det->SetErrorScale((process=="elaser") ? err*2*nIterations_trw : err*2*nIterations_trw);
@@ -2353,6 +2481,7 @@ int main(int argc, char *argv[])
 				// 	cout << "Track fit succeeded, associated clusters are:" << endl;
 				// 	trw->Print("clid");
 				// }
+				
 
 				/// save clusters of the track
 				vector<TVector3> v3tmp;
@@ -2419,6 +2548,7 @@ int main(int argc, char *argv[])
 				trw->GetPXYZ(pxyz);
 				trw->GetXYZ(xyz);
 				TrackPar* trk = trw->GetTrack();
+				// prec.SetXYZM(pxyz[0], pxyz[1], pxyz[2], meGeV);
 				prec.SetXYZM(pxyz[0], pxyz[1], pxyz[2], meGeV);
 				// if(issig4) cout << "Etru=" << Etru << "  -->  Erec=" << pxyz[2] << " and prec.E()=" << prec.E() << endl;
 				float chi2dof = trw->GetNormChi2();
@@ -2444,7 +2574,15 @@ int main(int argc, char *argv[])
 				double Py = reco_p[irec].Py();
 				double Energy = reco_p[irec].E();
 				
-				
+				/// matching
+				int nmat = (issig4) ? nmatched(itru,wincls) : -1; // the issig4 check could be redundant... 
+				bool ismatched = (nmat==wincls.size());           // tight matching (i.e. all track's clusters have the same truid)
+
+
+				///////////////////////////////////////////////////////////
+				///////////////////////////////////////////////////////////
+				///////////////////////////////////////////////////////////
+
 				/// fill cluster size plots
 				for(size_t c=0; c<wincls.size(); ++c)
 				{
@@ -2482,16 +2620,27 @@ int main(int argc, char *argv[])
 				histos["h_rec_px_zoom_"+side]->Fill(reco_p[irec].Px());
 				histos["h_rec_py_"+side]->Fill(reco_p[irec].Py());
 				histos["h_rec_py_zoom_"+side]->Fill(reco_p[irec].Py());
-				if(issig4)
+				histos["h_rec_xvtx_"+side]->Fill(reco_x[irec]);
+				histos["h_rec_yvtx_"+side]->Fill(reco_y[irec]);
+				histos["h_rec_zvtx_"+side]->Fill(reco_z[irec]);
+				if(issig4) // careful!! this doesn't mean matching but we can do it only wrt some signal... 
 				{
 					histos["h_resol_rec_dErel_"+side]->Fill(reco_dErel[irec]);
 					histos["h_resol_rec_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
+					
+					histos["h_rec_Etru_"+side]->Fill(Etru);
+					histos["h_rec_Etru_"+side+"_log0"]->Fill(Etru);
+					histos["h_rec_Etru_"+side+"_log1"]->Fill(Etru);
+					histos["h_rec_Etru_"+side+"_log2"]->Fill(Etru);
+					histos["h_rec_Etru_"+side+"_log3"]->Fill(Etru);
+					histos["h_rec_pztru_"+side]->Fill(pztru);
+					histos["h_rec_pztru_"+side+"_log0"]->Fill(pztru);
+					histos["h_rec_pztru_"+side+"_log1"]->Fill(pztru);
+					histos["h_rec_pztru_"+side+"_log2"]->Fill(pztru);
+					histos["h_rec_pztru_"+side+"_log3"]->Fill(pztru);
 				}
 				
 				
-				/// matching
-				int nmat = nmatched(itru,wincls);
-				bool ismatched = (nmat==wincls.size()); // tight matching (i.e. all track's clusters have the same truid)
 				if(ismatched)
 				{
 					n_match++;
@@ -2515,11 +2664,23 @@ int main(int argc, char *argv[])
 					histos["h_mat_px_zoom_"+side]->Fill(reco_p[irec].Px());
 					histos["h_mat_py_"+side]->Fill(reco_p[irec].Py());
 					histos["h_mat_py_zoom_"+side]->Fill(reco_p[irec].Py());
-					if(issig4)
-					{
-						histos["h_resol_mat_dErel_"+side]->Fill(reco_dErel[irec]);
-						histos["h_resol_mat_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
-					}
+					histos["h_mat_xvtx_"+side]->Fill(reco_x[irec]);
+					histos["h_mat_yvtx_"+side]->Fill(reco_y[irec]);
+					histos["h_mat_zvtx_"+side]->Fill(reco_z[irec]);
+
+					histos["h_resol_mat_dErel_"+side]->Fill(reco_dErel[irec]);
+					histos["h_resol_mat_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
+					
+					histos["h_mat_Etru_"+side]->Fill(Etru);
+					histos["h_mat_Etru_"+side+"_log0"]->Fill(Etru);
+					histos["h_mat_Etru_"+side+"_log1"]->Fill(Etru);
+					histos["h_mat_Etru_"+side+"_log2"]->Fill(Etru);
+					histos["h_mat_Etru_"+side+"_log3"]->Fill(Etru);
+					histos["h_mat_pztru_"+side]->Fill(pztru);
+					histos["h_mat_pztru_"+side+"_log0"]->Fill(pztru);
+					histos["h_mat_pztru_"+side+"_log1"]->Fill(pztru);
+					histos["h_mat_pztru_"+side+"_log2"]->Fill(pztru);
+					histos["h_mat_pztru_"+side+"_log3"]->Fill(pztru);
 				}
 				else
 				{
@@ -2543,10 +2704,24 @@ int main(int argc, char *argv[])
 					histos["h_non_px_zoom_"+side]->Fill(reco_p[irec].Px());
 					histos["h_non_py_"+side]->Fill(reco_p[irec].Py());
 					histos["h_non_py_zoom_"+side]->Fill(reco_p[irec].Py());
+					histos["h_non_xvtx_"+side]->Fill(reco_x[irec]);
+					histos["h_non_yvtx_"+side]->Fill(reco_y[irec]);
+					histos["h_non_zvtx_"+side]->Fill(reco_z[irec]);
 					if(issig4)
 					{
 						histos["h_resol_non_dErel_"+side]->Fill(reco_dErel[irec]);
 						histos["h_resol_non_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
+						
+						histos["h_non_Etru_"+side]->Fill(Etru);
+						histos["h_non_Etru_"+side+"_log0"]->Fill(Etru);
+						histos["h_non_Etru_"+side+"_log1"]->Fill(Etru);
+						histos["h_non_Etru_"+side+"_log2"]->Fill(Etru);
+						histos["h_non_Etru_"+side+"_log3"]->Fill(Etru);
+						histos["h_non_pztru_"+side]->Fill(pztru);
+						histos["h_non_pztru_"+side+"_log0"]->Fill(pztru);
+						histos["h_non_pztru_"+side+"_log1"]->Fill(pztru);
+						histos["h_non_pztru_"+side+"_log2"]->Fill(pztru);
+						histos["h_non_pztru_"+side+"_log3"]->Fill(pztru);
 					}
 				}
 
@@ -2561,15 +2736,15 @@ int main(int argc, char *argv[])
 				histos["h_cutflow_"+side]->Fill("Cluster size x", (int)pass);
 				if(pass && maxclssizey>5)                          pass = false;
 				histos["h_cutflow_"+side]->Fill("Cluster size y", (int)pass);
-				if(pass && (Px<-0.003 || Px>+0.008))               pass = false;
+				if(pass && (Px<-0.004 || Px>+0.009))               pass = false; /// -0.003 and +0.008 for low multiplicity
 				histos["h_cutflow_"+side]->Fill("p_{x}", (int)pass); /// this is maybe too tuned
-				if(pass && (Py<-0.0025 || Py>+0.0025))             pass = false;
+				if(pass && (Py<-0.005 || Py>+0.005))               pass = false;  //// 0.0025 for low multiplicity
 				histos["h_cutflow_"+side]->Fill("p_{y}", (int)pass);
 				if(pass && reco_chi2dof[irec]>5)                   pass = false;
 				histos["h_cutflow_"+side]->Fill("#chi^{2}/N_{DoF}", (int)pass);
 				if(pass && (SnpSig<-3 || SnpSig>7))                pass = false;
 				histos["h_cutflow_"+side]->Fill("Snp/#sigma(Snp)", (int)pass);
-				if(pass && abs(TglSig)>350)                        pass = false;
+				if(pass && abs(TglSig)>850)                        pass = false; //// 350 for low multiplicity
 				histos["h_cutflow_"+side]->Fill("Tgl/#sigma(Tgl)", (int)pass);
 				if(pass && (xVtxSig<-3e-9 || xVtxSig>+18e-9))      pass = false;
 				histos["h_cutflow_"+side]->Fill("x_{vtx}/#sigma(x_{vtx})", (int)pass);
@@ -2602,10 +2777,24 @@ int main(int argc, char *argv[])
 					histos["h_sel_px_zoom_"+side]->Fill(reco_p[irec].Px());
 					histos["h_sel_py_"+side]->Fill(reco_p[irec].Py());
 					histos["h_sel_py_zoom_"+side]->Fill(reco_p[irec].Py());
-					if(issig4)
+					histos["h_sel_xvtx_"+side]->Fill(reco_x[irec]);
+					histos["h_sel_yvtx_"+side]->Fill(reco_y[irec]);
+					histos["h_sel_zvtx_"+side]->Fill(reco_z[irec]);
+					if(ismatched)
 					{
 						histos["h_resol_sel_dErel_"+side]->Fill(reco_dErel[irec]);
 						histos["h_resol_sel_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
+						
+						histos["h_sel_Etru_"+side]->Fill(Etru);
+						histos["h_sel_Etru_"+side+"_log0"]->Fill(Etru);
+						histos["h_sel_Etru_"+side+"_log1"]->Fill(Etru);
+						histos["h_sel_Etru_"+side+"_log2"]->Fill(Etru);
+						histos["h_sel_Etru_"+side+"_log3"]->Fill(Etru);
+						histos["h_sel_pztru_"+side]->Fill(pztru);
+						histos["h_sel_pztru_"+side+"_log0"]->Fill(pztru);
+						histos["h_sel_pztru_"+side+"_log1"]->Fill(pztru);
+						histos["h_sel_pztru_"+side+"_log2"]->Fill(pztru);
+						histos["h_sel_pztru_"+side+"_log3"]->Fill(pztru);
 					}
 				}
 			} // end of loop on clusters in layer 4
@@ -2647,7 +2836,7 @@ int main(int argc, char *argv[])
 		// cout << "...normalising cutflow by N_BX for " << side << endl;
 		// histos["h_cutflow_"+side]->Scale(1./(float)nevents);
 
-		cout << "...plotting efficiencies for " << side << endl;
+		cout << "...plotting ratios and efficiencies for " << side << endl;
 		for(size_t h=0; h<htypes.size(); ++h)
 		{
 			TString htype = htypes[h];
@@ -2658,12 +2847,22 @@ int main(int argc, char *argv[])
 			histos["h_ratio_"+htype+"_pz_"+side+"_log1"]->Divide(histos["h_"+htype+"_pz_"+side+"_log1"], histos["h_tru_pz_"+side+"_log1"]);
 			histos["h_ratio_"+htype+"_pz_"+side+"_log2"]->Divide(histos["h_"+htype+"_pz_"+side+"_log2"], histos["h_tru_pz_"+side+"_log2"]);
 			histos["h_ratio_"+htype+"_pz_"+side+"_log3"]->Divide(histos["h_"+htype+"_pz_"+side+"_log3"], histos["h_tru_pz_"+side+"_log3"]);
-			
 			histos["h_ratio_"+htype+"_E_"+side]->Divide(        histos["h_"+htype+"_E_"+side],         histos["h_tru_E_"+side]);
 			histos["h_ratio_"+htype+"_E_"+side+"_log0"]->Divide(histos["h_"+htype+"_E_"+side+"_log0"], histos["h_tru_E_"+side+"_log0"]);
 			histos["h_ratio_"+htype+"_E_"+side+"_log1"]->Divide(histos["h_"+htype+"_E_"+side+"_log1"], histos["h_tru_E_"+side+"_log1"]);
 			histos["h_ratio_"+htype+"_E_"+side+"_log2"]->Divide(histos["h_"+htype+"_E_"+side+"_log2"], histos["h_tru_E_"+side+"_log2"]);
 			histos["h_ratio_"+htype+"_E_"+side+"_log3"]->Divide(histos["h_"+htype+"_E_"+side+"_log3"], histos["h_tru_E_"+side+"_log3"]);
+			
+			histos["h_eff_"+htype+"_pz_"+side]->Divide(        histos["h_"+htype+"_pztru_"+side],         histos["h_tru_pz_"+side]);
+			histos["h_eff_"+htype+"_pz_"+side+"_log0"]->Divide(histos["h_"+htype+"_pztru_"+side+"_log0"], histos["h_tru_pz_"+side+"_log0"]);
+			histos["h_eff_"+htype+"_pz_"+side+"_log1"]->Divide(histos["h_"+htype+"_pztru_"+side+"_log1"], histos["h_tru_pz_"+side+"_log1"]);
+			histos["h_eff_"+htype+"_pz_"+side+"_log2"]->Divide(histos["h_"+htype+"_pztru_"+side+"_log2"], histos["h_tru_pz_"+side+"_log2"]);
+			histos["h_eff_"+htype+"_pz_"+side+"_log3"]->Divide(histos["h_"+htype+"_pztru_"+side+"_log3"], histos["h_tru_pz_"+side+"_log3"]);
+			histos["h_eff_"+htype+"_E_"+side]->Divide(        histos["h_"+htype+"_Etru_"+side],         histos["h_tru_E_"+side]);
+			histos["h_eff_"+htype+"_E_"+side+"_log0"]->Divide(histos["h_"+htype+"_Etru_"+side+"_log0"], histos["h_tru_E_"+side+"_log0"]);
+			histos["h_eff_"+htype+"_E_"+side+"_log1"]->Divide(histos["h_"+htype+"_Etru_"+side+"_log1"], histos["h_tru_E_"+side+"_log1"]);
+			histos["h_eff_"+htype+"_E_"+side+"_log2"]->Divide(histos["h_"+htype+"_Etru_"+side+"_log2"], histos["h_tru_E_"+side+"_log2"]);
+			histos["h_eff_"+htype+"_E_"+side+"_log3"]->Divide(histos["h_"+htype+"_Etru_"+side+"_log3"], histos["h_tru_E_"+side+"_log3"]);
 		}
 		
 		cout << "...normalising occupancies for " << side << endl;
@@ -2693,11 +2892,12 @@ int main(int argc, char *argv[])
 		fOut->Close();
 		cout << "Done! " << side << endl;
 		
-		if(scalex!=1.)
+		if(scalex!=1. || PX0!=0.)
 		{
 			cout << "<<<<<<<<< !!! NOTE !!! >>>>>>>>" << endl;
-			cout << "scalex is set to " << scalex << endl;
-			cout << "This should be fixed later" << endl;
+			if(scalex!=1.) cout << "scalex is set to " << scalex << endl;
+			if(PX0!=0.)    cout << "PX0 is set to " << PX0 << " GeV" << endl;
+			cout << "These must be fixed later" << endl;
 			cout << "<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>" << endl;
 		}
 		

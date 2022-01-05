@@ -73,6 +73,10 @@ def hChopperUp(h, binstochop):
 #    hChopped.SetLineWidth(h.GetLineWidth())
 #    return hChopped
 
+def isTruth(name,truthvars):
+   for var in truthvars:
+      if(var in name): return True
+   return False
 
 def main():   
    gROOT.LoadMacro("LuxeStyle.C")
@@ -94,7 +98,7 @@ def main():
    pdfsdir = storage+"/output/pdf/rec/"+process+"/"+sample+"/"
    os.makedirs(pdfsdir, exist_ok=True)
    
-   outname = "signal_and_background_tracking_variable_"+process
+   outname = "signal_and_background_tracking_variable_"+process+"_"+sample.replace("/","_")
    
    sides = ["Eside","Pside"] if(sidepe==None) else [sidepe]
    
@@ -103,7 +107,7 @@ def main():
       fnames = {
          "ss":"../data/root/rec/"+process+"/"+sample+"s/rec_"+process+"__"+side+".root",
          "sb":"../data/root/rec/"+process+"/"+sample+"sb/rec_"+process+"__"+side+".root",
-         "bb":"../data/root/rec/"+process+"/bkg/rec_"+process+"__"+side+".root"
+         "bb":"../data/root/rec/"+process+"/"+sample+"b/rec_"+process+"__"+side+".root"
       }
       
       files = {}
@@ -112,6 +116,7 @@ def main():
          files.update({ftype:TFile(fname,"READ")})
          nBXs.update({ftype:files[ftype].Get("h_nBX_"+side).GetBinContent(1)})
       
+      plottruth = ["_E_", "_pz_", "_px_", "_py_"]
       
       hnames = ["h_all_csize_L1I_"+side,
                 "h_all_csize_L2I_"+side,
@@ -296,7 +301,8 @@ def main():
             hname = name+"_"+htyp
             
             ## draw truth just on energy plots
-            if(("_E_" in name or "_pz_" in name) and "_ratio_" not in name and htyp=="ss"):
+            istruth = isTruth(name,plottruth)
+            if(istruth and "_ratio_" not in name and htyp=="ss"):
                name1 = name
                name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
                hname1 = name1+"_"+htyp
@@ -343,7 +349,7 @@ def main():
             if("Nhits" in name or "cutflow" in name): h.SetMaximum(hmax*2)
          
          ## draw truth just on energy plots
-         if(("_E_" in name or "_pz_" in name) and "_ratio_" not in name):
+         if(istruth and "_ratio_" not in name):
             name1 = name
             name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
             htmp = histos[name1+"_ss"].Clone(name1+"_ss_tmp")
