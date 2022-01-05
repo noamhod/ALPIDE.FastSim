@@ -109,6 +109,10 @@ def main():
          "sb":"../data/root/rec/"+process+"/"+sample+"sb/rec_"+process+"__"+side+".root",
          "bb":"../data/root/rec/"+process+"/"+sample+"b/rec_"+process+"__"+side+".root"
       }
+      if("linearity" not in sample):
+         fnames["bb"] = "../data/root/rec/"+process+"/bkg/rec_"+process+"__"+side+".root"
+
+      print(fnames)
       
       files = {}
       nBXs  = {}
@@ -195,10 +199,10 @@ def main():
                 "h_ratio_rec_pz_"+side+"_log1",
                 "h_ratio_rec_E_"+side+"_log0",
                 "h_ratio_rec_E_"+side+"_log1",
-                "h_eff_rec_pztru_"+side+"_log0",
-                "h_eff_rec_pztru_"+side+"_log1",
-                "h_eff_rec_Etru_"+side+"_log0",
-                "h_eff_rec_Etru_"+side+"_log1",
+                "h_eff_rec_pz_"+side+"_log0",
+                "h_eff_rec_pz_"+side+"_log1",
+                "h_eff_rec_E_"+side+"_log0",
+                "h_eff_rec_E_"+side+"_log1",
                 
                 "h_mat_Nhits_"+side,
                 "h_mat_px_"+side,
@@ -223,10 +227,10 @@ def main():
                 "h_ratio_mat_pz_"+side+"_log1",
                 "h_ratio_mat_E_"+side+"_log0",
                 "h_ratio_mat_E_"+side+"_log1",
-                "h_eff_mat_pztru_"+side+"_log0",
-                "h_eff_mat_pztru_"+side+"_log1",
-                "h_eff_mat_Etru_"+side+"_log0",
-                "h_eff_mat_Etru_"+side+"_log1",
+                "h_eff_mat_pz_"+side+"_log0",
+                "h_eff_mat_pz_"+side+"_log1",
+                "h_eff_mat_E_"+side+"_log0",
+                "h_eff_mat_E_"+side+"_log1",
                 
                 "h_non_Nhits_"+side,
                 "h_non_px_"+side,
@@ -251,10 +255,10 @@ def main():
                 "h_ratio_non_pz_"+side+"_log1",
                 "h_ratio_non_E_"+side+"_log0",
                 "h_ratio_non_E_"+side+"_log1",
-                "h_eff_non_pztru_"+side+"_log0",
-                "h_eff_non_pztru_"+side+"_log1",
-                "h_eff_non_Etru_"+side+"_log0",
-                "h_eff_non_Etru_"+side+"_log1",
+                "h_eff_non_pz_"+side+"_log0",
+                "h_eff_non_pz_"+side+"_log1",
+                "h_eff_non_E_"+side+"_log0",
+                "h_eff_non_E_"+side+"_log1",
                 
                 "h_sel_Nhits_"+side,
                 "h_sel_px_"+side,
@@ -279,10 +283,10 @@ def main():
                 "h_ratio_sel_pz_"+side+"_log1",
                 "h_ratio_sel_E_"+side+"_log0",
                 "h_ratio_sel_E_"+side+"_log1",
-                "h_eff_sel_pztru_"+side+"_log0",
-                "h_eff_sel_pztru_"+side+"_log1",
-                "h_eff_sel_Etru_"+side+"_log0",
-                "h_eff_sel_Etru_"+side+"_log1",
+                "h_eff_sel_pz_"+side+"_log0",
+                "h_eff_sel_pz_"+side+"_log1",
+                "h_eff_sel_E_"+side+"_log0",
+                "h_eff_sel_E_"+side+"_log1",
                 
                 "h_cutflow_"+side,
              ]
@@ -333,7 +337,7 @@ def main():
                histos[hname1].SetLineStyle(2)
                legend.AddEntry(histos[hname1],"Tru","l")
             
-            # print("getting",htyp,name)
+            print("getting",htyp,name)
             hist = files[htyp].Get(name).Clone(hname)
             if(not hist): print(name,"is null")
             histos.update( {hname:hist} )
