@@ -2730,27 +2730,27 @@ int main(int argc, char *argv[])
 				//////// place holder for kinematic cuts ////////////////
 				/////////////////////////////////////////////////////////
 				bool pass = true;
-				if(pass && maxclssize>10)                          pass = false;
+				if(pass && maxclssize>icuts["MaxClsSize"])                               pass = false;
 				histos["h_cutflow_"+side]->Fill("Cluster size", (int)pass);
-				if(pass && maxclssizex>5)                          pass = false;
+				if(pass && maxclssizex>icuts["MaxClsSizeX"])                             pass = false;
 				histos["h_cutflow_"+side]->Fill("Cluster size x", (int)pass);
-				if(pass && maxclssizey>5)                          pass = false;
+				if(pass && maxclssizey>icuts["MaxClsSizeY"])                             pass = false;
 				histos["h_cutflow_"+side]->Fill("Cluster size y", (int)pass);
-				if(pass && (Px<-0.004 || Px>+0.009))               pass = false; /// -0.003 and +0.008 for low multiplicity
-				histos["h_cutflow_"+side]->Fill("p_{x}", (int)pass); /// this is maybe too tuned
-				if(pass && (Py<-0.005 || Py>+0.005))               pass = false;  //// 0.0025 for low multiplicity
+				if(pass && (Px<dcuts["MinPx"] || Px>dcuts["MaxPx"]))                     pass = false;
+				histos["h_cutflow_"+side]->Fill("p_{x}", (int)pass);
+				if(pass && (Py<dcuts["MinPy"] || Py>dcuts["MinPy"]))                     pass = false;
 				histos["h_cutflow_"+side]->Fill("p_{y}", (int)pass);
-				if(pass && reco_chi2dof[irec]>5)                   pass = false;
+				if(pass && reco_chi2dof[irec]>dcuts["MaxChi2DoF"])                       pass = false;
 				histos["h_cutflow_"+side]->Fill("#chi^{2}/N_{DoF}", (int)pass);
-				if(pass && (SnpSig<-3 || SnpSig>7))                pass = false;
+				if(pass && (SnpSig<dcuts["MinSnpSig"] || SnpSig>dcuts["MaxSnpSig"]))     pass = false;
 				histos["h_cutflow_"+side]->Fill("Snp/#sigma(Snp)", (int)pass);
-				if(pass && abs(TglSig)>850)                        pass = false; //// 350 for low multiplicity
+				if(pass && (TglSig<dcuts["MinTglSig"] || TglSig>dcuts["MaxTglSig"]))     pass = false;
 				histos["h_cutflow_"+side]->Fill("Tgl/#sigma(Tgl)", (int)pass);
-				if(pass && (xVtxSig<-3e-9 || xVtxSig>+18e-9))      pass = false;
+				if(pass && (xVtxSig<dcuts["MinxVtxSig"] || xVtxSig>dcuts["MaxxVtxSig"])) pass = false;
 				histos["h_cutflow_"+side]->Fill("x_{vtx}/#sigma(x_{vtx})", (int)pass);
-				if(pass && (yVtxSig<-0.00025 || yVtxSig>+0.00025)) pass = false;
+				if(pass && (yVtxSig<dcuts["MinyVtxSig"] || yVtxSig>dcuts["MaxyVtxSig"])) pass = false;
 				histos["h_cutflow_"+side]->Fill("y_{vtx}/#sigma(y_{vtx})", (int)pass);
-				if(pass && Energy<1.5)                             pass = false;
+				if(pass && Energy<dcuts["MinE"])                                         pass = false;
 				histos["h_cutflow_"+side]->Fill("#it{E}>1.5 GeV", (int)pass);
 				histos["h_cutflow_"+side]->Fill("Matched", (int)(pass && ismatched));
 				if(pass)
