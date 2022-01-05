@@ -1488,7 +1488,7 @@ int main(int argc, char *argv[])
 		printf("\n");
 	}
 	//// minimum requirements
-	if(argc<2) { printf("argc<2, exitting now\n"); exit(-1); }
+	if(argc<2) { printf("argc<2, exiting now\n"); exit(-1); }
 	//// validate inputs
 	if(argc==2 and !((TString)argv[1]).Contains("-proc=")) { printf("argc=2 but cannot parse %s\n", argv[1]); exit(-1); }
 	if(argc==3 and !((TString)argv[2]).Contains("-smpl=")) { printf("argc=3 but cannot parse %s\n", argv[2]); exit(-1); }
@@ -2236,10 +2236,11 @@ int main(int argc, char *argv[])
 										<< " clusters in " << slyr4 << " inc overlap (with " 
 											<< n_recos << " recos with " 
 												<< n_selct << " selected and " 
-													<< n_match << " matched) -> counting: " 
-														<< countreceff << "%(rec), "  
-															<< countseleff << "%(sel), "  
-																<< countmateff << "%(mat)" << endl;
+													<< n_match << " matched) " << endl;
+													//  -> counting: " 
+													// 	<< countreceff << "%(rec), "  
+													// 		<< countseleff << "%(sel), "  
+													// 			<< countmateff << "%(mat)" << endl;
 				}
 				n4count++;
 				
