@@ -188,6 +188,16 @@ def GetHminmax(h):
    return hmin,hmax
 
 
+def GetCutflowSummary(h,htype,btru,brec,bsel,bmat):
+   n = { "tru":-1, "rec":-1, "sel":-1, "mat":-1 }
+   if("s" in htype): n["tru"] = h.GetBinContent(btru)
+   n["rec"] = h.GetBinContent(brec)
+   n["sel"] = h.GetBinContent(bsel)
+   if("s" in htype): n["mat"] = h.GetBinContent(bmat)
+   return n
+   
+   
+
 ######################################################
 ######################################################
 ######################################################
@@ -199,13 +209,13 @@ def main():
    SetLuxeStyle()
    
    parser = argparse.ArgumentParser(description='makeTrackRecoPlots.py...')
-   parser.add_argument('-proc', metavar='process', required=True,  help='process [elaser,glaser]')
-   parser.add_argument('-smpl', metavar='sample',  required=True,  help='sample [phase0/allpix/ppw/3.0]')
-   parser.add_argument('-side', metavar='side',    required=False, help='side [,Pside,Eside]')
+   parser.add_argument('-proc', metavar='process', required=True, help='process [elaser,glaser]')
+   parser.add_argument('-smpl', metavar='sample',  required=True, help='sample [phase0/allpix/ppw/3.0]')
+   parser.add_argument('-side', metavar='side',    required=True, help='side [Pside,Eside]')
    argus  = parser.parse_args()
    process = argus.proc
    sample  = argus.smpl
-   sidepe  = argus.side
+   side    = argus.side
    
    storage = os.getenv("$STORAGEDIR","../")
    print("storage=",storage)
@@ -213,383 +223,395 @@ def main():
    os.makedirs(pdfsdir, exist_ok=True)
    
    outname = "signal_and_background_tracking_variable_"+process+"_"+sample.replace("/","_")
-   
-   sides = ["Eside","Pside"] if(sidepe==None) else [sidepe]
-   
-   for side in sides:
       
-      fnames = {
-         "ss":"../data/root/rec/"+process+"/"+sample+"s/rec_"+process+"__"+side+".root",
-         "sb":"../data/root/rec/"+process+"/"+sample+"sb/rec_"+process+"__"+side+".root",
-         "bb":"../data/root/rec/"+process+"/"+sample+"b/rec_"+process+"__"+side+".root"
+   fnames = {
+      "ss":"../data/root/rec/"+process+"/"+sample+"s/rec_"+process+"__"+side+".root",
+      "sb":"../data/root/rec/"+process+"/"+sample+"sb/rec_"+process+"__"+side+".root",
+      "bb":"../data/root/rec/"+process+"/"+sample+"b/rec_"+process+"__"+side+".root"
+   }
+   if("linearity" not in sample):
+      fnames["bb"] = "../data/root/rec/"+process+"/bkg/rec_"+process+"__"+side+".root"
+   
+   print(fnames)
+   
+   files = {}
+   nBXs  = {}
+   for ftype,fname in fnames.items():
+      files.update({ftype:TFile(fname,"READ")})
+      nBXs.update({ftype:files[ftype].Get("h_nBX_"+side).GetBinContent(1)})
+   
+   plottruth = ["_E_", "_pz_", "_px_", "_py_"]
+   
+   cutflowsummary = {}
+   btru = 1
+   brec = 6
+   bsel = 16
+   bmat = 17
+   
+   hnames = ["h_all_csize_L1I_"+side,
+             "h_all_csize_L2I_"+side,
+             "h_all_csize_L3I_"+side,
+             "h_all_csize_L4I_"+side,
+             "h_all_csize_L1O_"+side,
+             "h_all_csize_L2O_"+side,
+             "h_all_csize_L3O_"+side,
+             "h_all_csize_L4O_"+side,
+             
+             "h_all_csizex_L1I_"+side,
+             "h_all_csizex_L2I_"+side,
+             "h_all_csizex_L3I_"+side,
+             "h_all_csizex_L4I_"+side,
+             "h_all_csizex_L1O_"+side,
+             "h_all_csizex_L2O_"+side,
+             "h_all_csizex_L3O_"+side,
+             "h_all_csizex_L4O_"+side,
+             
+             "h_all_csizey_L1I_"+side,
+             "h_all_csizey_L2I_"+side,
+             "h_all_csizey_L3I_"+side,
+             "h_all_csizey_L4I_"+side,
+             "h_all_csizey_L1O_"+side,
+             "h_all_csizey_L2O_"+side,
+             "h_all_csizey_L3O_"+side,
+             "h_all_csizey_L4O_"+side,
+             
+             "h_rec_csize_L1I_"+side,
+             "h_rec_csize_L2I_"+side,
+             "h_rec_csize_L3I_"+side,
+             "h_rec_csize_L4I_"+side,
+             "h_rec_csize_L1O_"+side,
+             "h_rec_csize_L2O_"+side,
+             "h_rec_csize_L3O_"+side,
+             "h_rec_csize_L4O_"+side,
+             
+             "h_rec_csizex_L1I_"+side,
+             "h_rec_csizex_L2I_"+side,
+             "h_rec_csizex_L3I_"+side,
+             "h_rec_csizex_L4I_"+side,
+             "h_rec_csizex_L1O_"+side,
+             "h_rec_csizex_L2O_"+side,
+             "h_rec_csizex_L3O_"+side,
+             "h_rec_csizex_L4O_"+side,
+             
+             "h_rec_csizey_L1I_"+side,
+             "h_rec_csizey_L2I_"+side,
+             "h_rec_csizey_L3I_"+side,
+             "h_rec_csizey_L4I_"+side,
+             "h_rec_csizey_L1O_"+side,
+             "h_rec_csizey_L2O_"+side,
+             "h_rec_csizey_L3O_"+side,
+             "h_rec_csizey_L4O_"+side,
+             
+             "h_rec_Nhits_"+side,
+             "h_rec_px_"+side,
+             "h_rec_px_zoom_"+side,
+             "h_rec_py_"+side,
+             "h_rec_py_zoom_"+side,
+             "h_rec_pz_"+side,
+             "h_rec_pz_"+side+"_log0",
+             "h_rec_E_"+side,
+             "h_rec_E_"+side+"_log0",
+             # "h_rec_E_"+side+"_log1",
+             # "h_rec_E_"+side+"_log2",
+             # "h_rec_E_"+side+"_log3",
+             "h_rec_chi2dof_"+side,
+             "h_rec_SnpSig_"+side,
+             "h_rec_TglSig_"+side,
+             "h_rec_xVtxSig_"+side,
+             "h_rec_yVtxSig_"+side,
+             "h_resol_rec_dpzrel_"+side,
+             "h_resol_rec_dErel_"+side,
+             "h_resol_rec_dx1_"+side,
+             "h_resol_rec_dx4_"+side,
+             "h_resol_rec_dy1_"+side,
+             "h_resol_rec_dy4_"+side,
+             "h_ratio_rec_pz_"+side+"_log0",
+             "h_ratio_rec_pz_"+side+"_log1",
+             "h_ratio_rec_pz_"+side+"_log2",
+             "h_ratio_rec_pz_"+side+"_log3",
+             "h_ratio_rec_E_"+side+"_log0",
+             "h_ratio_rec_E_"+side+"_log1",
+             "h_ratio_rec_E_"+side+"_log2",
+             "h_ratio_rec_E_"+side+"_log3",
+             "h_eff_rec_pz_"+side+"_log0",
+             "h_eff_rec_pz_"+side+"_log1",
+             "h_eff_rec_pz_"+side+"_log2",
+             "h_eff_rec_pz_"+side+"_log3",
+             "h_eff_rec_E_"+side+"_log0",
+             "h_eff_rec_E_"+side+"_log1",
+             "h_eff_rec_E_"+side+"_log2",
+             "h_eff_rec_E_"+side+"_log3",
+             
+             "h_mat_Nhits_"+side,
+             "h_mat_px_"+side,
+             "h_mat_px_zoom_"+side,
+             "h_mat_py_"+side,
+             "h_mat_py_zoom_"+side,
+             "h_mat_pz_"+side,
+             "h_mat_pz_"+side+"_log0",
+             "h_mat_E_"+side,
+             "h_mat_E_"+side+"_log0",
+             # "h_mat_E_"+side+"_log1",
+             # "h_mat_E_"+side+"_log2",
+             # "h_mat_E_"+side+"_log3",
+             "h_mat_chi2dof_"+side,
+             "h_mat_SnpSig_"+side,
+             "h_mat_TglSig_"+side,
+             "h_mat_xVtxSig_"+side,
+             "h_mat_yVtxSig_"+side,
+             "h_resol_mat_dpzrel_"+side,
+             "h_resol_mat_dErel_"+side,
+             "h_resol_mat_dx1_"+side,
+             "h_resol_mat_dx4_"+side,
+             "h_resol_mat_dy1_"+side,
+             "h_resol_mat_dy4_"+side,
+             "h_ratio_mat_pz_"+side+"_log0",
+             "h_ratio_mat_pz_"+side+"_log1",
+             "h_ratio_mat_pz_"+side+"_log2",
+             "h_ratio_mat_pz_"+side+"_log3",
+             "h_ratio_mat_E_"+side+"_log0",
+             "h_ratio_mat_E_"+side+"_log1",
+             "h_ratio_mat_E_"+side+"_log2",
+             "h_ratio_mat_E_"+side+"_log3",
+             "h_eff_mat_pz_"+side+"_log0",
+             "h_eff_mat_pz_"+side+"_log1",
+             "h_eff_mat_pz_"+side+"_log2",
+             "h_eff_mat_pz_"+side+"_log3",
+             "h_eff_mat_E_"+side+"_log0",
+             "h_eff_mat_E_"+side+"_log1",
+             "h_eff_mat_E_"+side+"_log2",
+             "h_eff_mat_E_"+side+"_log3",
+             
+             "h_non_Nhits_"+side,
+             "h_non_px_"+side,
+             "h_non_px_zoom_"+side,
+             "h_non_py_"+side,
+             "h_non_py_zoom_"+side,
+             "h_non_pz_"+side,
+             "h_non_pz_"+side+"_log0",
+             "h_non_E_"+side,
+             "h_non_E_"+side+"_log0",
+             # "h_non_E_"+side+"_log1",
+             # "h_non_E_"+side+"_log2",
+             # "h_non_E_"+side+"_log3",
+             "h_non_chi2dof_"+side,
+             "h_non_SnpSig_"+side,
+             "h_non_TglSig_"+side,
+             "h_non_xVtxSig_"+side,
+             "h_non_yVtxSig_"+side,
+             # "h_resol_non_dpzrel_"+side,
+             # "h_resol_non_dErel_"+side,
+             "h_ratio_non_pz_"+side+"_log0",
+             "h_ratio_non_pz_"+side+"_log1",
+             "h_ratio_non_pz_"+side+"_log2",
+             "h_ratio_non_pz_"+side+"_log3",
+             "h_ratio_non_E_"+side+"_log0",
+             "h_ratio_non_E_"+side+"_log1",
+             "h_ratio_non_E_"+side+"_log2",
+             "h_ratio_non_E_"+side+"_log3",
+             "h_eff_non_pz_"+side+"_log0",
+             "h_eff_non_pz_"+side+"_log1",
+             "h_eff_non_pz_"+side+"_log2",
+             "h_eff_non_pz_"+side+"_log3",
+             "h_eff_non_E_"+side+"_log0",
+             "h_eff_non_E_"+side+"_log1",
+             "h_eff_non_E_"+side+"_log2",
+             "h_eff_non_E_"+side+"_log3",
+             
+             "h_sel_Nhits_"+side,
+             "h_sel_px_"+side,
+             "h_sel_px_zoom_"+side,
+             "h_sel_py_"+side,
+             "h_sel_py_zoom_"+side,
+             "h_sel_pz_"+side,
+             "h_sel_pz_"+side+"_log0",
+             "h_sel_E_"+side,
+             "h_sel_E_"+side+"_log0",
+             # "h_sel_E_"+side+"_log1",
+             # "h_sel_E_"+side+"_log2",
+             # "h_sel_E_"+side+"_log3",
+             "h_sel_chi2dof_"+side,
+             "h_sel_SnpSig_"+side,
+             "h_sel_TglSig_"+side,
+             "h_sel_xVtxSig_"+side,
+             "h_sel_yVtxSig_"+side,
+             "h_resol_sel_dpzrel_"+side,
+             "h_resol_sel_dErel_"+side,
+             "h_resol_sel_dx1_"+side,
+             "h_resol_sel_dx4_"+side,
+             "h_resol_sel_dy1_"+side,
+             "h_resol_sel_dy4_"+side,
+             "h_ratio_sel_pz_"+side+"_log0",
+             "h_ratio_sel_pz_"+side+"_log1",
+             "h_ratio_sel_pz_"+side+"_log2",
+             "h_ratio_sel_pz_"+side+"_log3",
+             "h_ratio_sel_E_"+side+"_log0",
+             "h_ratio_sel_E_"+side+"_log1",
+             "h_ratio_sel_E_"+side+"_log2",
+             "h_ratio_sel_E_"+side+"_log3",
+             "h_eff_sel_pz_"+side+"_log0",
+             "h_eff_sel_pz_"+side+"_log1",
+             "h_eff_sel_pz_"+side+"_log2",
+             "h_eff_sel_pz_"+side+"_log3",
+             "h_eff_sel_E_"+side+"_log0",
+             "h_eff_sel_E_"+side+"_log1",
+             "h_eff_sel_E_"+side+"_log2",
+             "h_eff_sel_E_"+side+"_log3",
+             
+             "h_cutflow_"+side,
+          ]
+   
+   ### plot
+   cnv = TCanvas("c","",700,500)
+   cnv.SaveAs(outname+".pdf(")
+   
+   for name in hnames:
+      # print(name)
+      
+      htypes = {
+         "ss":{"col":ROOT.kRed,     "leg":"Sig"},
+         "sb":{"col":ROOT.kGreen+3, "leg":"Sig+Bkg"},
+         "bb":{"col":ROOT.kBlue,    "leg":"Bkg"}
       }
-      if("linearity" not in sample):
-         fnames["bb"] = "../data/root/rec/"+process+"/bkg/rec_"+process+"__"+side+".root"
-
-      print(fnames)
       
-      files = {}
-      nBXs  = {}
-      for ftype,fname in fnames.items():
-         files.update({ftype:TFile(fname,"READ")})
-         nBXs.update({ftype:files[ftype].Get("h_nBX_"+side).GetBinContent(1)})
+      histos = {}
       
-      plottruth = ["_E_", "_pz_", "_px_", "_py_"]
+      cnv = TCanvas("c_"+name,"",700,500)
+      if("cutflow" in name): cnv = TCanvas("c_"+name,"",900,500)
+      cnv.cd()
+      ROOT.gPad.SetTicks(1,1)
+      ROOT.gPad.SetGrid()
+      if("ratio" not in name and "eff" not in name and "resol" not in name): ROOT.gPad.SetLogy()
       
-      hnames = ["h_all_csize_L1I_"+side,
-                "h_all_csize_L2I_"+side,
-                "h_all_csize_L3I_"+side,
-                "h_all_csize_L4I_"+side,
-                "h_all_csize_L1O_"+side,
-                "h_all_csize_L2O_"+side,
-                "h_all_csize_L3O_"+side,
-                "h_all_csize_L4O_"+side,
-                
-                "h_all_csizex_L1I_"+side,
-                "h_all_csizex_L2I_"+side,
-                "h_all_csizex_L3I_"+side,
-                "h_all_csizex_L4I_"+side,
-                "h_all_csizex_L1O_"+side,
-                "h_all_csizex_L2O_"+side,
-                "h_all_csizex_L3O_"+side,
-                "h_all_csizex_L4O_"+side,
-                
-                "h_all_csizey_L1I_"+side,
-                "h_all_csizey_L2I_"+side,
-                "h_all_csizey_L3I_"+side,
-                "h_all_csizey_L4I_"+side,
-                "h_all_csizey_L1O_"+side,
-                "h_all_csizey_L2O_"+side,
-                "h_all_csizey_L3O_"+side,
-                "h_all_csizey_L4O_"+side,
-                
-                "h_rec_csize_L1I_"+side,
-                "h_rec_csize_L2I_"+side,
-                "h_rec_csize_L3I_"+side,
-                "h_rec_csize_L4I_"+side,
-                "h_rec_csize_L1O_"+side,
-                "h_rec_csize_L2O_"+side,
-                "h_rec_csize_L3O_"+side,
-                "h_rec_csize_L4O_"+side,
-                
-                "h_rec_csizex_L1I_"+side,
-                "h_rec_csizex_L2I_"+side,
-                "h_rec_csizex_L3I_"+side,
-                "h_rec_csizex_L4I_"+side,
-                "h_rec_csizex_L1O_"+side,
-                "h_rec_csizex_L2O_"+side,
-                "h_rec_csizex_L3O_"+side,
-                "h_rec_csizex_L4O_"+side,
-                
-                "h_rec_csizey_L1I_"+side,
-                "h_rec_csizey_L2I_"+side,
-                "h_rec_csizey_L3I_"+side,
-                "h_rec_csizey_L4I_"+side,
-                "h_rec_csizey_L1O_"+side,
-                "h_rec_csizey_L2O_"+side,
-                "h_rec_csizey_L3O_"+side,
-                "h_rec_csizey_L4O_"+side,
-                
-                "h_rec_Nhits_"+side,
-                "h_rec_px_"+side,
-                "h_rec_px_zoom_"+side,
-                "h_rec_py_"+side,
-                "h_rec_py_zoom_"+side,
-                "h_rec_pz_"+side,
-                "h_rec_pz_"+side+"_log0",
-                "h_rec_E_"+side,
-                "h_rec_E_"+side+"_log0",
-                # "h_rec_E_"+side+"_log1",
-                # "h_rec_E_"+side+"_log2",
-                # "h_rec_E_"+side+"_log3",
-                "h_rec_chi2dof_"+side,
-                "h_rec_SnpSig_"+side,
-                "h_rec_TglSig_"+side,
-                "h_rec_xVtxSig_"+side,
-                "h_rec_yVtxSig_"+side,
-                "h_resol_rec_dpzrel_"+side,
-                "h_resol_rec_dErel_"+side,
-                "h_resol_rec_dx1_"+side,
-                "h_resol_rec_dx4_"+side,
-                "h_resol_rec_dy1_"+side,
-                "h_resol_rec_dy4_"+side,
-                "h_ratio_rec_pz_"+side+"_log0",
-                "h_ratio_rec_pz_"+side+"_log1",
-                "h_ratio_rec_pz_"+side+"_log2",
-                "h_ratio_rec_pz_"+side+"_log3",
-                "h_ratio_rec_E_"+side+"_log0",
-                "h_ratio_rec_E_"+side+"_log1",
-                "h_ratio_rec_E_"+side+"_log2",
-                "h_ratio_rec_E_"+side+"_log3",
-                "h_eff_rec_pz_"+side+"_log0",
-                "h_eff_rec_pz_"+side+"_log1",
-                "h_eff_rec_pz_"+side+"_log2",
-                "h_eff_rec_pz_"+side+"_log3",
-                "h_eff_rec_E_"+side+"_log0",
-                "h_eff_rec_E_"+side+"_log1",
-                "h_eff_rec_E_"+side+"_log2",
-                "h_eff_rec_E_"+side+"_log3",
-                
-                "h_mat_Nhits_"+side,
-                "h_mat_px_"+side,
-                "h_mat_px_zoom_"+side,
-                "h_mat_py_"+side,
-                "h_mat_py_zoom_"+side,
-                "h_mat_pz_"+side,
-                "h_mat_pz_"+side+"_log0",
-                "h_mat_E_"+side,
-                "h_mat_E_"+side+"_log0",
-                # "h_mat_E_"+side+"_log1",
-                # "h_mat_E_"+side+"_log2",
-                # "h_mat_E_"+side+"_log3",
-                "h_mat_chi2dof_"+side,
-                "h_mat_SnpSig_"+side,
-                "h_mat_TglSig_"+side,
-                "h_mat_xVtxSig_"+side,
-                "h_mat_yVtxSig_"+side,
-                "h_resol_mat_dpzrel_"+side,
-                "h_resol_mat_dErel_"+side,
-                "h_resol_mat_dx1_"+side,
-                "h_resol_mat_dx4_"+side,
-                "h_resol_mat_dy1_"+side,
-                "h_resol_mat_dy4_"+side,
-                "h_ratio_mat_pz_"+side+"_log0",
-                "h_ratio_mat_pz_"+side+"_log1",
-                "h_ratio_mat_pz_"+side+"_log2",
-                "h_ratio_mat_pz_"+side+"_log3",
-                "h_ratio_mat_E_"+side+"_log0",
-                "h_ratio_mat_E_"+side+"_log1",
-                "h_ratio_mat_E_"+side+"_log2",
-                "h_ratio_mat_E_"+side+"_log3",
-                "h_eff_mat_pz_"+side+"_log0",
-                "h_eff_mat_pz_"+side+"_log1",
-                "h_eff_mat_pz_"+side+"_log2",
-                "h_eff_mat_pz_"+side+"_log3",
-                "h_eff_mat_E_"+side+"_log0",
-                "h_eff_mat_E_"+side+"_log1",
-                "h_eff_mat_E_"+side+"_log2",
-                "h_eff_mat_E_"+side+"_log3",
-                
-                "h_non_Nhits_"+side,
-                "h_non_px_"+side,
-                "h_non_px_zoom_"+side,
-                "h_non_py_"+side,
-                "h_non_py_zoom_"+side,
-                "h_non_pz_"+side,
-                "h_non_pz_"+side+"_log0",
-                "h_non_E_"+side,
-                "h_non_E_"+side+"_log0",
-                # "h_non_E_"+side+"_log1",
-                # "h_non_E_"+side+"_log2",
-                # "h_non_E_"+side+"_log3",
-                "h_non_chi2dof_"+side,
-                "h_non_SnpSig_"+side,
-                "h_non_TglSig_"+side,
-                "h_non_xVtxSig_"+side,
-                "h_non_yVtxSig_"+side,
-                # "h_resol_non_dpzrel_"+side,
-                # "h_resol_non_dErel_"+side,
-                "h_ratio_non_pz_"+side+"_log0",
-                "h_ratio_non_pz_"+side+"_log1",
-                "h_ratio_non_pz_"+side+"_log2",
-                "h_ratio_non_pz_"+side+"_log3",
-                "h_ratio_non_E_"+side+"_log0",
-                "h_ratio_non_E_"+side+"_log1",
-                "h_ratio_non_E_"+side+"_log2",
-                "h_ratio_non_E_"+side+"_log3",
-                "h_eff_non_pz_"+side+"_log0",
-                "h_eff_non_pz_"+side+"_log1",
-                "h_eff_non_pz_"+side+"_log2",
-                "h_eff_non_pz_"+side+"_log3",
-                "h_eff_non_E_"+side+"_log0",
-                "h_eff_non_E_"+side+"_log1",
-                "h_eff_non_E_"+side+"_log2",
-                "h_eff_non_E_"+side+"_log3",
-                
-                "h_sel_Nhits_"+side,
-                "h_sel_px_"+side,
-                "h_sel_px_zoom_"+side,
-                "h_sel_py_"+side,
-                "h_sel_py_zoom_"+side,
-                "h_sel_pz_"+side,
-                "h_sel_pz_"+side+"_log0",
-                "h_sel_E_"+side,
-                "h_sel_E_"+side+"_log0",
-                # "h_sel_E_"+side+"_log1",
-                # "h_sel_E_"+side+"_log2",
-                # "h_sel_E_"+side+"_log3",
-                "h_sel_chi2dof_"+side,
-                "h_sel_SnpSig_"+side,
-                "h_sel_TglSig_"+side,
-                "h_sel_xVtxSig_"+side,
-                "h_sel_yVtxSig_"+side,
-                "h_resol_sel_dpzrel_"+side,
-                "h_resol_sel_dErel_"+side,
-                "h_resol_sel_dx1_"+side,
-                "h_resol_sel_dx4_"+side,
-                "h_resol_sel_dy1_"+side,
-                "h_resol_sel_dy4_"+side,
-                "h_ratio_sel_pz_"+side+"_log0",
-                "h_ratio_sel_pz_"+side+"_log1",
-                "h_ratio_sel_pz_"+side+"_log2",
-                "h_ratio_sel_pz_"+side+"_log3",
-                "h_ratio_sel_E_"+side+"_log0",
-                "h_ratio_sel_E_"+side+"_log1",
-                "h_ratio_sel_E_"+side+"_log2",
-                "h_ratio_sel_E_"+side+"_log3",
-                "h_eff_sel_pz_"+side+"_log0",
-                "h_eff_sel_pz_"+side+"_log1",
-                "h_eff_sel_pz_"+side+"_log2",
-                "h_eff_sel_pz_"+side+"_log3",
-                "h_eff_sel_E_"+side+"_log0",
-                "h_eff_sel_E_"+side+"_log1",
-                "h_eff_sel_E_"+side+"_log2",
-                "h_eff_sel_E_"+side+"_log3",
-                
-                "h_cutflow_"+side,
-             ]
+      LUXELabel(0.2,0.85,"TDR")
+      legend = LegendMaker()
       
-      ### plot
-      cnv = TCanvas("c","",700,500)
-      cnv.SaveAs(outname+".pdf(")
-      
-      for name in hnames:
-         # print(name)
-         
-         htypes = {
-            "ss":{"col":ROOT.kRed,     "leg":"Sig"},
-            "sb":{"col":ROOT.kGreen+3, "leg":"Sig+Bkg"},
-            "bb":{"col":ROOT.kBlue,    "leg":"Bkg"}
-         }
-         
-         histos = {}
-         
-         cnv = TCanvas("c_"+name,"",700,500)
-         if("cutflow" in name): cnv = TCanvas("c_"+name,"",900,500)
-         cnv.cd()
-         ROOT.gPad.SetTicks(1,1)
-         ROOT.gPad.SetGrid()
-         if("ratio" not in name and "eff" not in name and "resol" not in name): ROOT.gPad.SetLogy()
-         
-         LUXELabel(0.2,0.85,"TDR")
-         legend = LegendMaker()
-         
-         for htyp,attr in htypes.items():
-            hname = name+"_"+htyp
-            
-            ## draw truth just on energy plots
-            istruth = isTruth(name,plottruth)
-            if(istruth and "_ratio_" not in name and "_eff_" not in name and htyp=="ss"):
-               name1 = name
-               name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
-               hname1 = name1+"_"+htyp
-               # print("getting",htyp,name1)
-               hist = files[htyp].Get(name1).Clone(hname1)
-               if(not hist): print(name1,"is null")
-               histos.update( {hname1:hist} )
-               histos[hname1].SetDirectory(0)
-               histos[hname1].SetLineColor(ROOT.kBlack)
-               histos[hname1].SetLineWidth(2)
-               histos[hname1].SetLineStyle(2)
-               legend.AddEntry(histos[hname1],"Tru","l")
-            
-            # print("getting",htyp,name)
-            hist = files[htyp].Get(name).Clone(hname)
-            if(not hist): print(name,"is null")
-            histos.update( {hname:hist} )
-            histos[hname].SetDirectory(0)
-            histos[hname].SetLineColor(attr["col"])
-            histos[hname].SetFillColorAlpha(attr["col"],0.35)
-            histos[hname].SetLineWidth(1)
-            legend.AddEntry(histos[hname],attr["leg"],"f")
-            if("cutflow" in name):
-               hchop = hChopperUp(histos[hname],15)
-               histos.update( {hname+"_chop":hchop} )
-         
-      
-         ## normalise to nBX:
-         hmax = -1e20
-         for hname,h in histos.items():
-            if("_ratio_" not in hname and "_eff_" not in hname):
-               nBX = -1
-               if("ss" in hname): nBX = nBXs["ss"]
-               if("sb" in hname): nBX = nBXs["sb"]
-               if("bb" in hname): nBX = nBXs["bb"]
-               h.Scale(1./nBX)
-               if("_resol_" in hname and "bb" not in hname):
-                  h.Scale(1./h.Integral())
-                  h.GetYaxis().SetTitle( h.GetYaxis().GetTitle()+" [Normalised]" )
-            hmax = h.GetMaximum() if(h.GetMaximum()>hmax) else hmax
-
-      
-         ## set max
-         for hname,h in histos.items():
-            if("_ratio_" in hname or "_eff_" in hname or "_resol_" in hname):
-               h.SetMinimum(0.0)
-               h.SetMaximum(hmax*1.25)
-            else:
-               h.SetMinimum(0.1)
-               if("Nhits" in name or "cutflow" in name): h.SetMaximum(hmax*2)
-               else:                                     h.SetMaximum(hmax*1.25)
-
+      for htyp,attr in htypes.items():
+         hname = name+"_"+htyp
          
          ## draw truth just on energy plots
-         if(istruth and "_ratio_" not in name and "_eff_" not in name):
+         istruth = isTruth(name,plottruth)
+         if(istruth and "_ratio_" not in name and "_eff_" not in name and htyp=="ss"):
             name1 = name
             name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
-            htmp = histos[name1+"_ss"].Clone(name1+"_ss_tmp")
-            htmp.GetXaxis().SetTitle( histos[name+"_sb"].GetXaxis().GetTitle() )
-            htmp.GetYaxis().SetTitle( histos[name+"_sb"].GetYaxis().GetTitle() )
-            htmp.Draw("hist")
-            histos[name+"_sb"].Draw("hist same")
-         else:
-            if("cutflow" in name): histos[name+"_sb_chop"].Draw("hist")
-            else:                  histos[name+"_sb"].Draw("hist")
-         if("mat" not in name and "non" not in name):
-            if("cutflow" in name): histos[name+"_bb_chop"].Draw("hist same")
-            else:                  histos[name+"_bb"].Draw("hist same")
-         if("cutflow" in name): histos[name+"_ss_chop"].Draw("hist same")
-         else:                  histos[name+"_ss"].Draw("hist same")
-         legend.Draw("sames")
+            hname1 = name1+"_"+htyp
+            # print("getting",htyp,name1)
+            hist = files[htyp].Get(name1).Clone(hname1)
+            if(not hist): print(name1,"is null")
+            histos.update( {hname1:hist} )
+            histos[hname1].SetDirectory(0)
+            histos[hname1].SetLineColor(ROOT.kBlack)
+            histos[hname1].SetLineWidth(2)
+            histos[hname1].SetLineStyle(2)
+            legend.AddEntry(histos[hname1],"Tru","l")
          
-         cnv.RedrawAxis()
-         cnv.Update()
-         cnv.SaveAs(outname+".pdf")
-         cnv.SaveAs(pdfsdir+name.replace("h_","")+".pdf")
+         # print("getting",htyp,name)
+         hist = files[htyp].Get(name).Clone(hname)
+         if(not hist): print(name,"is null")
+         histos.update( {hname:hist} )
+         histos[hname].SetDirectory(0)
+         histos[hname].SetLineColor(attr["col"])
+         histos[hname].SetFillColorAlpha(attr["col"],0.35)
+         histos[hname].SetLineWidth(1)
+         legend.AddEntry(histos[hname],attr["leg"],"f")
+         if("cutflow" in name):
+            hchop = hChopperUp(histos[hname],15)
+            histos.update( {hname+"_chop":hchop} )
+            # print(hname+"_chop")
       
-      ### resolution fits:
-      fitnames = [
-         "h_resol_rec_dErel_"+side,
-         "h_resol_mat_dErel_"+side,
-         "h_resol_sel_dErel_"+side,
-      ]
-      for name in fitnames:
-         histos = {}
+   
+      ## normalise to nBX:
+      hmax = -1e20
+      for hname,h in histos.items():
+         if("_ratio_" not in hname and "_eff_" not in hname):
+            nBX = -1
+            if("ss" in hname): nBX = nBXs["ss"]
+            if("sb" in hname): nBX = nBXs["sb"]
+            if("bb" in hname): nBX = nBXs["bb"]
+            h.Scale(1./nBX)
+            if("_resol_" in hname and "bb" not in hname):
+               h.Scale(1./h.Integral())
+               h.GetYaxis().SetTitle( h.GetYaxis().GetTitle()+" [Normalised]" )
+         hmax = h.GetMaximum() if(h.GetMaximum()>hmax) else hmax
+   
+   
+      ## set max
+      for hname,h in histos.items():
+         if("_ratio_" in hname or "_eff_" in hname or "_resol_" in hname):
+            h.SetMinimum(0.0)
+            h.SetMaximum(hmax*1.25)
+         else:
+            h.SetMinimum(0.1)
+            if("Nhits" in name or "cutflow" in name): h.SetMaximum(hmax*2)
+            else:                                     h.SetMaximum(hmax*1.25)
+   
+   
+      ## fill cutflow dict
+      if("cutflow" in name):
          for htyp,attr in htypes.items():
-            if(htyp=="bb"): continue
-            hname = name+"_"+htyp
-            hist = files[htyp].Get(name).Clone(hname)
-            if(not hist): print(name,"is null")
-            histos.update( {hname:hist} )
-            histos[hname].SetDirectory(0)
-            # hmax = histos[hname].GetMaximum() if(histos[hname].GetMaximum()>hmax) else hmax
-            histos[hname].SetLineColor(attr["col"])
-            histos[hname].SetFillColorAlpha(attr["col"],0.35)
-            histos[hname].SetLineWidth(1)
-            
-            ## normalise to nBX:
-            h.Scale(1./nBXs[htyp])
-            
-            hmin,hmax = GetHminmax(histos[hname])
-            # print(name,histos[hname].GetMaximum(),hmax)
-            histos[hname].SetMinimum(0)
-            histos[hname].SetMaximum(1.1*hmax)
-            # TrippleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
-            DoubleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
-            # SingleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
+            hname = "h_cutflow_"+side+"_"+htyp+"_chop"
+            ncfs = GetCutflowSummary(histos[hname],htyp,btru,brec,bsel,bmat)
+            cutflowsummary.update({htyp:ncfs})
+         
       
-      cnv = TCanvas("c","",700,500)
-      cnv.SaveAs(outname+".pdf)")
+      ## draw truth just on energy plots
+      if(istruth and "_ratio_" not in name and "_eff_" not in name):
+         name1 = name
+         name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
+         htmp = histos[name1+"_ss"].Clone(name1+"_ss_tmp")
+         htmp.GetXaxis().SetTitle( histos[name+"_sb"].GetXaxis().GetTitle() )
+         htmp.GetYaxis().SetTitle( histos[name+"_sb"].GetYaxis().GetTitle() )
+         htmp.Draw("hist")
+         histos[name+"_sb"].Draw("hist same")
+      else:
+         if("cutflow" in name): histos[name+"_sb_chop"].Draw("hist")
+         else:                  histos[name+"_sb"].Draw("hist")
+      if("mat" not in name and "non" not in name):
+         if("cutflow" in name): histos[name+"_bb_chop"].Draw("hist same")
+         else:                  histos[name+"_bb"].Draw("hist same")
+      if("cutflow" in name): histos[name+"_ss_chop"].Draw("hist same")
+      else:                  histos[name+"_ss"].Draw("hist same")
+      legend.Draw("sames")
+      
+      cnv.RedrawAxis()
+      cnv.Update()
+      cnv.SaveAs(outname+".pdf")
+      cnv.SaveAs(pdfsdir+name.replace("h_","")+".pdf")
+   
+   ### resolution fits:
+   fitnames = [
+      "h_resol_rec_dErel_"+side,
+      "h_resol_mat_dErel_"+side,
+      "h_resol_sel_dErel_"+side,
+   ]
+   for name in fitnames:
+      histos = {}
+      for htyp,attr in htypes.items():
+         if(htyp=="bb"): continue
+         hname = name+"_"+htyp
+         hist = files[htyp].Get(name).Clone(hname)
+         if(not hist): print(name,"is null")
+         histos.update( {hname:hist} )
+         histos[hname].SetDirectory(0)
+         # hmax = histos[hname].GetMaximum() if(histos[hname].GetMaximum()>hmax) else hmax
+         histos[hname].SetLineColor(attr["col"])
+         histos[hname].SetFillColorAlpha(attr["col"],0.35)
+         histos[hname].SetLineWidth(1)
+         
+         ## normalise to nBX:
+         h.Scale(1./nBXs[htyp])
+         
+         hmin,hmax = GetHminmax(histos[hname])
+         # print(name,histos[hname].GetMaximum(),hmax)
+         histos[hname].SetMinimum(0)
+         histos[hname].SetMaximum(1.1*hmax)
+         # TrippleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
+         DoubleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
+         # SingleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
+   
+   cnv = TCanvas("c","",700,500)
+   cnv.SaveAs(outname+".pdf)")
+   print("Cutflow summary:\n",cutflowsummary)
 
 if __name__=="__main__":
     main()
