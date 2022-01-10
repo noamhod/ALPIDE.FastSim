@@ -538,9 +538,35 @@ void setCuts(TString process, int sigmult)
 			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
 			dcuts.insert(make_pair("MinE",1.5));
 		}
-		else if(sigmult>=2000 && sigmult<10000)
+		else if(sigmult>=2000 && sigmult<=10000)
 		{
-			;
+			//// cuts used by Arka, same as the previous block
+			// in cm, road width in x along the possible cluster where we embed the clusters
+			rwxL1 = 0.065;
+			rwxL2 = 0.065;
+			rwxL3 = 0.065;
+			rwyL1 = 0.065;
+			rwyL2 = 0.065;
+			rwyL3 = 0.065;
+			/// integers
+			icuts.insert(make_pair("MaxClsSize",10));
+			icuts.insert(make_pair("MaxClsSizeX",5));
+			icuts.insert(make_pair("MaxClsSizeY",5));
+			/// doubles
+			dcuts.insert(make_pair("MinPx",-0.004)); /// Px -0.003 and +0.008 for low multiplicity
+			dcuts.insert(make_pair("MaxPx",+0.009)); /// Px -0.003 and +0.008 for low multiplicity
+			dcuts.insert(make_pair("MinPy",-0.005)); /// Py -0.0025 for low multiplicity
+			dcuts.insert(make_pair("MaxPy",+0.005)); /// Py +0.0025 for low multiplicity
+			dcuts.insert(make_pair("MaxChi2DoF",5));
+			dcuts.insert(make_pair("MinSnpSig",-3));
+			dcuts.insert(make_pair("MaxSnpSig",+7));
+			dcuts.insert(make_pair("MinTglSig",-850)); // -350 for low multiplicity
+			dcuts.insert(make_pair("MaxTglSig",+850)); // +350 for low multiplicity
+			dcuts.insert(make_pair("MinxVtxSig",-3e-9));
+			dcuts.insert(make_pair("MaxxVtxSig",+18e-9));
+			dcuts.insert(make_pair("MinyVtxSig",-0.00025));
+			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
+			dcuts.insert(make_pair("MinE",1.5));
 		}
 		else
 		{
