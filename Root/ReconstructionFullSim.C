@@ -96,13 +96,13 @@ typedef map<TString, vector<int>> TMapTSvi;
 typedef map<TString, vector<float>> TMapTSvf;
 typedef map<TString, vector<double>> TMapTSvd;
 typedef map<int, TString> TMapiTS;
-typedef map<TString, TH1D *> TMapTSTH1D;
-typedef map<TString, TH2D *> TMapTSTH2D;
-typedef map<TString, vector<Cluster>> TMapTSvCls;		  // formatted as
+typedef map<TString, TH1D*> TMapTSTH1D;
+typedef map<TString, TH2D*> TMapTSTH2D;
+typedef map<TString, vector<Cluster>> TMapTSvCls;
 typedef map<TString, map<int, vector<int>>> TMapTSMapivi; // this is needed for the lookup table
-typedef map<TString, TAxis *> TMapTSAxis;
+typedef map<TString, TAxis*> TMapTSAxis;
 typedef map<TString, map<int, int>> TMapTSMapii;
-typedef map<TString, TF1 *> TMapTSTF1;
+typedef map<TString, TF1*> TMapTSTF1;
 typedef map<TString, TString> TMapTSTS;
 typedef map<int, TMapTSTS> TMapiTMapTSTS;
 
@@ -154,8 +154,8 @@ float dxAlignmentXFEL = 0.005; // 0.005; // cm
 float dyAlignmentXFEL = 0.005; // 0.005; // cm
 float XvariationSign = +1.;
 float YvariationSign = +1.;
-float dxAlignmentInTray = 0.000; // cm
-float dyAlignmentInTray = 0.000; // cm
+float dxAlignmentClsTray = 0.000; // cm
+float dyAlignmentClsTray = 0.000; // cm
 bool doMisalignmentX = false;
 bool doMisalignmentY = false;
 
@@ -451,7 +451,7 @@ void setParametersFromDet(TString side, TString proc)
 	for (size_t i = 0; i<layersnames.size(); i++)
 	{
 		TString lname = layersnames.at(i);
-		if(lname.Contains("P") && lname.Contains("I"))      axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinPI, xMaxPI)));
+		if     (lname.Contains("P") && lname.Contains("I")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinPI, xMaxPI)));
 		else if(lname.Contains("P") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinPO, xMaxPO)));
 		else if(lname.Contains("E") && lname.Contains("I")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinEI, xMaxEI)));
 		else if(lname.Contains("E") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinEO, xMaxEO)));
@@ -513,12 +513,13 @@ void setCuts(TString process, int sigmult)
 			icuts.insert(make_pair("MaxClsSize",10));
 			icuts.insert(make_pair("MaxClsSizeX",5));
 			icuts.insert(make_pair("MaxClsSizeY",5));
+			icuts.insert(make_pair("MinNhits",4));
 			/// doubles
 			dcuts.insert(make_pair("MinPx",-0.003));
 			dcuts.insert(make_pair("MaxPx",+0.008));
 			dcuts.insert(make_pair("MinPy",-0.025));
 			dcuts.insert(make_pair("MaxPy",+0.025));
-			dcuts.insert(make_pair("MaxChi2DoF",5));
+			dcuts.insert(make_pair("MaxChi2DoF",2));
 			dcuts.insert(make_pair("MinSnpSig",-3));
 			dcuts.insert(make_pair("MaxSnpSig",+7));
 			dcuts.insert(make_pair("MinTglSig",-350));
@@ -542,12 +543,13 @@ void setCuts(TString process, int sigmult)
 			icuts.insert(make_pair("MaxClsSize",10));
 			icuts.insert(make_pair("MaxClsSizeX",5));
 			icuts.insert(make_pair("MaxClsSizeY",5));
+			icuts.insert(make_pair("MinNhits",3));
 			/// doubles
 			dcuts.insert(make_pair("MinPx",-0.004)); /// Px -0.003 and +0.008 for low multiplicity
 			dcuts.insert(make_pair("MaxPx",+0.009)); /// Px -0.003 and +0.008 for low multiplicity
 			dcuts.insert(make_pair("MinPy",-0.005)); /// Py -0.0025 for low multiplicity
 			dcuts.insert(make_pair("MaxPy",+0.005)); /// Py +0.0025 for low multiplicity
-			dcuts.insert(make_pair("MaxChi2DoF",5));
+			dcuts.insert(make_pair("MaxChi2DoF",5)); /// 2 for low multiplicity
 			dcuts.insert(make_pair("MinSnpSig",-3));
 			dcuts.insert(make_pair("MaxSnpSig",+7));
 			dcuts.insert(make_pair("MinTglSig",-850)); // -350 for low multiplicity
@@ -571,12 +573,13 @@ void setCuts(TString process, int sigmult)
 			icuts.insert(make_pair("MaxClsSize",10));
 			icuts.insert(make_pair("MaxClsSizeX",5));
 			icuts.insert(make_pair("MaxClsSizeY",5));
+			icuts.insert(make_pair("MinNhits",3));
 			/// doubles
 			dcuts.insert(make_pair("MinPx",-0.004)); /// Px -0.003 and +0.008 for low multiplicity
 			dcuts.insert(make_pair("MaxPx",+0.009)); /// Px -0.003 and +0.008 for low multiplicity
 			dcuts.insert(make_pair("MinPy",-0.005)); /// Py -0.0025 for low multiplicity
 			dcuts.insert(make_pair("MaxPy",+0.005)); /// Py +0.0025 for low multiplicity
-			dcuts.insert(make_pair("MaxChi2DoF",5));
+			dcuts.insert(make_pair("MaxChi2DoF",5)); /// 2 for low multiplicity
 			dcuts.insert(make_pair("MinSnpSig",-3));
 			dcuts.insert(make_pair("MaxSnpSig",+7));
 			dcuts.insert(make_pair("MinTglSig",-850)); // -350 for low multiplicity
@@ -600,12 +603,13 @@ void setCuts(TString process, int sigmult)
 			icuts.insert(make_pair("MaxClsSize",10));
 			icuts.insert(make_pair("MaxClsSizeX",5));
 			icuts.insert(make_pair("MaxClsSizeY",5));
+			icuts.insert(make_pair("MinNhits",3));
 			/// doubles
 			dcuts.insert(make_pair("MinPx",-0.004)); /// Px -0.003 and +0.008 for low multiplicity
 			dcuts.insert(make_pair("MaxPx",+0.009)); /// Px -0.003 and +0.008 for low multiplicity
 			dcuts.insert(make_pair("MinPy",-0.005)); /// Py -0.0025 for low multiplicity
 			dcuts.insert(make_pair("MaxPy",+0.005)); /// Py +0.0025 for low multiplicity
-			dcuts.insert(make_pair("MaxChi2DoF",5));
+			dcuts.insert(make_pair("MaxChi2DoF",5)); /// 2 for low multiplicity
 			dcuts.insert(make_pair("MinSnpSig",-3));
 			dcuts.insert(make_pair("MaxSnpSig",+7));
 			dcuts.insert(make_pair("MinTglSig",-850)); // -350 for low multiplicity
@@ -1299,20 +1303,32 @@ void cache_cluster(TVector3*               cls_r,
 		cls.trksp.push_back(cls_trksp->at(c));
 		cls.trksr.push_back(cls_trksr->at(c));
 		cls.trksid.push_back(cls_trkids->at(c));
+		
+		/// fill occupancy plots
+		double trkx = cls_trksr->at(c).X()/10;
+		double trky = cls_trksr->at(c).Y()/10;
+		if(lyrname_KF.Contains("L1I")) histos2["h_tru_occ_L1I_"+side]->Fill(trkx,trky);
+		if(lyrname_KF.Contains("L2I")) histos2["h_tru_occ_L2I_"+side]->Fill(trkx,trky);
+		if(lyrname_KF.Contains("L3I")) histos2["h_tru_occ_L3I_"+side]->Fill(trkx,trky);
+		if(lyrname_KF.Contains("L4I")) histos2["h_tru_occ_L4I_"+side]->Fill(trkx,trky);
+		if(lyrname_KF.Contains("L1O")) histos2["h_tru_occ_L1O_"+side]->Fill(trkx,trky);
+		if(lyrname_KF.Contains("L2O")) histos2["h_tru_occ_L2O_"+side]->Fill(trkx,trky);
+		if(lyrname_KF.Contains("L3O")) histos2["h_tru_occ_L3O_"+side]->Fill(trkx,trky);
+		if(lyrname_KF.Contains("L4O")) histos2["h_tru_occ_L4O_"+side]->Fill(trkx,trky);
 	}
 	cls.type = typeSummary;
 	// cout << "2. (x,y,z) = (" << x <<", " << y << ", " << z << ") lyrid_FS: " << lyrid_FS << " lyrname_KF: " << lyrname_KF << " clsid: " << cluster_id << " type: " << cluster_isSig << endl; 
 	// cout << " chip_FS: " << chip_FS << ", cellX_FS: " << cellx_FS << ", cellY_FS: " << celly_FS << endl;
 	
 	/// fill occupancy plots
-	if(lyrname_KF.Contains("L1I")) histos2["h_all_occ_L1I_"+side]->Fill(x,y);
-	if(lyrname_KF.Contains("L2I")) histos2["h_all_occ_L2I_"+side]->Fill(x,y);
-	if(lyrname_KF.Contains("L3I")) histos2["h_all_occ_L3I_"+side]->Fill(x,y);
-	if(lyrname_KF.Contains("L4I")) histos2["h_all_occ_L4I_"+side]->Fill(x,y);
-	if(lyrname_KF.Contains("L1O")) histos2["h_all_occ_L1O_"+side]->Fill(x,y);
-	if(lyrname_KF.Contains("L2O")) histos2["h_all_occ_L2O_"+side]->Fill(x,y);
-	if(lyrname_KF.Contains("L3O")) histos2["h_all_occ_L3O_"+side]->Fill(x,y);
-	if(lyrname_KF.Contains("L4O")) histos2["h_all_occ_L4O_"+side]->Fill(x,y);
+	if(lyrname_KF.Contains("L1I")) histos2["h_cls_occ_L1I_"+side]->Fill(x,y);
+	if(lyrname_KF.Contains("L2I")) histos2["h_cls_occ_L2I_"+side]->Fill(x,y);
+	if(lyrname_KF.Contains("L3I")) histos2["h_cls_occ_L3I_"+side]->Fill(x,y);
+	if(lyrname_KF.Contains("L4I")) histos2["h_cls_occ_L4I_"+side]->Fill(x,y);
+	if(lyrname_KF.Contains("L1O")) histos2["h_cls_occ_L1O_"+side]->Fill(x,y);
+	if(lyrname_KF.Contains("L2O")) histos2["h_cls_occ_L2O_"+side]->Fill(x,y);
+	if(lyrname_KF.Contains("L3O")) histos2["h_cls_occ_L3O_"+side]->Fill(x,y);
+	if(lyrname_KF.Contains("L4O")) histos2["h_cls_occ_L4O_"+side]->Fill(x,y);
 	
 	/// fill cluster size plots
 	if(lyrname_KF.Contains("L1I")) { histos1["h_all_csize_L1I_"+side]->Fill(cls_size); histos1["h_all_csizex_L1I_"+side]->Fill(cls_sizex); histos1["h_all_csizey_L1I_"+side]->Fill(cls_sizey); }
@@ -2020,14 +2036,32 @@ int main(int argc, char *argv[])
 		hname = "h_all_csizey_L4O_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels}^{#it{y}} in cluster;All clusters in L4O", 20, 0, 20)));
 		
 		/// 2D occupancy
-		hname = "h_all_occ_L1I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L1I occupancy per ~pixel per BX;x [cm];y [cm];Tracks/~pixel/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
-		hname = "h_all_occ_L2I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L2I occupancy per ~pixel per BX;x [cm];y [cm];Tracks/~pixel/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
-		hname = "h_all_occ_L3I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L3I occupancy per ~pixel per BX;x [cm];y [cm];Tracks/~pixel/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
-		hname = "h_all_occ_L4I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L4I occupancy per ~pixel per BX;x [cm];y [cm];Tracks/~pixel/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
-		hname = "h_all_occ_L1O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L1O occupancy per ~pixel per BX;x [cm];y [cm];Tracks/~pixel/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
-		hname = "h_all_occ_L2O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L2O occupancy per ~pixel per BX;x [cm];y [cm];Tracks/~pixel/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
-		hname = "h_all_occ_L3O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L3O occupancy per ~pixel per BX;x [cm];y [cm];Tracks/~pixel/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
-		hname = "h_all_occ_L4O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L4O occupancy per ~pixel per BX;x [cm];y [cm];Tracks/~pixel/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_tru_occ_L1I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L1I particles per pixel per BX;x [cm];y [cm];Particles/~pixel/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_tru_occ_L2I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L2I particles per pixel per BX;x [cm];y [cm];Particles/~pixel/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_tru_occ_L3I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L3I particles per pixel per BX;x [cm];y [cm];Particles/~pixel/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_tru_occ_L4I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L4I particles per pixel per BX;x [cm];y [cm];Particles/~pixel/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_tru_occ_L1O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L1O particles per pixel per BX;x [cm];y [cm];Particles/~pixel/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_tru_occ_L2O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L2O particles per pixel per BX;x [cm];y [cm];Particles/~pixel/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_tru_occ_L3O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L3O particles per pixel per BX;x [cm];y [cm];Particles/~pixel/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_tru_occ_L4O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L4O particles per pixel per BX;x [cm];y [cm];Particles/~pixel/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+
+		hname = "h_pix_occ_L1I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L1I pixels per cm^{2} per BX;x [cm];y [cm];Pixels/cm^{2}/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_pix_occ_L2I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L2I pixels per cm^{2} per BX;x [cm];y [cm];Pixels/cm^{2}/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_pix_occ_L3I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L3I pixels per cm^{2} per BX;x [cm];y [cm];Pixels/cm^{2}/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_pix_occ_L4I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L4I pixels per cm^{2} per BX;x [cm];y [cm];Pixels/cm^{2}/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_pix_occ_L1O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L1O pixels per cm^{2} per BX;x [cm];y [cm];Pixels/cm^{2}/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_pix_occ_L2O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L2O pixels per cm^{2} per BX;x [cm];y [cm];Pixels/cm^{2}/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_pix_occ_L3O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L3O pixels per cm^{2} per BX;x [cm];y [cm];Pixels/cm^{2}/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_pix_occ_L4O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L4O pixels per cm^{2} per BX;x [cm];y [cm];Pixels/cm^{2}/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+
+		hname = "h_cls_occ_L1I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L1I clusters per cm^{2} per BX;x [cm];y [cm];Clusters/cm^{2}/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_cls_occ_L2I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L2I clusters per cm^{2} per BX;x [cm];y [cm];Clusters/cm^{2}/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_cls_occ_L3I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L3I clusters per cm^{2} per BX;x [cm];y [cm];Clusters/cm^{2}/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_cls_occ_L4I_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L4I clusters per cm^{2} per BX;x [cm];y [cm];Clusters/cm^{2}/BX", 900,xMinI,xMaxI, 100,yDn,yUp)));
+		hname = "h_cls_occ_L1O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L1O clusters per cm^{2} per BX;x [cm];y [cm];Clusters/cm^{2}/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_cls_occ_L2O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L2O clusters per cm^{2} per BX;x [cm];y [cm];Clusters/cm^{2}/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_cls_occ_L3O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L3O clusters per cm^{2} per BX;x [cm];y [cm];Clusters/cm^{2}/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
+		hname = "h_cls_occ_L4O_"+side; histos2.insert(make_pair(hname, new TH2D(hname, "L4O clusters per cm^{2} per BX;x [cm];y [cm];Clusters/cm^{2}/BX", 900,xMinO,xMaxO, 100,yDn,yUp)));
 		
 		vector<TString> htypes = {"rec","mat","non","sel"};
 		for(size_t h=0; h<htypes.size(); ++h)
@@ -2154,6 +2188,8 @@ int main(int argc, char *argv[])
 			hname = "h_eff_"+htype+"_E_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{E} [GeV];"+ytitleeff, nlogEbins3,logEbins3)));
 		}		
 		cout << "histograms booked for " << side << endl;
+		for(TMapTSTH1D::iterator it=histos.begin()  ; it!=histos.end()  ; it++) it->second->Sumw2();
+		for(TMapTSTH2D::iterator it=histos2.begin() ; it!=histos2.end() ; it++) it->second->Sumw2();
 		
 		
 		/// get the input files
@@ -2167,8 +2203,6 @@ int main(int argc, char *argv[])
 		for(TMapiTMapTSTS::iterator it1=fmap.begin(); it1!=fmap.end(); ++it1)
 		{
 			ibx++;
-			
-			// if(ibx==3 || ibx==9) continue;
 			
 			/// prepare the dictionaries
 			prepare_cached_clusters();
@@ -2249,8 +2283,12 @@ int main(int argc, char *argv[])
 
 				TString inFileName = it2->second;
 				TFile* fIn = new TFile(inFileName, "READ");
-				TTree* tIn = (TTree *)fIn->Get("clusters");
-				if(!tIn) continue;
+				TTree* tCls = (TTree *)fIn->Get("clusters");
+				TTree* tPix = (TTree *)fIn->Get("pixels");
+				if(!tCls || !tPix) continue;
+				/// for the pixels tree
+				vector<TVector3>* pix_tru_hit=0;
+				tPix->SetBranchAddress("tru_hit", &pix_tru_hit);
 
 				/// for cluster tree
 				int bx;
@@ -2282,44 +2320,73 @@ int main(int argc, char *argv[])
 				vector<double>* yres=0;
 				int seed_entry;
 
-				tIn->SetBranchAddress("bx", &bx);
-				tIn->SetBranchAddress("pix_entry", &pix_entry);
-				tIn->SetBranchAddress("pixId", &pixId);
-				tIn->SetBranchAddress("encodedClsId", &encodedClsId);
-				tIn->SetBranchAddress("isSignal", &isSignal);
-				tIn->SetBranchAddress("size", &size);
-				tIn->SetBranchAddress("xsize", &xsize);
-				tIn->SetBranchAddress("ysize", &ysize);
-				tIn->SetBranchAddress("charge", &charge);
-				tIn->SetBranchAddress("rglobal_cog", &rglobal_cog);
-				tIn->SetBranchAddress("rlocal_cog", &rlocal_cog);
-				tIn->SetBranchAddress("rglobal_geo", &rglobal_geo);
-				tIn->SetBranchAddress("rlocal_geo", &rlocal_geo);
-				tIn->SetBranchAddress("cellx_cog", &cellx_cog);
-				tIn->SetBranchAddress("celly_cog", &celly_cog);
-				tIn->SetBranchAddress("cellx_geo", &cellx_geo);
-				tIn->SetBranchAddress("celly_geo", &celly_geo);
-				tIn->SetBranchAddress("seed_entry", &seed_entry);
-				tIn->SetBranchAddress("tru_type", &tru_type);
-				tIn->SetBranchAddress("tru_pixentry", &tru_pixentry);
-				tIn->SetBranchAddress("tru_pdgId", &tru_pdgId);
-				tIn->SetBranchAddress("tru_trackId", &tru_trackId);
-				tIn->SetBranchAddress("tru_edep", &tru_edep);
-				tIn->SetBranchAddress("tru_p", &tru_p);
-				tIn->SetBranchAddress("tru_hit", &tru_hit);
-				tIn->SetBranchAddress("tru_vertex", &tru_vertex);
-				tIn->SetBranchAddress("xres", &xres);
-				tIn->SetBranchAddress("yres", &yres);
+				tCls->SetBranchAddress("bx", &bx);
+				tCls->SetBranchAddress("pix_entry", &pix_entry);
+				tCls->SetBranchAddress("pixId", &pixId);
+				tCls->SetBranchAddress("encodedClsId", &encodedClsId);
+				tCls->SetBranchAddress("isSignal", &isSignal);
+				tCls->SetBranchAddress("size", &size);
+				tCls->SetBranchAddress("xsize", &xsize);
+				tCls->SetBranchAddress("ysize", &ysize);
+				tCls->SetBranchAddress("charge", &charge);
+				tCls->SetBranchAddress("rglobal_cog", &rglobal_cog);
+				tCls->SetBranchAddress("rlocal_cog", &rlocal_cog);
+				tCls->SetBranchAddress("rglobal_geo", &rglobal_geo);
+				tCls->SetBranchAddress("rlocal_geo", &rlocal_geo);
+				tCls->SetBranchAddress("cellx_cog", &cellx_cog);
+				tCls->SetBranchAddress("celly_cog", &celly_cog);
+				tCls->SetBranchAddress("cellx_geo", &cellx_geo);
+				tCls->SetBranchAddress("celly_geo", &celly_geo);
+				tCls->SetBranchAddress("seed_entry", &seed_entry);
+				tCls->SetBranchAddress("tru_type", &tru_type);
+				tCls->SetBranchAddress("tru_pixentry", &tru_pixentry);
+				tCls->SetBranchAddress("tru_pdgId", &tru_pdgId);
+				tCls->SetBranchAddress("tru_trackId", &tru_trackId);
+				tCls->SetBranchAddress("tru_edep", &tru_edep);
+				tCls->SetBranchAddress("tru_p", &tru_p);
+				tCls->SetBranchAddress("tru_hit", &tru_hit);
+				tCls->SetBranchAddress("tru_vertex", &tru_vertex);
+				tCls->SetBranchAddress("xres", &xres);
+				tCls->SetBranchAddress("yres", &yres);
 
 
 				/// make a pool of all signal clusters
 				/// loop over the clusters
 				
-				Int_t ntotclusnmbr = tIn->GetEntries();
+				Int_t ntotclusnmbr = tCls->GetEntries();
 				// cout << "Starting loop over " << ntotclusnmbr << " clusters of chip " << it2->first << endl;
 				for(size_t clsnmbr=0; clsnmbr < ntotclusnmbr; clsnmbr++)
-				{	
-					tIn->GetEntry(clsnmbr);
+				{
+					/// get the cluster
+					tCls->GetEntry(clsnmbr);
+
+					/// get some basic info from the clsID
+					int lyrid_FS = DecodeLayer(encodedClsId);
+					int lyrid_KF = mapFullSim2KFLayer(side, lyrid_FS); 
+					TString lyrname_KF = layers[lyrid_KF];
+					
+					/// navigate to this cluster's pixels
+					for(size_t pixentry=0 ; pixentry<pix_entry->size() ; pixentry++)
+					{
+						/// get this pixel
+						tPix->GetEntry( pixentry );
+						
+						/// fill some pix-oriented info
+						if(pix_tru_hit->size()>0)
+						{
+							double xpix = pix_tru_hit->at(0).X()/10;
+							double ypix = pix_tru_hit->at(0).Y()/10;
+							if(lyrname_KF.Contains("L1I")) histos2["h_pix_occ_L1I_"+side]->Fill(xpix,ypix);
+							if(lyrname_KF.Contains("L2I")) histos2["h_pix_occ_L2I_"+side]->Fill(xpix,ypix);
+							if(lyrname_KF.Contains("L3I")) histos2["h_pix_occ_L3I_"+side]->Fill(xpix,ypix);
+							if(lyrname_KF.Contains("L4I")) histos2["h_pix_occ_L4I_"+side]->Fill(xpix,ypix);
+							if(lyrname_KF.Contains("L1O")) histos2["h_pix_occ_L1O_"+side]->Fill(xpix,ypix);
+							if(lyrname_KF.Contains("L2O")) histos2["h_pix_occ_L2O_"+side]->Fill(xpix,ypix);
+							if(lyrname_KF.Contains("L3O")) histos2["h_pix_occ_L3O_"+side]->Fill(xpix,ypix);
+							if(lyrname_KF.Contains("L4O")) histos2["h_pix_occ_L4O_"+side]->Fill(xpix,ypix);
+						}
+					}
+					
 					/// fill truth signal tracks:
 					for(size_t t=0; t<tru_p->size(); ++t)
 					{
@@ -2331,7 +2398,6 @@ int main(int argc, char *argv[])
 							histos["h_tru_zvtx_"+side]->Fill(tru_vertex->at(t).Z());
 							
 							histos["h_tru_px_"+side]->Fill(tru_p->at(t).Px());
-							// cout << "tru_p=(" << tru_p->at(t).Px() << "," << tru_p->at(t).Py() << "," << tru_p->at(t).Pz() << ")" << endl;
 							histos["h_tru_px_zoom_"+side]->Fill(tru_p->at(t).Px());
 							histos["h_tru_py_"+side]->Fill(tru_p->at(t).Py());
 							histos["h_tru_py_zoom_"+side]->Fill(tru_p->at(t).Py());
@@ -2368,12 +2434,23 @@ int main(int argc, char *argv[])
 			TString slyr1I = (side=="Eside") ? "EL1I" : "PL1I";
 			TString slyr4O = (side=="Eside") ? "EL4O" : "PL4O";
 			TString slyr1O = (side=="Eside") ? "EL1O" : "PL1O";
+			
+			TString slyr2I = (side=="Eside") ? "EL2I" : "PL2I";
+			TString slyr3I = (side=="Eside") ? "EL3I" : "PL3I";
+			TString slyr2O = (side=="Eside") ? "EL2O" : "PL2O";
+			TString slyr3O = (side=="Eside") ? "EL3O" : "PL3O";
 
 			/// loop on seeds
 			unsigned int n1I = cached_clusters[slyr1I].size();
 			unsigned int n1O = cached_clusters[slyr1O].size();
 			unsigned int n4I = cached_clusters[slyr4I].size();
 			unsigned int n4O = cached_clusters[slyr4O].size();
+			
+			unsigned int n2I = cached_clusters[slyr2I].size();
+			unsigned int n2O = cached_clusters[slyr2O].size();
+			unsigned int n3I = cached_clusters[slyr3I].size();
+			unsigned int n3O = cached_clusters[slyr3O].size();
+			
 			int n4count = 1;
 			cout << "Starting loop over layer 4 clusters with " << (n4I+n4O) << " clusters" << endl;
 			histos["h_cutflow_"+side]->Fill("L4 Clusters", (n4I+n4O));
@@ -2574,22 +2651,22 @@ int main(int argc, char *argv[])
 				}
 				
 				/// instant summary
-				int countmateff = (int)((float)n_match / (float)n4count * 100.);
-				int countreceff = (int)((float)n_recos / (float)n4count * 100.);
-				int countseleff = (int)((float)n_selct / (float)n4count * 100.);
+				// int countmateff = (n_truth>0) ? (int)((float)n_match / (float)n_truth * 100.) : -1;
+				// int countreceff = (n_truth>0) ? (int)((float)n_recos / (float)n_truth * 100.) : -1;
+				// int countseleff = (n_truth>0) ? (int)((float)n_selct / (float)n_truth * 100.) : -1;
 				if(n4count%100==0)
 				{
-					cout << "ibx=" << ibx
-							<< ": " << n_seeds
-								<< " seeds for " << n4count 
-									<< "/" << (n4I+n4O)
-										<< " clusters in " << slyr4 << " inc overlap (with " 
-											<< n_recos << " recos with " 
-												<< n_selct << " selected and " 
-													<< n_match << " matched) -> counting: " 
-														<< countreceff << "%(rec), "  
-															<< countseleff << "%(sel), "  
-																<< countmateff << "%(mat)" << endl;
+					cout << "ibx: " << ibx
+						  << ", truth: " << n_truth
+							  << ", seeds: " << n_seeds
+								  << ", clusters: [" <<(n4I+n4O)<<","<<(n3I+n3O)<<","<<(n2I+n2O)<<","<<(n1I+n1O)<<"]"
+									  << ", recos: " << n_recos
+										  << ", selected: " << n_selct 
+											  << ", matched: " << n_match << endl;
+											  // << ", matched: " << n_match << " -> counting: "
+												  // << countreceff << "%(rec), "
+													  // << countseleff << "%(sel), "
+														  // << countmateff << "%(mat)" << endl;
 				}
 				n4count++;
 				
@@ -2815,7 +2892,7 @@ int main(int argc, char *argv[])
 				double yVtxSig = (trk->GetSigmaZ2()>0)  ? reco_y[irec]/sqrt(trk->GetSigmaZ2())    : -1e10;
 				double Px = reco_p[irec].Px();
 				double Py = reco_p[irec].Py();
-				double Energy = reco_p[irec].E();
+				// double Energy = reco_p[irec].E();
 				
 				/// matching
 				int nmat = (issig4) ? nmatched(itru,wincls) : -1; // the issig4 check is redundant... 
@@ -3003,6 +3080,8 @@ int main(int argc, char *argv[])
 				histos["h_cutflow_"+side]->Fill("Cluster size x", (int)pass);
 				if(pass && maxclssizey>icuts["MaxClsSizeY"])                             pass = false;
 				histos["h_cutflow_"+side]->Fill("Cluster size y", (int)pass);
+				if(pass && nHits<icuts["MinNhits"])                                      pass = false;
+				histos["h_cutflow_"+side]->Fill("Nhits", (int)pass);
 				if(pass && (Px<dcuts["MinPx"] || Px>dcuts["MaxPx"]))                     pass = false;
 				histos["h_cutflow_"+side]->Fill("p_{x}", (int)pass);
 				if(pass && (Py<dcuts["MinPy"] || Py>dcuts["MaxPy"]))                     pass = false;
@@ -3081,6 +3160,8 @@ int main(int argc, char *argv[])
 			cout << "<<<<<<<<<< Performance summary for sample: " << smplname << " >>>>>>>>>>" << endl;
 			cout << "Event #" << ibx << ", " << side << ": n_truth=" << n_truth
 					<< ", n_cls4=" << (n4I+n4O)
+					<< ", n_cls3=" << (n3I+n3O)
+					<< ", n_cls2=" << (n2I+n2O)
 					<< ", n_cls1=" << (n1I+n1O)
 						<< ", n_seeds=" << n_seeds
 							<< ", n_solve=" << n_solve
@@ -3149,7 +3230,9 @@ int main(int argc, char *argv[])
 				double binareacm2 = (it->second->GetXaxis()->GetBinWidth(1))*(it->second->GetYaxis()->GetBinWidth(1));
 				double pixareacm2 = (27*um2cm)*(29*um2cm);
 				double npixelsperbin = (binareacm2/pixareacm2);
-				it->second->Scale(1./(npixelsperbin*nEvntsProcessed));
+				if(it->first.Contains("_tru_")) it->second->Scale(1./(npixelsperbin*nEvntsProcessed));
+				if(it->first.Contains("_pix_")) it->second->Scale(1./(binareacm2*nEvntsProcessed));
+				if(it->first.Contains("_cls_")) it->second->Scale(1./(binareacm2*nEvntsProcessed));
 			}
 		}
 		

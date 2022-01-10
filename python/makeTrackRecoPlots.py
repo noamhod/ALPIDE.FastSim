@@ -65,6 +65,17 @@ def isTruth(name,truthvars):
    return False
 
 
+def label(text,x,y,col=ROOT.kBlack,boldit=False):
+   s = TLatex()
+   s.SetNDC(1)
+   s.SetTextFont(132)
+   s.SetTextAlign(13)
+   s.SetTextColor(col)
+   s.SetTextSize(0.05)
+   if(boldit): text = "#font[72]{"+text+"}"
+   s.DrawLatex(x,y,text)
+
+
 def GetMeanSigma(fitf,name):
    xmin = fitf.GetXmin()
    xmax = fitf.GetXmax()
@@ -178,22 +189,26 @@ def SingleGausFitResE(hResE, cname, fsinglename, fallname):
    cnv.SaveAs(fallname)
 
 
-def GetHminmax(h):
+def GetHminmax(h,error=False):
    hmin = +1e20
    hmax = -1e20
    for b in range(1,h.GetNbinsX()):
       y = h.GetBinContent(b)
+      if(error): y += h.GetBinError(b)
       if(y<hmin and y>0): hmin = y
       if(y>hmax):         hmax = y
    return hmin,hmax
 
 
-def GetCutflowSummary(h,htype,btru,brec,bsel,bmat):
-   n = { "tru":-1, "rec":-1, "sel":-1, "mat":-1 }
-   if("s" in htype): n["tru"] = h.GetBinContent(btru)
-   n["rec"] = h.GetBinContent(brec)
-   n["sel"] = h.GetBinContent(bsel)
-   if("s" in htype): n["mat"] = h.GetBinContent(bmat)
+def GetCutflowSummary(h):
+   n = { "tru":0, "sed":0, "rec":0, "sel":0, "mat":0 }
+   for b in range(1,h.GetNbinsX()+1):
+      blabel = h.GetXaxis().GetBinLabel(b)
+      if(blabel=="Truth"):                   n["tru"] = h.GetBinContent(b)
+      if(blabel=="Seeds"):                   n["sed"] = h.GetBinContent(b)
+      if(blabel=="KF Tracks"):               n["rec"] = h.GetBinContent(b)
+      if(blabel=="y_{vtx}/#sigma(y_{vtx})"): n["sel"] = h.GetBinContent(b)
+      if(blabel=="Matched"):                 n["mat"] = h.GetBinContent(b)
    return n
    
    
@@ -212,10 +227,12 @@ def main():
    parser.add_argument('-proc', metavar='process', required=True, help='process [elaser,glaser]')
    parser.add_argument('-smpl', metavar='sample',  required=True, help='sample [phase0/allpix/ppw/3.0]')
    parser.add_argument('-side', metavar='side',    required=True, help='side [Pside,Eside]')
+   parser.add_argument('-mult', metavar='multiplicity', required=True, help='multiplicity [500,1000,...]')
    argus  = parser.parse_args()
    process = argus.proc
    sample  = argus.smpl
    side    = argus.side
+   mult    = int(argus.mult)
    
    storage = os.getenv("$STORAGEDIR","../")
    print("storage=",storage)
@@ -243,10 +260,6 @@ def main():
    plottruth = ["_E_", "_pz_", "_px_", "_py_"]
    
    cutflowsummary = {}
-   btru = 1
-   brec = 6
-   bsel = 16
-   bmat = 17
    
    hnames = ["h_all_csize_L1I_"+side,
              "h_all_csize_L2I_"+side,
@@ -515,12 +528,13 @@ def main():
          histos[hname].SetLineWidth(1)
          legend.AddEntry(histos[hname],attr["leg"],"f")
          if("cutflow" in name):
-            hchop = hChopperUp(histos[hname],15)
+            hchop = hChopperUp(histos[hname],14)
             histos.update( {hname+"_chop":hchop} )
             # print(hname+"_chop")
       
    
       ## normalise to nBX:
+      hmin = +1e20
       hmax = -1e20
       for hname,h in histos.items():
          if("_ratio_" not in hname and "_eff_" not in hname):
@@ -532,7 +546,10 @@ def main():
             if("_resol_" in hname and "bb" not in hname):
                h.Scale(1./h.Integral())
                h.GetYaxis().SetTitle( h.GetYaxis().GetTitle()+" [Normalised]" )
-         hmax = h.GetMaximum() if(h.GetMaximum()>hmax) else hmax
+         # hmax = h.GetMaximum() if(h.GetMaximum()>hmax) else hmax
+         hmin0,hmax0 = GetHminmax(h,True)
+         hmax = hmax0 if(hmax0>hmax) else hmax
+         hmin = hmin0 if(hmin0<hmin) else hmin
    
    
       ## set max
@@ -550,9 +567,20 @@ def main():
       if("cutflow" in name):
          for htyp,attr in htypes.items():
             hname = "h_cutflow_"+side+"_"+htyp+"_chop"
-            ncfs = GetCutflowSummary(histos[hname],htyp,btru,brec,bsel,bmat)
+            ncfs = GetCutflowSummary(histos[hname])
             cutflowsummary.update({htyp:ncfs})
-         
+      
+      ## drawopt
+      drawopt = "hist"
+      if("_ratio_" in name or "_eff_" in name):
+         drawopt = "E2P"
+         for htyp,attr in htypes.items():
+            hname = name+"_"+htyp
+            histos[hname].SetMarkerColor( histos[hname].GetLineColor() )
+            histos[hname].SetLineWidth( 1 )
+            histos[hname].SetMarkerStyle( 20 )
+            histos[hname].SetMarkerSize( 1 )
+            
       
       ## draw truth just on energy plots
       if(istruth and "_ratio_" not in name and "_eff_" not in name):
@@ -565,12 +593,12 @@ def main():
          histos[name+"_sb"].Draw("hist same")
       else:
          if("cutflow" in name): histos[name+"_sb_chop"].Draw("hist")
-         else:                  histos[name+"_sb"].Draw("hist")
+         else:                  histos[name+"_sb"].Draw(drawopt)
       if("mat" not in name and "non" not in name):
          if("cutflow" in name): histos[name+"_bb_chop"].Draw("hist same")
-         else:                  histos[name+"_bb"].Draw("hist same")
+         else:                  histos[name+"_bb"].Draw(drawopt+" same")
       if("cutflow" in name): histos[name+"_ss_chop"].Draw("hist same")
-      else:                  histos[name+"_ss"].Draw("hist same")
+      else:                  histos[name+"_ss"].Draw(drawopt+" same")
       legend.Draw("sames")
       
       cnv.RedrawAxis()
@@ -578,6 +606,7 @@ def main():
       cnv.SaveAs(outname+".pdf")
       cnv.SaveAs(pdfsdir+name.replace("h_","")+".pdf")
    
+
    ### resolution fits:
    fitnames = [
       "h_resol_rec_dErel_"+side,
@@ -593,7 +622,6 @@ def main():
          if(not hist): print(name,"is null")
          histos.update( {hname:hist} )
          histos[hname].SetDirectory(0)
-         # hmax = histos[hname].GetMaximum() if(histos[hname].GetMaximum()>hmax) else hmax
          histos[hname].SetLineColor(attr["col"])
          histos[hname].SetFillColorAlpha(attr["col"],0.35)
          histos[hname].SetLineWidth(1)
@@ -602,13 +630,54 @@ def main():
          h.Scale(1./nBXs[htyp])
          
          hmin,hmax = GetHminmax(histos[hname])
-         # print(name,histos[hname].GetMaximum(),hmax)
          histos[hname].SetMinimum(0)
          histos[hname].SetMaximum(1.1*hmax)
-         # TrippleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
-         DoubleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
-         # SingleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
+         if(mult>=1000):             TrippleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
+         if(mult>500 and mult<1000): DoubleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
+         if(mult<500):               SingleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
    
+   
+   ## 2D plots:
+   ROOT.gStyle.SetPadRightMargin(0.2)
+   occnames = [
+      "h_tru_occ_L1I_"+side,
+      "h_tru_occ_L2I_"+side,
+      "h_tru_occ_L3I_"+side,
+      "h_tru_occ_L4I_"+side,
+      "h_tru_occ_L1O_"+side,
+      "h_tru_occ_L2O_"+side,
+      "h_tru_occ_L3O_"+side,
+      "h_tru_occ_L4O_"+side,
+   ]
+   for name in occnames:
+      histos = {}
+      for htyp,attr in htypes.items():
+         # if(htyp=="sb"): continue
+         hname = name+"_"+htyp
+         hist = files[htyp].Get(name).Clone(hname)
+         if(not hist): print(name,"is null")
+         histos.update( {hname:hist} )
+         histos[hname].SetDirectory(0)
+         
+         layer = hname.replace("h_tru_occ_","").replace("_"+side,"").replace("_"+htyp,"")
+         if(htyp=="ss"): layer += " Sig only"
+         if(htyp=="bb"): layer += " Bkg only"
+         if(htyp=="sb"): layer += " Sig+Bkg"
+         # ztitle = histos[hname].GetZaxis().SetTitle()
+         
+         cnv = TCanvas("c_"+name,"",900,500)
+         cnv.cd()
+         ROOT.gPad.SetTicks(1,1)
+         ROOT.gPad.SetGrid()
+         histos[hname].Draw("colz")
+         LUXELabel(0.2,0.85,"TDR")
+         label(layer,0.2,0.84)
+         cnv.RedrawAxis()
+         cnv.Update()
+         cnv.SaveAs(outname+".pdf")
+         cnv.SaveAs(pdfsdir+hname.replace("h_","")+".pdf")
+   
+   ### close everything
    cnv = TCanvas("c","",700,500)
    cnv.SaveAs(outname+".pdf)")
    print("Cutflow summary:\n",cutflowsummary)
