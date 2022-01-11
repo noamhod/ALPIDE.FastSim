@@ -59,6 +59,45 @@ def hChopperUp(h, binstochop):
    return hChopped
 
 
+def graph(h,name):
+   g = TGraphAsymmErrors(h)
+   point = 0
+   for b in range(1,h.GetNbinsX()+1):
+      x    = h.GetBinCenter(b)
+      y    = h.GetBinContent(b)
+      yerr = h.GetBinError(b)
+      xerrdn = x-h.GetXaxis().GetBinLowEdge(b)
+      xerrup = h.GetXaxis().GetBinUpEdge(b)-x
+      yerrdn = yerr
+      yerrup = yerr
+      g.SetPoint(point, x, y)
+      g.SetPointError(point, xerrdn,xerrup, yerrdn,yerrup)
+      point += 1
+   for i in range(g.GetN()):
+      y = g.GetPointY(i)
+      d = g.GetErrorYhigh(i)
+      if(y<=0):
+         g.SetPointY(i,-999)
+         g.SetPointEYhigh(i,1e-6)
+         g.SetPointEYlow(i,1e-6)
+      if((y+d)>1):
+         g.SetPointEYhigh(i,1-y)
+         
+   g.SetName(name)
+   g.SetTitle( h.GetTitle() )
+   g.GetXaxis().SetTitle( h.GetXaxis().GetTitle() )
+   g.GetYaxis().SetTitle( h.GetYaxis().GetTitle() )
+   g.SetLineColor( h.GetLineColor() )
+   g.SetLineWidth( h.GetLineWidth() )
+   g.SetFillColorAlpha( h.GetLineColor(), 0.35 )
+   g.SetMarkerColor( h.GetLineColor() )
+   g.SetMarkerStyle( 20 )
+   g.SetMarkerSize( 1 )
+   g.SetMinimum( 0 )
+   g.SetMaximum( 1.1 )
+   return g
+
+
 def isTruth(name,truthvars):
    for var in truthvars:
       if(var in name): return True
@@ -488,6 +527,7 @@ def main():
       }
       
       histos = {}
+      graphs = {}
       
       cnv = TCanvas("c_"+name,"",700,500)
       if("cutflow" in name): cnv = TCanvas("c_"+name,"",900,500)
@@ -496,7 +536,6 @@ def main():
       ROOT.gPad.SetGrid()
       if("ratio" not in name and "eff" not in name and "resol" not in name): ROOT.gPad.SetLogy()
       
-      LUXELabel(0.2,0.85,"TDR")
       legend = LegendMaker()
       
       for htyp,attr in htypes.items():
@@ -530,7 +569,11 @@ def main():
          if("cutflow" in name):
             hchop = hChopperUp(histos[hname],14)
             histos.update( {hname+"_chop":hchop} )
-            # print(hname+"_chop")
+         if("eff" in name):
+            gname = hname.replace("h_","g_")
+            g = graph(histos[hname],gname)
+            graphs.update({gname:g})
+            
       
    
       ## normalise to nBX:
@@ -570,6 +613,7 @@ def main():
             ncfs = GetCutflowSummary(histos[hname])
             cutflowsummary.update({htyp:ncfs})
       
+      
       ## drawopt
       drawopt = "hist"
       if("_ratio_" in name or "_eff_" in name):
@@ -599,12 +643,35 @@ def main():
          else:                  histos[name+"_bb"].Draw(drawopt+" same")
       if("cutflow" in name): histos[name+"_ss_chop"].Draw("hist same")
       else:                  histos[name+"_ss"].Draw(drawopt+" same")
+      LUXELabel(0.2,0.85,"TDR")
       legend.Draw("sames")
-      
       cnv.RedrawAxis()
       cnv.Update()
       cnv.SaveAs(outname+".pdf")
       cnv.SaveAs(pdfsdir+name.replace("h_","")+".pdf")
+      
+      
+      if("eff" in name):
+         mg = TMultiGraph()
+         gname = name.replace("h_","g_")
+         mg.Add( graphs[gname+"_sb"],"E2P" )
+         mg.Add( graphs[gname+"_ss"],"E2P" )
+         mg.GetXaxis().SetTitle( graphs[gname+"_sb"].GetXaxis().GetTitle() )
+         mg.GetYaxis().SetTitle( graphs[gname+"_sb"].GetYaxis().GetTitle() )
+         mg.SetMinimum(0)
+         mg.SetMaximum(1.1)
+         cnv = TCanvas("c_"+gname,"",700,500)
+         cnv.cd()
+         ROOT.gPad.SetTicks(1,1)
+         ROOT.gPad.SetGrid()
+         mg.Draw("a")
+         LUXELabel(0.2,0.85,"TDR")
+         legend.Draw("sames")
+         cnv.RedrawAxis()
+         cnv.Update()
+         cnv.SaveAs(outname+".pdf")
+         cnv.SaveAs(pdfsdir+name.replace("h_","graph_")+".pdf")
+         
    
 
    ### resolution fits:

@@ -101,6 +101,7 @@ typedef map<TString, TH2D*> TMapTSTH2D;
 typedef map<TString, vector<Cluster>> TMapTSvCls;
 typedef map<TString, map<int, vector<int>>> TMapTSMapivi; // this is needed for the lookup table
 typedef map<TString, TAxis*> TMapTSAxis;
+typedef map<TString, TMapTSAxis> TMapTSAxis2D;
 typedef map<TString, map<int, int>> TMapTSMapii;
 typedef map<TString, TF1*> TMapTSTF1;
 typedef map<TString, TString> TMapTSTS;
@@ -187,7 +188,9 @@ TMapTSMapii cached_clusters_id2ix;
 /// lookup table for cluster id's bin
 TMapTSMapivi lookupTable;
 TMapTSAxis axisMap;
-int nAxisBins = 10000;
+TMapTSTH2D axis2DMap;
+int nAxisBinsX = 270; // 270
+int nAxisBinsY = 20;  // 20
 
 /// road/cone width
 double rwxL1 = -999;
@@ -451,17 +454,32 @@ void setParametersFromDet(TString side, TString proc)
 	for (size_t i = 0; i<layersnames.size(); i++)
 	{
 		TString lname = layersnames.at(i);
-		if     (lname.Contains("P") && lname.Contains("I")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinPI, xMaxPI)));
-		else if(lname.Contains("P") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinPO, xMaxPO)));
-		else if(lname.Contains("E") && lname.Contains("I")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinEI, xMaxEI)));
-		else if(lname.Contains("E") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBins, xMinEO, xMaxEO)));
+		// if     (lname.Contains("P") && lname.Contains("I")) axisMap.insert(make_pair(lname, new TAxis(nAxisBinsX, xMinPI, xMaxPI)));
+		// else if(lname.Contains("P") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBinsX, xMinPO, xMaxPO)));
+		// else if(lname.Contains("E") && lname.Contains("I")) axisMap.insert(make_pair(lname, new TAxis(nAxisBinsX, xMinEI, xMaxEI)));
+		// else if(lname.Contains("E") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBinsX, xMinEO, xMaxEO)));
+
+		if     (lname.Contains("P") && lname.Contains("I")) axis2DMap.insert(make_pair(lname, new TH2D(lname+"_axismap", ";x[cm];y[cm];", nAxisBinsX,xMinPI,xMaxPI, nAxisBinsY,yDn,yUp)));
+		else if(lname.Contains("P") && lname.Contains("O")) axis2DMap.insert(make_pair(lname, new TH2D(lname+"_axismap", ";x[cm];y[cm];", nAxisBinsX,xMinPO,xMaxPO, nAxisBinsY,yDn,yUp)));
+		else if(lname.Contains("E") && lname.Contains("I")) axis2DMap.insert(make_pair(lname, new TH2D(lname+"_axismap", ";x[cm];y[cm];", nAxisBinsX,xMinEI,xMaxEI, nAxisBinsY,yDn,yUp)));
+		else if(lname.Contains("E") && lname.Contains("O")) axis2DMap.insert(make_pair(lname, new TH2D(lname+"_axismap", ";x[cm];y[cm];", nAxisBinsX,xMinEO,xMaxEO, nAxisBinsY,yDn,yUp)));
 
 		// If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true. Otherwise, return 0 or fNbins+1.
-		axisMap[lname]->SetCanExtend(0);
+		// axisMap[lname]->SetCanExtend(0);
+		// vector<int> temp1;
+		// for (int b = 1; b<axisMap[lname]->GetNbins()+1; ++b)
+		// {
+		// 	lookupTable[lname].insert(make_pair(b, temp1));
+		// }
+
 		vector<int> temp1;
-		for (int b = 1; b<axisMap[lname]->GetNbins()+1; ++b)
+		for(int bx=1; bx<axis2DMap[lname]->GetNbinsX()+1; ++bx)
 		{
-			lookupTable[lname].insert(make_pair(b, temp1));
+			for(int by=1; by<axis2DMap[lname]->GetNbinsY()+1; ++by)
+			{	
+				int bin = axis2DMap[lname]->GetBin(bx,by);
+				lookupTable[lname].insert(make_pair(bin, temp1));
+			}
 		}
 	}
 	
@@ -1347,7 +1365,8 @@ void cache_cluster(TVector3*               cls_r,
 	int index = cached_clusters[lyrname_KF].size()-1;
 	cached_clusters_id2ix[lyrname_KF].insert(make_pair(cls_id, index));
 
-	int bin = axisMap[lyrname_KF]->FindBin(x);
+	// int bin = axisMap[lyrname_KF]->FindBin(x);
+	int bin = axis2DMap[lyrname_KF]->FindBin(x,y);
 
 	lookupTable[lyrname_KF][bin].push_back(cls_id);
 }
@@ -1378,8 +1397,15 @@ void clear_lookup_table()
 	{
 		TString lname = layersnames.at(i);
 		{
-			for (int b = 1; b<axisMap[lname]->GetNbins()+1; ++b)
-				lookupTable[lname][b].clear();
+			// for (int b = 1; b<axisMap[lname]->GetNbins()+1; ++b)
+			for(int bx=1; bx<axis2DMap[lname]->GetNbinsX()+1; ++bx)
+			{
+				for(int by=1; by<axis2DMap[lname]->GetNbinsY()+1; ++by)
+				{
+					int bin = axis2DMap[lname]->GetBin(bx,by);
+					lookupTable[lname][bin].clear();
+				}
+			}
 		}
 	}
 }
@@ -1392,7 +1418,9 @@ void remove_from_lookup_table(vector<Cluster> wincls)
 	   TString lyrnameKF = layers[wincls[i].lyridKF];
 	   //int clsix = cached_clusters_id2ix[lyrnameKF][clsid];
 	   double x = wincls[i].r.X();
-	   int bin = axisMap[lyrnameKF]->FindBin(x);
+	   double y = wincls[i].r.Y();
+	   // int bin = axisMap[lyrnameKF]->FindBin(x);
+	   int bin = axis2DMap[lyrnameKF]->FindBin(x,y);
 	   int clsix = getvecindex(clsid, lookupTable[lyrnameKF][bin]);
 	   if(clsix<0) continue;
 	   lookupTable[lyrnameKF][bin].erase(lookupTable[lyrnameKF][bin].begin()+clsix);
@@ -1411,7 +1439,7 @@ void embed_cluster(Cluster &cls)
 	det->GetLayer(cls.lyridKF)->AddBgCluster(clxyzTrk[0], clxyzTrk[1], clxyzTrk[2], cls.clsid);
 }
 
-int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, double x4, double y4, double z4, TMapTSTF1& fDy14vsYMap, TF1* fEvsXL4, vector<int> &embedded_clusters, double rwscale1=1, double rwscale2=1, double rwscale3=1)
+int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, double yPivot, double x4, double y4, double z4, TF1* fEvsXL4, vector<int> &embedded_clusters, double rwscale1=1, double rwscale2=1, double rwscale3=1)
 {
 	TString slyr  = side.ReplaceAll("side", "")+"L"+lyrnumber+io;
 	TString slyr4 = side.ReplaceAll("side", "")+"L4"+io;
@@ -1428,25 +1456,34 @@ int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, 
 	if(slyr.Contains("1")) { rwxM = rwx1; rwyM = rwy1; }
 	if(slyr.Contains("2")) { rwxM = rwx2; rwyM = rwy2; }
 	if(slyr.Contains("3")) { rwxM = rwx3; rwyM = rwy3; }
-	int binUp = axisMap[slyr]->FindBin(xPivot+rwxM);
-	int binDown = axisMap[slyr]->FindBin(xPivot-rwxM);
+	// int binUp = axisMap[slyr]->FindBin(xPivot+rwxM);
+	// int binDown = axisMap[slyr]->FindBin(xPivot-rwxM);
+	
+	int binUpx = axis2DMap[slyr]->GetXaxis()->FindBin(xPivot+rwxM);
+	int binDnx = axis2DMap[slyr]->GetXaxis()->FindBin(xPivot-rwxM);
+	int binUpy = axis2DMap[slyr]->GetYaxis()->FindBin(yPivot+rwyM);
+	int binDny = axis2DMap[slyr]->GetYaxis()->FindBin(yPivot-rwyM);
 
 	int nembedded = 0;
-	for (int bin = binDown; bin <= binUp; ++bin)
+	for(int binx=binDnx; binx<=binUpx; ++binx)
 	{
-		for (size_t k = 0; k<lookupTable[slyr][bin].size(); k++)
-		{
-			int clsid = lookupTable[slyr][bin][k];
-			if(foundinvec(clsid, embedded_clusters)) continue;
-			int index = cached_clusters_id2ix[slyr][clsid];
-			double dycut = fDy14vsYMap[slyr4]->Eval(y4);
-			double dy14 = y4-cached_clusters[slyr][index].r.Y();
-			if(dy14>(dycut+rwyM)) continue;
-			if(dy14<(dycut-rwyM)) continue;
-			if(debug) cout << "embedding: slyr " << slyr << " index " << index << endl;
-			embed_cluster(cached_clusters[slyr][index]);
-			embedded_clusters.push_back(clsid);
-			nembedded++;
+		for(int biny=binDny; biny<=binUpy; ++biny)
+		{	
+			int bin = axis2DMap[slyr]->GetBin(binx,biny);
+			for(size_t k=0; k<lookupTable[slyr][bin].size(); k++)
+			{
+				int clsid = lookupTable[slyr][bin][k];
+				if(foundinvec(clsid, embedded_clusters)) continue;
+				int index = cached_clusters_id2ix[slyr][clsid];
+				// double dycut = fDy14vsYMap[slyr4]->Eval(y4);
+				// double dy14 = y4-cached_clusters[slyr][index].r.Y();
+				// if(dy14>(dycut+rwyM)) continue;
+				// if(dy14<(dycut-rwyM)) continue;
+				if(debug) cout << "embedding: slyr " << slyr << " index " << index << endl;
+				embed_cluster(cached_clusters[slyr][index]);
+				embedded_clusters.push_back(clsid);
+				nembedded++;
+			}
 		}
 	}
 	return nembedded;
@@ -1482,44 +1519,75 @@ void add_all_clusters(TString side, TString slyr, int i4, TMapTSTF1& fDx14vsXMap
 	double x1XPivot = (side=="Pside") ? (x4-dxabs1X) : (x4+dxabs1X);
 	double z1X      = (side=="Pside") ? zPL1I : zEL1I; 
 
+
+	/// II: if x4 and x1 are in the inner layer
+	double dy1I  = fDy14vsYMap[sname+"L4I"]->Eval(y4);
+	double y1IPivot = (y4-dy1I);
+	
+	/// OO: if x4 and x1 are in the outer layer
+	double dy1O  = fDy14vsYMap[sname+"L4O"]->Eval(y4);
+	double y1OPivot = (y4-dy1O);
+	
+	/// OI: if x4 is in the outer layer and x1 is in the inner layer
+	double dy1X  = fDy14vsYMap[sname+"L4X"]->Eval(y4);
+	double y1XPivot = (y4-dy1X);
+	
+	
+
 	/// II: find the x along layer 2 and 3
 	double x2IPivotII = xofz(x1IPivot, x4, z1I, z4, (side=="Pside") ? zPL2I : zEL2I);
 	double x2OPivotII = xofz(x1IPivot, x4, z1I, z4, (side=="Pside") ? zPL2O : zEL2O);
 	double x3IPivotII = xofz(x1IPivot, x4, z1I, z4, (side=="Pside") ? zPL3I : zEL3I);
 	double x3OPivotII = xofz(x1IPivot, x4, z1I, z4, (side=="Pside") ? zPL3O : zEL3O);
 
+	double y2IPivotII = yofz(y1IPivot, y4, z1I, z4, (side=="Pside") ? zPL2I : zEL2I);
+	double y2OPivotII = yofz(y1IPivot, y4, z1I, z4, (side=="Pside") ? zPL2O : zEL2O);
+	double y3IPivotII = yofz(y1IPivot, y4, z1I, z4, (side=="Pside") ? zPL3I : zEL3I);
+	double y3OPivotII = yofz(y1IPivot, y4, z1I, z4, (side=="Pside") ? zPL3O : zEL3O);
+
 	/// OO: find the x along layer 2 and 3
 	double x2IPivotOO = xofz(x1OPivot, x4, z1O, z4, (side=="Pside") ? zPL2I : zEL2I);
 	double x2OPivotOO = xofz(x1OPivot, x4, z1O, z4, (side=="Pside") ? zPL2O : zEL2O);
 	double x3IPivotOO = xofz(x1OPivot, x4, z1O, z4, (side=="Pside") ? zPL3I : zEL3I);
 	double x3OPivotOO = xofz(x1OPivot, x4, z1O, z4, (side=="Pside") ? zPL3O : zEL3O);
-
+	
+	double y2IPivotOO = yofz(y1OPivot, y4, z1O, z4, (side=="Pside") ? zPL2I : zEL2I);
+	double y2OPivotOO = yofz(y1OPivot, y4, z1O, z4, (side=="Pside") ? zPL2O : zEL2O);
+	double y3IPivotOO = yofz(y1OPivot, y4, z1O, z4, (side=="Pside") ? zPL3I : zEL3I);
+	double y3OPivotOO = yofz(y1OPivot, y4, z1O, z4, (side=="Pside") ? zPL3O : zEL3O);
+	
 	/// OI: find the x along layer 2 and 3
 	double x2IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side=="Pside") ? zPL2I : zEL2I);
 	double x2OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side=="Pside") ? zPL2O : zEL2O);
 	double x3IPivotOI = xofz(x1XPivot, x4, z1X, z4, (side=="Pside") ? zPL3I : zEL3I);
 	double x3OPivotOI = xofz(x1XPivot, x4, z1X, z4, (side=="Pside") ? zPL3O : zEL3O);
 	
+	double y2IPivotOI = yofz(y1XPivot, y4, z1X, z4, (side=="Pside") ? zPL2I : zEL2I);
+	double y2OPivotOI = yofz(y1XPivot, y4, z1X, z4, (side=="Pside") ? zPL2O : zEL2O);
+	double y3IPivotOI = yofz(y1XPivot, y4, z1X, z4, (side=="Pside") ? zPL3I : zEL3I);
+	double y3OPivotOI = yofz(y1XPivot, y4, z1X, z4, (side=="Pside") ? zPL3O : zEL3O);
+	
+	
 	/// II: find the bins in layer 1 where the x values lie
-	int n1I_II = embed_selective(side, "1", "I", x1IPivot,   x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n2I_II = embed_selective(side, "2", "I", x2IPivotII, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n2O_II = embed_selective(side, "2", "O", x2OPivotII, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n3I_II = embed_selective(side, "3", "I", x3IPivotII, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n3O_II = embed_selective(side, "3", "O", x3OPivotII, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n1I_II = embed_selective(side, "1", "I", x1IPivot,   y1IPivot,   x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n2I_II = embed_selective(side, "2", "I", x2IPivotII, y2IPivotII, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n2O_II = embed_selective(side, "2", "O", x2OPivotII, y2OPivotII, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n3I_II = embed_selective(side, "3", "I", x3IPivotII, y3IPivotII, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n3O_II = embed_selective(side, "3", "O", x3OPivotII, y3OPivotII, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
 
 	/// OO: find the bins in layer 1 where the x values lie
-	int n1I_OO = embed_selective(side, "1", "O", x1OPivot,   x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n2I_OO = embed_selective(side, "2", "I", x2IPivotOO, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n2O_OO = embed_selective(side, "2", "O", x2OPivotOO, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n3I_OO = embed_selective(side, "3", "I", x3IPivotOO, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n3O_OO = embed_selective(side, "3", "O", x3OPivotOO, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n1I_OO = embed_selective(side, "1", "O", x1OPivot,   y1OPivot,   x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n2I_OO = embed_selective(side, "2", "I", x2IPivotOO, y2IPivotOO, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n2O_OO = embed_selective(side, "2", "O", x2OPivotOO, y2OPivotOO, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n3I_OO = embed_selective(side, "3", "I", x3IPivotOO, y3IPivotOO, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n3O_OO = embed_selective(side, "3", "O", x3OPivotOO, y3OPivotOO, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
 
 	/// OI: find the bins in layer 1 where the x values lie
-	int n1I_OI = embed_selective(side, "1", "I", x1IPivot,   x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n2I_OI = embed_selective(side, "2", "I", x2IPivotOI, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n2O_OI = embed_selective(side, "2", "O", x2OPivotOI, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n3I_OI = embed_selective(side, "3", "I", x3IPivotOI, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
-	int n3O_OI = embed_selective(side, "3", "O", x3OPivotOI, x4,y4,z4, fDy14vsYMap,fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n1I_OI = embed_selective(side, "1", "I", x1IPivot,   y1IPivot,   x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n2I_OI = embed_selective(side, "2", "I", x2IPivotOI, y2IPivotOI, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n2O_OI = embed_selective(side, "2", "O", x2OPivotOI, y2OPivotOI, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n3I_OI = embed_selective(side, "3", "I", x3IPivotOI, y3IPivotOI, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
+	int n3O_OI = embed_selective(side, "3", "O", x3OPivotOI, y3OPivotOI, x4,y4,z4, fEvsXL4, embedded_clusters, rwscale1,rwscale2,rwscale3);
 
 	if(0) cout << "n1I_II=" << n1I_II << endl;
 	if(0) cout << "n2I_II=" << n2I_II << endl;
@@ -2662,7 +2730,8 @@ int main(int argc, char *argv[])
 								  << ", clusters: [" <<(n4I+n4O)<<","<<(n3I+n3O)<<","<<(n2I+n2O)<<","<<(n1I+n1O)<<"]"
 									  << ", recos: " << n_recos
 										  << ", selected: " << n_selct 
-											  << ", matched: " << n_match << endl;
+											  << ", matched: " << n_match
+												  << " --> recos/seeds: " << (int)((float)n_recos / (float)n_seeds * 100.) << "%" << endl;
 											  // << ", matched: " << n_match << " -> counting: "
 												  // << countreceff << "%(rec), "
 													  // << countseleff << "%(sel), "
