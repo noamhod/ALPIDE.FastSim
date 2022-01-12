@@ -78,7 +78,7 @@ class TrackPar: public TObject {
   virtual  Bool_t IsStartedTimeIntegral() const {return kFALSE;}
   virtual  void   AddTimeStep(Double_t ) {} // dummy method, real stuff is done in AliKalmanTrack
   Double_t GetAlpha() const {return fAlpha;}
-  Double_t GetX() const {return fX;}
+  Double_t GetX()    const {return fX;}
   Double_t GetY()    const {return fP[0];}
   Double_t GetZ()    const {return fP[1];}
   Double_t GetSnp()  const {return fP[2];}
