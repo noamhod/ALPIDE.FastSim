@@ -2353,7 +2353,11 @@ int main(int argc, char *argv[])
 				TFile* fIn = new TFile(inFileName, "READ");
 				TTree* tCls = (TTree *)fIn->Get("clusters");
 				TTree* tPix = (TTree *)fIn->Get("pixels");
-				if(!tCls || !tPix) continue;
+				if(!tCls || !tPix)
+				{
+					fIn->Close();
+					continue;
+				}
 				/// for the pixels tree
 				vector<TVector3>* pix_tru_hit=0;
 				tPix->SetBranchAddress("tru_hit", &pix_tru_hit);
