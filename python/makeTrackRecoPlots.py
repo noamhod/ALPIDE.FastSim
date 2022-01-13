@@ -35,14 +35,12 @@ def LegendMaker():
 def hChopperUp(h, binstochop):
    nbinsorig = h.GetNbinsX()
    nbins = nbinsorig-binstochop
-   print("nbins=",nbins)
    xbins = []
    xaxis = h.GetXaxis()
    yaxis = h.GetYaxis()
    for b in range(1,nbins+1): xbins.append( xaxis.GetBinLowEdge(b) )
    xbins.append( xaxis.GetBinUpEdge(nbins) )
    arrxbins = array("d", xbins)
-   print(arrxbins)
    name   = h.GetName()
    title  = h.GetTitle()
    xtitle = xaxis.GetTitle()
@@ -243,11 +241,24 @@ def GetCutflowSummary(h):
    n = { "tru":0, "sed":0, "rec":0, "sel":0, "mat":0 }
    for b in range(1,h.GetNbinsX()+1):
       blabel = h.GetXaxis().GetBinLabel(b)
-      if(blabel=="Truth"):                   n["tru"] = h.GetBinContent(b)
-      if(blabel=="Seeds"):                   n["sed"] = h.GetBinContent(b)
-      if(blabel=="KF Tracks"):               n["rec"] = h.GetBinContent(b)
-      if(blabel=="y_{vtx}/#sigma(y_{vtx})"): n["sel"] = h.GetBinContent(b)
-      if(blabel=="Matched"):                 n["mat"] = h.GetBinContent(b)
+      if(blabel=="Truth"):          n["tru"] = h.GetBinContent(b)
+      if(blabel=="Seeds"):          n["sed"] = h.GetBinContent(b)
+      if(blabel=="KF Tracks"):      n["rec"] = h.GetBinContent(b)
+      if(blabel=="#it{E}>1.5 GeV"): n["sel"] = h.GetBinContent(b)
+      if(blabel=="Matched"):        n["mat"] = h.GetBinContent(b)
+   return n
+   
+def GetCountingSummary(h,side):
+   n = { "All":0, "Peak":0 }
+   s = "P" if(side=="Pside") else "E"
+   n["All"]  = h.GetBinContent(1)
+   for b in range(2,h.GetNbinsX()+1):
+      blabel = h.GetXaxis().GetBinLabel(b)
+      if("I" not in blabel): continue
+      if("_" not in blabel): continue
+      chip = int(blabel.split("_")[1])
+      if(chip<1 or chip>6): continue
+      n["Peak"] += h.GetBinContent(b)
    return n
    
    
@@ -299,6 +310,8 @@ def main():
    plottruth = ["_E_", "_pz_", "_px_", "_py_"]
    
    cutflowsummary = {}
+   pixelssummary = {}
+   clusterssummary = {}
    
    hnames = ["h_all_csize_L1I_"+side,
              "h_all_csize_L2I_"+side,
@@ -510,6 +523,8 @@ def main():
              "h_eff_sel_E_"+side+"_log2",
              "h_eff_sel_E_"+side+"_log3",
              
+             "h_chip_npix_"+side,
+             "h_chip_ncls_"+side,
              "h_cutflow_"+side,
           ]
    
@@ -530,7 +545,7 @@ def main():
       graphs = {}
       
       cnv = TCanvas("c_"+name,"",700,500)
-      if("cutflow" in name): cnv = TCanvas("c_"+name,"",900,500)
+      if("cutflow" in name or "chip" in name): cnv = TCanvas("c_"+name,"",900,500)
       cnv.cd()
       ROOT.gPad.SetTicks(1,1)
       ROOT.gPad.SetGrid()
@@ -567,8 +582,13 @@ def main():
          histos[hname].SetLineWidth(1)
          legend.AddEntry(histos[hname],attr["leg"],"f")
          if("cutflow" in name):
-            hchop = hChopperUp(histos[hname],14)
+            hchop = hChopperUp(histos[hname],13)
             histos.update( {hname+"_chop":hchop} )
+            histos[hname+"_chop"].SetLabelSize( histos[hname+"_chop"].GetLabelSize()*0.9 )
+         if("chip" in name):
+            hchop = hChopperUp(histos[hname],47)
+            histos.update( {hname+"_chop":hchop} )
+            histos[hname+"_chop"].SetLabelSize( histos[hname+"_chop"].GetLabelSize()*0.5 )
          if("eff" in name):
             gname = hname.replace("h_","g_")
             g = graph(histos[hname],gname)
@@ -614,6 +634,19 @@ def main():
             cutflowsummary.update({htyp:ncfs})
       
       
+      ## fill counting dict
+      if("chip" in name):
+         for htyp,attr in htypes.items():
+            if("npix" in name):
+               hname = "h_chip_npix_"+side+"_"+htyp+"_chop"
+               npix = GetCountingSummary(histos[hname],side)
+               pixelssummary.update({htyp:npix})
+            if("ncls" in name):
+               hname = "h_chip_ncls_"+side+"_"+htyp+"_chop"
+               ncls = GetCountingSummary(histos[hname],side)
+               clusterssummary.update({htyp:ncls})
+      
+      
       ## drawopt
       drawopt = "hist"
       if("_ratio_" in name or "_eff_" in name):
@@ -636,13 +669,13 @@ def main():
          htmp.Draw("hist")
          histos[name+"_sb"].Draw("hist same")
       else:
-         if("cutflow" in name): histos[name+"_sb_chop"].Draw("hist")
-         else:                  histos[name+"_sb"].Draw(drawopt)
+         if("cutflow" in name or "chip" in name): histos[name+"_sb_chop"].Draw("hist")
+         else:                                    histos[name+"_sb"].Draw(drawopt)
       if("mat" not in name and "non" not in name):
-         if("cutflow" in name): histos[name+"_bb_chop"].Draw("hist same")
-         else:                  histos[name+"_bb"].Draw(drawopt+" same")
-      if("cutflow" in name): histos[name+"_ss_chop"].Draw("hist same")
-      else:                  histos[name+"_ss"].Draw(drawopt+" same")
+         if("cutflow" in name or "chip" in name): histos[name+"_bb_chop"].Draw("hist same")
+         else:                                    histos[name+"_bb"].Draw(drawopt+" same")
+      if("cutflow" in name or "chip" in name): histos[name+"_ss_chop"].Draw("hist same")
+      else:                                    histos[name+"_ss"].Draw(drawopt+" same")
       LUXELabel(0.2,0.85,"TDR")
       legend.Draw("sames")
       cnv.RedrawAxis()
@@ -699,9 +732,10 @@ def main():
          hmin,hmax = GetHminmax(histos[hname])
          histos[hname].SetMinimum(0)
          histos[hname].SetMaximum(1.1*hmax)
-         if(mult>=1000):             TrippleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
-         if(mult>500 and mult<1000): DoubleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
-         if(mult<500):               SingleGausFitResE(histos[hname],"cnv_resE",outname+".pdf",pdfsdir+name.replace("h_","fit_")+".pdf")
+         fitname = (name+"_"+htyp).replace("h_","fit_")
+         if(mult>=1000):             TrippleGausFitResE(histos[hname], "cnv_resE",outname+".pdf",pdfsdir+fitname+".pdf")
+         if(mult>500 and mult<1000): DoubleGausFitResE(histos[hname],  "cnv_resE",outname+".pdf", pdfsdir+fitname+".pdf")
+         if(mult<500):               SingleGausFitResE(histos[hname],  "cnv_resE",outname+".pdf", pdfsdir+fitname+".pdf")
    
    
    ## 2D plots:
@@ -748,6 +782,8 @@ def main():
    cnv = TCanvas("c","",700,500)
    cnv.SaveAs(outname+".pdf)")
    print("Cutflow summary:\n",cutflowsummary)
+   print("Pixels summary:\n",pixelssummary)
+   print("Clusters summary:\n",clusterssummary)
 
 if __name__=="__main__":
     main()

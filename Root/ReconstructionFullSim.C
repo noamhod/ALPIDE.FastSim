@@ -100,8 +100,6 @@ typedef map<TString, TH1D*> TMapTSTH1D;
 typedef map<TString, TH2D*> TMapTSTH2D;
 typedef map<TString, vector<Cluster>> TMapTSvCls;
 typedef map<TString, map<int, vector<int>>> TMapTSMapivi; // this is needed for the lookup table
-typedef map<TString, TAxis*> TMapTSAxis;
-typedef map<TString, TMapTSAxis> TMapTSAxis2D;
 typedef map<TString, map<int, int>> TMapTSMapii;
 typedef map<TString, TF1*> TMapTSTF1;
 typedef map<TString, TString> TMapTSTS;
@@ -137,8 +135,7 @@ TMapiTS seedcutnames = {{FAIL_SLOPE,"slope"}, {FAIL_SIDE,"side"}, {FAIL_SAMEZ,"s
 								{FAIL_E,"energy"},{PASS,"pass"}};
 
 
-/// some hardcoded provisional stuff								
-int    nMinHits = 4;
+/// some hardcoded provisional stuff
 double scalex   = 1.033; /// TODO dirty fix!!! ///
 
 double vX = 0, vY = 0, vZ = 0; // event vertex
@@ -160,11 +157,21 @@ float dyAlignmentClsTray = 0.000; // cm
 bool doMisalignmentX = false;
 bool doMisalignmentY = false;
 
+/// KF setup and max iterations for retrials of seeding or reconstruction
+int    nMinHits           = -999;
+double ErrorScaleBaseline = -999;
+double MaxChi2ClBaseline  = -999;
+double MaxChi2NDFBaseline = -999;
+int    nMaxIterReco       = -999;
+int    nMaxIterSeeding    = -999;
+bool   AllowChi2Inflation = false;
+bool   AllowHolesOnTrak   = false;
+
 //// seed energies
-double EseedMinGLaser = 0.5;  // GeV
-double EseedMinELaser = 0.5;  // GeV
-double EseedMaxGLaser = 14.0; // GeV
-double EseedMaxELaser = 12.0; // GeV
+double EseedMinGLaser = -999;
+double EseedMinELaser = -999;
+double EseedMaxGLaser = -999;
+double EseedMaxELaser = -999;
 
 vector<TString> sides{"Eside", "Pside"};
 // vector<TString> sides{"Pside", "Eside"};
@@ -180,17 +187,17 @@ double chipgapsize = -999;
 double chipsizex   = -999;
 double chipsizey   = -999;
 
-TMapTSvCls cached_clusters; /// formatted per side per layer e.g. as: cached_clusters[side+"_"+layerid][i].r.X(),  cached_clusters[side+"_"+layerid][i].clsid, etc
-TMapii cached_clusters_all_ids; ///
-TMapii cached_clusters_id2lyr;	///
+/// the basic data structures
+TMapTSvCls cached_clusters;
+TMapii cached_clusters_all_ids;
+TMapii cached_clusters_id2lyr;
 TMapTSMapii cached_clusters_id2ix;
 
 /// lookup table for cluster id's bin
-TMapTSMapivi lookupTable;
-TMapTSAxis axisMap;
-TMapTSTH2D axis2DMap;
-int nAxisBinsX = 270; // 270
-int nAxisBinsY = 20;  // 20
+TMapTSMapivi lookupTable; // this dynamically changing
+TMapTSTH2D axis2DMap; // using just the TAxis functionality... 
+int nAxisBinsX = -999; // 270
+int nAxisBinsY = -999; // 20
 
 /// road/cone width
 double rwxL1 = -999;
@@ -199,11 +206,6 @@ double rwxL3 = -999;
 double rwyL1 = -999;
 double rwyL2 = -999;
 double rwyL3 = -999;
-TF2* fRWxPI = 0;
-TF2* fRWxPO = 0;
-TF2* fRWxEI = 0;
-TF2* fRWxEO = 0;
-TF2* fRWy   = 0;
 
 /// cuts
 TMapTSi icuts;
@@ -313,7 +315,40 @@ string tostring(int n)
 	return str;
 }
 
-void setParametersFromDet(TString side, TString proc)
+void setMultDependencies(int sigmult)
+{
+	/// binning of the lookup-table -- this has a huge impact on accuracy and speed!
+	if     (sigmult<=250)                     { nAxisBinsX = 1000;  nAxisBinsY = 200; }
+	else if(sigmult>250   && sigmult<=500)    { nAxisBinsX = 5000;  nAxisBinsY = 100; }
+	else if(sigmult>500   && sigmult<=1000)   { nAxisBinsX = 1000;  nAxisBinsY = 50;  }
+	else if(sigmult>1000  && sigmult<=9999)   { nAxisBinsX = 270;   nAxisBinsY = 20;  }
+	else if(sigmult>9999  && sigmult<=100000) { nAxisBinsX = 1000;  nAxisBinsY = 100; }
+	else
+	{
+		cout << "not implemented !!!" << endl;
+		cout << "please fix this" << endl;
+		cout << "exitting" << endl;
+		exit(-1);
+	}
+	
+	/// KF baseline setup and max iterations for seeding or reconstruction
+	// nMinHits = 5; // actually it is 4+1
+	if(sigmult<=50)                      { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 3;  MaxChi2NDFBaseline = 3;  AllowChi2Inflation = false; nMaxIterReco = 5; AllowHolesOnTrak = false; }
+	else if(sigmult>50  && sigmult<=100) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 4;  MaxChi2NDFBaseline = 4;  AllowChi2Inflation = false; nMaxIterReco = 4; AllowHolesOnTrak = false;  }
+	else if(sigmult>100 && sigmult<=250) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	else if(sigmult>250 && sigmult<=500) { nMinHits = 5;/*actually means 3+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = true;  nMaxIterReco = 2; AllowHolesOnTrak = true;  }
+	else                                 { nMinHits = 4;/*actually means 4+1*/ ErrorScaleBaseline = 200.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = true;  nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	
+	// in cm, road width in x along the possible cluster where we embed the clusters
+	rwxL1 = 0.030;
+	rwxL2 = 0.025;
+	rwxL3 = 0.020;
+	rwyL1 = 0.030;
+	rwyL2 = 0.025;
+	rwyL3 = 0.020;
+}
+
+void setParametersFromDet(TString side, TString proc, int sigmult)
 {
 	cout << "====================================" << endl;
 	cout << "============DEFINITIONS=============" << endl;
@@ -454,23 +489,10 @@ void setParametersFromDet(TString side, TString proc)
 	for (size_t i = 0; i<layersnames.size(); i++)
 	{
 		TString lname = layersnames.at(i);
-		// if     (lname.Contains("P") && lname.Contains("I")) axisMap.insert(make_pair(lname, new TAxis(nAxisBinsX, xMinPI, xMaxPI)));
-		// else if(lname.Contains("P") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBinsX, xMinPO, xMaxPO)));
-		// else if(lname.Contains("E") && lname.Contains("I")) axisMap.insert(make_pair(lname, new TAxis(nAxisBinsX, xMinEI, xMaxEI)));
-		// else if(lname.Contains("E") && lname.Contains("O")) axisMap.insert(make_pair(lname, new TAxis(nAxisBinsX, xMinEO, xMaxEO)));
-
 		if     (lname.Contains("P") && lname.Contains("I")) axis2DMap.insert(make_pair(lname, new TH2D(lname+"_axismap", ";x[cm];y[cm];", nAxisBinsX,xMinPI,xMaxPI, nAxisBinsY,yDn,yUp)));
 		else if(lname.Contains("P") && lname.Contains("O")) axis2DMap.insert(make_pair(lname, new TH2D(lname+"_axismap", ";x[cm];y[cm];", nAxisBinsX,xMinPO,xMaxPO, nAxisBinsY,yDn,yUp)));
 		else if(lname.Contains("E") && lname.Contains("I")) axis2DMap.insert(make_pair(lname, new TH2D(lname+"_axismap", ";x[cm];y[cm];", nAxisBinsX,xMinEI,xMaxEI, nAxisBinsY,yDn,yUp)));
 		else if(lname.Contains("E") && lname.Contains("O")) axis2DMap.insert(make_pair(lname, new TH2D(lname+"_axismap", ";x[cm];y[cm];", nAxisBinsX,xMinEO,xMaxEO, nAxisBinsY,yDn,yUp)));
-
-		// If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true. Otherwise, return 0 or fNbins+1.
-		// axisMap[lname]->SetCanExtend(0);
-		// vector<int> temp1;
-		// for (int b = 1; b<axisMap[lname]->GetNbins()+1; ++b)
-		// {
-		// 	lookupTable[lname].insert(make_pair(b, temp1));
-		// }
 
 		vector<int> temp1;
 		for(int bx=1; bx<axis2DMap[lname]->GetNbinsX()+1; ++bx)
@@ -483,19 +505,7 @@ void setParametersFromDet(TString side, TString proc)
 		}
 	}
 	
-	/// initialise the road width cuts
-	if(side=="Pside")
-	{
-		fRWxPI = new TF2("fRWxPI","(0.06-0.01*x)/2 * (1+(abs(y-"+(TString)tostring(xMinPI)+")/("+(TString)tostring(Lstave)+"))^0.1)",1.,3.,xMinPI,xMaxPI); /// y is x4
-		fRWxPO = new TF2("fRWxPO","(0.06-0.01*x)/2 * (1+(abs(y-"+(TString)tostring(xMinPO)+")/("+(TString)tostring(Lstave)+"))^0.1)",1.,3.,xMinPO,xMaxPO); /// y is x4
-	}
-	if(side=="Eside")
-	{
-		fRWxEI = new TF2("fRWxEI","(0.06-0.01*x)/2 * (1+(abs(y-"+(TString)tostring(xMaxEI)+")/("+(TString)tostring(Lstave)+"))^0.1)",1.,3.,xMinEI,xMaxEI); /// y is x4
-		fRWxEO = new TF2("fRWxEO","(0.06-0.01*x)/2 * (1+(abs(y-"+(TString)tostring(xMaxEO)+")/("+(TString)tostring(Lstave)+"))^0.1)",1.,3.,xMinEO,xMaxEO); /// y is x4
-	}
-	fRWy = new TF2("fRWy","(0.06-0.01*x)/2 * (1+(abs(y)/("+(TString)tostring(Hstave)+"/2))^0.1)",1.,3.,yDn,yUp); /// y is y4
-	
+	/// for spotting holes-on-track
 	chipgapsize = 0.15824/10;  // cm (i.e. ~158 um)
 	chipsizex   = 29.94176/10; // cm
 	chipsizey   = 13.76256/10; // cm
@@ -510,23 +520,21 @@ void setParametersFromDet(TString side, TString proc)
 		chipgaps = {{"PL1I", vcentersI}, {"PL1O", vcentersO}, {"PL2I", vcentersI}, {"PL2O", vcentersO}, {"PL3I", vcentersI}, {"PL3O", vcentersO}, {"PL4I", vcentersI}, {"PL4O", vcentersO}};
 	}
 	
-	
 	cout << "++++++++++++++++++++++++++++++++++++" << endl;
 }
 
 void setCuts(TString process, int sigmult)
 {
+	//// seed energies
+	EseedMinGLaser = 0.5;  // GeV
+	EseedMinELaser = 0.5;  // GeV
+	EseedMaxGLaser = 14.0; // GeV
+	EseedMaxELaser = 12.0; // GeV
+	
 	if(process=="elaser")
 	{
 		if(sigmult<200)
 		{
-			// in cm, road width in x along the possible cluster where we embed the clusters
-			rwxL1 = 0.030;
-			rwxL2 = 0.025;
-			rwxL3 = 0.020;
-			rwyL1 = 0.030;
-			rwyL2 = 0.025;
-			rwyL3 = 0.020;
 			/// integers
 			icuts.insert(make_pair("MaxClsSize",10));
 			icuts.insert(make_pair("MaxClsSizeX",5));
@@ -537,7 +545,7 @@ void setCuts(TString process, int sigmult)
 			dcuts.insert(make_pair("MaxPx",+0.008));
 			dcuts.insert(make_pair("MinPy",-0.025));
 			dcuts.insert(make_pair("MaxPy",+0.025));
-			dcuts.insert(make_pair("MaxChi2DoF",2));
+			dcuts.insert(make_pair("MaxChi2DoF",3));
 			dcuts.insert(make_pair("MinSnpSig",-3));
 			dcuts.insert(make_pair("MaxSnpSig",+7));
 			dcuts.insert(make_pair("MinTglSig",-350));
@@ -546,17 +554,10 @@ void setCuts(TString process, int sigmult)
 			dcuts.insert(make_pair("MaxxVtxSig",+18e-9));
 			dcuts.insert(make_pair("MinyVtxSig",-0.00025));
 			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
-			// dcuts.insert(make_pair("MinE",1.5));
+			dcuts.insert(make_pair("MinE",1.5));
 		}
 		else if(sigmult>=200 && sigmult<2000)
 		{
-			// in cm, road width in x along the possible cluster where we embed the clusters
-			rwxL1 = 0.030; // 0.060;
-			rwxL2 = 0.025; // 0.060;
-			rwxL3 = 0.020; // 0.060;
-			rwyL1 = 0.030; // 0.060;
-			rwyL2 = 0.025; // 0.060;
-			rwyL3 = 0.020; // 0.060;
 			/// integers
 			icuts.insert(make_pair("MaxClsSize",10));
 			icuts.insert(make_pair("MaxClsSizeX",5));
@@ -567,26 +568,19 @@ void setCuts(TString process, int sigmult)
 			dcuts.insert(make_pair("MaxPx",+0.009)); /// Px -0.003 and +0.008 for low multiplicity
 			dcuts.insert(make_pair("MinPy",-0.005)); /// Py -0.0025 for low multiplicity
 			dcuts.insert(make_pair("MaxPy",+0.005)); /// Py +0.0025 for low multiplicity
-			dcuts.insert(make_pair("MaxChi2DoF",5)); /// 2 for low multiplicity
+			dcuts.insert(make_pair("MaxChi2DoF",10)); /// 2 for low multiplicity?
 			dcuts.insert(make_pair("MinSnpSig",-3));
 			dcuts.insert(make_pair("MaxSnpSig",+7));
 			dcuts.insert(make_pair("MinTglSig",-850)); // -350 for low multiplicity
 			dcuts.insert(make_pair("MaxTglSig",+850)); // +350 for low multiplicity
-			dcuts.insert(make_pair("MinxVtxSig",-3e-9));
-			dcuts.insert(make_pair("MaxxVtxSig",+18e-9));
+			dcuts.insert(make_pair("MinxVtxSig",-10e-9));
+			dcuts.insert(make_pair("MaxxVtxSig",+30e-9));
 			dcuts.insert(make_pair("MinyVtxSig",-0.00025));
 			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
-			// dcuts.insert(make_pair("MinE",1.5));
+			dcuts.insert(make_pair("MinE",1.5));
 		}
 		else if(sigmult>=2000 && sigmult<10000)
 		{
-			// in cm, road width in x along the possible cluster where we embed the clusters
-			rwxL1 = 0.030; // 0.060;
-			rwxL2 = 0.025; // 0.060;
-			rwxL3 = 0.020; // 0.060;
-			rwyL1 = 0.030; // 0.060;
-			rwyL2 = 0.025; // 0.060;
-			rwyL3 = 0.020; // 0.060;
 			/// integers
 			icuts.insert(make_pair("MaxClsSize",10));
 			icuts.insert(make_pair("MaxClsSizeX",5));
@@ -606,42 +600,45 @@ void setCuts(TString process, int sigmult)
 			dcuts.insert(make_pair("MaxxVtxSig",+18e-9));
 			dcuts.insert(make_pair("MinyVtxSig",-0.00025));
 			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
-			// dcuts.insert(make_pair("MinE",1.5));
+			dcuts.insert(make_pair("MinE",1.5));
+		}
+		else if(sigmult>=10000 && sigmult<100000)
+		{
+			/// integers
+			icuts.insert(make_pair("MaxClsSize",10));
+			icuts.insert(make_pair("MaxClsSizeX",5));
+			icuts.insert(make_pair("MaxClsSizeY",5));
+			icuts.insert(make_pair("MinNhits",3));
+			/// doubles
+			dcuts.insert(make_pair("MinPx",-0.2)); /// Px -0.003 and +0.008 for low multiplicity
+			dcuts.insert(make_pair("MaxPx",+0.2)); /// Px -0.003 and +0.008 for low multiplicity
+			dcuts.insert(make_pair("MinPy",-0.005)); /// Py -0.0025 for low multiplicity
+			dcuts.insert(make_pair("MaxPy",+0.005)); /// Py +0.0025 for low multiplicity
+			dcuts.insert(make_pair("MaxChi2DoF",10)); /// 2 for low multiplicity
+			dcuts.insert(make_pair("MinSnpSig",-20));
+			dcuts.insert(make_pair("MaxSnpSig",+25));
+			dcuts.insert(make_pair("MinTglSig",-1000)); // -350 for low multiplicity
+			dcuts.insert(make_pair("MaxTglSig",+1000)); // +350 for low multiplicity
+			dcuts.insert(make_pair("MinxVtxSig",-20e-9));
+			dcuts.insert(make_pair("MaxxVtxSig",+40e-9));
+			dcuts.insert(make_pair("MinyVtxSig",-0.001));
+			dcuts.insert(make_pair("MaxyVtxSig",+0.001));
+			dcuts.insert(make_pair("MinE",1.5));
 		}
 		else
 		{
-			// in cm, road width in x along the possible cluster where we embed the clusters
-			rwxL1 = 0.030; // 0.060;
-			rwxL2 = 0.025; // 0.060;
-			rwxL3 = 0.020; // 0.060;
-			rwyL1 = 0.030; // 0.060;
-			rwyL2 = 0.025; // 0.060;
-			rwyL3 = 0.020; // 0.060;
-			/// integers
-			icuts.insert(make_pair("MaxClsSize",10));
-			icuts.insert(make_pair("MaxClsSizeX",5));
-			icuts.insert(make_pair("MaxClsSizeY",5));
-			icuts.insert(make_pair("MinNhits",3));
-			/// doubles
-			dcuts.insert(make_pair("MinPx",-0.004)); /// Px -0.003 and +0.008 for low multiplicity
-			dcuts.insert(make_pair("MaxPx",+0.009)); /// Px -0.003 and +0.008 for low multiplicity
-			dcuts.insert(make_pair("MinPy",-0.005)); /// Py -0.0025 for low multiplicity
-			dcuts.insert(make_pair("MaxPy",+0.005)); /// Py +0.0025 for low multiplicity
-			dcuts.insert(make_pair("MaxChi2DoF",5)); /// 2 for low multiplicity
-			dcuts.insert(make_pair("MinSnpSig",-3));
-			dcuts.insert(make_pair("MaxSnpSig",+7));
-			dcuts.insert(make_pair("MinTglSig",-850)); // -350 for low multiplicity
-			dcuts.insert(make_pair("MaxTglSig",+850)); // +350 for low multiplicity
-			dcuts.insert(make_pair("MinxVtxSig",-3e-9));
-			dcuts.insert(make_pair("MaxxVtxSig",+18e-9));
-			dcuts.insert(make_pair("MinyVtxSig",-0.00025));
-			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
-			// dcuts.insert(make_pair("MinE",1.5));
+			cout << "not implemented !!!" << endl;
+			cout << "please fix this" << endl;
+			cout << "exitting" << endl;
+			exit(-1);
 		}
 	}
 	else if(process=="glaser")
 	{
-		
+		cout << "not implemented !!!" << endl;
+		cout << "please fix this" << endl;
+		cout << "exitting" << endl;
+		exit(-1);
 	}
 }
 
@@ -1365,7 +1362,6 @@ void cache_cluster(TVector3*               cls_r,
 	int index = cached_clusters[lyrname_KF].size()-1;
 	cached_clusters_id2ix[lyrname_KF].insert(make_pair(cls_id, index));
 
-	// int bin = axisMap[lyrname_KF]->FindBin(x);
 	int bin = axis2DMap[lyrname_KF]->FindBin(x,y);
 
 	lookupTable[lyrname_KF][bin].push_back(cls_id);
@@ -1397,7 +1393,6 @@ void clear_lookup_table()
 	{
 		TString lname = layersnames.at(i);
 		{
-			// for (int b = 1; b<axisMap[lname]->GetNbins()+1; ++b)
 			for(int bx=1; bx<axis2DMap[lname]->GetNbinsX()+1; ++bx)
 			{
 				for(int by=1; by<axis2DMap[lname]->GetNbinsY()+1; ++by)
@@ -1419,7 +1414,6 @@ void remove_from_lookup_table(vector<Cluster> wincls)
 	   //int clsix = cached_clusters_id2ix[lyrnameKF][clsid];
 	   double x = wincls[i].r.X();
 	   double y = wincls[i].r.Y();
-	   // int bin = axisMap[lyrnameKF]->FindBin(x);
 	   int bin = axis2DMap[lyrnameKF]->FindBin(x,y);
 	   int clsix = getvecindex(clsid, lookupTable[lyrnameKF][bin]);
 	   if(clsix<0) continue;
@@ -1456,8 +1450,6 @@ int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, 
 	if(slyr.Contains("1")) { rwxM = rwx1; rwyM = rwy1; }
 	if(slyr.Contains("2")) { rwxM = rwx2; rwyM = rwy2; }
 	if(slyr.Contains("3")) { rwxM = rwx3; rwyM = rwy3; }
-	// int binUp = axisMap[slyr]->FindBin(xPivot+rwxM);
-	// int binDown = axisMap[slyr]->FindBin(xPivot-rwxM);
 	
 	int binUpx = axis2DMap[slyr]->GetXaxis()->FindBin(xPivot+rwxM);
 	int binDnx = axis2DMap[slyr]->GetXaxis()->FindBin(xPivot-rwxM);
@@ -1475,10 +1467,6 @@ int embed_selective(TString side, TString lyrnumber, TString io, double xPivot, 
 				int clsid = lookupTable[slyr][bin][k];
 				if(foundinvec(clsid, embedded_clusters)) continue;
 				int index = cached_clusters_id2ix[slyr][clsid];
-				// double dycut = fDy14vsYMap[slyr4]->Eval(y4);
-				// double dy14 = y4-cached_clusters[slyr][index].r.Y();
-				// if(dy14>(dycut+rwyM)) continue;
-				// if(dy14<(dycut-rwyM)) continue;
 				if(debug) cout << "embedding: slyr " << slyr << " index " << index << endl;
 				embed_cluster(cached_clusters[slyr][index]);
 				embedded_clusters.push_back(clsid);
@@ -1696,12 +1684,26 @@ int nexpectedholes(TString side, TString slyr, int i4, TMapTSTF1& fDx14vsXMap, i
 	{
 		TString slyr0 = it->first;
 		double x0     = it->second;
-		// cout << "x0=" << x0 << endl;
+		
+		/// chip gaps
 		for(size_t k=0 ; k<chipgaps[slyr0].size() ; ++k)
 		{
 			double xmin = chipgaps[slyr0][k]-chipgapsize/2.;
 			double xmax = chipgaps[slyr0][k]+chipgapsize/2.;
-			// cout << "   range=[" << xmin << "," << xmax << "]" << endl;
+			if(x0>=xmin && x0<=xmax)
+			{
+				if(slyr0.Contains("1")) L1holes++;
+				if(slyr0.Contains("2")) L2holes++;
+				if(slyr0.Contains("3")) L3holes++;
+				nholes++;
+			}
+		}
+		
+		/// L-shape holders
+		if(slyr0.Contains("I"))
+		{
+			double xmin = 26.;     // cm
+			double xmax = 26+1.25; // cm
 			if(x0>=xmin && x0<=xmax)
 			{
 				if(slyr0.Contains("1")) L1holes++;
@@ -1982,21 +1984,21 @@ int main(int argc, char *argv[])
 		det->ReadSetup(setup, setup);
 		det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VertexTelescope
 		// det->SetMinITSHits( det->GetNumberOfActiveLayersITS() ); // require hit in every layer
-		det->SetMinITSHits(nMinHits+1); // require hit in at least 4 layers //TODO!!!
+		det->SetMinITSHits(nMinHits); // require hit in at least 4 layers //TODO!!!
 		det->SetMinMSHits(0);		  // we don't have muon spectrometer
 		det->SetMinTRHits(0);		  // we don't have muon trigger stations
 		// max number of seeds on each layer to propagate (per muon track)
 		det->SetMaxSeedToPropagate(1000); // relevant only if background is considered
 		// det->SetMaxSeedToPropagate(4000); // relevant only if background is considered
 		// set chi2 cuts
-		det->SetMaxChi2Cl(10.);  // max track to cluster chi2
+		det->SetMaxChi2Cl(MaxChi2ClBaseline); // 10.  // max track to cluster chi2
 		// det->SetMaxChi2Cl(15.); // max track to cluster chi2
 		// det->SetMaxChi2NDF(3.5); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser")?15.:5.); // max total chi2/ndf
 		// det->SetMaxChi2NDF((process=="elaser") ? 15. : 5.); // max total chi2/ndf
 		// det->SetMaxChi2NDF(15.); // max total chi2/ndf
-		det->SetMaxChi2NDF(10.); // max total chi2/ndf
+		det->SetMaxChi2NDF(MaxChi2NDFBaseline); // 10. // max total chi2/ndf
 		det->SetMaxChi2Vtx(20e9); // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(50.); // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
@@ -2010,14 +2012,15 @@ int main(int argc, char *argv[])
 		// det->ImposeVertex(0., 0., 0.0125);		 // the vertex position is imposed according to the elaser/phase0/ppw/xi=3 sample
 		det->SetApplyBransonPCorrection(-1); // Branson correction, only relevant for setup with MS
 		// for reconstruction:
-		det->SetErrorScale(500.); // can be up to 1000
+		det->SetErrorScale(ErrorScaleBaseline); // can be up to 1000
 		det->Print();
 		// det->BookControlHistos();
 
-		////////////////////////////////////////
-		setParametersFromDet(side, process); ///
-		setCuts(process, sigmult); /////////////
-		////////////////////////////////////////
+		/////////////////////////////////////////////////
+		setMultDependencies(sigmult); // nust be first //
+		setParametersFromDet(side, process, sigmult); ///
+		setCuts(process, sigmult); //////////////////////
+		/////////////////////////////////////////////////
 		
 		////////////////////////////////////////////////
 		if(scalex!=1.)
@@ -2051,6 +2054,37 @@ int main(int argc, char *argv[])
 		histos[hname]->SetName(hname);
 		histos[hname]->GetYaxis()->SetTitle("Entries/BX");
 		
+		/// npixels
+		hname = "h_chip_npix_"+side; histos.insert(make_pair(hname, new TH1D()));
+		histos[hname]->SetName(hname);
+		histos[hname]->GetYaxis()->SetTitle("Pixels/BX");
+		histos[hname]->Fill("All",0);
+		for(size_t l = 0; l<layersnames.size(); l++)
+		{
+			TString lname = layersnames[l];
+			for(size_t c=0; c<9 ; ++c)
+			{
+				if(c==0) histos[hname]->Fill(lname,0);
+				TString cname = tostring(c);
+				histos[hname]->Fill(lname+"_"+cname,0);
+			}
+		}
+		
+		/// nclusters
+		hname = "h_chip_ncls_"+side; histos.insert(make_pair(hname, new TH1D()));
+		histos[hname]->SetName(hname);
+		histos[hname]->GetYaxis()->SetTitle("Clusters/BX");
+		histos[hname]->Fill("All",0);
+		for(size_t l = 0; l<layersnames.size(); l++)
+		{
+			TString lname = layersnames[l];
+			for(size_t c=0; c<9 ; ++c)
+			{
+				if(c==0) histos[hname]->Fill(lname,0);
+				TString cname = tostring(c);
+				histos[hname]->Fill(lname+"_"+cname,0);
+			}
+		}		
 		/// vtx x/y tru
 		hname = "h_tru_xvtx_"+side; histos.insert(make_pair(hname, new TH1D(hname,";#it{x}_{vtx} [cm];Tracks", 200,-0.05,+0.05)));
 		hname = "h_tru_yvtx_"+side; histos.insert(make_pair(hname, new TH1D(hname,";#it{y}_{vtx} [cm];Tracks", 200,-0.05,+0.05)));
@@ -2058,7 +2092,7 @@ int main(int argc, char *argv[])
 		
 		/// px/py tru
 		hname = "h_tru_px_"+side;       histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];Tracks", 200,-1,+1)));
-		hname = "h_tru_px_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];Tracks", 100,-0.5,+0.5)));
+		hname = "h_tru_px_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{x}} [GeV];Tracks", 100,-0.03,+0.03)));
 		hname = "h_tru_py_"+side;       histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{y}} [GeV];Tracks", 200,-0.02,+0.02)));
 		hname = "h_tru_py_zoom_"+side;  histos.insert(make_pair(hname, new TH1D(hname,";#it{p}_{#it{y}} [GeV];Tracks", 100,-0.01,+0.01)));
 		
@@ -2254,7 +2288,7 @@ int main(int argc, char *argv[])
 			hname = "h_eff_"+htype+"_E_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{E} [GeV];"+ytitleeff, nlogEbins1,logEbins1)));
 			hname = "h_eff_"+htype+"_E_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{E} [GeV];"+ytitleeff, nlogEbins2,logEbins2)));
 			hname = "h_eff_"+htype+"_E_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";Truth #it{E} [GeV];"+ytitleeff, nlogEbins3,logEbins3)));
-		}		
+		}
 		cout << "histograms booked for " << side << endl;
 		for(TMapTSTH1D::iterator it=histos.begin()  ; it!=histos.end()  ; it++) it->second->Sumw2();
 		for(TMapTSTH2D::iterator it=histos2.begin() ; it!=histos2.end() ; it++) it->second->Sumw2();
@@ -2350,10 +2384,11 @@ int main(int argc, char *argv[])
 				//cout << it1->first << " " << it2->first << " " << it2->second << endl;
 
 				TString inFileName = it2->second;
-				TFile* fIn = new TFile(inFileName, "READ");
+				// TFile* fIn = new TFile(inFileName, "READ");
+				TFile* fIn = TFile::Open(inFileName, "READ");
 				TTree* tCls = (TTree *)fIn->Get("clusters");
 				TTree* tPix = (TTree *)fIn->Get("pixels");
-				if(!tCls || !tPix) continue;
+				if(tCls==NULL || tPix==NULL) { fIn->Close(); delete fIn; continue; }
 				/// for the pixels tree
 				vector<TVector3>* pix_tru_hit=0;
 				tPix->SetBranchAddress("tru_hit", &pix_tru_hit);
@@ -2432,12 +2467,24 @@ int main(int argc, char *argv[])
 					int lyrid_FS = DecodeLayer(encodedClsId);
 					int lyrid_KF = mapFullSim2KFLayer(side, lyrid_FS); 
 					TString lyrname_KF = layers[lyrid_KF];
+					int chip_FS  = DecodeChip(encodedClsId);
+					TString chipname = lyrname_KF+"_"+tostring(chip_FS);
+					
+					/// fill the cluster count per chip
+					histos["h_chip_ncls_"+side]->Fill("All",1);
+					histos["h_chip_ncls_"+side]->Fill(lyrname_KF,1);
+					histos["h_chip_ncls_"+side]->Fill(chipname,1);
 					
 					/// navigate to this cluster's pixels
 					for(size_t pixentry=0 ; pixentry<pix_entry->size() ; pixentry++)
 					{
 						/// get this pixel
 						tPix->GetEntry( pixentry );
+						
+						/// fill the pixel count per chip
+						histos["h_chip_npix_"+side]->Fill("All",1);
+						histos["h_chip_npix_"+side]->Fill(lyrname_KF,1);
+						histos["h_chip_npix_"+side]->Fill(chipname,1);
 						
 						/// fill some pix-oriented info
 						if(pix_tru_hit->size()>0)
@@ -2491,8 +2538,8 @@ int main(int argc, char *argv[])
 					cache_cluster(rglobal_geo, encodedClsId, isSignal, size, xsize, ysize, charge, tru_trackId, tru_type, tru_p, tru_hit, side, histos, histos2);
 				} // end of loop on clusters
 				fIn->Close(); // must close the file
+				delete fIn;
 			} // end loop on staves
-			
 			
 			/// fill cutflow in the beginning of the cutflow
 			histos["h_cutflow_"+side]->Fill("Truth", n_truth);
@@ -2524,15 +2571,16 @@ int main(int argc, char *argv[])
 			histos["h_cutflow_"+side]->Fill("L4 Clusters", (n4I+n4O));
 			for (unsigned int i4all = 0; i4all<(n4I+n4O); ++i4all)
 			{
-				det->SetErrorScale((process=="elaser") ? 500 : 500);
-				det->SetMaxChi2NDF(10.);
-				det->SetMaxChi2Cl(10.);
-				det->SetMinITSHits(nMinHits+1); // require hit in at least 4 layers by default
+				/// reset to baseline if changed down
+				det->SetErrorScale(ErrorScaleBaseline);
+				det->SetMaxChi2NDF(MaxChi2NDFBaseline);
+				det->SetMaxChi2Cl(MaxChi2ClBaseline);
+				det->SetMinITSHits(nMinHits); // require hit in at least 4 layers by default
 				
 				/// outer first
 				unsigned int i4 = (i4all<n4O) ? i4all  : i4all-n4O;
 				TString slyr4   = (i4all<n4O) ? slyr4O : slyr4I;
-				// int ilyr4       = (i4all<n4O) ? ilyr4O : ilyr4I;
+				// int ilyr4    = (i4all<n4O) ? ilyr4O : ilyr4I;
 				if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
 				if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
 
@@ -2609,7 +2657,6 @@ int main(int argc, char *argv[])
 				double rwscl1 = 1;
 				double rwscl2 = 1;
 				double rwscl3 = 1;
-				int niterations_nMax = 4;
 				int niterations_n = 1;
 				
 				goto embed;
@@ -2622,7 +2669,7 @@ int main(int argc, char *argv[])
 					n3inroad = ncls_on_layer[2];
 					bool insufficientHits = ((n1inroad<1 && L1holes<1) || (n2inroad<1 && L2holes<1) || (n3inroad<1 && L3holes<1));
 				
-				if(niterations_n<niterations_nMax && insufficientHits)
+				if(niterations_n<nMaxIterSeeding && insufficientHits)
 				{
 					if(n1inroad<1) rwscl1 *= 1.5;
 					if(n2inroad<1) rwscl2 *= 2.0;
@@ -2745,7 +2792,6 @@ int main(int argc, char *argv[])
 
 				stopwatch1.Start();
 				
-				int nMaxIterations = 3;
 				int nIterations_slv = 1;
 				int nIterations_trw = 1;
 				int nIterations_hit = 1;
@@ -2754,7 +2800,8 @@ int main(int argc, char *argv[])
 				bool wasSolved = false;
 
 				/// reconstruction!!!
-				int nExpectedHits = nMinHits+1-(nholes>0);
+				int nExpectedHits = nMinHits;
+				if(AllowHolesOnTrak) nExpectedHits = nExpectedHits-(nholes>0);
 				goto reco;
 
 				reco:
@@ -2763,7 +2810,7 @@ int main(int argc, char *argv[])
 				/// solve the track with the KF
 				if(!solved)
 				{
-					if(nIterations_slv<nMaxIterations)
+					if(nIterations_slv<nMaxIterReco)
 					{
 						nIterations_slv++;
 						goto reco;
@@ -2782,21 +2829,20 @@ int main(int argc, char *argv[])
 				KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack();
 				if(!trw)
 				{
-					if(nIterations_trw<nMaxIterations)
+					if(nIterations_trw<nMaxIterReco)
 					{
 						nIterations_trw++;
-						double err = 500;
-						
 						det->SetMinITSHits(nExpectedHits);
-						det->SetErrorScale(err*2*nIterations_trw);
-						// det->SetMaxChi2NDF( (nholes>0) ? 2. : 10.+(5*nIterations_trw)); /// that is, be tighter on the fit quality if there are less points to fit with
-						// det->SetMaxChi2Cl(  (nholes>0) ? 2. : 10.+(5*nIterations_trw)); /// that is, be tighter on the fit quality if there are less points to fit with
-						det->SetMaxChi2NDF(10.+(5*nIterations_trw));
-						det->SetMaxChi2Cl( 10.+(5*nIterations_trw));
+						det->SetErrorScale(ErrorScaleBaseline*2*nIterations_trw);
+						if(AllowChi2Inflation)
+						{
+							det->SetMaxChi2NDF(MaxChi2NDFBaseline+(MaxChi2NDFBaseline*nIterations_trw));
+							det->SetMaxChi2Cl( MaxChi2ClBaseline+(MaxChi2ClBaseline*nIterations_trw));
+						}
 						
 						goto reco;
 					}
-					if(itru!=-999) cout << "!trw: clusterid=" << clsid4 << " (itru=" << itru << ", E=" << Etru << ", iteration=" << nIterations_trw << " out of " << nMaxIterations << ")" << endl;
+					if(itru!=-999) cout << "!trw: clusterid=" << clsid4 << " (itru=" << itru << ", E=" << Etru << ", iteration=" << nIterations_trw << " out of " << nMaxIterReco << ")" << endl;
 					continue; // track was not reconstructed
 				}
 				
@@ -2805,7 +2851,7 @@ int main(int argc, char *argv[])
 				// if(trw->GetNITSHits()<nMinHits)
 				if(trw->GetNITSHits()<nExpectedHits-1)
 				{
-					if(nIterations_hit<nMaxIterations)
+					if(nIterations_hit<nMaxIterReco)
 					{
 						nIterations_hit++;
 						goto reco;
@@ -2818,7 +2864,7 @@ int main(int argc, char *argv[])
 				/// if the track is killed
 				if(trw->IsKilled())
 				{
-					if(nIterations_kil<nMaxIterations)
+					if(nIterations_kil<nMaxIterReco)
 					{
 						nIterations_kil++;
 						goto reco;
@@ -2961,7 +3007,7 @@ int main(int argc, char *argv[])
 				double yVtxSig = (trk->GetSigmaZ2()>0)  ? reco_y[irec]/sqrt(trk->GetSigmaZ2())    : -1e10;
 				double Px = reco_p[irec].Px();
 				double Py = reco_p[irec].Py();
-				// double Energy = reco_p[irec].E();
+				double Energy = reco_p[irec].E();
 				
 				/// matching
 				int nmat = (issig4) ? nmatched(itru,wincls) : -1; // the issig4 check is redundant... 
@@ -3165,8 +3211,8 @@ int main(int argc, char *argv[])
 				histos["h_cutflow_"+side]->Fill("x_{vtx}/#sigma(x_{vtx})", (int)pass);
 				if(pass && (yVtxSig<dcuts["MinyVtxSig"] || yVtxSig>dcuts["MaxyVtxSig"])) pass = false;
 				histos["h_cutflow_"+side]->Fill("y_{vtx}/#sigma(y_{vtx})", (int)pass);
-				// if(pass && Energy<dcuts["MinE"])                                         pass = false;
-				// histos["h_cutflow_"+side]->Fill("#it{E}>1.5 GeV", (int)pass);
+				if(pass && Energy<dcuts["MinE"])                                         pass = false;
+				histos["h_cutflow_"+side]->Fill("#it{E}>1.5 GeV", (int)pass);
 				histos["h_cutflow_"+side]->Fill("Matched", (int)(pass && ismatched));
 				if(pass)
 				{
