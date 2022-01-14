@@ -322,7 +322,8 @@ void setMultDependencies(int sigmult)
 	else if(sigmult>250   && sigmult<=500)    { nAxisBinsX = 5000;  nAxisBinsY = 100; }
 	else if(sigmult>500   && sigmult<=1000)   { nAxisBinsX = 1000;  nAxisBinsY = 50;  }
 	else if(sigmult>1000  && sigmult<=9999)   { nAxisBinsX = 270;   nAxisBinsY = 20;  }
-	else if(sigmult>9999  && sigmult<=100000) { nAxisBinsX = 1000;  nAxisBinsY = 100; }
+	else if(sigmult>9999  && sigmult<=100000) { nAxisBinsX = 500;   nAxisBinsY = 40; }
+	// else if(sigmult>9999  && sigmult<=100000) { nAxisBinsX = 1000;  nAxisBinsY = 100; }
 	else
 	{
 		cout << "not implemented !!!" << endl;
@@ -333,11 +334,13 @@ void setMultDependencies(int sigmult)
 	
 	/// KF baseline setup and max iterations for seeding or reconstruction
 	// nMinHits = 5; // actually it is 4+1
-	if(sigmult<=50)                      { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 3;  MaxChi2NDFBaseline = 3;  AllowChi2Inflation = false; nMaxIterReco = 5; AllowHolesOnTrak = false; }
-	else if(sigmult>50  && sigmult<=100) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 4;  MaxChi2NDFBaseline = 4;  AllowChi2Inflation = false; nMaxIterReco = 4; AllowHolesOnTrak = false;  }
-	else if(sigmult>100 && sigmult<=250) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
-	else if(sigmult>250 && sigmult<=500) { nMinHits = 5;/*actually means 3+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = true;  nMaxIterReco = 2; AllowHolesOnTrak = true;  }
-	else                                 { nMinHits = 4;/*actually means 4+1*/ ErrorScaleBaseline = 200.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = true;  nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	if(sigmult<=50)                       { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 3;  MaxChi2NDFBaseline = 3;  AllowChi2Inflation = false; nMaxIterReco = 5; AllowHolesOnTrak = false; }
+	else if(sigmult>50  && sigmult<=100)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 4;  MaxChi2NDFBaseline = 4;  AllowChi2Inflation = false; nMaxIterReco = 4; AllowHolesOnTrak = false;  }
+	else if(sigmult>100 && sigmult<=250)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	else if(sigmult>250 && sigmult<=500)  { nMinHits = 5;/*actually means 3+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = true;  nMaxIterReco = 2; AllowHolesOnTrak = true;  }
+	else if(sigmult>500 && sigmult<=1000) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = true;  nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	// else                                  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	else                                  { nMinHits = 4;/*actually means 4+1*/ ErrorScaleBaseline = 200.; nMaxIterSeeding = 3; MaxChi2ClBaseline = 15; MaxChi2NDFBaseline = 15; AllowChi2Inflation = false; nMaxIterReco = 0; AllowHolesOnTrak = true;  }
 	
 	// in cm, road width in x along the possible cluster where we embed the clusters
 	rwxL1 = 0.030;
@@ -346,6 +349,13 @@ void setMultDependencies(int sigmult)
 	rwyL1 = 0.030;
 	rwyL2 = 0.025;
 	rwyL3 = 0.020;
+}
+
+int getMinHits(double EfromX4, int sigmult)
+{
+	int nMinHits0 = nMinHits;
+	if(EfromX4>3 && sigmult>=1000) nMinHits0 = nMinHits-1;
+	return nMinHits0;
 }
 
 void setParametersFromDet(TString side, TString proc, int sigmult)
@@ -2367,12 +2377,14 @@ int main(int argc, char *argv[])
 			float crg = (side=="Eside") ? -1 : +1;
 
 			/// globals (per side)
-			unsigned int n_truth = 0;
-			unsigned int n_seeds = 0;
-			unsigned int n_solve = 0;
-			unsigned int n_recos = 0;
-			unsigned int n_selct = 0;
-			unsigned int n_match = 0;
+			unsigned int n_truth  = 0;
+			unsigned int n_truth4 = 0;
+			unsigned int n_seeds  = 0;
+			unsigned int n_solve  = 0;
+			unsigned int n_recos  = 0;
+			unsigned int n_selct  = 0;
+			unsigned int n_match  = 0;
+			unsigned int n_match4 = 0;
 			// unsigned int n_trumt = 0;
 			vector<int> vtruid;
 
@@ -2570,13 +2582,7 @@ int main(int argc, char *argv[])
 			cout << "Starting loop over layer 4 clusters with " << (n4I+n4O) << " clusters" << endl;
 			histos["h_cutflow_"+side]->Fill("L4 Clusters", (n4I+n4O));
 			for (unsigned int i4all = 0; i4all<(n4I+n4O); ++i4all)
-			{
-				/// reset to baseline if changed down
-				det->SetErrorScale(ErrorScaleBaseline);
-				det->SetMaxChi2NDF(MaxChi2NDFBaseline);
-				det->SetMaxChi2Cl(MaxChi2ClBaseline);
-				det->SetMinITSHits(nMinHits); // require hit in at least 4 layers by default
-				
+			{				
 				/// outer first
 				unsigned int i4 = (i4all<n4O) ? i4all  : i4all-n4O;
 				TString slyr4   = (i4all<n4O) ? slyr4O : slyr4I;
@@ -2590,6 +2596,22 @@ int main(int argc, char *argv[])
 				// // int ilyr4       = (i4all<n4I) ? ilyr4I : ilyr4O;
 				// if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
 				// if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
+				
+				
+				/// set the functions
+				TF1 *fEvsXL4 = 0;
+				TF1 *fDx14vsX = 0;
+				TF1 *fDy14vsY = 0;
+				if(slyr4.Contains("I")) fEvsXL4 = (side=="Pside") ? fEvsX_L4I_Pside : fEvsX_L4I_Eside;
+				else                    fEvsXL4 = (side=="Pside") ? fEvsX_L4O_Pside : fEvsX_L4O_Eside;
+				double EfromX4 = fEvsXL4->Eval( cached_clusters[slyr4][i4].r.X() );
+				
+				
+				/// reset to baseline if changed down
+				det->SetErrorScale(ErrorScaleBaseline);
+				det->SetMaxChi2NDF(MaxChi2NDFBaseline);
+				det->SetMaxChi2Cl(MaxChi2ClBaseline);
+				det->SetMinITSHits( getMinHits(EfromX4,sigmult) ); // require hit in at least 4 layers by default
 				
 				
 				/// cluster id for the pivot 
@@ -2626,6 +2648,7 @@ int main(int argc, char *argv[])
 						break;
 					}
 				}
+				if(issig4) n_truth4++;
 
 				/// rest all the layers of the detector (including inactive if any)
 				reset_layers_all(); // reset both sides
@@ -2633,14 +2656,6 @@ int main(int argc, char *argv[])
 				reset_layers_tracks();
 				/// clear this side's indices
 				cached_clusters_all_ids.clear();
-
-				TF1 *fEvsXL4 = 0;
-				TF1 *fDx14vsX = 0;
-				TF1 *fDy14vsY = 0;
-				
-				if(slyr4.Contains("I")) fEvsXL4 = (side=="Pside") ? fEvsX_L4I_Pside : fEvsX_L4I_Eside;
-				else                    fEvsXL4 = (side=="Pside") ? fEvsX_L4O_Pside : fEvsX_L4O_Eside;
-
 
 				/// how many holes expected on track?
 				int L1holes = 0;
@@ -2771,14 +2786,17 @@ int main(int argc, char *argv[])
 				// int countseleff = (n_truth>0) ? (int)((float)n_selct / (float)n_truth * 100.) : -1;
 				if(n4count%100==0)
 				{
-					cout << "ibx: " << ibx
-						  << ", truth: " << n_truth
-							  << ", seeds: " << n_seeds
-								  << ", clusters: [" <<(n4I+n4O)<<","<<(n3I+n3O)<<","<<(n2I+n2O)<<","<<(n1I+n1O)<<"]"
-									  << ", recos: " << n_recos
-										  << ", selected: " << n_selct 
-											  << ", matched: " << n_match
-												  << " --> recos/seeds: " << (int)((float)n_recos / (float)n_seeds * 100.) << "%" << endl;
+					cout << "ibx:" << ibx
+						  << ", truth:" << n_truth
+							  << ", truth4:" << n_truth4
+								  << ", seeds:" << n_seeds
+									  << ", clusters:[" <<(n4I+n4O)<<","<<(n3I+n3O)<<","<<(n2I+n2O)<<","<<(n1I+n1O)<<"]"
+										  << ", recos:" << n_recos
+											  << ", match4:" << n_match4
+												  << ", selected:" << n_selct 
+													  << ", matched:" << n_match
+														  << " --> recos/seeds:" << (int)((float)n_recos / (float)n_seeds * 100.) << "%"
+															  << ", match4/truth4:" << (int)((float)n_match4 / (float)n_truth4 * 100.) << "%" << endl;
 											  // << ", matched: " << n_match << " -> counting: "
 												  // << countreceff << "%(rec), "
 													  // << countseleff << "%(sel), "
@@ -2800,7 +2818,7 @@ int main(int argc, char *argv[])
 				bool wasSolved = false;
 
 				/// reconstruction!!!
-				int nExpectedHits = nMinHits;
+				int nExpectedHits = getMinHits(EfromX4,sigmult); //nMinHits;
 				if(AllowHolesOnTrak) nExpectedHits = nExpectedHits-(nholes>0);
 				goto reco;
 
@@ -2848,7 +2866,7 @@ int main(int argc, char *argv[])
 				
 				/// NOAM TODO
 				/// kill the tracks with less than minimum hits-this should be killed on the KF side
-				// if(trw->GetNITSHits()<nMinHits)
+				// if(trw->GetNITSHits()<getMinHits(EfromX4,sigmult))//nMinHits)
 				if(trw->GetNITSHits()<nExpectedHits-1)
 				{
 					if(nIterations_hit<nMaxIterReco)
@@ -3060,6 +3078,7 @@ int main(int argc, char *argv[])
 				histos["h_rec_zvtx_"+side]->Fill(reco_z[irec]);
 				if(issig4) // careful!! this doesn't mean matching but we can do it only wrt some signal... 
 				{
+					n_match4++;
 					histos["h_resol_rec_dErel_"+side]->Fill(reco_dErel[irec]);
 					histos["h_resol_rec_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
 					histos["h_resol_rec_dx1rel_"+side]->Fill(reco_dx1rel[irec]);
@@ -3279,11 +3298,13 @@ int main(int argc, char *argv[])
 					<< ", n_cls2=" << (n2I+n2O)
 					<< ", n_cls1=" << (n1I+n1O)
 						<< ", n_seeds=" << n_seeds
-							<< ", n_solve=" << n_solve
+							// << ", n_solve=" << n_solve
+							<< ", n_truth4=" << n_solve
 								<< ", n_recos=" << n_recos
-									<< ", n_selct=" << n_selct
+									<< ", n_match4=" << n_match4
 										<< ", n_match=" << n_match
-											<< ", counting eff(rec,mat)=" << mateff << "%" << endl;
+											<< ", n_selct=" << n_selct
+												<< ", counting eff(rec,mat)=" << mateff << "%" << endl;
 			cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl;
 
 			fOut->cd();
