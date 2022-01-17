@@ -322,7 +322,7 @@ void setMultDependencies(int sigmult)
 	else if(sigmult>250   && sigmult<=500)    { nAxisBinsX = 5000;  nAxisBinsY = 100; }
 	else if(sigmult>500   && sigmult<=1000)   { nAxisBinsX = 1000;  nAxisBinsY = 50;  }
 	else if(sigmult>1000  && sigmult<=9999)   { nAxisBinsX = 270;   nAxisBinsY = 20;  }
-	else if(sigmult>9999  && sigmult<=100000) { nAxisBinsX = 500;   nAxisBinsY = 40; }
+	else if(sigmult>9999  && sigmult<=100000) { nAxisBinsX = 600;   nAxisBinsY = 30;  }
 	// else if(sigmult>9999  && sigmult<=100000) { nAxisBinsX = 1000;  nAxisBinsY = 100; }
 	else
 	{
@@ -334,28 +334,48 @@ void setMultDependencies(int sigmult)
 	
 	/// KF baseline setup and max iterations for seeding or reconstruction
 	// nMinHits = 5; // actually it is 4+1
-	if(sigmult<=50)                       { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 3;  MaxChi2NDFBaseline = 3;  AllowChi2Inflation = false; nMaxIterReco = 5; AllowHolesOnTrak = false; }
-	else if(sigmult>50  && sigmult<=100)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 4;  MaxChi2NDFBaseline = 4;  AllowChi2Inflation = false; nMaxIterReco = 4; AllowHolesOnTrak = false;  }
-	else if(sigmult>100 && sigmult<=250)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
-	else if(sigmult>250 && sigmult<=500)  { nMinHits = 5;/*actually means 3+1*/ ErrorScaleBaseline = 500.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = true;  nMaxIterReco = 2; AllowHolesOnTrak = true;  }
-	else if(sigmult>500 && sigmult<=1000) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = true;  nMaxIterReco = 3; AllowHolesOnTrak = true;  }
-	// else                                  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.; nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
-	else                                  { nMinHits = 4;/*actually means 4+1*/ ErrorScaleBaseline = 200.; nMaxIterSeeding = 3; MaxChi2ClBaseline = 15; MaxChi2NDFBaseline = 15; AllowChi2Inflation = false; nMaxIterReco = 0; AllowHolesOnTrak = true;  }
+	if(sigmult<=50)                       { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 3;  MaxChi2NDFBaseline = 3;  AllowChi2Inflation = false; nMaxIterReco = 5; AllowHolesOnTrak = false; }
+	else if(sigmult>50  && sigmult<=100)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 4;  MaxChi2NDFBaseline = 4;  AllowChi2Inflation = false; nMaxIterReco = 4; AllowHolesOnTrak = false; }
+	else if(sigmult>100 && sigmult<=250)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	else if(sigmult>250 && sigmult<=500)  { nMinHits = 5;/*actually means 3+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = true;  nMaxIterReco = 2; AllowHolesOnTrak = true;  }
+	else if(sigmult>500 && sigmult<=1000) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = true;  nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	else if(sigmult>1000 && sigmult<=9999){ nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	else                                  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 15; MaxChi2NDFBaseline = 15; AllowChi2Inflation = true;  nMaxIterReco = 1; AllowHolesOnTrak = true;  }
+	
 	
 	// in cm, road width in x along the possible cluster where we embed the clusters
-	rwxL1 = 0.030;
-	rwxL2 = 0.025;
-	rwxL3 = 0.020;
-	rwyL1 = 0.030;
-	rwyL2 = 0.025;
-	rwyL3 = 0.020;
+	if(sigmult<10000)
+	{
+		rwxL1 = 0.030;
+		rwxL2 = 0.025;
+		rwxL3 = 0.020;
+		rwyL1 = 0.030;
+		rwyL2 = 0.025;
+		rwyL3 = 0.020;
+	}
+	else
+	{
+		rwxL1 = 0.030;
+		rwxL2 = 0.025;
+		rwxL3 = 0.020;
+		rwyL1 = 0.030;
+		rwyL2 = 0.025;
+		rwyL3 = 0.020;
+	}
 }
 
 int getMinHits(double EfromX4, int sigmult)
 {
-	int nMinHits0 = nMinHits;
-	if(EfromX4>3 && sigmult>=1000) nMinHits0 = nMinHits-1;
-	return nMinHits0;
+	// if(EfromX4>3 && sigmult>=1000) return nMinHits-1;
+	// if(EfromX4>4 && EfromX4<7 && sigmult>=1000) return nMinHits-1;
+	return nMinHits;
+}
+
+double getMinChi2(double EfromX4, int sigmult)
+{
+	// if(EfromX4>3 && sigmult>=1000) return nMinHits-1;
+	if(EfromX4>4 && EfromX4<7 && sigmult>=1000) return 100;
+	return nMinHits;
 }
 
 void setParametersFromDet(TString side, TString proc, int sigmult)
@@ -1817,8 +1837,6 @@ int nmatched(int truid4, vector<Cluster>& wincls)
 }
 
 
-
-
 int main(int argc, char *argv[])
 {
 	int argcounter;
@@ -1998,7 +2016,7 @@ int main(int argc, char *argv[])
 		det->SetMinMSHits(0);		  // we don't have muon spectrometer
 		det->SetMinTRHits(0);		  // we don't have muon trigger stations
 		// max number of seeds on each layer to propagate (per muon track)
-		det->SetMaxSeedToPropagate(1000); // relevant only if background is considered
+		det->SetMaxSeedToPropagate(10000); // relevant only if background is considered
 		// det->SetMaxSeedToPropagate(4000); // relevant only if background is considered
 		// set chi2 cuts
 		det->SetMaxChi2Cl(MaxChi2ClBaseline); // 10.  // max track to cluster chi2
@@ -2009,14 +2027,15 @@ int main(int argc, char *argv[])
 		// det->SetMaxChi2NDF((process=="elaser") ? 15. : 5.); // max total chi2/ndf
 		// det->SetMaxChi2NDF(15.); // max total chi2/ndf
 		det->SetMaxChi2NDF(MaxChi2NDFBaseline); // 10. // max total chi2/ndf
-		det->SetMaxChi2Vtx(20e9); // fiducial cut on chi2 of convergence to vtx
+		det->SetMaxChi2Vtx(100); // 20e9 // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(50.); // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(1e3);  // fiducial cut on chi2 of convergence to vtx
 		// det->SetMaxChi2Vtx(500);  // fiducial cut on chi2 of convergence to vtx
 		// det->SetDefStepAir(1);				 // IMPORTANT FOR NON-UNIFORM FIELDS
 		det->SetDefStepAir(1);				 // IMPORTANT FOR NON-UNIFORM FIELDS
 		// det->SetDefStepMat(0.1);			 // NOAM??
-		det->SetMinP2Propagate(0.1); /// GeV
+		// det->SetMinP2Propagate(0.1); /// GeV
+		det->SetMinP2Propagate(1.3); /// GeV
 		det->SetIncludeVertex(kTRUE);		 // count vertex as an extra measured point
 		det->ImposeVertex(0., 0., 0.);		 // the vertex position is imposed NOAM
 		// det->ImposeVertex(0., 0., 0.0125);		 // the vertex position is imposed according to the elaser/phase0/ppw/xi=3 sample
@@ -2582,21 +2601,27 @@ int main(int argc, char *argv[])
 			cout << "Starting loop over layer 4 clusters with " << (n4I+n4O) << " clusters" << endl;
 			histos["h_cutflow_"+side]->Fill("L4 Clusters", (n4I+n4O));
 			for (unsigned int i4all = 0; i4all<(n4I+n4O); ++i4all)
-			{				
-				/// outer first
-				unsigned int i4 = (i4all<n4O) ? i4all  : i4all-n4O;
-				TString slyr4   = (i4all<n4O) ? slyr4O : slyr4I;
-				// int ilyr4    = (i4all<n4O) ? ilyr4O : ilyr4I;
-				if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
-				if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
-
-				// /// inner first
-				// unsigned int i4 = (i4all<n4I) ? i4all  : i4all-n4I;
-				// TString slyr4   = (i4all<n4I) ? slyr4I : slyr4O;
-				// // int ilyr4       = (i4all<n4I) ? ilyr4I : ilyr4O;
-				// if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
-				// if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
-				
+			{
+				int i4        = -1;
+				TString slyr4 = "";
+				if(sigmult<10000)
+				{		
+					/// outer first
+					i4     = (i4all<n4O) ? i4all  : i4all-n4O;
+					slyr4  = (i4all<n4O) ? slyr4O : slyr4I;
+					// int ilyr4    = (i4all<n4O) ? ilyr4O : ilyr4I;
+					if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
+					if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
+				}
+				else
+				{
+					/// inner first
+					i4     = (i4all<n4I) ? i4all  : i4all-n4I;
+					slyr4  = (i4all<n4I) ? slyr4I : slyr4O;
+					// int ilyr4       = (i4all<n4I) ? ilyr4I : ilyr4O;
+					if(slyr4==slyr4O && (side=="Pside" && cached_clusters[slyr4][i4].r.X()<xMaxPI)) continue;
+					if(slyr4==slyr4O && (side=="Eside" && cached_clusters[slyr4][i4].r.X()>xMinEI)) continue;
+				}
 				
 				/// set the functions
 				TF1 *fEvsXL4 = 0;
@@ -2611,7 +2636,7 @@ int main(int argc, char *argv[])
 				det->SetErrorScale(ErrorScaleBaseline);
 				det->SetMaxChi2NDF(MaxChi2NDFBaseline);
 				det->SetMaxChi2Cl(MaxChi2ClBaseline);
-				det->SetMinITSHits( getMinHits(EfromX4,sigmult) ); // require hit in at least 4 layers by default
+				det->SetMinITSHits( nMinHits ); // require hit in at least 4 layers by default
 				
 				
 				/// cluster id for the pivot 
@@ -2818,7 +2843,7 @@ int main(int argc, char *argv[])
 				bool wasSolved = false;
 
 				/// reconstruction!!!
-				int nExpectedHits = getMinHits(EfromX4,sigmult); //nMinHits;
+				int nExpectedHits = nMinHits; // getMinHits(EfromX4,sigmult);
 				if(AllowHolesOnTrak) nExpectedHits = nExpectedHits-(nholes>0);
 				goto reco;
 
@@ -2828,7 +2853,7 @@ int main(int argc, char *argv[])
 				/// solve the track with the KF
 				if(!solved)
 				{
-					if(nIterations_slv<nMaxIterReco)
+					if(nIterations_slv<=nMaxIterReco)
 					{
 						nIterations_slv++;
 						goto reco;
@@ -2847,20 +2872,23 @@ int main(int argc, char *argv[])
 				KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack();
 				if(!trw)
 				{
-					if(nIterations_trw<nMaxIterReco)
+					if(nIterations_trw<=nMaxIterReco)
 					{
-						nIterations_trw++;
+						// cout << "retrying with iteration " << nIterations_trw << " for original nMinHits=" << nMinHits << ", nholes=" << nholes << " and nExpectedHits=" << nExpectedHits << endl;
 						det->SetMinITSHits(nExpectedHits);
 						det->SetErrorScale(ErrorScaleBaseline*2*nIterations_trw);
 						if(AllowChi2Inflation)
 						{
-							det->SetMaxChi2NDF(MaxChi2NDFBaseline+(MaxChi2NDFBaseline*nIterations_trw));
-							det->SetMaxChi2Cl( MaxChi2ClBaseline+(MaxChi2ClBaseline*nIterations_trw));
+							// det->SetMaxChi2NDF(MaxChi2NDFBaseline+(MaxChi2NDFBaseline*nIterations_trw));
+							det->SetMaxChi2NDF(getMinChi2(EfromX4,sigmult)+(MaxChi2NDFBaseline*nIterations_trw));
+							// det->SetMaxChi2Cl( MaxChi2ClBaseline+(MaxChi2ClBaseline*nIterations_trw));
+							det->SetMaxChi2Cl( getMinChi2(EfromX4,sigmult)+(MaxChi2ClBaseline*nIterations_trw));
 						}
 						
+						nIterations_trw++;
 						goto reco;
 					}
-					if(itru!=-999) cout << "!trw: clusterid=" << clsid4 << " (itru=" << itru << ", E=" << Etru << ", iteration=" << nIterations_trw << " out of " << nMaxIterReco << ")" << endl;
+					if(itru!=-999) cout << "!trw: clusterid=" << clsid4 << " (itru=" << itru << ", E=" << Etru << ", iteration=" << nIterations_trw-1 << " out of " << nMaxIterReco << ") with nExpectedHits=" << nExpectedHits << " (nMinHits="<<nMinHits<<")" << endl;
 					continue; // track was not reconstructed
 				}
 				
@@ -2869,7 +2897,7 @@ int main(int argc, char *argv[])
 				// if(trw->GetNITSHits()<getMinHits(EfromX4,sigmult))//nMinHits)
 				if(trw->GetNITSHits()<nExpectedHits-1)
 				{
-					if(nIterations_hit<nMaxIterReco)
+					if(nIterations_hit<=nMaxIterReco)
 					{
 						nIterations_hit++;
 						goto reco;
@@ -2882,7 +2910,7 @@ int main(int argc, char *argv[])
 				/// if the track is killed
 				if(trw->IsKilled())
 				{
-					if(nIterations_kil<nMaxIterReco)
+					if(nIterations_kil<=nMaxIterReco)
 					{
 						nIterations_kil++;
 						goto reco;
@@ -2921,7 +2949,7 @@ int main(int argc, char *argv[])
 				// trw->Print("clid etp");
 				// trw->Print("clid");
 				vector<Cluster> wincls;
-				for (int l = 0; l <= nprobeclusters; ++l)
+				for(int l=0; l<=nprobeclusters; ++l)
 				{
 					int cid = probeclusters[l];
 					if(cid<0) continue;
@@ -3177,7 +3205,8 @@ int main(int argc, char *argv[])
 					histos["h_non_xvtx_"+side]->Fill(reco_x[irec]);
 					histos["h_non_yvtx_"+side]->Fill(reco_y[irec]);
 					histos["h_non_zvtx_"+side]->Fill(reco_z[irec]);
-					if(issig4)
+					// if(ismatched)
+					if(issig4) // careful!! this doesn't mean matching but we can do it only wrt some signal... 
 					{
 						histos["h_resol_non_dErel_"+side]->Fill(reco_dErel[irec]);
 						histos["h_resol_non_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
@@ -3260,7 +3289,8 @@ int main(int argc, char *argv[])
 					histos["h_sel_xvtx_"+side]->Fill(reco_x[irec]);
 					histos["h_sel_yvtx_"+side]->Fill(reco_y[irec]);
 					histos["h_sel_zvtx_"+side]->Fill(reco_z[irec]);
-					if(ismatched)
+					// if(ismatched)
+					if(issig4) // careful!! this doesn't mean matching but we can do it only wrt some signal... 
 					{
 						histos["h_resol_sel_dErel_"+side]->Fill(reco_dErel[irec]);
 						histos["h_resol_sel_dpzrel_"+side]->Fill(reco_dpzrel[irec]);
