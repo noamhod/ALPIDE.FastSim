@@ -322,8 +322,8 @@ void setMultDependencies(int sigmult)
 	else if(sigmult>250   && sigmult<=500)    { nAxisBinsX = 5000;  nAxisBinsY = 100; }
 	else if(sigmult>500   && sigmult<=1000)   { nAxisBinsX = 1000;  nAxisBinsY = 50;  }
 	else if(sigmult>1000  && sigmult<=9999)   { nAxisBinsX = 270;   nAxisBinsY = 20;  }
-	else if(sigmult>9999  && sigmult<=100000) { nAxisBinsX = 600;   nAxisBinsY = 30;  }
-	// else if(sigmult>9999  && sigmult<=100000) { nAxisBinsX = 1000;  nAxisBinsY = 100; }
+	else if(sigmult>9999  && sigmult<=30000)  { nAxisBinsX = 600;   nAxisBinsY = 30;  }
+	else if(sigmult>30000 && sigmult<=100000) { nAxisBinsX = 1200;  nAxisBinsY = 60; }
 	else
 	{
 		cout << "not implemented !!!" << endl;
@@ -339,7 +339,7 @@ void setMultDependencies(int sigmult)
 	else if(sigmult>100 && sigmult<=250)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
 	else if(sigmult>250 && sigmult<=500)  { nMinHits = 5;/*actually means 3+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = true;  nMaxIterReco = 2; AllowHolesOnTrak = true;  }
 	else if(sigmult>500 && sigmult<=1000) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = true;  nMaxIterReco = 3; AllowHolesOnTrak = true;  }
-	else if(sigmult>1000 && sigmult<=9999){ nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+	else if(sigmult>1000 && sigmult<=9999){ nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 15; MaxChi2NDFBaseline = 15; AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
 	else                                  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 15; MaxChi2NDFBaseline = 15; AllowChi2Inflation = true;  nMaxIterReco = 1; AllowHolesOnTrak = true;  }
 	
 	
@@ -370,12 +370,26 @@ int getMinHits(double EfromX4, int sigmult)
 	// if(EfromX4>4 && EfromX4<7 && sigmult>=1000) return nMinHits-1;
 	return nMinHits;
 }
-
-double getMinChi2(double EfromX4, int sigmult)
+double getMinChi2NDF(double EfromX4, int sigmult, int iteration)
 {
-	// if(EfromX4>3 && sigmult>=1000) return nMinHits-1;
-	if(EfromX4>4 && EfromX4<7 && sigmult>=1000) return 100;
-	return nMinHits;
+	if(EfromX4>4 && EfromX4<7 && sigmult>=5000) return MaxChi2NDFBaseline*(1+iteration);
+	return MaxChi2NDFBaseline;
+}
+double getMinChi2Cl(double EfromX4, int sigmult, int iteration)
+{
+	if(EfromX4>4 && EfromX4<7 && sigmult>=5000) return MaxChi2NDFBaseline*(1+iteration);
+	return MaxChi2ClBaseline;
+}
+bool allowSharedHitsL123(double Erec, int sigmult)
+{
+	if(Erec>3 && sigmult>=5000) return true;
+	// if(sigmult>=5000) return true;
+	return false;
+}
+bool outerFirst(int sigmult)
+{
+	if(sigmult<5000) return true;
+	return false;
 }
 
 void setParametersFromDet(TString side, TString proc, int sigmult)
@@ -1435,20 +1449,24 @@ void clear_lookup_table()
 	}
 }
 
-void remove_from_lookup_table(vector<Cluster> wincls)
+void remove_from_lookup_table(vector<Cluster> wincls, double Erec, int sigmult)
 {
-   for(size_t i=0; i<wincls.size(); ++i)
-   {
-	   int clsid = wincls[i].clsid;
-	   TString lyrnameKF = layers[wincls[i].lyridKF];
-	   //int clsix = cached_clusters_id2ix[lyrnameKF][clsid];
-	   double x = wincls[i].r.X();
-	   double y = wincls[i].r.Y();
-	   int bin = axis2DMap[lyrnameKF]->FindBin(x,y);
-	   int clsix = getvecindex(clsid, lookupTable[lyrnameKF][bin]);
-	   if(clsix<0) continue;
-	   lookupTable[lyrnameKF][bin].erase(lookupTable[lyrnameKF][bin].begin()+clsix);
-   }
+	bool allow2share = allowSharedHitsL123(Erec,sigmult);
+	for(size_t i=0; i<wincls.size(); ++i)
+	{
+		int clsid = wincls[i].clsid;
+		TString lyrnameKF = layers[wincls[i].lyridKF];
+		
+		if(allow2share && !lyrnameKF.Contains("4")) continue;
+		
+		//int clsix = cached_clusters_id2ix[lyrnameKF][clsid];
+		double x = wincls[i].r.X();
+		double y = wincls[i].r.Y();
+		int bin = axis2DMap[lyrnameKF]->FindBin(x,y);
+		int clsix = getvecindex(clsid, lookupTable[lyrnameKF][bin]);
+		if(clsix<0) continue;
+		lookupTable[lyrnameKF][bin].erase(lookupTable[lyrnameKF][bin].begin()+clsix);
+	}
 }
 
 void embed_cluster(Cluster &cls)
@@ -2137,6 +2155,19 @@ int main(int argc, char *argv[])
 		hname = "h_tru_E_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", nlogEbins1,logEbins1)));
 		hname = "h_tru_E_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", nlogEbins2,logEbins2)));
 		hname = "h_tru_E_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", nlogEbins3,logEbins3)));		
+
+		/// E/pz tru at L4 with various binning
+		hname = "h_tru_L4_pz_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", 150, 0, 15)));
+		hname = "h_tru_L4_pz_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", nlogEbins0,logEbins0)));
+		hname = "h_tru_L4_pz_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", nlogEbins1,logEbins1)));
+		hname = "h_tru_L4_pz_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", nlogEbins2,logEbins2)));
+		hname = "h_tru_L4_pz_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{p}_{#it{z}} [GeV];Tracks", nlogEbins3,logEbins3)));		
+		
+		hname = "h_tru_L4_E_"+side;         histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", 150, 0, 15)));
+		hname = "h_tru_L4_E_"+side+"_log0"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", nlogEbins0,logEbins0)));
+		hname = "h_tru_L4_E_"+side+"_log1"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", nlogEbins1,logEbins1)));
+		hname = "h_tru_L4_E_"+side+"_log2"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", nlogEbins2,logEbins2)));
+		hname = "h_tru_L4_E_"+side+"_log3"; histos.insert(make_pair(hname, new TH1D(hname, ";#it{E} [GeV];Tracks", nlogEbins3,logEbins3)));		
 		
 		/// inclusive clustering info
 		hname = "h_all_csize_L1I_"+side;    histos.insert(make_pair(hname, new TH1D(hname, ";N_{pixels} in cluster;All clusters in L1I", 40, 0, 40)));
@@ -2604,7 +2635,9 @@ int main(int argc, char *argv[])
 			{
 				int i4        = -1;
 				TString slyr4 = "";
-				if(sigmult<10000)
+				bool doOuterFirst = outerFirst(sigmult);
+				
+				if(doOuterFirst)
 				{		
 					/// outer first
 					i4     = (i4all<n4O) ? i4all  : i4all-n4O;
@@ -2673,7 +2706,22 @@ int main(int argc, char *argv[])
 						break;
 					}
 				}
-				if(issig4) n_truth4++;
+				if(issig4)
+				{
+					n_truth4++;
+					
+					histos["h_tru_L4_pz_"+side]->Fill(pztru);
+					histos["h_tru_L4_pz_"+side+"_log0"]->Fill(pztru);
+					histos["h_tru_L4_pz_"+side+"_log1"]->Fill(pztru);
+					histos["h_tru_L4_pz_"+side+"_log2"]->Fill(pztru);
+					histos["h_tru_L4_pz_"+side+"_log3"]->Fill(pztru);
+					
+					histos["h_tru_L4_E_"+side]->Fill(Etru);
+					histos["h_tru_L4_E_"+side+"_log0"]->Fill(Etru);
+					histos["h_tru_L4_E_"+side+"_log1"]->Fill(Etru);
+					histos["h_tru_L4_E_"+side+"_log2"]->Fill(Etru);
+					histos["h_tru_L4_E_"+side+"_log3"]->Fill(Etru);
+				}
 
 				/// rest all the layers of the detector (including inactive if any)
 				reset_layers_all(); // reset both sides
@@ -2880,9 +2928,9 @@ int main(int argc, char *argv[])
 						if(AllowChi2Inflation)
 						{
 							// det->SetMaxChi2NDF(MaxChi2NDFBaseline+(MaxChi2NDFBaseline*nIterations_trw));
-							det->SetMaxChi2NDF(getMinChi2(EfromX4,sigmult)+(MaxChi2NDFBaseline*nIterations_trw));
+							det->SetMaxChi2NDF( getMinChi2NDF(EfromX4,sigmult,nIterations_trw) );
 							// det->SetMaxChi2Cl( MaxChi2ClBaseline+(MaxChi2ClBaseline*nIterations_trw));
-							det->SetMaxChi2Cl( getMinChi2(EfromX4,sigmult)+(MaxChi2ClBaseline*nIterations_trw));
+							det->SetMaxChi2Cl( getMinChi2Cl(EfromX4,sigmult,nIterations_trw) );
 						}
 						
 						nIterations_trw++;
@@ -2973,9 +3021,6 @@ int main(int argc, char *argv[])
 					
 					det->GetLayer(ilr)->GetBgCluster(cix)->Kill();
 				}
-				
-				/// remove the winner cluster from the lookup table
-				remove_from_lookup_table(wincls);
 
 				/// save the clusters' id of the winner track
 				reco_clusters_id.push_back(win_cls_id);
@@ -3022,6 +3067,10 @@ int main(int argc, char *argv[])
 					if(!Propagate2Z(trw,z1tru,r1ontrk,1)) r1ontrk.SetXYZ(-999,-999,-999);
 					if(!Propagate2Z(trw,z4tru,r4ontrk,1)) r4ontrk.SetXYZ(-999,-999,-999);
 				}
+				
+				/// remove the winner cluster from the lookup table
+				// remove_from_lookup_table(wincls);
+				remove_from_lookup_table(wincls, prec.E(), sigmult);
 				
 				/// reco vectors
 				reco_chi2dof.push_back(chi2dof);

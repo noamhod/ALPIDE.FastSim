@@ -2,7 +2,8 @@
 CC = g++
 CFLAGS = -g -O0 -Wall -fPIC -m64 -std=gnu++17
 LDFLAGS = $(shell root-config --glibs) -lEG -lGeom -L./../src/ -lKMCDetFwd Loader_C.so
-INCLUDE = -I$(ROOTSYS)/include -I/usr/include -I./../src/ -I./
+#INCLUDE = -I$(ROOTSYS)/include -I/usr/include -I./../src/ -I./
+INCLUDE = -I$(ROOTSYS)/include/root -I/usr/include -I./../src/ -I./
 
 src = $(wildcard *.C)
 obj = $(src:.c=.o)
