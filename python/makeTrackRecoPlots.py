@@ -21,15 +21,15 @@ ROOT.gStyle.SetPadLeftMargin(0.12)
 ROOT.gStyle.SetPadRightMargin(0.12)
 
 
-def LegendMaker():
-   legend1 = TLegend(0.77,0.80,0.92,0.92); ### with the mean
-   legend1.SetFillColor(kWhite);
-   legend1.SetTextFont(42);
-   legend1.SetTextSize(0.046);
-   legend1.SetBorderSize(0);
-   legend1.SetShadowColor(kWhite);
-   legend1.SetFillStyle(0);
-   return legend1;
+def LegendMaker(isTru=False):
+   legend = TLegend(0.77,0.80,0.92,0.92) if(not isTru) else TLegend(0.77,0.77,0.92,0.92)
+   legend.SetFillColor(kWhite)
+   legend.SetTextFont(42)
+   legend.SetTextSize(0.046)
+   legend.SetBorderSize(0)
+   legend.SetShadowColor(kWhite)
+   legend.SetFillStyle(0)
+   return legend
 
 
 def hChopperUp(h, binstochop):
@@ -74,6 +74,7 @@ def graph(h,name):
    for i in range(g.GetN()):
       y = g.GetPointY(i)
       d = g.GetErrorYhigh(i)
+      if(y>1): y=1
       if(y<=0):
          g.SetPointY(i,-999)
          g.SetPointEYhigh(i,1e-6)
@@ -97,133 +98,133 @@ def graph(h,name):
 
 
 def isTruth(name,truthvars):
-   for var in truthvars:
-      if(var in name): return True
-   return False
+    for var in truthvars:
+        if(var in name): return True
+    return False
 
 
 def label(text,x,y,col=ROOT.kBlack,boldit=False):
-   s = TLatex()
-   s.SetNDC(1)
-   s.SetTextFont(132)
-   s.SetTextAlign(13)
-   s.SetTextColor(col)
-   s.SetTextSize(0.05)
-   if(boldit): text = "#font[72]{"+text+"}"
-   s.DrawLatex(x,y,text)
+    s = TLatex()
+    s.SetNDC(1)
+    s.SetTextFont(132)
+    s.SetTextAlign(13)
+    s.SetTextColor(col)
+    s.SetTextSize(0.05)
+    if(boldit): text = "#font[72]{"+text+"}"
+    s.DrawLatex(x,y,text)
 
 
 def GetMeanSigma(fitf,name):
-   xmin = fitf.GetXmin()
-   xmax = fitf.GetXmax()
-   mean = fitf.Mean(xmin,xmax)
-   sigma = ROOT.TMath.Sqrt(fitf.Variance(xmin,xmax))
-   xmin = mean-5*sigma
-   xmax = mean+5*sigma
-   mean = fitf.Mean(xmin,xmax)
-   sigma = ROOT.TMath.Sqrt(fitf.Variance(xmin,xmax))
-   print("%s: mean=%.5f, sigma=%.5f" % (name,mean,sigma))
-   return mean,sigma
+    xmin = fitf.GetXmin()
+    xmax = fitf.GetXmax()
+    mean = fitf.Mean(xmin,xmax)
+    sigma = ROOT.TMath.Sqrt(fitf.Variance(xmin,xmax))
+    xmin = mean-5*sigma
+    xmax = mean+5*sigma
+    mean = fitf.Mean(xmin,xmax)
+    sigma = ROOT.TMath.Sqrt(fitf.Variance(xmin,xmax))
+    print("%s: mean=%.5f, sigma=%.5f" % (name,mean,sigma))
+    return mean,sigma
 
 
 def TrippleGausFitResE(hResE, cname, fsinglename, fallname):
-   cnv = TCanvas(cname,"",700,500)
-   cnv.SetTicks(1,1)
-   g1 = TF1("g1", "gaus", -0.03,+0.03); g1.SetLineColor(ROOT.kViolet)
-   g2 = TF1("g2", "gaus", -0.03,+0.03); g2.SetLineColor(ROOT.kGreen+2)
-   g3 = TF1("g3", "gaus", -0.03,+0.03); g3.SetLineColor(ROOT.kYellow+2)
-   hResE.Fit(g1,"EMRS")
-   hResE.Fit(g2,"EMRS")
-   hResE.Fit(g3,"EMRS")
-   fite = TF1("fite", "gaus(0)+gaus(3)+gaus(6)", -0.03,+0.03)
-   fite.SetLineColor(ROOT.kBlack)
-   fite.SetLineWidth(2)
-   fite.SetParameter(0,g1.GetParameter(0))
-   fite.SetParameter(1,g1.GetParameter(1))
-   fite.SetParameter(2,g1.GetParameter(2))
-   fite.SetParameter(3,g2.GetParameter(0))
-   fite.SetParameter(4,g2.GetParameter(1))
-   fite.SetParameter(5,g2.GetParameter(2))
-   fite.SetParameter(6,g3.GetParameter(0))
-   fite.SetParameter(7,g3.GetParameter(1))
-   fite.SetParameter(8,g3.GetParameter(2))
-   res = hResE.Fit(fite,"EMRS")
-   chi2dof = fite.GetChisquare()/fite.GetNDF() if(fite.GetNDF()>0) else -1
-   print("Res(E rec:tru) chi2/Ndof=",chi2dof)
-   hResE.Draw("hist")
-   fite.Draw("same")
-   mean,sigma = GetMeanSigma(fite,"E")
-   s = ROOT.TLatex()
-   s.SetNDC(1);
-   s.SetTextAlign(13);
-   s.SetTextColor(ROOT.kBlack)
-   s.SetTextSize(0.04)
-   s.DrawLatex(0.7,0.85,ROOT.Form("Mean=%.6f" % (mean)))
-   s.DrawLatex(0.7,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
-   s.DrawLatex(0.7,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
-   # LUXE(0.18,0.85,ROOT.kBlack)
-   cnv.SaveAs(fsinglename)
-   cnv.SaveAs(fallname)
+    cnv = TCanvas(cname,"",700,500)
+    cnv.SetTicks(1,1)
+    g1 = TF1("g1", "gaus", -0.03,+0.03); g1.SetLineColor(ROOT.kViolet)
+    g2 = TF1("g2", "gaus", -0.03,+0.03); g2.SetLineColor(ROOT.kGreen+2)
+    g3 = TF1("g3", "gaus", -0.03,+0.03); g3.SetLineColor(ROOT.kYellow+2)
+    hResE.Fit(g1,"EMRS")
+    hResE.Fit(g2,"EMRS")
+    hResE.Fit(g3,"EMRS")
+    fite = TF1("fite", "gaus(0)+gaus(3)+gaus(6)", -0.03,+0.03)
+    fite.SetLineColor(ROOT.kBlack)
+    fite.SetLineWidth(2)
+    fite.SetParameter(0,g1.GetParameter(0))
+    fite.SetParameter(1,g1.GetParameter(1))
+    fite.SetParameter(2,g1.GetParameter(2))
+    fite.SetParameter(3,g2.GetParameter(0))
+    fite.SetParameter(4,g2.GetParameter(1))
+    fite.SetParameter(5,g2.GetParameter(2))
+    fite.SetParameter(6,g3.GetParameter(0))
+    fite.SetParameter(7,g3.GetParameter(1))
+    fite.SetParameter(8,g3.GetParameter(2))
+    res = hResE.Fit(fite,"EMRS")
+    chi2dof = fite.GetChisquare()/fite.GetNDF() if(fite.GetNDF()>0) else -1
+    print("Res(E rec:tru) chi2/Ndof=",chi2dof)
+    hResE.Draw("hist")
+    fite.Draw("same")
+    mean,sigma = GetMeanSigma(fite,"E")
+    s = ROOT.TLatex()
+    s.SetNDC(1);
+    s.SetTextAlign(13);
+    s.SetTextColor(ROOT.kBlack)
+    s.SetTextSize(0.04)
+    s.DrawLatex(0.7,0.85,ROOT.Form("Mean=%.6f" % (mean)))
+    s.DrawLatex(0.7,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
+    s.DrawLatex(0.7,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
+    LUXELabel(0.2,0.85,"TDR")
+    cnv.SaveAs(fsinglename)
+    cnv.SaveAs(fallname)
 
 def DoubleGausFitResE(hResE, cname, fsinglename, fallname):
-   cnv = TCanvas(cname,"",700,500)
-   cnv.SetTicks(1,1)
-   g1 = TF1("g1", "gaus", -0.03,+0.03); g1.SetLineColor(ROOT.kViolet)
-   g2 = TF1("g2", "gaus", -0.03,+0.03); g2.SetLineColor(ROOT.kGreen+2)
-   hResE.Fit(g1,"EMRS")
-   hResE.Fit(g2,"EMRS")
-   fite = TF1("fite", "gaus(0)+gaus(3)", -0.03,+0.03)
-   fite.SetLineColor(ROOT.kBlack)
-   fite.SetLineWidth(2)
-   fite.SetParameter(0,g1.GetParameter(0))
-   fite.SetParameter(1,g1.GetParameter(1))
-   fite.SetParameter(2,g1.GetParameter(2))
-   fite.SetParameter(3,g2.GetParameter(0))
-   fite.SetParameter(4,g2.GetParameter(1))
-   fite.SetParameter(5,g2.GetParameter(2))
-   res = hResE.Fit(fite,"EMRS")
-   chi2dof = fite.GetChisquare()/fite.GetNDF() if(fite.GetNDF()>0) else -1
-   print("Res(E rec:tru) chi2/Ndof=",chi2dof)
-   hResE.Draw("hist")
-   fite.Draw("same")
-   mean,sigma = GetMeanSigma(fite,"E")
-   s = ROOT.TLatex()
-   s.SetNDC(1);
-   s.SetTextAlign(13);
-   s.SetTextColor(ROOT.kBlack)
-   s.SetTextSize(0.04)
-   s.DrawLatex(0.7,0.85,ROOT.Form("Mean=%.6f" % (mean)))
-   s.DrawLatex(0.7,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
-   s.DrawLatex(0.7,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
-   # LUXE(0.18,0.85,ROOT.kBlack)
-   cnv.SaveAs(fsinglename)
-   cnv.SaveAs(fallname)
+    cnv = TCanvas(cname,"",700,500)
+    cnv.SetTicks(1,1)
+    g1 = TF1("g1", "gaus", -0.03,+0.03); g1.SetLineColor(ROOT.kViolet)
+    g2 = TF1("g2", "gaus", -0.03,+0.03); g2.SetLineColor(ROOT.kGreen+2)
+    hResE.Fit(g1,"EMRS")
+    hResE.Fit(g2,"EMRS")
+    fite = TF1("fite", "gaus(0)+gaus(3)", -0.03,+0.03)
+    fite.SetLineColor(ROOT.kBlack)
+    fite.SetLineWidth(2)
+    fite.SetParameter(0,g1.GetParameter(0))
+    fite.SetParameter(1,g1.GetParameter(1))
+    fite.SetParameter(2,g1.GetParameter(2))
+    fite.SetParameter(3,g2.GetParameter(0))
+    fite.SetParameter(4,g2.GetParameter(1))
+    fite.SetParameter(5,g2.GetParameter(2))
+    res = hResE.Fit(fite,"EMRS")
+    chi2dof = fite.GetChisquare()/fite.GetNDF() if(fite.GetNDF()>0) else -1
+    print("Res(E rec:tru) chi2/Ndof=",chi2dof)
+    hResE.Draw("hist")
+    fite.Draw("same")
+    mean,sigma = GetMeanSigma(fite,"E")
+    s = ROOT.TLatex()
+    s.SetNDC(1);
+    s.SetTextAlign(13);
+    s.SetTextColor(ROOT.kBlack)
+    s.SetTextSize(0.04)
+    s.DrawLatex(0.7,0.85,ROOT.Form("Mean=%.6f" % (mean)))
+    s.DrawLatex(0.7,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
+    s.DrawLatex(0.7,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
+    LUXELabel(0.2,0.85,"TDR")
+    cnv.SaveAs(fsinglename)
+    cnv.SaveAs(fallname)
    
 def SingleGausFitResE(hResE, cname, fsinglename, fallname):
-   cnv = TCanvas(cname,"",700,500)
-   cnv.SetTicks(1,1)
-   fite = TF1("g1", "gaus", -0.03,+0.03)
-   fite.SetLineColor(ROOT.kBlack)
-   fite.SetLineWidth(2)
-   hResE.Fit(fite,"EMRS")
-   res = hResE.Fit(fite,"EMRS")
-   chi2dof = fite.GetChisquare()/fite.GetNDF() if(fite.GetNDF()>0) else -1
-   print("Res(E rec:tru) chi2/Ndof=",chi2dof)
-   hResE.Draw("hist")
-   fite.Draw("same")
-   mean  = fite.GetParameter("Mean")
-   sigma = fite.GetParameter("Sigma")
-   s = ROOT.TLatex()
-   s.SetNDC(1);
-   s.SetTextAlign(13);
-   s.SetTextColor(ROOT.kBlack)
-   s.SetTextSize(0.04)
-   s.DrawLatex(0.7,0.85,ROOT.Form("Mean=%.6f" % (mean)))
-   s.DrawLatex(0.7,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
-   s.DrawLatex(0.7,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
-   # LUXE(0.18,0.85,ROOT.kBlack)
-   cnv.SaveAs(fsinglename)
-   cnv.SaveAs(fallname)
+    cnv = TCanvas(cname,"",700,500)
+    cnv.SetTicks(1,1)
+    fite = TF1("g1", "gaus", -0.03,+0.03)
+    fite.SetLineColor(ROOT.kBlack)
+    fite.SetLineWidth(2)
+    hResE.Fit(fite,"EMRS")
+    res = hResE.Fit(fite,"EMRS")
+    chi2dof = fite.GetChisquare()/fite.GetNDF() if(fite.GetNDF()>0) else -1
+    print("Res(E rec:tru) chi2/Ndof=",chi2dof)
+    hResE.Draw("hist")
+    fite.Draw("same")
+    mean  = fite.GetParameter("Mean")
+    sigma = fite.GetParameter("Sigma")
+    s = ROOT.TLatex()
+    s.SetNDC(1);
+    s.SetTextAlign(13);
+    s.SetTextColor(ROOT.kBlack)
+    s.SetTextSize(0.04)
+    s.DrawLatex(0.7,0.85,ROOT.Form("Mean=%.6f" % (mean)))
+    s.DrawLatex(0.7,0.78,ROOT.Form("#sigma=%.4f" % (sigma)))
+    s.DrawLatex(0.7,0.71,ROOT.Form("#chi^{2}/N_{DOF}=%.1f" % (chi2dof)))
+    LUXELabel(0.2,0.85,"TDR")
+    cnv.SaveAs(fsinglename)
+    cnv.SaveAs(fallname)
 
 
 def GetHminmax(h,error=False):
@@ -551,7 +552,8 @@ def main():
       ROOT.gPad.SetGrid()
       if("ratio" not in name and "eff" not in name and "resol" not in name): ROOT.gPad.SetLogy()
       
-      legend = LegendMaker()
+      legend     = LegendMaker()
+      legendwtru = LegendMaker(True)
       
       for htyp,attr in htypes.items():
          hname = name+"_"+htyp
@@ -570,7 +572,7 @@ def main():
             histos[hname1].SetLineColor(ROOT.kBlack)
             histos[hname1].SetLineWidth(2)
             histos[hname1].SetLineStyle(2)
-            legend.AddEntry(histos[hname1],"Tru","l")
+            legendwtru.AddEntry(histos[hname1],"Tru","l")
          
          # print("getting",htyp,name)
          hist = files[htyp].Get(name).Clone(hname)
@@ -580,7 +582,8 @@ def main():
          histos[hname].SetLineColor(attr["col"])
          histos[hname].SetFillColorAlpha(attr["col"],0.35)
          histos[hname].SetLineWidth(1)
-         legend.AddEntry(histos[hname],attr["leg"],"f")
+         if(istruth): legendwtru.AddEntry(histos[hname],attr["leg"],"f")
+         else:        legend.AddEntry(histos[hname],attr["leg"],"f")
          if("cutflow" in name):
             hchop = hChopperUp(histos[hname],13)
             histos.update( {hname+"_chop":hchop} )
@@ -606,8 +609,9 @@ def main():
             if("sb" in hname): nBX = nBXs["sb"]
             if("bb" in hname): nBX = nBXs["bb"]
             h.Scale(1./nBX)
+            h.GetYaxis().SetTitle( h.GetYaxis().GetTitle()+" per BX" )
             if("_resol_" in hname and "bb" not in hname):
-               h.Scale(1./h.Integral())
+               if(h.Integral()>0): h.Scale(1./h.Integral())
                h.GetYaxis().SetTitle( h.GetYaxis().GetTitle()+" [Normalised]" )
          # hmax = h.GetMaximum() if(h.GetMaximum()>hmax) else hmax
          hmin0,hmax0 = GetHminmax(h,True)
@@ -659,7 +663,7 @@ def main():
             histos[hname].SetMarkerSize( 1 )
             
       
-      ## draw truth just on energy plots
+      ## draw truth just on energy amd px/py plots
       if(istruth and "_ratio_" not in name and "_eff_" not in name):
          name1 = name
          name1 = name1.replace("rec","tru").replace("sel","tru").replace("mat","tru").replace("non","tru")
@@ -677,7 +681,8 @@ def main():
       if("cutflow" in name or "chip" in name): histos[name+"_ss_chop"].Draw("hist same")
       else:                                    histos[name+"_ss"].Draw(drawopt+" same")
       LUXELabel(0.2,0.85,"TDR")
-      legend.Draw("sames")
+      if(istruth): legendwtru.Draw("sames")
+      else:        legend.Draw("sames")
       cnv.RedrawAxis()
       cnv.Update()
       cnv.SaveAs(outname+".pdf")
@@ -699,7 +704,19 @@ def main():
          ROOT.gPad.SetGrid()
          mg.Draw("a")
          LUXELabel(0.2,0.85,"TDR")
-         legend.Draw("sames")
+         # legend.Draw("sames")
+         
+         legendeff = TLegend(0.77,0.80,0.92,0.92)
+         legendeff.SetFillColor(kWhite)
+         legendeff.SetTextFont(42)
+         legendeff.SetTextSize(0.046)
+         legendeff.SetBorderSize(0)
+         legendeff.SetShadowColor(kWhite)
+         legendeff.SetFillStyle(0)
+         legendeff.AddEntry( graphs[gname+"_ss"],"Sig" )
+         legendeff.AddEntry( graphs[gname+"_sb"],"Sig+Bkg" )
+         legendeff.Draw("same")
+         
          cnv.RedrawAxis()
          cnv.Update()
          cnv.SaveAs(outname+".pdf")
@@ -732,6 +749,7 @@ def main():
          hmin,hmax = GetHminmax(histos[hname])
          histos[hname].SetMinimum(0)
          histos[hname].SetMaximum(1.1*hmax)
+         histos[hname].GetYaxis().SetTitle( histos[hname].GetYaxis().GetTitle()+" per BX" )
          fitname = (name+"_"+htyp).replace("h_","fit_")
          if(mult>=1000):             TrippleGausFitResE(histos[hname], "cnv_resE",outname+".pdf",pdfsdir+fitname+".pdf")
          if(mult>500 and mult<1000): DoubleGausFitResE(histos[hname],  "cnv_resE",outname+".pdf", pdfsdir+fitname+".pdf")
