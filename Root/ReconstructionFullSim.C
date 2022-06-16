@@ -328,7 +328,7 @@ void setMultDependencies(int sigmult)
 	{
 		cout << "not implemented !!!" << endl;
 		cout << "please fix this" << endl;
-		cout << "exiting" << endl;
+		cout << "exitting" << endl;
 		exit(-1);
 	}
 	
@@ -679,32 +679,10 @@ void setCuts(TString process, int sigmult)
 	}
 	else if(process=="glaser")
 	{
-		cout << "implemented by Arka, only for now!!!" << endl;
-
-		if(true)
-		{
-			/// integers
-			icuts.insert(make_pair("MaxClsSize",10));
-			icuts.insert(make_pair("MaxClsSizeX",5));
-			icuts.insert(make_pair("MaxClsSizeY",5));
-			icuts.insert(make_pair("MinNhits",4));
-			/// doubles
-			dcuts.insert(make_pair("MinPx",-0.003));
-			dcuts.insert(make_pair("MaxPx",+0.008));
-			dcuts.insert(make_pair("MinPy",-0.025));
-			dcuts.insert(make_pair("MaxPy",+0.025));
-			dcuts.insert(make_pair("MaxChi2DoF",3));
-			dcuts.insert(make_pair("MinSnpSig",-3));
-			dcuts.insert(make_pair("MaxSnpSig",+7));
-			dcuts.insert(make_pair("MinTglSig",-350));
-			dcuts.insert(make_pair("MaxTglSig",+350));
-			dcuts.insert(make_pair("MinxVtxSig",-3e-9));
-			dcuts.insert(make_pair("MaxxVtxSig",+18e-9));
-			dcuts.insert(make_pair("MinyVtxSig",-0.00025));
-			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
-			dcuts.insert(make_pair("MinE",1.5));
-		}
-
+		cout << "not implemented !!!" << endl;
+		cout << "please fix this" << endl;
+		cout << "exitting" << endl;
+		exit(-1);
 	}
 }
 
@@ -1159,21 +1137,6 @@ bool skipglitches(TPolyMarker3D* points)
 	return false;
 }
 
-int lyrIdFromStaveName(TString staveName)
-{
-	TString suffix = staveName.ReplaceAll("Stave","");
-	/// get the layer id from stave name itself
-	/// this is when numerics in stave name more than 3, e.g. Stave120, remove uninteresting/chip numbers
-	if(suffix.Sizeof()-1 > 2)
-		suffix = suffix.Remove(2);
-	// this is when numerics in stave name less than 3, e.g. Stave00, remove uninteresting/chip numbers
-	else
-		suffix = suffix.Remove(1);
-
-	int numbers = suffix.Atoi();
-	return numbers;
-}
-
 void WriteGeometry(vector<TPolyMarker3D*> &polm, vector<TPolyLine3D *> &poll, TString process, vector<int> &inacc, vector<TPolyMarker3D*> &clusters, TString suff = "")
 {
 	TCanvas *cnv_pl3d = new TCanvas("cnv_pl3d"+suff, "", 500, 500);
@@ -1369,6 +1332,7 @@ void cache_cluster(TVector3*               cls_r,
 	// int chip_FS  = DecodeChip(cls_id);
 	// int cellx_FS = DecodeCellX(cls_id);
 	// int celly_FS = DecodeCellY(cls_id);
+	// cout << "lyrid_FS: " << lyrid_FS << endl;
 	int lyrid_KF = mapFullSim2KFLayer(side, lyrid_FS); 
 	TString lyrname_KF = layers[lyrid_KF];
 	// cout << "1. (x,y,z) " << x << ", " << y << ", " << z << ") lyrid_FS: " << lyrid_FS << " lyrid_KF: " << lyrid_KF << " lyrname_KF: " << lyrname_KF << endl; 
@@ -1377,7 +1341,6 @@ void cache_cluster(TVector3*               cls_r,
 	y = (doMisalignmentY) ? y+YvariationSign * dyAlignmentXFEL : y;
 
 	Cluster cls;
-
 	
 	cls.lyridKF = lyrid_KF;
 	cls.lyrnmKF = lyrname_KF;
@@ -1415,6 +1378,7 @@ void cache_cluster(TVector3*               cls_r,
 	cls.type = typeSummary;
 	// cout << "2. (x,y,z) = (" << x <<", " << y << ", " << z << ") lyrid_FS: " << lyrid_FS << " lyrname_KF: " << lyrname_KF << " clsid: " << cluster_id << " type: " << cluster_isSig << endl; 
 	// cout << " chip_FS: " << chip_FS << ", cellX_FS: " << cellx_FS << ", cellY_FS: " << celly_FS << endl;
+	
 	/// fill occupancy plots
 	if(lyrname_KF.Contains("L1I")) histos2["h_cls_occ_L1I_"+side]->Fill(x,y);
 	if(lyrname_KF.Contains("L2I")) histos2["h_cls_occ_L2I_"+side]->Fill(x,y);
@@ -1436,10 +1400,14 @@ void cache_cluster(TVector3*               cls_r,
 	if(lyrname_KF.Contains("L4O")) { histos1["h_all_csize_L4O_"+side]->Fill(cls_size); histos1["h_all_csizex_L4O_"+side]->Fill(cls_sizex); histos1["h_all_csizey_L4O_"+side]->Fill(cls_sizey); }
 	
 	cached_clusters[lyrname_KF].push_back(cls);
+
 	cached_clusters_id2lyr.insert(make_pair(cls_id, lyrid_KF));
+
 	int index = cached_clusters[lyrname_KF].size()-1;
 	cached_clusters_id2ix[lyrname_KF].insert(make_pair(cls_id, index));
+
 	int bin = axis2DMap[lyrname_KF]->FindBin(x,y);
+
 	lookupTable[lyrname_KF][bin].push_back(cls_id);
 }
 
@@ -2398,6 +2366,7 @@ int main(int argc, char *argv[])
 		for(TMapiTMapTSTS::iterator it1=fmap.begin(); it1!=fmap.end(); ++it1)
 		{
 			ibx++;
+			
 			/// prepare the dictionaries
 			prepare_cached_clusters();
 
@@ -2476,12 +2445,8 @@ int main(int argc, char *argv[])
 			{
 				// this is the loop on the files belonging to the same stave and same event
 				//cout << it1->first << " " << it2->first << " " << it2->second << endl;
-				TString inFileName = it2->second;
-				int lyrNumberFSt = lyrIdFromStaveName(it2->first);
-				// cout << "StaveName: " << it2->first << " - lyrNumber " << lyrNumberFSt << endl;
-				if((side=="Eside" && lyrNumberFSt < 8) || (side=="Pside" && lyrNumberFSt > 7))
-					continue;
 
+				TString inFileName = it2->second;
 				// TFile* fIn = new TFile(inFileName, "READ");
 				TFile* fIn = TFile::Open(inFileName, "READ");
 				TTree* tCls = (TTree *)fIn->Get("clusters");
@@ -2563,16 +2528,11 @@ int main(int argc, char *argv[])
 
 					/// get some basic info from the clsID
 					int lyrid_FS = DecodeLayer(encodedClsId);
-					int lyrid_KF = mapFullSim2KFLayer(side, lyrid_FS);
-
-					if(lyrid_KF==-999)
-                        continue; // this is to stop looping over unwanted staves
-
+					int lyrid_KF = mapFullSim2KFLayer(side, lyrid_FS); 
 					TString lyrname_KF = layers[lyrid_KF];
 					int chip_FS  = DecodeChip(encodedClsId);
 					TString chipname = lyrname_KF+"_"+tostring(chip_FS);
 					
-					// cout << "loop over clusters" << endl;
 					/// fill the cluster count per chip
 					histos["h_chip_ncls_"+side]->Fill("All",1);
 					histos["h_chip_ncls_"+side]->Fill(lyrname_KF,1);
@@ -2645,7 +2605,6 @@ int main(int argc, char *argv[])
 						}
 					}
 					/// caching is happening here
-					
 					cache_cluster(rglobal_geo, encodedClsId, isSignal, size, xsize, ysize, charge, tru_trackId, tru_type, tru_p, tru_hit, side, histos, histos2);
 				} // end of loop on clusters
 				fIn->Close(); // must close the file
