@@ -136,7 +136,7 @@ TMapiTS seedcutnames = {{FAIL_SLOPE,"slope"}, {FAIL_SIDE,"side"}, {FAIL_SAMEZ,"s
 
 
 /// some hardcoded provisional stuff
-double scalex   = 1.033; /// TODO dirty fix!!! ///
+double scalex   = 1.0; // 1.033; // for e+laser signal use 1.033, for g+laser, use 1.0 /// TODO dirty fix!!! ///
 
 double vX = 0, vY = 0, vZ = 0; // event vertex
 KMCDetectorFwd *det = 0;
@@ -679,7 +679,7 @@ void setCuts(TString process, int sigmult)
 	}
 	else if(process=="glaser")
 	{
-		cout << "implemented by Arka, only for Bkg!!!" << endl;
+		cout << "implemented by Arka, only for now!!!" << endl;
 
 		if(true)
 		{
@@ -1925,6 +1925,7 @@ int main(int argc, char *argv[])
 	cout << "Seed=" << Seed << endl;
 	
 	TString digdir = storage+"/data/root/dig/"+process+"/"+smplname;
+	cout << "digdir: " << digdir << endl;
 	
 	// making the dir if it is not existing
 	TString recdir = storage+"/data/root/rec/"+process+"/"+smplname;
@@ -2565,7 +2566,7 @@ int main(int argc, char *argv[])
 					int lyrid_KF = mapFullSim2KFLayer(side, lyrid_FS);
 
 					if(lyrid_KF==-999)
-						continue; // this is to stop looping over unwanted staves
+                        continue; // this is to stop looping over unwanted staves
 
 					TString lyrname_KF = layers[lyrid_KF];
 					int chip_FS  = DecodeChip(encodedClsId);
@@ -2606,8 +2607,15 @@ int main(int argc, char *argv[])
 					
 					/// fill truth signal tracks:
 					for(size_t t=0; t<tru_p->size(); ++t)
-					{
+					{  
+                                                //cout << "tru_type->at(" << t <<") " << tru_type->at(t) << endl;
 						if(tru_type->at(t)!=1) continue;
+						// if(vtruid.size() > 0)
+						// {
+						// 	for(size_t k = 0; k < vtruid.size(); ++k)
+						// 		cout << "tru_trackId->at(" << t << "): " << tru_trackId->at(t) << " and vtruid.at(" << k << "): " << vtruid.at(k) << endl;
+						// }
+                                                
 						if(!foundinvec(tru_trackId->at(t), vtruid))
 						{
 							histos["h_tru_xvtx_"+side]->Fill(tru_vertex->at(t).X());
@@ -2895,9 +2903,9 @@ int main(int argc, char *argv[])
 				}
 				
 				/// instant summary
-				// int countmateff = (n_truth>0) ? (int)((float)n_match / (float)n_truth * 100.) : -1;
-				// int countreceff = (n_truth>0) ? (int)((float)n_recos / (float)n_truth * 100.) : -1;
-				// int countseleff = (n_truth>0) ? (int)((float)n_selct / (float)n_truth * 100.) : -1;
+				int countmateff = (n_truth>0) ? (int)((float)n_match / (float)n_truth * 100.) : -1;
+				int countreceff = (n_truth>0) ? (int)((float)n_recos / (float)n_truth * 100.) : -1;
+				int countseleff = (n_truth>0) ? (int)((float)n_selct / (float)n_truth * 100.) : -1;
 				if(n4count%100==0)
 				{
 					cout << "ibx:" << ibx
@@ -2910,11 +2918,11 @@ int main(int argc, char *argv[])
 												  << ", selected:" << n_selct 
 													  << ", matched:" << n_match
 														  << " --> recos/seeds:" << (int)((float)n_recos / (float)n_seeds * 100.) << "%"
-															  << ", match4/truth4:" << (int)((float)n_match4 / (float)n_truth4 * 100.) << "%" << endl;
-											  // << ", matched: " << n_match << " -> counting: "
-												  // << countreceff << "%(rec), "
-													  // << countseleff << "%(sel), "
-														  // << countmateff << "%(mat)" << endl;
+															  << ", match4/truth4:" << (int)((float)n_match4 / (float)n_truth4 * 100.) << "%" 
+											  << ", matched: " << n_match << " -> counting: "
+												  << countreceff << "%(rec), "
+													  << countseleff << "%(sel), "
+														  << countmateff << "%(mat)" << endl;
 				}
 				n4count++;
 				
@@ -3447,7 +3455,8 @@ int main(int argc, char *argv[])
 		fOut->cd();
 		
 		// cout << "...normalising cutflow by N_BX for " << side << endl;
-		// histos["h_cutflow_"+side]->Scale(1./(float)nevents);
+		histos["h_cutflow_"+side]->Scale(1./(float)nevents);
+		//histos["h_cutflow_"+side]->Scale(1./1.26); // as we use 1.26 bx of g+laser background
 
 		cout << "...plotting ratios and efficiencies for " << side << endl;
 		for(size_t h=0; h<htypes.size(); ++h)
@@ -3486,9 +3495,12 @@ int main(int argc, char *argv[])
 				double binareacm2 = (it->second->GetXaxis()->GetBinWidth(1))*(it->second->GetYaxis()->GetBinWidth(1));
 				double pixareacm2 = (27*um2cm)*(29*um2cm);
 				double npixelsperbin = (binareacm2/pixareacm2);
+// 				double fractionalBX = 1.26;
+				// cout << "npixelsperbin*nEvntsProcessed: " << npixelsperbin*nEvntsProcessed << endl;
+				// cout << "scaling histograms: " << 1./(npixelsperbin*nEvntsProcessed) << endl;
 				if(it->first.Contains("_tru_")) it->second->Scale(1./(npixelsperbin*nEvntsProcessed));
-				if(it->first.Contains("_pix_")) it->second->Scale(1./(binareacm2*nEvntsProcessed));
-				if(it->first.Contains("_cls_")) it->second->Scale(1./(binareacm2*nEvntsProcessed));
+				if(it->first.Contains("_pix_")) it->second->Scale(1./(npixelsperbin*nEvntsProcessed));
+				if(it->first.Contains("_cls_")) it->second->Scale(1./(npixelsperbin*nEvntsProcessed));
 			}
 		}
 		

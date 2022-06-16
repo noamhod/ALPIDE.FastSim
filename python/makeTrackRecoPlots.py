@@ -292,13 +292,16 @@ def main():
    
    outname = "signal_and_background_tracking_variable_"+process+"_"+sample.replace("/","_")
       
-   fnames = {
-      "ss":"../data/root/rec/"+process+"/"+sample+"s/rec_"+process+"__"+side+".root",
-      "sb":"../data/root/rec/"+process+"/"+sample+"sb/rec_"+process+"__"+side+".root",
-      "bb":"../data/root/rec/"+process+"/"+sample+"b/rec_"+process+"__"+side+".root"
-   }
+   fnames = {}
+   
    if("linearity" not in sample):
       fnames["bb"] = "../data/root/rec/"+process+"/bkg/rec_"+process+"__"+side+".root"
+   else:
+      fnames = {
+         "ss":"../data/root/rec/"+process+"/"+sample+"s/rec_"+process+"__"+side+".root",
+         "sb":"../data/root/rec/"+process+"/"+sample+"sb/rec_"+process+"__"+side+".root",
+         "bb":"../data/root/rec/"+process+"/"+sample+"b/rec_"+process+"__"+side+".root"
+      }
    
    print(fnames)
    
