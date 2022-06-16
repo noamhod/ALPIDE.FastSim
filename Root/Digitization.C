@@ -918,7 +918,8 @@ int main(int argc, char *argv[])
 		vector<double> *E = 0;
 		vector<double> *wgt0 = 0;
 		vector<int>    *pdgId = 0;
-		vector<int>    *trkId = 0;
+		vector<string> *mpid = 0; //// this was needed to check result with Sasha
+		// vector<int>    *trkId = 0;
 		tIn->SetBranchAddress("vx",    &vx);
 		tIn->SetBranchAddress("vy",    &vy);
 		tIn->SetBranchAddress("vz",    &vz);
@@ -928,7 +929,8 @@ int main(int argc, char *argv[])
 		tIn->SetBranchAddress("E",     &E);
 		tIn->SetBranchAddress("wgt",   &wgt0);
 		tIn->SetBranchAddress("pdgId", &pdgId);
-		tIn->SetBranchAddress("trkId", &trkId);
+		// tIn->SetBranchAddress("trkId", &trkId);
+		tIn->SetBranchAddress("mpid", &mpid);
 
 		// output tree
 		SetOutTree(fOutName, side);
@@ -989,8 +991,8 @@ int main(int argc, char *argv[])
 		/// loop on events
 		// for(int iev=0;iev<nev;iev++)
 		bool fullloop = (evnt<0);
+		// for (int iev = 0 ; iev<10; iev++)
 		for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<nev : iev==evnt; iev++)
-		//for (int iev = (fullloop) ? 0 : evnt; (fullloop) ? iev<10 : iev==evnt; iev++)
 		{
 			/// reset the layers
 			reset_layers_all();
@@ -1086,7 +1088,22 @@ int main(int argc, char *argv[])
 				yvtx.push_back(vy->at(igen));
 				zvtx.push_back(vz->at(igen));
 				crg.push_back(q);
-				trkID.push_back(trkId->at(igen));
+				// trkID.push_back(trkId->at(igen)); /// commented out when trkId not in the input tree
+				
+
+				//// remove the block once working with raw h5 files are done
+				/// convert mpid, a string in input tree to int
+                string s = mpid->at(igen);
+				string delimiter = "_";
+				string token = s.substr(0, s.find(delimiter));
+
+				stringstream trackIdString(token);
+				int trackIdInt = 0;
+				trackIdString >> trackIdInt;
+				// cout << "trackIdInt " << trackIdInt << endl;
+				trkID.push_back(trackIdInt);
+
+				
 				trkp4.push_back(ptmp);
 				if(!process.Contains("bkg")) trkpts_fullrange.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E()), false, true));
 				trkpts.push_back(TrackMarker3d(trutrk, 0, zLastLayer + 15, 0.1, trkcol(ptmp.E())));

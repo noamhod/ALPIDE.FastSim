@@ -43,7 +43,7 @@ def label(text,x,y,col=ROOT.kBlack,boldit=False):
    s.DrawLatex(x,y,text)
 
 
-def graph(name,arrx,arry,col,mrk,xtitle,ytitle,witherr=False):
+def graph(name,arrx,arry,col,mrk,xtitle,ytitle,errx,erry,witherr=False):
    htmp = TH1D("htmp","",1,0,1)
    htmp.SetBinErrorOption(ROOT.TH1.kPoisson)
    
@@ -53,9 +53,10 @@ def graph(name,arrx,arry,col,mrk,xtitle,ytitle,witherr=False):
       x = arrx[point]
       y = arry[point]
       htmp.SetBinContent(1,y)
-      yerr = 0
-      xerrdn = 0
-      xerrup = 0
+      ### here forced symmetric error
+      yerr = erry[point]
+      xerrdn = errx[point]
+      xerrup = errx[point]
       yerrdn = yerr
       yerrup = yerr
       g.SetPoint(point,x,y)
@@ -81,20 +82,23 @@ def main():
    gROOT.SetBatch()
    SetLuxeStyle()
    
-   linarity = { "Truth":[], "Npix":[] }
+   linarity = { "Truth":[], "TruthError":[], "Npix":[], "NpixError":[] }
    
-   linarity["Truth"] = [ 126.75,  250,  499.8, 999.4, 4989.5, 9951.2, 40453.5 ]
-   linarity["Npix"]  = [ 2.11,  -1.68,  0.06,  0.93,  1.64,   1.72,   1.75 ]
+   linarity["Truth"] = [ 499.8, 999.4, 4989.5, 9951.2, 40453.5 ] #126.75,  250,  
+   linarity["TruthError"] = [ 0,0,0,0,0 ] #0,0
+   linarity["Npix"]  = [ 0.06,  0.93,  1.64,   1.72,   1.75 ] #2.11,  -1.68,  
+   linarity["NpixError"] = [ 0.3463450308, 0.2159309193, 0.06685101419, 0.0422737233, 0.01786155703] #1.620009288, 0.605509768, 
+
    
    ytitle = "(N_{pix}^{s+b}-N_{pix}^{b})/N_{tru} per BX"
    xtitle = "Truth signal particle multiplicity per BX"
    
-   gnpix = graph("gnpix", linarity["Truth"], linarity["Npix"], ROOT.kBlack,  20, xtitle,ytitle)
+   gnpix = graph("gnpix", linarity["Truth"], linarity["Npix"], ROOT.kBlack,  20, xtitle,ytitle,linarity["TruthError"],linarity["NpixError"])
    
-   xmin = 1e+1
+   xmin = 3e+2
    xmax = 1e+5
-   ymin = -2
-   ymax = +3
+   ymin = -1
+   ymax = +2.5
    
    mg = TMultiGraph()
    mg.Add( gnpix,"EP" )
@@ -116,7 +120,7 @@ def main():
    ROOT.gPad.SetGrid()
    ROOT.gPad.SetLogx()
    mg.Draw("ap")
-   LUXELabel(0.2,0.85,"TDR")
+   LUXELabel(0.5,0.85,"TDR")
    # legend.Draw("sames")
    cnv.RedrawAxis()
    cnv.Update()
