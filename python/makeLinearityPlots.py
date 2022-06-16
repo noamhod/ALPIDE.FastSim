@@ -22,14 +22,15 @@ ROOT.gStyle.SetPadRightMargin(0.12)
 
 
 def LegendMaker():
-   legend1 = TLegend(0.5,0.75,0.80,0.92); ### with the mean
-   legend1.SetFillColor(kWhite);
-   legend1.SetTextFont(42);
-   legend1.SetTextSize(0.046);
-   legend1.SetBorderSize(0);
-   legend1.SetShadowColor(kWhite);
-   legend1.SetFillStyle(0);
-   return legend1;
+   #legend = TLegend(0.5,0.75,0.80,0.92) ### with matched
+   legend = TLegend(0.45,0.805,0.75,0.9205) ### without matched
+   legend.SetFillColor(kWhite)
+   legend.SetTextFont(42)
+   legend.SetTextSize(0.046)
+   legend.SetBorderSize(0)
+   legend.SetShadowColor(kWhite)
+   legend.SetFillStyle(0)
+   return legend
 
 
 def label(text,x,y,col=ROOT.kBlack,boldit=False):
@@ -102,7 +103,7 @@ def main():
    legend = LegendMaker()
    legend.AddEntry(grec,"Reconstructed","p")
    legend.AddEntry(gsel,"Selected","p")
-   legend.AddEntry(gmat,"Matched","p")
+   #legend.AddEntry(gmat,"Matched","p")
    
    xmin = 1e-1
    xmax = 1e+5
@@ -112,7 +113,7 @@ def main():
    mg = TMultiGraph()
    mg.Add( grec,"EP" )
    mg.Add( gsel,"EP" )
-   mg.Add( gmat,"EP" )
+   #mg.Add( gmat,"EP" )
    mg.GetXaxis().SetTitle( xtitle )
    mg.GetYaxis().SetTitle( ytitle )
    mg.SetMinimum(ymin)

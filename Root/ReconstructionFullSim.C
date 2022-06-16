@@ -136,7 +136,9 @@ TMapiTS seedcutnames = {{FAIL_SLOPE,"slope"}, {FAIL_SIDE,"side"}, {FAIL_SAMEZ,"s
 
 
 /// some hardcoded provisional stuff
-double scalex   = 1.033; /// TODO dirty fix!!! ///
+double scalex_elaser   = 1.033; /// TODO dirty fix!!! ///
+double scalex_glaser   = 0.993; /// TODO dirty fix!!! ///
+double scalex = -999;
 
 double vX = 0, vY = 0, vZ = 0; // event vertex
 KMCDetectorFwd *det = 0;
@@ -315,52 +317,103 @@ string tostring(int n)
 	return str;
 }
 
-void setMultDependencies(int sigmult)
+void setMultDependencies(TString proc, int sigmult)
 {
 	/// binning of the lookup-table -- this has a huge impact on accuracy and speed!
-	if     (sigmult<=250)                     { nAxisBinsX = 1000;  nAxisBinsY = 200; }
-	else if(sigmult>250   && sigmult<=500)    { nAxisBinsX = 5000;  nAxisBinsY = 100; }
-	else if(sigmult>500   && sigmult<=1000)   { nAxisBinsX = 1000;  nAxisBinsY = 50;  }
-	else if(sigmult>1000  && sigmult<=9999)   { nAxisBinsX = 270;   nAxisBinsY = 20;  }
-	else if(sigmult>9999  && sigmult<=30000)  { nAxisBinsX = 600;   nAxisBinsY = 30;  }
-	else if(sigmult>30000 && sigmult<=100000) { nAxisBinsX = 1200;  nAxisBinsY = 60; }
-	else
+	if(proc=="elaser")
 	{
-		cout << "not implemented !!!" << endl;
-		cout << "please fix this" << endl;
-		cout << "exitting" << endl;
-		exit(-1);
+		if     (sigmult<=250)                     { nAxisBinsX = 1000;  nAxisBinsY = 200; }
+		else if(sigmult>250   && sigmult<=500)    { nAxisBinsX = 5000;  nAxisBinsY = 100; }
+		else if(sigmult>500   && sigmult<=1000)   { nAxisBinsX = 1000;  nAxisBinsY = 50;  }
+		else if(sigmult>1000  && sigmult<=9999)   { nAxisBinsX = 270;   nAxisBinsY = 20;  }
+		else if(sigmult>9999  && sigmult<=30000)  { nAxisBinsX = 600;   nAxisBinsY = 30;  }
+		else if(sigmult>30000 && sigmult<=100000) { nAxisBinsX = 1200;  nAxisBinsY = 60; }
+		else
+		{
+			cout << "not implemented !!!" << endl;
+			cout << "please fix this" << endl;
+			cout << "exitting" << endl;
+			exit(-1);
+		}
+	}
+	else if(proc=="glaser")
+	{
+		if(sigmult<=70) { nAxisBinsX = 1000;  nAxisBinsY = 100; }
+		else
+		{
+			cout << "not implemented !!!" << endl;
+			cout << "please fix this" << endl;
+			cout << "exitting" << endl;
+			exit(-1);
+		}	
 	}
 	
 	/// KF baseline setup and max iterations for seeding or reconstruction
 	// nMinHits = 5; // actually it is 4+1
-	if(sigmult<=50)                       { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 3;  MaxChi2NDFBaseline = 3;  AllowChi2Inflation = false; nMaxIterReco = 5; AllowHolesOnTrak = false; }
-	else if(sigmult>50  && sigmult<=100)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 4;  MaxChi2NDFBaseline = 4;  AllowChi2Inflation = false; nMaxIterReco = 4; AllowHolesOnTrak = false; }
-	else if(sigmult>100 && sigmult<=250)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
-	else if(sigmult>250 && sigmult<=500)  { nMinHits = 5;/*actually means 3+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = true;  nMaxIterReco = 2; AllowHolesOnTrak = true;  }
-	else if(sigmult>500 && sigmult<=1000) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = true;  nMaxIterReco = 3; AllowHolesOnTrak = true;  }
-	else if(sigmult>1000 && sigmult<=9999){ nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 15; MaxChi2NDFBaseline = 15; AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
-	else                                  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 15; MaxChi2NDFBaseline = 15; AllowChi2Inflation = true;  nMaxIterReco = 1; AllowHolesOnTrak = true;  }
-	
+	if(proc=="elaser")
+	{
+		if(sigmult<=50)                       { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 3;  MaxChi2NDFBaseline = 3;  AllowChi2Inflation = false; nMaxIterReco = 5; AllowHolesOnTrak = false; }
+		else if(sigmult>50  && sigmult<=100)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 4;  MaxChi2NDFBaseline = 4;  AllowChi2Inflation = false; nMaxIterReco = 4; AllowHolesOnTrak = false; }
+		else if(sigmult>100 && sigmult<=250)  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+		else if(sigmult>250 && sigmult<=500)  { nMinHits = 5;/*actually means 3+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 5;  MaxChi2NDFBaseline = 5;  AllowChi2Inflation = true;  nMaxIterReco = 2; AllowHolesOnTrak = true;  }
+		else if(sigmult>500 && sigmult<=1000) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 10; MaxChi2NDFBaseline = 10; AllowChi2Inflation = true;  nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+		else if(sigmult>1000 && sigmult<=9999){ nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 15; MaxChi2NDFBaseline = 15; AllowChi2Inflation = false; nMaxIterReco = 3; AllowHolesOnTrak = true;  }
+		else                                  { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 200.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 15; MaxChi2NDFBaseline = 15; AllowChi2Inflation = true;  nMaxIterReco = 1; AllowHolesOnTrak = true;  }
+	}
+	else if(proc=="glaser")
+	{
+		if(sigmult<=100) { nMinHits = 5;/*actually means 4+1*/ ErrorScaleBaseline = 500.;  nMaxIterSeeding = 4; MaxChi2ClBaseline = 10;  MaxChi2NDFBaseline = 10;  AllowChi2Inflation = true; nMaxIterReco = 1; AllowHolesOnTrak = false; }
+		else
+		{
+			cout << "not implemented !!!" << endl;
+			cout << "please fix this" << endl;
+			cout << "exitting" << endl;
+			exit(-1);
+		}     
+	}
 	
 	// in cm, road width in x along the possible cluster where we embed the clusters
-	if(sigmult<10000)
+	if(proc=="elaser")
 	{
-		rwxL1 = 0.030;
-		rwxL2 = 0.025;
-		rwxL3 = 0.020;
-		rwyL1 = 0.030;
-		rwyL2 = 0.025;
-		rwyL3 = 0.020;
+		if(sigmult<10000)
+		{
+			rwxL1 = 0.030;
+			rwxL2 = 0.025;
+			rwxL3 = 0.020;
+			rwyL1 = 0.030;
+			rwyL2 = 0.025;
+			rwyL3 = 0.020;
+		}
+		else
+		{
+			rwxL1 = 0.030;
+			rwxL2 = 0.025;
+			rwxL3 = 0.020;
+			rwyL1 = 0.030;
+			rwyL2 = 0.025;
+			rwyL3 = 0.020;
+		}
 	}
-	else
+	else if(proc=="glaser")
 	{
-		rwxL1 = 0.030;
-		rwxL2 = 0.025;
-		rwxL3 = 0.020;
-		rwyL1 = 0.030;
-		rwyL2 = 0.025;
-		rwyL3 = 0.020;
+		if(sigmult<10000)
+		{
+			rwxL1 = 0.030;
+			rwxL2 = 0.025;
+			rwxL3 = 0.020;
+			rwyL1 = 0.030;
+			rwyL2 = 0.025;
+			rwyL3 = 0.020;
+		}
+		else
+		{
+			rwxL1 = 0.030;
+			rwxL2 = 0.025;
+			rwxL3 = 0.020;
+			rwyL1 = 0.030;
+			rwyL2 = 0.025;
+			rwyL3 = 0.020;
+		}
 	}
 }
 
@@ -380,15 +433,28 @@ double getMinChi2Cl(double EfromX4, int sigmult, int iteration)
 	if(EfromX4>4 && EfromX4<7 && sigmult>=5000) return MaxChi2NDFBaseline*(1+iteration);
 	return MaxChi2ClBaseline;
 }
-bool allowSharedHitsL123(double Erec, int sigmult)
+bool allowSharedHitsL123(TString proc, double Erec, int sigmult)
 {
-	if(Erec>3 && sigmult>=5000) return true;
-	// if(sigmult>=5000) return true;
+	if(proc=="elaser")
+	{
+		if(Erec>3 && sigmult>=5000) return true;
+	}
+	else if(proc=="glaser")
+	{
+		if(sigmult<100) return true;
+	}
 	return false;
 }
-bool outerFirst(int sigmult)
+bool outerFirst(TString proc, int sigmult)
 {
-	if(sigmult<5000) return true;
+	if(proc=="elaser")
+	{
+		if(sigmult<5000) return true;
+	}
+	else if(proc=="glaser")
+	{
+		return false;
+	}
 	return false;
 }
 
@@ -553,16 +619,24 @@ void setParametersFromDet(TString side, TString proc, int sigmult)
 	chipgapsize = 0.15824/10;  // cm (i.e. ~158 um)
 	chipsizex   = 29.94176/10; // cm
 	chipsizey   = 13.76256/10; // cm
-	vector<double> vcentersI = {82.78/10, 112.88/10, 142.98/10, 173.08/10, 203.18/10, 233.28/10, 263.38/10, 293.48/10};
-	vector<double> vcentersO = {313.58/10, 343.68/10, 373.78/10, 403.88/10, 433.98/10, 464.08/10, 494.18/10, 524.28/10};
+	vector<double> vcentersIP = {82.78/10, 112.88/10, 142.98/10, 173.08/10, 203.18/10, 233.28/10, 263.38/10, 293.48/10};
+	vector<double> vcentersOP = {313.58/10, 343.68/10, 373.78/10, 403.88/10, 433.98/10, 464.08/10, 494.18/10, 524.28/10};
+	vector<double> vcentersIE = vcentersIP; 
+	vector<double> vcentersOE = vcentersOP;
+	for(unsigned int j=0 ; j<vcentersIE.size() ; ++j) vcentersIE[j] *= -1.;
+	for(unsigned int j=0 ; j<vcentersOE.size() ; ++j) vcentersOE[j] *= -1.;
 	if(side=="Eside")
 	{
-		chipgaps = {{"EL1I", vcentersI}, {"EL1O", vcentersO}, {"EL2I", vcentersI}, {"EL2O", vcentersO}, {"EL3I", vcentersI}, {"EL3O", vcentersO}, {"EL4I", vcentersI}, {"EL4O", vcentersO}};
+		chipgaps = {{"EL1I", vcentersIE}, {"EL1O", vcentersOE}, {"EL2I", vcentersIE}, {"EL2O", vcentersOE}, {"EL3I", vcentersIE}, {"EL3O", vcentersOE}, {"EL4I", vcentersIE}, {"EL4O", vcentersOE}};
 	}
 	if(side=="Pside")
 	{
-		chipgaps = {{"PL1I", vcentersI}, {"PL1O", vcentersO}, {"PL2I", vcentersI}, {"PL2O", vcentersO}, {"PL3I", vcentersI}, {"PL3O", vcentersO}, {"PL4I", vcentersI}, {"PL4O", vcentersO}};
+		chipgaps = {{"PL1I", vcentersIP}, {"PL1O", vcentersOP}, {"PL2I", vcentersIP}, {"PL2O", vcentersOP}, {"PL3I", vcentersIP}, {"PL3O", vcentersOP}, {"PL4I", vcentersIP}, {"PL4O", vcentersOP}};
 	}
+	
+	/// set the scalex - dirty fix!!! //TODO
+	if(proc=="elaser") scalex = scalex_elaser;
+	if(proc=="glaser") scalex = scalex_glaser;
 	
 	cout << "++++++++++++++++++++++++++++++++++++" << endl;
 }
@@ -570,7 +644,7 @@ void setParametersFromDet(TString side, TString proc, int sigmult)
 void setCuts(TString process, int sigmult)
 {
 	//// seed energies
-	EseedMinGLaser = 0.5;  // GeV
+	EseedMinGLaser = 1.5;  // GeV
 	EseedMinELaser = 0.5;  // GeV
 	EseedMaxGLaser = 14.0; // GeV
 	EseedMaxELaser = 12.0; // GeV
@@ -679,10 +753,36 @@ void setCuts(TString process, int sigmult)
 	}
 	else if(process=="glaser")
 	{
-		cout << "not implemented !!!" << endl;
-		cout << "please fix this" << endl;
-		cout << "exitting" << endl;
-		exit(-1);
+		if(sigmult<200)
+		{
+			/// integers
+			icuts.insert(make_pair("MaxClsSize",10));
+			icuts.insert(make_pair("MaxClsSizeX",5));
+			icuts.insert(make_pair("MaxClsSizeY",5));
+			icuts.insert(make_pair("MinNhits",4));
+			/// doubles
+			dcuts.insert(make_pair("MinPx",-0.003));
+			dcuts.insert(make_pair("MaxPx",+0.008));
+			dcuts.insert(make_pair("MinPy",-0.025));
+			dcuts.insert(make_pair("MaxPy",+0.025));
+			dcuts.insert(make_pair("MaxChi2DoF",3));
+			dcuts.insert(make_pair("MinSnpSig",-3));
+			dcuts.insert(make_pair("MaxSnpSig",+7));
+			dcuts.insert(make_pair("MinTglSig",-350));
+			dcuts.insert(make_pair("MaxTglSig",+350));
+			dcuts.insert(make_pair("MinxVtxSig",-3e-9));
+			dcuts.insert(make_pair("MaxxVtxSig",+18e-9));
+			dcuts.insert(make_pair("MinyVtxSig",-0.00025));
+			dcuts.insert(make_pair("MaxyVtxSig",+0.00025));
+			dcuts.insert(make_pair("MinE",1.5));
+		}
+		else
+		{
+			cout << "not implemented !!!" << endl;
+			cout << "please fix this" << endl;
+			cout << "exitting" << endl;
+			exit(-1);
+		}
 	}
 }
 
@@ -720,7 +820,7 @@ unsigned int DecodeCellY(const unsigned int clsid)
 	return (clsid>>0)&check4;
 }
 unsigned int mapFullSim2KFLayer(TString side, int lyrid)
-{  
+{
 	unsigned int KFLyr = -999;
 	if(side=="Pside")
 	{
@@ -761,16 +861,25 @@ vector<TString> splitString(string s1)
 }
 int getfiles(string path, TMapiTMapTSTS& fmap, TString side)
 {
-    int nevents = 0;
-    for (const auto & entry : filesystem::directory_iterator(path))
-    {
-        string file = entry.path();
-        // cout << file << endl;
-        string barename = file.substr(file.find_last_of("/")+1);
-        vector<TString> words = splitString(barename);
-        int event = toint(words[words.size()-1].ReplaceAll(".root","").ReplaceAll("Event", ""));
-        TString stave = words[words.size()-2];
-        // cout << "event=" << event << ", stave=" << stave << endl;
+	int nevents = 0;
+	for (const auto & entry : filesystem::directory_iterator(path))
+	{
+		string file = entry.path();
+		// cout << file << endl;
+		string barename = file.substr(file.find_last_of("/")+1);
+		vector<TString> words = splitString(barename);
+		int event = toint(words[words.size()-1].ReplaceAll(".root","").ReplaceAll("Event", ""));
+		TString stave = words[words.size()-2];
+		
+		size_t nchar = ((string)stave.Data()).size();
+		int ilr = -999;
+		string slr = "";
+		if(nchar<8) slr = ((string)stave.Data()).substr(5,1);
+		else        slr = ((string)stave.Data()).substr(5,2);
+		ilr = stoi(slr);
+		if(side=="Pside" && ilr>7)  continue;
+		if(side=="Eside" && ilr<=7) continue;
+		
 		auto it = fmap.find(event);
 		if(it==fmap.end())
 		{
@@ -779,14 +888,14 @@ int getfiles(string path, TMapiTMapTSTS& fmap, TString side)
 			fmap.insert(make_pair(event,tempm));
 		} 
 		else fmap[event].insert(make_pair(stave, file));
-    }
-    for(TMapiTMapTSTS::iterator it1=fmap.begin(); it1!=fmap.end(); ++it1)
-    {
-        for(TMapTSTS::iterator it2=it1->second.begin(); it2!=it1->second.end(); ++it2)
-        {
-            cout << "event: " << it1->first << " stave: " << it2->first << " filename: " << it2->second << endl;
-        }
-    }
+	}
+	for(TMapiTMapTSTS::iterator it1=fmap.begin(); it1!=fmap.end(); ++it1)
+	{
+		for(TMapTSTS::iterator it2=it1->second.begin(); it2!=it1->second.end(); ++it2)
+		{
+			cout << "event: " << it1->first << " stave: " << it2->first << " filename: " << it2->second << endl;
+		}
+	}
 	nevents = fmap.size();
 	return nevents;
 }
@@ -1083,6 +1192,32 @@ TPolyLine3D *GetLayerFront(TString side, TString io, double z, Color_t col)
 	return polyline;
 }
 
+vector<TPolyLine3D*> GetStaves(vector<TString>& lyrsnames)
+{
+	vector<TPolyLine3D *> staves;
+	for(unsigned int l = 0; l<layersz.size(); ++l)
+	{
+		double z = layersz[l];
+		TString io = (lyrsnames[l].Contains("I")) ? "I" : "O";
+		TString pe = (lyrsnames[l].Contains("P")) ? "P" : "E";
+		staves.push_back(GetLayer(pe, io, z, kGreen+3));
+	}
+	return staves;
+}
+
+vector<TPolyLine3D*> GetFrontStaves(vector<TString>& lyrsnames)
+{
+	vector<TPolyLine3D *> fstaves;
+	for (unsigned int l = 0; l<layersz.size(); ++l)
+	{
+		double z = layersz[l];
+		TString io = (lyrsnames[l].Contains("I")) ? "I" : "O";
+		TString pe = (lyrsnames[l].Contains("P")) ? "P" : "E";
+		fstaves.push_back(GetLayerFront(pe, io, z, kGreen+3));
+	}
+	return fstaves;
+}
+
 TPolyLine3D *GetDipole(Color_t col)
 {
 	TPolyLine3D *polyline = new TPolyLine3D();
@@ -1126,18 +1261,7 @@ TPolyLine3D *GetDipoleFront(Color_t col)
 	return polyline;
 }
 
-bool skipglitches(TPolyMarker3D* points)
-{
-	Double_t x, y, z;
-	for (int n = 0; n<points->GetN(); ++n)
-	{
-		points->GetPoint(n, x, y, z);
-		if(abs(x)>40 || abs(y)>5) return true;
-	}
-	return false;
-}
-
-void WriteGeometry(vector<TPolyMarker3D*> &polm, vector<TPolyLine3D *> &poll, TString process, vector<int> &inacc, vector<TPolyMarker3D*> &clusters, TString suff = "")
+void WriteGeometry(TString process, vector<TPolyMarker3D*>& polm, vector<TPolyLine3D*>& poll, vector<TPolyLine3D*>& staves, vector<TPolyLine3D*>& fstaves, TPolyLine3D* dipole, TPolyLine3D* fdipole, TMapTSvCls& allclusters, TString suff="")
 {
 	TCanvas *cnv_pl3d = new TCanvas("cnv_pl3d"+suff, "", 500, 500);
 	TView *view_pl3d = TView::CreateView(1);
@@ -1149,20 +1273,6 @@ void WriteGeometry(vector<TPolyMarker3D*> &polm, vector<TPolyLine3D *> &poll, TS
 	view_pm3d->SetRange(-60, -20, 0, +60, +20, zLastLayer+15);
 	view_pm3d->ShowAxis();
 
-	vector<TPolyLine3D *> staves;
-	vector<TPolyLine3D *> fstaves;
-	for (unsigned int l = 0; l<layersz.size(); ++l)
-	{
-		double z = layersz[l];
-		TString io = (layersnames[l].Contains("I")) ? "I" : "O";
-		TString pe = (layersnames[l].Contains("P")) ? "P" : "E";
-		staves.push_back(GetLayer(pe, io, z, kGreen+3));
-		fstaves.push_back(GetLayerFront(pe, io, z, kGreen+3));
-	}
-
-	TPolyLine3D *dipole = GetDipole(kGray);
-	TPolyLine3D *fdipole = GetDipoleFront(kGray);
-
 	cnv_pl3d->cd();
 	dipole->Draw();
 	for (unsigned int l = 0; l<staves.size(); l++) staves[l]->Draw();
@@ -1171,16 +1281,38 @@ void WriteGeometry(vector<TPolyMarker3D*> &polm, vector<TPolyLine3D *> &poll, TS
 	dipole->Draw();
 	for (unsigned int l = 0; l<staves.size(); l++) staves[l]->Draw();
 
-	for (int i = 0; i<(int)poll.size(); ++i)
+	cnv_pl3d->cd();
+	TPolyMarker3D* clsmrk_sig = new TPolyMarker3D();
+	TPolyMarker3D* clsmrk_bkg = new TPolyMarker3D();
+	clsmrk_sig->SetMarkerColor(kRed);
+	clsmrk_bkg->SetMarkerColor(kBlack);
+	int nmkr_sig = 0;
+	int nmkr_bkg = 0;
+	for(TMapTSvCls::iterator it = allclusters.begin() ; it!=allclusters.end() ; ++it)
 	{
-		/// check acceptance
-		if(!inacc[i]) continue;
-		/// check for glitches
-		if(skipglitches(polm[i])) continue;
+		TString lyr = it->first;
+		// cout << "plotting layer " << lyr << " with " << it->second.size() << " clusters" << endl;
+		for(unsigned int c=0 ; c<allclusters[lyr].size() ; ++c)
+		{
+			if(allclusters[lyr][c].issig)
+			{
+				clsmrk_sig->SetPoint(nmkr_sig, allclusters[lyr][c].r.X(), allclusters[lyr][c].r.Y(), allclusters[lyr][c].r.Z());
+				nmkr_sig++;
+			}
+			else
+			{
+				clsmrk_bkg->SetPoint(nmkr_bkg, allclusters[lyr][c].r.X(), allclusters[lyr][c].r.Y(), allclusters[lyr][c].r.Z());
+				nmkr_bkg++;
+			}
+		}
+	}
+	clsmrk_bkg->Draw();
+	clsmrk_sig->Draw();
 
+	for(int i = 0; i<(int)poll.size(); ++i)
+	{
 		cnv_pl3d->cd();
 		poll[i]->Draw();
-		clusters[i]->Draw();
 
 		cnv_pm3d->cd();
 		polm[i]->Draw();
@@ -1189,7 +1321,7 @@ void WriteGeometry(vector<TPolyMarker3D*> &polm, vector<TPolyLine3D *> &poll, TS
 	TLegend *leg = trkcolleg();
 	cnv_pl3d->cd();
 	fdipole->Draw();
-	for (unsigned int l = 0; l<fstaves.size(); l++) fstaves[l]->Draw();
+	for(unsigned int l = 0; l<fstaves.size(); l++) fstaves[l]->Draw();
 	leg->Draw("same");
 
 	cnv_pm3d->cd();
@@ -1199,7 +1331,6 @@ void WriteGeometry(vector<TPolyMarker3D*> &polm, vector<TPolyLine3D *> &poll, TS
 	cnv_pl3d->SaveAs(storage+"/output/pdf/"+process+"_tracks_pl3d"+suff+".pdf");
 	cnv_pm3d->SaveAs(storage+"/output/root/"+process+"_tracks_pm3d"+suff+".root");
 	cnv_pm3d->SaveAs(storage+"/output/pdf/"+process+"_tracks_pm3d"+suff+".pdf");
-
 	
 	TFile *flines = new TFile(storage+"/data/root/"+process+"_geometry"+suff+".root", "RECREATE");
 	flines->cd();
@@ -1212,6 +1343,8 @@ void WriteGeometry(vector<TPolyMarker3D*> &polm, vector<TPolyLine3D *> &poll, TS
 	}
 	leg->Write();
 	flines->Close();
+	delete clsmrk_sig;
+	delete clsmrk_bkg;
 }
 
 
@@ -1449,9 +1582,9 @@ void clear_lookup_table()
 	}
 }
 
-void remove_from_lookup_table(vector<Cluster> wincls, double Erec, int sigmult)
+void remove_from_lookup_table(TString proc, vector<Cluster> wincls, double Erec, int sigmult)
 {
-	bool allow2share = allowSharedHitsL123(Erec,sigmult);
+	bool allow2share = allowSharedHitsL123(proc,Erec,sigmult);
 	for(size_t i=0; i<wincls.size(); ++i)
 	{
 		int clsid = wincls[i].clsid;
@@ -1770,7 +1903,7 @@ int makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TL
 	if(abs(r1[0])>=abs(r4[0])) return FAIL_SLOPE; // |x1| must be smaller than |x4|
 	if(r1[0]*r4[0]<0)          return FAIL_SIDE; // not on the same side...
 	if(r1[2]==r4[2])           return FAIL_SAMEZ; // trivial, make sure z is not the same
-	float yDipoleExitAbsMax = (process=="glaser") ? 0.6  : 0.75; // cm
+	float yDipoleExitAbsMax = (process=="glaser") ? 0.75 : 0.75; // cm //0.6  : 0.75; // cm
 	float xDipoleExitAbsMin = (process=="glaser") ? 1.8  : 1.8; // cm
 	float xDipoleExitAbsMax = (process=="glaser") ? 30.  : 30.;  // cm
 	float yDipoleExit = yofz(r1, r4, zDipoleExit);
@@ -1781,8 +1914,8 @@ int makeseed_nonuniformB(TString process, float *r1, float *r4, TString side, TL
 	float absdx41max = (process=="glaser") ? 8.0 : 8.0; //7.6; // cm, similar for elaser and glaser-derived from flat signal
 	float absdx41min = (process=="glaser") ? 0.7 : 0.7; //0.8; // cm, similar for elaser and glaser-derived from flat signal
 	double E = fEvsXL4->Eval(r4[0]); // in GeV
-	double rwx = (E>3) ? rwxL1 : rwxL1*2;
-	double rwy = (E>3) ? rwyL1 : rwyL1*2;
+	double rwx = (E>3 && process=="elaser") ? rwxL1 : rwxL1*2;
+	double rwy = (E>3 && process=="elaser") ? rwyL1 : rwyL1*2;
 	if(abs(r4[0]-r1[0])>absdx41max || abs(r4[0]-r1[0])<absdx41min) return FAIL_DXSIZE; // new cut!!
 	if(abs(r4[0]-r1[0])>(fDxvsX->Eval(r4[0])+rwx))                 return FAIL_RWXHIGH; // new cut!!
 	if(abs(r4[0]-r1[0])<(fDxvsX->Eval(r4[0])-rwx))                 return FAIL_RWXLOW; // new cut!!
@@ -1987,6 +2120,14 @@ int main(int argc, char *argv[])
 	Double_t logEbins3[nlogEbins3+1];
 	setLogBins(nlogEbins3,logEmin3,logEmax3,logEbins3);
 	
+	/// for the full geometry
+	vector<TPolyMarker3D*> reco_trckmar_bothsides;
+	vector<TPolyLine3D*>   reco_trcklin_bothsides;
+	vector<TPolyLine3D*>   staves_bothsides;
+	vector<TPolyLine3D*>   fstaves_bothsides;
+	TMapTSvCls             cached_clusters_bothsides;
+	TPolyLine3D*           dipole  = 0;
+	TPolyLine3D*           fdipole = 0;
 
 	/////////////////////
 	/// loop on the sides
@@ -2017,7 +2158,7 @@ int main(int argc, char *argv[])
 		vector<float> reco_z;
 		vector<vector<TVector3>> reco_trck_cls_r;
 		vector<TPolyMarker3D*> reco_trckmar;
-		vector<TPolyLine3D*> reco_trcklin;
+		vector<TPolyLine3D*>   reco_trcklin;
 		vector<float> reco_chi2dof;
 		vector<int> reco_ismtchd;
 		vector<int> reco_ixmtchd;
@@ -2064,7 +2205,7 @@ int main(int argc, char *argv[])
 		// det->BookControlHistos();
 
 		/////////////////////////////////////////////////
-		setMultDependencies(sigmult); // nust be first //
+		setMultDependencies(process,sigmult); // nust be first //
 		setParametersFromDet(side, process, sigmult); ///
 		setCuts(process, sigmult); //////////////////////
 		/////////////////////////////////////////////////
@@ -2079,6 +2220,13 @@ int main(int argc, char *argv[])
 		}
 		////////////////////////////////////////////////
 		
+		/// set the staves' lines per side
+		vector<TPolyLine3D*> staves  = GetStaves(layersnames);
+		vector<TPolyLine3D*> fstaves = GetFrontStaves(layersnames);
+		if(dipole ) delete dipole;
+		if(fdipole) delete fdipole;
+		dipole = GetDipole(kGray);
+		fdipole = GetDipoleFront(kGray);
 		
 		/// monitoring histograms
 		TMapTSTH1D histos;
@@ -2527,7 +2675,13 @@ int main(int argc, char *argv[])
 
 					/// get some basic info from the clsID
 					int lyrid_FS = DecodeLayer(encodedClsId);
-					int lyrid_KF = mapFullSim2KFLayer(side, lyrid_FS); 
+					// cout << "lyrid_FS=" << lyrid_FS << endl;
+					int lyrid_KF = mapFullSim2KFLayer(side, lyrid_FS);
+					if(lyrid_KF==-999)
+					{
+						cout << "Error: encodedClsId=" << encodedClsId << " cannot be decoded" << endl;
+						exit(-1);
+					}
 					TString lyrname_KF = layers[lyrid_KF];
 					int chip_FS  = DecodeChip(encodedClsId);
 					TString chipname = lyrname_KF+"_"+tostring(chip_FS);
@@ -2603,6 +2757,26 @@ int main(int argc, char *argv[])
 				delete fIn;
 			} // end loop on staves
 			
+			
+			/// for plotting the geometry
+			if(ibx==1)
+			{
+				if(cached_clusters_bothsides.size()==0)
+				{
+					cout << "first event cached clusters are copied for " << side << endl;
+					cached_clusters_bothsides = cached_clusters;
+				}
+				else
+				{
+					cout << "first event cached clusters are appended for " << side << endl;
+					for(TMapTSvCls::iterator it = cached_clusters.begin() ; it!=cached_clusters.end() ; ++it)
+					{
+						cached_clusters_bothsides.insert(make_pair(it->first,it->second));
+					}
+				}
+			}
+			
+			
 			/// fill cutflow in the beginning of the cutflow
 			histos["h_cutflow_"+side]->Fill("Truth", n_truth);
 
@@ -2635,7 +2809,7 @@ int main(int argc, char *argv[])
 			{
 				int i4        = -1;
 				TString slyr4 = "";
-				bool doOuterFirst = outerFirst(sigmult);
+				bool doOuterFirst = outerFirst(process,sigmult);
 				
 				if(doOuterFirst)
 				{		
@@ -2691,8 +2865,10 @@ int main(int argc, char *argv[])
 				double y4tru = -999;
 				double z4tru = -999;
 				bool issig4  = false;
+				// if(side=="Eside") cout << "cached_clusters["<<slyr4<<"]["<<i4<<"].issig==" << cached_clusters[slyr4][i4].issig << endl;
 				if(cached_clusters[slyr4][i4].issig==1)
 				{
+					// if(side=="Eside") cout << "cached_clusters["<<slyr4<<"]["<<i4<<"].issig==1" << endl;
 					for(size_t t=0; t<cached_clusters[slyr4][i4].trksid.size(); ++t)
 					{
 						if(cached_clusters[slyr4][i4].trkstype[t]!=1) continue; // not a signal track
@@ -2864,8 +3040,9 @@ int main(int argc, char *argv[])
 							  << ", truth4:" << n_truth4
 								  << ", seeds:" << n_seeds
 									  << ", clusters:[" <<(n4I+n4O)<<","<<(n3I+n3O)<<","<<(n2I+n2O)<<","<<(n1I+n1O)<<"]"
-										  << ", recos:" << n_recos
-											  << ", match4:" << n_match4
+										  << ", solved:" << n_solve
+										  	 << ", recos:" << n_recos
+											 	<< ", match4:" << n_match4
 												  << ", selected:" << n_selct 
 													  << ", matched:" << n_match
 														  << " --> recos/seeds:" << (int)((float)n_recos / (float)n_seeds * 100.) << "%"
@@ -2877,7 +3054,7 @@ int main(int argc, char *argv[])
 				}
 				n4count++;
 				
-				bool doPrint = false;
+				bool doPrint =  false; //(ibx==10 && itru==214297); //false;
 				// prepare the probe from the seed and do the KF fit
 
 
@@ -2917,7 +3094,7 @@ int main(int argc, char *argv[])
 
 				
 				// get the reconstructed propagated to the vertex
-				KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack();
+				KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack(doPrint);
 				if(!trw)
 				{
 					if(nIterations_trw<=nMaxIterReco)
@@ -3070,7 +3247,7 @@ int main(int argc, char *argv[])
 				
 				/// remove the winner cluster from the lookup table
 				// remove_from_lookup_table(wincls);
-				remove_from_lookup_table(wincls, prec.E(), sigmult);
+				remove_from_lookup_table(process,wincls, prec.E(), sigmult);
 				
 				/// reco vectors
 				reco_chi2dof.push_back(chi2dof);
@@ -3091,9 +3268,9 @@ int main(int argc, char *argv[])
 				reco_dy4.push_back((issig4)    ? (y4tru-r4ontrk.Y())       : -999);
 				// cout << "for z4tru=" << z4tru << " and z4onrk=" << z4onrk << ": dx4rel=" << reco_dx4rel[irec] << ", dy4rel=" << reco_dy4rel[irec] << ", dz4rel=" << (z4tru-z4onrk)/z4tru << endl;
 				// cout << "dErel=" << reco_dErel[irec] << endl;
-				// reco_trckmar.push_back( TrackMarker3d(trw,0,zLastLayer+1,0.1,trkcol(prec.E())) );
-				// reco_trckmar.push_back(TrackMarker3d(trw, 0, zLastLayer+1, 1, trkcol(prec.E())));
-				// reco_trcklin.push_back(TrackLine3d(trw, zLastLayer+1, 1, trkcol(prec.E())));
+				reco_trckmar.push_back( TrackMarker3d(trw,0,zLastLayer+1,0.1,trkcol(prec.E())) );
+				reco_trckmar.push_back(TrackMarker3d(trw, 0, zLastLayer+1, 1, trkcol(prec.E())));
+				reco_trcklin.push_back(TrackLine3d(trw, zLastLayer+1, 1, trkcol(prec.E())));
 				
 				int nHits = reco_trck_cls_r[irec].size();
 				double SnpSig = (trk->GetSigmaSnp2()>0) ? trk->GetSnp()/sqrt(trk->GetSigmaSnp2()) : -1e10;
@@ -3379,6 +3556,7 @@ int main(int argc, char *argv[])
 						<< ", n_seeds=" << n_seeds
 							// << ", n_solve=" << n_solve
 							<< ", n_truth4=" << n_solve
+								<< ", n_solve=" << n_solve
 								<< ", n_recos=" << n_recos
 									<< ", n_match4=" << n_match4
 										<< ", n_match=" << n_match
@@ -3388,6 +3566,32 @@ int main(int argc, char *argv[])
 
 			fOut->cd();
 			// tOut->Fill();
+			
+			/// write geometry per side
+			if(ibx==1)
+			{
+				for(unsigned int g=0 ; g<reco_trckmar.size() ; g++)
+				{
+					TPolyMarker3D* marker = new TPolyMarker3D( *reco_trckmar[g] );
+					reco_trckmar_bothsides.push_back( marker );
+				}
+				for(unsigned int g=0 ; g<reco_trcklin.size() ; g++)
+				{
+					TPolyLine3D*   line   = new TPolyLine3D( *reco_trcklin[g] );
+					reco_trcklin_bothsides.push_back( line );
+				}
+				for(unsigned int s=0 ; s<staves.size()  ; ++s)
+				{
+					TPolyLine3D* stave  = new TPolyLine3D( *staves[s] );
+					staves_bothsides.push_back( stave );
+				}
+				for(unsigned int s=0 ; s<fstaves.size()  ; ++s)
+				{
+					TPolyLine3D* fstave = new TPolyLine3D( *fstaves[s] );
+					fstaves_bothsides.push_back( fstave );
+				}
+				WriteGeometry(process,reco_trckmar,reco_trcklin,staves,fstaves,dipole,fdipole,cached_clusters,"_reco_BX1_"+side);
+			}
 
 			stopwatch.Stop();
 			Double_t cputime = stopwatch.CpuTime();
@@ -3475,6 +3679,14 @@ int main(int argc, char *argv[])
 		}
 		
 	} // end of loop on sides
+	
+	/// write all geometry of both sides
+	WriteGeometry(process,reco_trckmar_bothsides,reco_trcklin_bothsides,staves_bothsides,fstaves_bothsides,dipole,fdipole,cached_clusters_bothsides,"_reco_BX1_bothsides");
+	reco_trckmar_bothsides.clear();
+	reco_trcklin_bothsides.clear();
+	staves_bothsides.clear();
+	fstaves_bothsides.clear();
+	cached_clusters_bothsides.clear();
 
 	return 0;
 }

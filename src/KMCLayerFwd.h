@@ -113,7 +113,7 @@ public:
   KMCProbeFwd*          GetMCTrack(Int_t it)     const {return (KMCProbeFwd*)fTrMC[it];}
   Int_t                 GetNBgClusters()         const {return fClBg.GetEntries();}
   KMCProbeFwd*          AddMCTrack(KMCProbeFwd* src=0);
-  KMCProbeFwd*          GetWinnerMCTrack();
+  KMCProbeFwd*          GetWinnerMCTrack(bool doprint=false);
   //
   Double_t              GetSig2EstX()            const {return fSig2EstX;}
   Double_t              GetSig2EstY()            const {return fSig2EstY;}
