@@ -207,6 +207,7 @@ void KMCDetectorFwd::ReadMaterials(const char* fnam)
   //
 }
 
+
 //__________________________________________________________________________
 void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
 {
@@ -214,65 +215,93 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   ReadMaterials(materials);
   NaMaterial* mat = 0;
   int narg;
-  //
+
   NaCardsInput *inp = new NaCardsInput();
   if( !(inp->OpenFile(setup)) ) {Error("BuilSetup","Did not find setup File %s",setup);exit(1);}
-  //
-  // -------------------------------------------------------------------
-  // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
-  // with optional data  
-  //  original line commented here; new lines follow 
-  //  if ( (narg=inp->FindEntry("define","magfield","d|",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
-  if ( (narg=inp->FindEntry("define","magfield","dfffffffaaa",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
-  printf("Magnetic Field: %d\n",fMagFieldID);
-  int nreg = 0;
-  Double_t xminDipole               = narg > 1 ? inp->GetArgF(1) : -9999;  
-  Double_t xmaxDipole               = narg > 2 ? inp->GetArgF(2) : -9999;  
-  Double_t yminDipole               = narg > 3 ? inp->GetArgF(3) : -9999;  
-  Double_t ymaxDipole               = narg > 4 ? inp->GetArgF(4) : -9999;  
-  Double_t zminDipole               = narg > 5 ? inp->GetArgF(5) : -9999;  
-  Double_t zmaxDipole               = narg > 6 ? inp->GetArgF(6) : -9999;  
-  Double_t dipoleField              = narg > 7 ? inp->GetArgF(7) : -9999;
-  std::string functionalFormStringX = narg > 8 ? inp->GetArg(8) : "NONE";
-  std::string functionalFormStringY = narg > 9 ? inp->GetArg(9) : "NONE";
-  std::string functionalFormStringZ = narg > 10 ? inp->GetArg(10) : "NONE";
-  std::string function3D[3]         = {functionalFormStringX, functionalFormStringY, functionalFormStringZ};
-  std::cout << "dipole dimensions: x=["<<xminDipole<<","<<xmaxDipole<<"], y=["<<yminDipole<<","<<ymaxDipole<<"], z=["<<zminDipole<<","<<zmaxDipole<<"]" << std::endl;
-  std::cout << "dipole strength  : B=" << dipoleField << " kG" << std::endl;
-  std::cout << "functional form for dipole magnetic field: [" << function3D[0] << ", " << function3D[1] << ", " << function3D[2] << "]" << std::endl;
-
-
-  if (narg>3) nreg = 1;
-  // this part is relevant for exra mag field, e.g. MS toroid
-  // this is not reading from the setup properly ! BEWARE
-  Double_t zminToroid  = narg > 4 ? inp->GetArgF(4) : -9999;  
-  Double_t zmaxToroid  = narg > 5 ? inp->GetArgF(5) : -9999;  
-  Double_t toroidField = narg > 6 ? inp->GetArgF(6) : -9999;  
-  Double_t toroidRmin  = narg > 7 ? inp->GetArgF(7) : -9999;  
-  Double_t toroidRmax  = narg > 11 ? inp->GetArgF(8) : -9999;
-  if (narg>11) nreg = 2;
   
-  // end modification
-  // -------------------------------------------------------------------
-  //
+  // init mag field
+  int nreg = 0;
+  inp->Rewind();
+  std::vector<Double_t> xminBfield;
+  std::vector<Double_t> xmaxBfield;
+  std::vector<Double_t> yminBfield;
+  std::vector<Double_t> ymaxBfield;
+  std::vector<Double_t> zminBfield;
+  std::vector<Double_t> zmaxBfield;
+  std::vector<Double_t> magBfield;
+  std::vector<std::string> functionalFormStringX;
+  std::vector<std::string> functionalFormStringY;
+  std::vector<std::string> functionalFormStringZ;
+  std::vector<std::vector<std::string>> functionalForm;
+  while ( (narg=inp->FindEntry("define","magfield","dfffffffaaa",0,1))>0 )
+  {
+	  fMagFieldID = inp->GetArgD(0);
+	  printf("Magnetic Field: %d\n",fMagFieldID);
+	  xminBfield.push_back( (narg > 1)  ? inp->GetArgF(1) : -9999 );  
+	  xmaxBfield.push_back( (narg > 2)  ? inp->GetArgF(2) : -9999 );  
+	  yminBfield.push_back( (narg > 3)  ? inp->GetArgF(3) : -9999 );  
+	  ymaxBfield.push_back( (narg > 4)  ? inp->GetArgF(4) : -9999 );  
+	  zminBfield.push_back( (narg > 5)  ? inp->GetArgF(5) : -9999 );  
+	  zmaxBfield.push_back( (narg > 6)  ? inp->GetArgF(6) : -9999 );  
+	  magBfield.push_back(  (narg > 7)  ? inp->GetArgF(7) : -9999 );
+	  functionalFormStringX.push_back( (narg > 8 ) ? inp->GetArg(8)  : "NONE");
+	  functionalFormStringY.push_back( (narg > 9 ) ? inp->GetArg(9)  : "NONE");
+	  functionalFormStringZ.push_back( (narg > 10) ? inp->GetArg(10) : "NONE");
+	  int r = nreg;
+	  std::vector<std::string> functionalFormStringVec = { functionalFormStringX[r], functionalFormStringY[r], functionalFormStringZ[r] };
+	  functionalForm.push_back( functionalFormStringVec );
+	  std::cout << "Magnet region["<<r<<"]: dimensions: x=["<<xminBfield[r]<<","<<xmaxBfield[r]<<"], y=["<<yminBfield[r]<<","<<ymaxBfield[r]<<"], z=["<<zminBfield[r]<<","<<zmaxBfield[r]<<"]" << std::endl;
+	  std::cout << "Magnet region["<<r<<"]: strength  : B=" << magBfield[r] << " kG" << std::endl;
+	  std::cout << "Magnet region["<<r<<"]: form      : [" << functionalForm[r][0] << ", " << functionalForm[r][1] << ", " << functionalForm[r][2] << "]" << std::endl;
+	  nreg += 1;
+  }
+  MagField* fld = 0;
+  if(TGeoGlobalMagField::Instance()->GetField())
+  {
+	  printf("Magnetic Field is already initialized\n");
+  }
+  else
+  {
+	  fld = new MagField(TMath::Abs(fMagFieldID),nreg,magBfield,
+	  							xminBfield,xmaxBfield,yminBfield,ymaxBfield,zminBfield,zmaxBfield,
+								functionalForm);
+	  fld->SetNReg(nreg);
+	  std::cout << "----- Non uniform magnetic field constructor-----" << std::endl;
+     TGeoGlobalMagField::Instance()->SetField( fld );
+     TGeoGlobalMagField::Instance()->Lock();
+  }
+
+  
+  
   // beampipe
-  if ( (narg=inp->FindEntry("beampipe","","ffa|",1,1))<0 ) printf("No BeamPipe found in the setup %s\n",setup);
-  else {
+  if( (narg=inp->FindEntry("beampipe","","ffa|",1,1))<0 )
+  {
+	  printf("No BeamPipe found in the setup %s\n",setup);
+  }
+  else
+  {
     mat = GetMaterial(inp->GetArg(2,"U"));
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(2,"U")); exit(1);}
     AddBeamPipe(inp->GetArgF(0), inp->GetArgF(1), mat->GetRadLength(), mat->GetDensity(), mat );
   }
-  //
-  if ( (narg=inp->FindEntry("vertex","","ffff|",1,1))<0 ) printf("No vertex found in the setup %s\n",setup);
-  else {
+  
+  
+  // vertex
+  if ( (narg=inp->FindEntry("vertex","","ffff|",1,1))<0 )
+  {
+	  printf("No vertex found in the setup %s\n",setup);
+  }
+  else
+  {
     fVtx = AddLayer("vtx","vertex",inp->GetArgF(0),0,0,inp->GetArgF(1), inp->GetArgF(2),inp->GetArgF(3));
   }
-  //
-  //
+
+
   // dummy material (not the official absorber
   inp->Rewind();
   TString fmtdummy = "aaff|";
-  while ( (narg=inp->FindEntry("dummy","",fmtdummy.Data(),0,1))>0 ) {
+  while ( (narg=inp->FindEntry("dummy","",fmtdummy.Data(),0,1))>0 )
+  {
     mat = GetMaterial(inp->GetArg(1,"U"));
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
     KMCLayerFwd* lr = AddLayer("dummy", inp->GetArg(0,"U"),  inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), inp->GetArgF(3));
@@ -280,127 +309,93 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     lr->SetDead(kTRUE);
   }
   
-  //
+
   // Absorber
   inp->Rewind();
-  while ( (narg=inp->FindEntry("absorber","","aaff|",0,1))>0 ) {
+  TString fmtAbs = "aaffff*fff";
+  while ( (narg=inp->FindEntry("absorber",0,fmtAbs.Data(),0,1))>0 )
+  {
     mat = GetMaterial(inp->GetArg(1,"U"));
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
     KMCLayerFwd* lr = AddLayer("abs", inp->GetArg(0,"U"),  inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), inp->GetArgF(3));
     lr->SetMaterial(mat);
     lr->SetDead(kTRUE);
-  }
-  //
-  // active layers
-  //
-  inp->Rewind();
-  TString fmtAct = "aaffff*fff";
-  for (int i=0;i<KMCLayerFwd::kMaxAccReg-1;i++) fmtAct += "fff";
-  while ( (narg=inp->FindEntry("activelayer",0,fmtAct.Data(),0,1))>0 ) {
-    // expect format "activelayer:type	NAME MATERIAL Z	DZ sigmaX sigmaZ [eff XMin XMax YMin YMax] [sigmaX1 sigmaY1 RMax1] ...  [sigmaX4 sigmaYN RMaxN]
-    // the optional triplets [sigmaXk sigmaYk RMaxk] allow to define regions with different resolutions and eff, max possible N is 
-    // KMCLayerFwd::kMaxAccReg-1
-    mat = GetMaterial(inp->GetArg(1,"U"));
     double eff = narg > 6 ? inp->GetArgF(6) : 1.0;
     double xmn = narg > 7 ? inp->GetArgF(7) : 0.0;
     double xmx = narg > 8 ? inp->GetArgF(8) : 1e9;  
     double ymn = narg > 9 ? inp->GetArgF(9) : 0.0;
     double ymx = narg > 10 ? inp->GetArgF(10) : 1e9;  
+    lr->SetXMin(xmn);
+    lr->SetXMax(xmx);
+    lr->SetYMin(ymn);
+    lr->SetYMax(ymx);
+  }
+
+
+  // active layers
+  inp->Rewind();
+  TString fmtAct = "aaffff*fff";
+  for (int i=0;i<KMCLayerFwd::kMaxAccReg-1;i++) fmtAct += "fff";
+  while ( (narg=inp->FindEntry("activelayer",0,fmtAct.Data(),0,1))>0 )
+  {
+    // expect format "activelayer:type	NAME MATERIAL Z	DZ sigmaX sigmaZ [eff XMin XMax YMin YMax] [sigmaX1 sigmaY1 RMax1] ...  [sigmaX4 sigmaYN RMaxN]
+    // the optional triplets [sigmaXk sigmaYk RMaxk] allow to define regions with different resolutions and eff, max possible N is 
+    // KMCLayerFwd::kMaxAccReg-1
+    mat = GetMaterial(inp->GetArg(1,"U"));
+    double eff = narg > 6  ? inp->GetArgF(6)  : 1.0;
+    double xmn = narg > 7  ? inp->GetArgF(7)  : 0.0;
+    double xmx = narg > 8  ? inp->GetArgF(8)  : 1e9;  
+    double ymn = narg > 9  ? inp->GetArgF(9)  : 0.0;
+    double ymx = narg > 10 ? inp->GetArgF(10) : 1e9;  
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
     KMCLayerFwd* lr = AddLayer(inp->GetModifier(), inp->GetArg(0,"U"),  inp->GetArgF(2),  
 			       mat->GetRadLength(), mat->GetDensity(), 
-			       inp->GetArgF(3), inp->GetArgF(4), inp->GetArgF(5), eff);    
-//     lr->SetRMin(rmn);
-//     lr->SetRMax(rmx);
+			       inp->GetArgF(3), inp->GetArgF(4), inp->GetArgF(5), eff);
     lr->SetXMin(xmn);
     lr->SetXMax(xmx);
     lr->SetYMin(ymn);
     lr->SetYMax(ymx);
     lr->SetMaterial(mat);
     int nExtra = narg - 11; // are there extra settings
-    if (nExtra>0) {
-      if ( (nExtra%3) ) {
-        printf("ReadSetup: %d extra values provided for activelayer are not multiple of 3\n",nExtra);
-        printf("%s\n",inp->GetLastBuffer());
-        exit(1);
-      }
-      int nBloc = nExtra/3;
-      if (nBloc>=KMCLayerFwd::kMaxAccReg) {
-        printf("ReadSetup: number of extra regions in activelayer %d should not exceed %d\n",nBloc,KMCLayerFwd::kMaxAccReg-1);
-        printf("%s\n",inp->GetLastBuffer());
-        exit(1);
-      }
-      lr->SetNAccRegions(nBloc+1);
-      for (int i=0;i<nBloc;i++) {
-      double sigxE = inp->GetArgF(9+3*i+0);
-      double sigyE = inp->GetArgF(9+3*i+1);	
-      double rmaxE = inp->GetArgF(9+3*i+2);
-      if (rmaxE <= lr->GetRMax(i)) {
-        printf("ReadSetup: RMax=%.3f of %d-th extra region in activelayer must exceed R=%.3f of previous region\n",rmaxE, i+1, lr->GetRMax(i));
-        printf("%s\n",inp->GetLastBuffer());
-        exit(1);
-      }
-      lr->SetRMin(lr->GetRMax(i), i+1);
-      lr->SetRMax(rmaxE, i+1);
-      lr->SetXRes(sigxE, i+1);
-      lr->SetYRes(sigyE, i+1);
-      }
-      
+    if(nExtra>0)
+	 {
+		if( (nExtra%3) )
+		{
+		  printf("ReadSetup: %d extra values provided for activelayer are not multiple of 3\n",nExtra);
+		  printf("%s\n",inp->GetLastBuffer());
+		  exit(1);
+		}
+		int nBloc = nExtra/3;
+		if(nBloc>=KMCLayerFwd::kMaxAccReg)
+		{
+		  printf("ReadSetup: number of extra regions in activelayer %d should not exceed %d\n",nBloc,KMCLayerFwd::kMaxAccReg-1);
+		  printf("%s\n",inp->GetLastBuffer());
+		  exit(1);
+		}
+		lr->SetNAccRegions(nBloc+1);
+		for(int i=0;i<nBloc;i++)
+		{
+			double sigxE = inp->GetArgF(9+3*i+0);
+			double sigyE = inp->GetArgF(9+3*i+1);	
+			double rmaxE = inp->GetArgF(9+3*i+2);
+			if(rmaxE <= lr->GetRMax(i))
+			{
+			  printf("ReadSetup: RMax=%.3f of %d-th extra region in activelayer must exceed R=%.3f of previous region\n",rmaxE, i+1, lr->GetRMax(i));
+			  printf("%s\n",inp->GetLastBuffer());
+			  exit(1);
+			}
+			lr->SetRMin(lr->GetRMax(i), i+1);
+			lr->SetRMax(rmaxE, i+1);
+			lr->SetXRes(sigxE, i+1);
+			lr->SetYRes(sigyE, i+1);
+		}
     }
-    
   }
-
-  //-------------------------------------
-  //
-  // init mag field
-  if (TGeoGlobalMagField::Instance()->GetField()) printf("Magnetic Field is already initialized\n");
-  else {
-    MagField* fld = 0;
-    // -------------------------------------------------------------------
-    // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
-    // with optional data  
-
-    if ((function3D[0].find("NONE")==std::string::npos) || (function3D[1].find("NONE")==std::string::npos) || (function3D[2].find("NONE")==std::string::npos)){
-      // constructor for the non-uniform magnetic field
-      fld = new MagField(TMath::Abs(fMagFieldID),dipoleField,xminDipole, xmaxDipole, yminDipole, ymaxDipole, zminDipole, zmaxDipole, function3D);
-      std::cout << "----- Non uniform magnetic field constructor-----" << std::endl;
-    }
-    else{
-      // constructor for the uniform magnetic field
-      fld = new MagField(TMath::Abs(fMagFieldID));
-      std::cout << "----- Uniform magnetic field constructor-----" << std::endl;
-    }
-
-    if (nreg>0) {
-      fld->SetNReg(nreg);
-      if (xminDipole>-9999)  ((MagField *) fld)->SetXMin(0,xminDipole);
-      if (xmaxDipole>-9999)  ((MagField *) fld)->SetXMax(0,xmaxDipole);
-      if (yminDipole>-9999)  ((MagField *) fld)->SetYMin(0,yminDipole);
-      if (ymaxDipole>-9999)  ((MagField *) fld)->SetYMax(0,ymaxDipole);
-      if (zminDipole>-9999)  ((MagField *) fld)->SetZMin(0,zminDipole);
-      if (zmaxDipole>-9999)  ((MagField *) fld)->SetZMax(0,zmaxDipole);
-      if (dipoleField>-9999) ((MagField *) fld)->SetBVals(0,1,dipoleField);
-      /// if NONE not in the string, set the function form
-      if (functionalFormStringX.find("NONE")==std::string::npos)((MagField *) fld)->SetFunctionForm(0,0,function3D[0]);
-      if (functionalFormStringY.find("NONE")==std::string::npos)((MagField *) fld)->SetFunctionForm(0,1,function3D[1]);
-      if (functionalFormStringZ.find("NONE")==std::string::npos)((MagField *) fld)->SetFunctionForm(0,2,function3D[2]);
-    }
-    if (nreg>1) {
-		  if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
-      if (zmaxToroid>-9999) ((MagField *) fld)->SetZMax(1,zmaxToroid);
-      if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
-      if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
-      if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
-    }
-    // -------------------------------------------------------------------
-    TGeoGlobalMagField::Instance()->SetField( fld );
-    TGeoGlobalMagField::Instance()->Lock();
-  }
-  //
   ClassifyLayers();
-  //  BookControlHistos();
-  //
+  //BookControlHistos();
 }
+
+
 
 //__________________________________________________________________________
 KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_t zPos, Float_t radL, Float_t density, 

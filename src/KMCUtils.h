@@ -12,6 +12,11 @@ class MagField: public TVirtualMagField
   MagField(UInt_t id);
   /// second constructor for the non-uniform magnetic field
   MagField(UInt_t id, double dipoleConst, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, std::string *functionForm);
+  MagField(UInt_t id, UInt_t nreg, std::vector<double> dipoleConst,
+  			  std::vector<double> xmin, std::vector<double> xmax,
+			  std::vector<double> ymin, std::vector<double> ymax,
+			  std::vector<double> zmin, std::vector<double> zmax,
+			  std::vector<std::vector<std::string>> functionForm);
   virtual ~MagField() {}
   virtual void Field(const Double_t *xyz, Double_t *bxyz);
   //
@@ -32,7 +37,8 @@ class MagField: public TVirtualMagField
   void SetXMin(int nreg, double xmin) { fXMin[nreg] = xmin; }
   void SetXMax(int nreg, double xmax) { fXMax[nreg] = xmax; }
   void SetBVals(int nreg, int index, double val) { fBVal[nreg][index] = val; }
-  void SetFunctionForm(int nreg, int index, std::string funcForm){functionFormStr[nreg][index] = funcForm;}
+  // void SetFunctionForm(int nreg, int index, std::string funcForm){functionFormStr[nreg][index] = funcForm;}
+  void SetFunctionForm(int nreg, int index, std::string funcForm, double dipoleConst, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
 
  protected:
   int fNReg = 0;

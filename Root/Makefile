@@ -9,7 +9,7 @@ INCLUDE = -I$(ROOTSYS)/include -I$(ROOTSYS)/include/root -I/usr/include -I./../s
 src = $(wildcard *.C)
 obj = $(src:.c=.o)
 
-all: src load link digi digiNew reco recoNew recoFull
+all: src load link digi digiE320 digiNew reco recoNew recoFull
 
 src:
 	cd ../src; make; cd -
@@ -20,6 +20,10 @@ load:
 link:
 	ln -sf ../src/KMCDetFwdDict_rdict.pcm KMCDetFwdDict_rdict.pcm
 	ln -sf ../src/libKMCDetFwd.so libKMCDetFwd.so
+
+digiE320: DigitizationE320.C
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(INCLUDE)
+	chmod 755 digiE320
 
 digi: Digitization.C
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(INCLUDE)
@@ -44,5 +48,5 @@ recoFull: ReconstructionFullSim.C
 
 .PHONY: clean
 clean:
-	rm -f digi reco recoNew *.o *_.cxx* *_cxx* *ACLiC* *.so dict* *.d *.pcm
+	rm -f digi digiE320 reco recoNew *.o *_.cxx* *_cxx* *ACLiC* *.so dict* *.d *.pcm
 	rm -rf *.dSYM

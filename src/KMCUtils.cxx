@@ -13,6 +13,44 @@ MagField::MagField(UInt_t id) {
 }
 
 /// constructor for the non-uniform magnetic field
+MagField::MagField(UInt_t id, UInt_t nreg, std::vector<double> dipoleConst,
+						 std::vector<double> xmin, std::vector<double> xmax,
+						 std::vector<double> ymin, std::vector<double> ymax,
+						 std::vector<double> zmin, std::vector<double> zmax,
+						 std::vector<std::vector<std::string>> functionForm)
+{
+  SetUniqueID(id);
+  fNReg = 0;
+  for(unsigned int r=0 ; r<nreg ; r++)
+  {
+	 std::string reg = std::to_string(r);
+    for(unsigned int x=0 ; x<3 ; x++)
+	 {
+      std::string axs = std::to_string(x);
+      if(functionForm[r][x]!="NONE")
+		{
+      	fBValNonUniform[r][x] = new TF3(("B1_RegId_"+reg+"_dim_"+axs).c_str(),(functionForm[r][x]).c_str(),xmin[r],xmax[r],ymin[r],ymax[r],zmin[r],zmax[r]);
+			fBValNonUniform[r][x]->SetParameter(0,dipoleConst[r]);
+		}
+		else
+		{
+      	fBValNonUniform[r][x] = new TF3(("B1_RegId_"+reg+"_dim_"+axs).c_str(),"0",xmin[r],xmax[r],ymin[r],ymax[r],zmin[r],zmax[r]);
+			fBValNonUniform[r][x]->SetParameter(0,0);
+		}
+		SetBVals(r,x,dipoleConst[r]);
+		SetXMin(r,xmin[r]);
+		SetXMax(r,xmax[r]);
+		SetYMin(r,ymin[r]);
+		SetYMax(r,ymax[r]);
+		SetZMin(r,zmin[r]);
+		SetZMax(r,zmax[r]);
+    }
+  }
+}
+
+
+
+/// constructor for the non-uniform magnetic field
 MagField::MagField(UInt_t id, double dipoleConst, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, std::string *functionForm){
   SetUniqueID(id);
   fNReg = 0;
@@ -27,6 +65,16 @@ MagField::MagField(UInt_t id, double dipoleConst, double xmin, double xmax, doub
       else fBValNonUniform[i][j]=NULL;
     }
   }
+}
+
+void MagField::SetFunctionForm(int nreg, int index, std::string funcForm, double dipoleConst, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
+{
+   std::string reg = std::to_string(nreg);
+   std::string dim = std::to_string(index);
+	functionFormStr[nreg][index] = funcForm;
+	if(fBValNonUniform[nreg][index]) delete fBValNonUniform[nreg][index];
+   fBValNonUniform[nreg][index] = new TF3(("B1_RegId_"+reg+"_dim_"+dim).c_str(),(funcForm).c_str(),xmin,xmax,ymin,ymax,zmin,zmax);
+   fBValNonUniform[nreg][index]->SetParameter(0,dipoleConst);
 }
 
 
